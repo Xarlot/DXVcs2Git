@@ -59,11 +59,12 @@ namespace DXVcs2Git.DXVcs {
             }
             return diffInfo;
         }
-        public ProjectHistoryInfo[] GetProjectHistory(string vcsPath, bool resursive) {
+        public ProjectHistoryInfo[] GetProjectHistory(string vcsPath, bool resursive, DateTime? from = null, DateTime? to = null) {
             if (string.IsNullOrEmpty(vcsPath))
                 throw new ArgumentException("vcsPath");
+
             string id;
-            var result = Service.GetProjectHistory(vcsPath, resursive, string.Empty, DateTime.Today, DateTime.Now, true, true, out id);
+            var result = Service.GetProjectHistory(vcsPath, resursive, string.Empty, from ?? new DateTime(2000, 1, 1), to ?? DateTime.Now, true, true, out id);
             return result;
         }
         public void GetLatestVersion(string vcsFile, string fileName) {

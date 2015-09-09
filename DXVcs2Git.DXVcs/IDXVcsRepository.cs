@@ -3,7 +3,7 @@ using DXVCS;
 
 namespace DXVcs2Git.DXVcs {
     public interface IDXVcsRepository {
-        ProjectHistoryInfo[] GetProjectHistory(string vcsFile, bool resursive);
+        ProjectHistoryInfo[] GetProjectHistory(string vcsFile, bool resursive, DateTime? from = null, DateTime? to = null);
         FileVersionInfo[] GetFileHistory(string vcsFile, out string fileName);
         FileDiffInfo GetFileDiffInfo(string vcsFile, SpacesAction spacesAction = SpacesAction.IgnoreAll);
         FileDiffInfo GetFileDiffInfo(string vcsFile, Action<int, int> progressAction, SpacesAction spacesAction);
