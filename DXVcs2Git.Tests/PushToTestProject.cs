@@ -40,7 +40,7 @@ namespace DXVcs2Git.Tests {
             string file = Path.Combine(scd.DirectoryPath, "testpush.txt");
             var rbg = new RandomBufferGenerator(30000);
             using (var repo = new Repository(clonedRepoPath)) {
-                for (int i = 0; i < 100; i++) {
+                for (int i = 0; i < 1; i++) {
                     var network = repo.Network.Remotes.First();
                     FetchOptions fetchOptions = new FetchOptions();
                     fetchOptions.CredentialsProvider += (url, fromUrl, types) => credentials;
