@@ -5,6 +5,8 @@ VisualStudioVersion = 14.0.23107.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DXVcs2Git", "DXVcs2Git\DXVcs2Git.csproj", "{B9C82B37-4D92-4903-907F-A1F7F3908062}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DXVcs2Git.UI", "..\DXVcs2Git.UI\DXVcs2Git.UI.csproj", "{3B9ADC57-B49D-4DE7-A532-DBEB0CA78C10}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,6 +17,10 @@ Global
 		{B9C82B37-4D92-4903-907F-A1F7F3908062}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B9C82B37-4D92-4903-907F-A1F7F3908062}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B9C82B37-4D92-4903-907F-A1F7F3908062}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3B9ADC57-B49D-4DE7-A532-DBEB0CA78C10}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3B9ADC57-B49D-4DE7-A532-DBEB0CA78C10}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3B9ADC57-B49D-4DE7-A532-DBEB0CA78C10}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3B9ADC57-B49D-4DE7-A532-DBEB0CA78C10}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
