@@ -72,7 +72,7 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\DXVcs2Git\DXVcs2Git\DXVcs2Git.csproj">
+    <ProjectReference Include="..\DXVcs2Git\DXVcs2Git.csproj">
       <Project>{b9c82b37-4d92-4903-907f-a1f7f3908062}</Project>
       <Name>DXVcs2Git</Name>
     </ProjectReference>
