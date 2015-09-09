@@ -6,8 +6,15 @@ MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DXVcs2Git", "DXVcs2Git\DXVcs2Git.csproj", "{B9C82B37-4D92-4903-907F-A1F7F3908062}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DXVcs2Git.UI", "..\DXVcs2Git.UI\DXVcs2Git.UI.csproj", "{3B9ADC57-B49D-4DE7-A532-DBEB0CA78C10}"
+	ProjectSection(ProjectDependencies) = postProject
+		{B9C82B37-4D92-4903-907F-A1F7F3908062} = {B9C82B37-4D92-4903-907F-A1F7F3908062}
+	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DXVcs2Git.Tests", "..\DXVcs2Git.Tests\DXVcs2Git.Tests.csproj", "{8CC237EF-3D03-456D-A101-C9DBE57EA6E5}"
+	ProjectSection(ProjectDependencies) = postProject
+		{B9C82B37-4D92-4903-907F-A1F7F3908062} = {B9C82B37-4D92-4903-907F-A1F7F3908062}
+		{3B9ADC57-B49D-4DE7-A532-DBEB0CA78C10} = {3B9ADC57-B49D-4DE7-A532-DBEB0CA78C10}
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

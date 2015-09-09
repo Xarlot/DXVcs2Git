@@ -1,5 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="..\DXVcs2Git\packages\LibGit2Sharp.NativeBinaries.1.0.72\build\LibGit2Sharp.NativeBinaries.props" Condition="Exists('..\DXVcs2Git\packages\LibGit2Sharp.NativeBinaries.1.0.72\build\LibGit2Sharp.NativeBinaries.props')" />
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
@@ -11,12 +12,14 @@
     <AssemblyName>DXVcs2Git.Tests</AssemblyName>
     <TargetFrameworkVersion>v4.6</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
+    <NuGetPackageImportStamp>
+    </NuGetPackageImportStamp>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
-    <OutputPath>bin\Debug\</OutputPath>
+    <OutputPath>..\bin\Debug\</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
@@ -30,6 +33,10 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="LibGit2Sharp, Version=0.22.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\DXVcs2Git\packages\LibGit2Sharp.0.22.0-pre20150716071016\lib\net40\LibGit2Sharp.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="nunit.framework, Version=2.5.10.11092, Culture=neutral, PublicKeyToken=96d09a1eb7f44a77, processorArchitecture=MSIL">
       <HintPath>..\DXVcs2Git\packages\NUnit.2.5.10.11092\lib\nunit.framework.dll</HintPath>
       <Private>True</Private>
@@ -52,13 +59,31 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Class1.cs" />
+    <Compile Include="BaseFixture.cs" />
+    <Compile Include="Config.cs" />
+    <Compile Include="PushToTestProject.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="TestHelpers\Constants.cs" />
+    <Compile Include="TestHelpers\DirectoryHelper.cs" />
+    <Compile Include="TestHelpers\Interfaces.cs" />
+    <Compile Include="TestHelpers\SelfCleaningDirectory.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\DXVcs2Git\DXVcs2Git\DXVcs2Git.csproj">
+      <Project>{b9c82b37-4d92-4903-907f-a1f7f3908062}</Project>
+      <Name>DXVcs2Git</Name>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
+    <PropertyGroup>
+      <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
+    </PropertyGroup>
+    <Error Condition="!Exists('..\DXVcs2Git\packages\LibGit2Sharp.NativeBinaries.1.0.72\build\LibGit2Sharp.NativeBinaries.props')" Text="$([System.String]::Format('$(ErrorText)', '..\DXVcs2Git\packages\LibGit2Sharp.NativeBinaries.1.0.72\build\LibGit2Sharp.NativeBinaries.props'))" />
+  </Target>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">
