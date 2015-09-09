@@ -3,7 +3,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 
-namespace DXVcsTools.DXVcsClient {
+namespace DXVcs2Git.DXVcs {
     public class DXVcsRepositoryFactory {
         static DXVcsServiceProvider serviceProvider;
         static readonly object ServiceProviderLock = new object();

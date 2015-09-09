@@ -45,6 +45,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="DXVcsConfig.cs" />
+    <Compile Include="DXVcsConnectionHelper.cs" />
     <Compile Include="DXVcsRepository.cs" />
     <Compile Include="DXVcsRepositoryFactory.cs" />
     <Compile Include="DXVcsServiceProvider.cs" />

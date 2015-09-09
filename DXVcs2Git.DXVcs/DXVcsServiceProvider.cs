@@ -3,7 +3,7 @@ using System.ServiceModel;
 using System.ServiceModel.Description;
 using DXVCS;
 
-namespace DXVcsTools.DXVcsClient {
+namespace DXVcs2Git.DXVcs {
     [ServiceContract]
     class DXVcsServiceProvider : MarshalByRefObject {
         class Factory : ChannelFactory<IDXVCSService> {

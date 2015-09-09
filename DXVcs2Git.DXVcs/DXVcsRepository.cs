@@ -4,7 +4,7 @@ using System.IO;
 using System.Linq;
 using DXVCS;
 
-namespace DXVcsTools.DXVcsClient {
+namespace DXVcs2Git.DXVcs {
     class DXVcsRepository : IDXVcsRepository {
         readonly string serviceUrl;
         readonly DXVcsServiceProvider serviceProvider;
@@ -59,7 +59,13 @@ namespace DXVcsTools.DXVcsClient {
             }
             return diffInfo;
         }
-
+        public ProjectHistoryInfo[] GetProjectHistory(string vcsPath, bool resursive) {
+            if (string.IsNullOrEmpty(vcsPath))
+                throw new ArgumentException("vcsPath");
+            string id;
+            var result = Service.GetProjectHistory(vcsPath, resursive, string.Empty, DateTime.Today, DateTime.Now, true, true, out id);
+            return result;
+        }
         public void GetLatestVersion(string vcsFile, string fileName) {
             if (string.IsNullOrEmpty(vcsFile))
                 throw new ArgumentException("vcsFile");

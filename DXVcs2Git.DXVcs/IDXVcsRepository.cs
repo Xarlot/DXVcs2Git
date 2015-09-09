@@ -1,7 +1,9 @@
 ﻿using System;
+using DXVCS;
 
-namespace DXVcsTools.DXVcsClient {
+namespace DXVcs2Git.DXVcs {
     public interface IDXVcsRepository {
+        ProjectHistoryInfo[] GetProjectHistory(string vcsFile, bool resursive);
         FileVersionInfo[] GetFileHistory(string vcsFile, out string fileName);
         FileDiffInfo GetFileDiffInfo(string vcsFile, SpacesAction spacesAction = SpacesAction.IgnoreAll);
         FileDiffInfo GetFileDiffInfo(string vcsFile, Action<int, int> progressAction, SpacesAction spacesAction);

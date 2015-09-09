@@ -4,7 +4,7 @@ using System.Text;
 using DXVCS;
 using DXVcsTools.Data;
 
-namespace DXVcsTools.DXVcsClient {
+namespace DXVcs2Git.DXVcs {
     public class FileDiffInfo {
         readonly DiffStringItem[][] deltas;
         readonly FileVersionInfoBase[] historyInfo;

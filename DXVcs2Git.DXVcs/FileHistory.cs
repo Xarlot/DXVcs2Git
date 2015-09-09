@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using DXVCS;
 
-namespace DXVcsTools.DXVcsClient {
+namespace DXVcs2Git.DXVcs {
     class FileHistory : IEnumerable<FileVersionInfo> {
         readonly IDXVCSService service;
         readonly string vcsFile;

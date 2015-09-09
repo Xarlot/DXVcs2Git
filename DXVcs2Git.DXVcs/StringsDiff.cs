@@ -4,7 +4,7 @@ using System.Text;
 using DXVCS;
 using DXVCS.Properties;
 
-namespace DXVcsTools.DXVcsClient {
+namespace DXVcs2Git.DXVcs {
     public enum SpacesAction {
         Compare,
         IgnoreChange,

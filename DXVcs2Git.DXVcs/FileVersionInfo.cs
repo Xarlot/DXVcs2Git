@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace DXVcsTools.DXVcsClient {
+namespace DXVcs2Git.DXVcs {
     public class FileVersionInfoBase {
         public FileVersionInfoBase(int version, DateTime date, string user, string comment) {
             if (version < 0)
