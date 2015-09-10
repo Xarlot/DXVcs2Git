@@ -55,15 +55,56 @@ namespace DXVcs2Git.Tests {
         [Test, Explicit]
         public void GetProjectHistoryForXpfCore152() {
             var repo = DXVcsConectionHelper.Connect(defaultConfig.AuxPath);
-            var vcsPath81 = @"$/NET.OLD/2008.1/WPF/DevExpress.Wpf.Core";
+            List<string> branches = new List<string>() {
+                @"$/NET.OLD/2009.1/WPF/DevExpress.Wpf.Core",
+                @"$/NET.OLD/2009.2/WPF/DevExpress.Wpf.Core",
+                @"$/NET.OLD/2009.3/WPF/DevExpress.Wpf.Core",
+                @"$/NET.OLD/2010.1/XPF/DevExpress.Xpf.Core",
+                @"$/NET.OLD/2010.2/XPF/DevExpress.Xpf.Core",
+                @"$/NET.OLD/2011.1/XPF/DevExpress.Xpf.Core",
+                @"$/NET.OLD/2011.2/XPF/DevExpress.Xpf.Core",
+                @"$/NET.OLD/2012.1/XPF/DevExpress.Xpf.Core",
+                @"$/NET.OLD/2012.2/XPF/DevExpress.Xpf.Core",
+                @"$/NET.OLD/2013.1/XPF/DevExpress.Xpf.Core",
+                @"$/NET.OLD/2013.2/XPF/DevExpress.Xpf.Core",
+                @"$/2014.1/XPF/DevExpress.Xpf.Core",
+                @"$/2014.2/XPF/DevExpress.Xpf.Core",
+                @"$/2015.1/XPF/DevExpress.Xpf.Core",
+                @"$/2015.2/XPF/DevExpress.Xpf.Core",
+            };
+            List<DateTime> branchesCreatedTime = branches.Select(x => {
+                var history = repo.GetProjectHistory(x, true);
+                return history.First(IsBranchCreatedTimeStamp).ActionDate;
+            }).ToList();
+            DateTime previous = DateTime.MinValue;
+            for (int i = 0; i < branchesCreatedTime.Count - 1; i++) {
+                DateTime currentStamp = branchesCreatedTime[i];
+                string branch = branches[i];
+                var history = repo.GetProjectHistory(branch, true, previous, currentStamp);
+                var projectHistory = CalcProjectHistory(history);
+            }
+
             //var vcsPath = @"$/2015.2/XPF/DevExpress.Xpf.Core/DevExpress.Xpf.Core";
-            var history = repo.GetProjectHistory(vcsPath81, true);
-            var grouped = history.Reverse().GroupBy(x => x.ActionDate).OrderBy(x => x.First().ActionDate).Select(x => new HistoryItem(x.First().ActionDate, x.ToList()));
+            //var history = repo.GetProjectHistory(vcsPath81, true);
+            //var grouped = history.Reverse().GroupBy(x => x.ActionDate).OrderBy(x => x.First().ActionDate).Select(x => new HistoryItem(x.First().ActionDate, x.ToList()));
+        }
+        [Test]
+        public void TestFindCreateBranchTimeStamp() {
+            var repo = DXVcsConectionHelper.Connect(defaultConfig.AuxPath);
+            var vcsPath = @"$/2014.1/XPF/DevExpress.Xpf.Core/DevExpress.Xpf.Core";
+            var history = repo.GetProjectHistory(vcsPath, true);
+            var create = history.Where(IsBranchCreatedTimeStamp).ToList();
+            Assert.AreEqual(1, create.Count);
+            Assert.AreEqual(635187859620700000, create[0].ActionDate.Ticks);
+            //var projectHistory = history.Reverse().GroupBy(x => x.ActionDate).OrderBy(x => x.First().ActionDate).Select(x => new HistoryItem(x.First().ActionDate, x.ToList()));
+            //var project = projectHistory.Where(x => x.History.Any(h => h.Message != null && h.Message.ToLowerInvariant().Contains("branch"))).ToList();
+        }
+        IEnumerable<HistoryItem> CalcProjectHistory(IEnumerable<ProjectHistoryInfo> history) {
+            return history.Reverse().GroupBy(x => x.ActionDate).OrderBy(x => x.First().ActionDate).Select(x => new HistoryItem(x.First().ActionDate, x.ToList()));
         }
 
-        [Test]
-        void UpdateProjectForGroupedHistory() {
-            
+        static bool IsBranchCreatedTimeStamp(ProjectHistoryInfo x) {
+            return x.Message != null && x.Message.ToLowerInvariant() == "create";
         }
     }
     class HistoryItem {
