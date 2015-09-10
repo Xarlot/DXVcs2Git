@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using DXVcs2Git.DXVcs;
 using DXVcs2Git.Tests;
@@ -16,11 +17,8 @@ namespace DXvcs2Git.Console {
 
             var repo = DXVcsConectionHelper.Connect(DefaultConfig.Config.AuxPath);
             List<string> branches = new List<string>() {
-                @"$/NET.OLD/2009.1/WPF/DevExpress.Wpf.Core",
-                @"$/NET.OLD/2009.2/WPF/DevExpress.Wpf.Core",
-                //@"$/NET.OLD/2009.3/WPF/DevExpress.Wpf.Core",
-                //@"$/NET.OLD/2010.1/XPF/DevExpress.Xpf.Core",
-                //@"$/NET.OLD/2010.2/XPF/DevExpress.Xpf.Core",
+                @"$/NET.OLD/2010.1/XPF/DevExpress.Xpf.Core",
+                @"$/NET.OLD/2010.2/XPF/DevExpress.Xpf.Core",
                 //@"$/NET.OLD/2011.1/XPF/DevExpress.Xpf.Core",
                 //@"$/NET.OLD/2011.2/XPF/DevExpress.Xpf.Core",
                 //@"$/NET.OLD/2012.1/XPF/DevExpress.Xpf.Core",
@@ -37,25 +35,26 @@ namespace DXvcs2Git.Console {
             List<DateTime> branchesCreatedTime = branches.Select(x => {
                 var history = repo.GetProjectHistory(x, true);
                 return history.First(IsBranchCreatedTimeStamp).ActionDate;
-            }).ToList();
+            }).Concat(new[] { DateTime.Now}).ToList();
             System.Console.WriteLine($"===================   Completed generating branch timings   ======================");
             System.Console.WriteLine($"===================   Start generating project history   ======================");
             var resultHistory = Enumerable.Empty<HistoryItem>();
-            DateTime previousStamp = DateTime.MinValue;
-            for (int i = 0; i < branchesCreatedTime.Count; i++) {
-                DateTime currentStamp = branchesCreatedTime[i];
+            DateTime previousStamp = branchesCreatedTime[0];
+            for (int i = 0; i < branches.Count; i++) {
+                DateTime currentStamp = branchesCreatedTime[i + 1];
                 string branch = branches[i];
                 System.Console.WriteLine($"===================   Start generating project history for brahch {branch}  ======================");
                 var history = repo.GetProjectHistory(branch, true, previousStamp, currentStamp);
                 System.Console.WriteLine($"===================   Completed generating project history for brahch {branch}  ======================");
 
-                var projectHistory = CalcProjectHistory(history);
+                var projectHistory = CalcProjectHistory(history).Where(x => x.TimeStamp >= previousStamp && x.TimeStamp <= currentStamp).ToList();
                 foreach (var historyItem in projectHistory) {
                     historyItem.Branch = branch;
                 }
                 resultHistory = resultHistory.Concat(projectHistory);
                 previousStamp = currentStamp;
             }
+            resultHistory = resultHistory.ToList();
             System.Console.WriteLine($"===================   Completed generating project history   ======================");
 
             InitUserCredentials();
@@ -68,7 +67,6 @@ namespace DXvcs2Git.Console {
                 gitRepo.Fetch(network.Name, fetchOptions);
                 System.Console.WriteLine($"===================   Startup git fetch completed   ======================");
                 foreach (var item in resultHistory) {
-                    System.Console.WriteLine($"===================   Startup git fetch completed   ======================");
                     System.Console.WriteLine($"===================   Start updating project {item.Branch} {item.TimeStamp} ======================");
                     repo.GetProject(item.Branch, path, item.TimeStamp);
                     System.Console.WriteLine($"===================   Completed updating project   ======================");
@@ -76,7 +74,7 @@ namespace DXvcs2Git.Console {
 
                     string user = item.History.First().User;
                     System.Console.WriteLine($"===================   Start git commit {user} {item.TimeStamp}  ======================");
-                    Commit commit = gitRepo.Commit(CalcComment(item), new Signature(user, "test@mail.com", new DateTimeOffset(item.TimeStamp)));
+                    Commit commit = gitRepo.Commit(CalcComment(item), new Signature(user, "", new DateTimeOffset(item.TimeStamp)));
                     System.Console.WriteLine($"===================   Completed git commit   ======================");
 
                     System.Console.WriteLine($"===================   Start git push for branch master  ======================");
@@ -104,6 +102,11 @@ namespace DXvcs2Git.Console {
             System.Console.WriteLine($"===================   User Initialized   ======================");
         }
         static string InitGit(string path) {
+            if (Directory.Exists(path)) {
+                Directory.Delete(path, true);
+                Directory.CreateDirectory(path);
+            }
+
             CloneOptions options = new CloneOptions();
             options.CredentialsProvider += (url, fromUrl, types) => credentials;
             string clonedRepoPath = Repository.Clone(testUrl, path, options);

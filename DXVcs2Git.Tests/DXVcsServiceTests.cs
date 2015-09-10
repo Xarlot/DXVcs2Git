@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Security.Policy;
 using DXVcs2Git.DXVcs;
@@ -57,66 +58,43 @@ namespace DXVcs2Git.Tests {
             string path = @"c:\test\";
             var repo = DXVcsConectionHelper.Connect(defaultConfig.AuxPath);
             List<string> branches = new List<string>() {
-                @"$/NET.OLD/2009.1/WPF/DevExpress.Wpf.Core",
-                @"$/NET.OLD/2009.2/WPF/DevExpress.Wpf.Core",
-                @"$/NET.OLD/2009.3/WPF/DevExpress.Wpf.Core",
                 @"$/NET.OLD/2010.1/XPF/DevExpress.Xpf.Core",
                 @"$/NET.OLD/2010.2/XPF/DevExpress.Xpf.Core",
                 @"$/NET.OLD/2011.1/XPF/DevExpress.Xpf.Core",
-                @"$/NET.OLD/2011.2/XPF/DevExpress.Xpf.Core",
-                @"$/NET.OLD/2012.1/XPF/DevExpress.Xpf.Core",
-                @"$/NET.OLD/2012.2/XPF/DevExpress.Xpf.Core",
-                @"$/NET.OLD/2013.1/XPF/DevExpress.Xpf.Core",
-                @"$/NET.OLD/2013.2/XPF/DevExpress.Xpf.Core",
-                @"$/2014.1/XPF/DevExpress.Xpf.Core",
-                @"$/2014.2/XPF/DevExpress.Xpf.Core",
-                @"$/2015.1/XPF/DevExpress.Xpf.Core",
-                @"$/2015.2/XPF/DevExpress.Xpf.Core",
             };
             List<DateTime> branchesCreatedTime = branches.Select(x => {
                 var history = repo.GetProjectHistory(x, true);
                 return history.First(IsBranchCreatedTimeStamp).ActionDate;
-            }).ToList();
-            DateTime previous = DateTime.MinValue;
+            }).Concat(new[] { DateTime.Now }).ToList();
+            DateTime previous = branchesCreatedTime[0];
             var resultHistory = Enumerable.Empty<HistoryItem>();
-            for (int i = 0; i < branchesCreatedTime.Count - 1; i++) {
-                DateTime currentStamp = branchesCreatedTime[i];
+            for (int i = 0; i < branches.Count; i++) {
+                DateTime currentStamp = branchesCreatedTime[i + 1];
                 string branch = branches[i];
                 var history = repo.GetProjectHistory(branch, true, previous, currentStamp);
-                var projectHistory = CalcProjectHistory(history);
+                var projectHistory = CalcProjectHistory(history).Where(x => x.TimeStamp >= previous && x.TimeStamp < currentStamp).OrderBy(x => x.TimeStamp).ToList();
                 foreach (var historyItem in projectHistory) {
                     historyItem.Branch = branch;
                 }
                 resultHistory = resultHistory.Concat(projectHistory);
+                previous = currentStamp;
+            }
+            var result = resultHistory.ToList();
+            var testItem = result.First();
+            int ii = 0;
+            foreach (var item in result) {
+                repo.GetProject(item.Branch, path, item.TimeStamp);
+                if (!IsDirEmpty(path))
+                    break;
+                ii++;
             }
         }
-    //    CloneOptions options = new CloneOptions();
-    //    var credentials = new UsernamePasswordCredentials();
-    //    credentials.Username = Constants.Identity.Name;
-    //        credentials.Password = "q1w2e3r4t5y6";
-    //        options.CredentialsProvider += (url, fromUrl, types) => credentials;
-
-    //        string clonedRepoPath = Repository.Clone(testUrl, scd.DirectoryPath, options);
-    //    string file = Path.Combine(scd.DirectoryPath, "testpush.txt");
-    //    var rbg = new RandomBufferGenerator(30000);
-    //        using (var repo = new Repository(clonedRepoPath)) {
-    //            for (int i = 0; i< 1; i++) {
-    //                var network = repo.Network.Remotes.First();
-    //FetchOptions fetchOptions = new FetchOptions();
-    //fetchOptions.CredentialsProvider += (url, fromUrl, types) => credentials;
-    //                repo.Fetch(network.Name, fetchOptions);
-
-    //                File.WriteAllBytes(file, rbg.GenerateBufferFromSeed(30000));
-    //                repo.Stage(file);
-    //                Signature author = Constants.Signature;
-
-    //Commit commit = repo.Commit($"Here's a commit {i + 1} i made!", author, author);
-    //PushOptions pushOptions = new PushOptions();
-    //pushOptions.CredentialsProvider += (url, fromUrl, types) => credentials;
-    //                repo.Network.Push(repo.Branches["master"], pushOptions);
-    //            }
-    //        }
-
+        bool IsDirEmpty(string path) {
+            return !Directory.EnumerateDirectories(path).Any(x => {
+                string dirName = Path.GetFileName(x);
+                return dirName != ".git";
+            });
+        }
         [Test]
         public void TestFindCreateBranchTimeStamp() {
             var repo = DXVcsConectionHelper.Connect(defaultConfig.AuxPath);
@@ -129,7 +107,7 @@ namespace DXVcs2Git.Tests {
             //var project = projectHistory.Where(x => x.History.Any(h => h.Message != null && h.Message.ToLowerInvariant().Contains("branch"))).ToList();
         }
         IEnumerable<HistoryItem> CalcProjectHistory(IEnumerable<ProjectHistoryInfo> history) {
-            return history.Reverse().GroupBy(x => x.ActionDate).OrderBy(x => x.First().ActionDate).Select(x => new HistoryItem(x.First().ActionDate, x.ToList()));
+            return history.Reverse().GroupBy(x => x.ActionDate).Select(x => new HistoryItem(x.First().ActionDate, x.ToList()));
         }
 
         static bool IsBranchCreatedTimeStamp(ProjectHistoryInfo x) {
