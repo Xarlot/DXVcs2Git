@@ -52,11 +52,13 @@
     <Compile Include="DXVcsServiceProvider.cs" />
     <Compile Include="FileDiffInfo.cs" />
     <Compile Include="FileHistory.cs" />
+    <Compile Include="FileSystem.cs" />
     <Compile Include="FileVersionInfo.cs" />
     <Compile Include="IBlameLine.cs" />
     <Compile Include="IDXVcsRepository.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="StringsDiff.cs" />
+    <Compile Include="VersionStorage.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
