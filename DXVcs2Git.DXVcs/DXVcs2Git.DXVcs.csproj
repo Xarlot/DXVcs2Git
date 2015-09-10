@@ -33,6 +33,10 @@
     <Reference Include="DXVCS">
       <HintPath>..\Lib\DXVcs\DXVCS.dll</HintPath>
     </Reference>
+    <Reference Include="DXVCSCore, Version=1.0.0.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\Lib\DXVcs\DXVCSCore.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.IdentityModel" />
@@ -45,6 +49,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AsyncWorks.cs" />
+    <Compile Include="ConsoleContactWithUser.cs" />
     <Compile Include="DXVcsConfig.cs" />
     <Compile Include="DXVcsConnectionHelper.cs" />
     <Compile Include="DXVcsRepository.cs" />
@@ -52,7 +58,6 @@
     <Compile Include="DXVcsServiceProvider.cs" />
     <Compile Include="FileDiffInfo.cs" />
     <Compile Include="FileHistory.cs" />
-    <Compile Include="FileSystem.cs" />
     <Compile Include="FileVersionInfo.cs" />
     <Compile Include="IBlameLine.cs" />
     <Compile Include="IDXVcsRepository.cs" />
