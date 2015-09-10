@@ -54,6 +54,7 @@ namespace DXVcs2Git.Tests {
         }
         [Test, Explicit]
         public void GetProjectHistoryForXpfCore152() {
+            string path = @"c:\test\";
             var repo = DXVcsConectionHelper.Connect(defaultConfig.AuxPath);
             List<string> branches = new List<string>() {
                 @"$/NET.OLD/2009.1/WPF/DevExpress.Wpf.Core",
@@ -77,17 +78,45 @@ namespace DXVcs2Git.Tests {
                 return history.First(IsBranchCreatedTimeStamp).ActionDate;
             }).ToList();
             DateTime previous = DateTime.MinValue;
+            var resultHistory = Enumerable.Empty<HistoryItem>();
             for (int i = 0; i < branchesCreatedTime.Count - 1; i++) {
                 DateTime currentStamp = branchesCreatedTime[i];
                 string branch = branches[i];
                 var history = repo.GetProjectHistory(branch, true, previous, currentStamp);
                 var projectHistory = CalcProjectHistory(history);
+                foreach (var historyItem in projectHistory) {
+                    historyItem.Branch = branch;
+                }
+                resultHistory = resultHistory.Concat(projectHistory);
             }
-
-            //var vcsPath = @"$/2015.2/XPF/DevExpress.Xpf.Core/DevExpress.Xpf.Core";
-            //var history = repo.GetProjectHistory(vcsPath81, true);
-            //var grouped = history.Reverse().GroupBy(x => x.ActionDate).OrderBy(x => x.First().ActionDate).Select(x => new HistoryItem(x.First().ActionDate, x.ToList()));
         }
+    //    CloneOptions options = new CloneOptions();
+    //    var credentials = new UsernamePasswordCredentials();
+    //    credentials.Username = Constants.Identity.Name;
+    //        credentials.Password = "q1w2e3r4t5y6";
+    //        options.CredentialsProvider += (url, fromUrl, types) => credentials;
+
+    //        string clonedRepoPath = Repository.Clone(testUrl, scd.DirectoryPath, options);
+    //    string file = Path.Combine(scd.DirectoryPath, "testpush.txt");
+    //    var rbg = new RandomBufferGenerator(30000);
+    //        using (var repo = new Repository(clonedRepoPath)) {
+    //            for (int i = 0; i< 1; i++) {
+    //                var network = repo.Network.Remotes.First();
+    //FetchOptions fetchOptions = new FetchOptions();
+    //fetchOptions.CredentialsProvider += (url, fromUrl, types) => credentials;
+    //                repo.Fetch(network.Name, fetchOptions);
+
+    //                File.WriteAllBytes(file, rbg.GenerateBufferFromSeed(30000));
+    //                repo.Stage(file);
+    //                Signature author = Constants.Signature;
+
+    //Commit commit = repo.Commit($"Here's a commit {i + 1} i made!", author, author);
+    //PushOptions pushOptions = new PushOptions();
+    //pushOptions.CredentialsProvider += (url, fromUrl, types) => credentials;
+    //                repo.Network.Push(repo.Branches["master"], pushOptions);
+    //            }
+    //        }
+
         [Test]
         public void TestFindCreateBranchTimeStamp() {
             var repo = DXVcsConectionHelper.Connect(defaultConfig.AuxPath);
@@ -107,7 +136,9 @@ namespace DXVcs2Git.Tests {
             return x.Message != null && x.Message.ToLowerInvariant() == "create";
         }
     }
-    class HistoryItem {
+
+    public class HistoryItem {
+        public string Branch { get; set; }
         public DateTime TimeStamp { get; private set; }
         public IList<ProjectHistoryInfo> History { get; private set; }
 
