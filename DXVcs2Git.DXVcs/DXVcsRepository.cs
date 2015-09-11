@@ -127,26 +127,445 @@ namespace DXVcs2Git.DXVcs {
             byte[] data = DXVCSHelpers.TryToDecompressData(Service.GetFileData(vcsFile, version));
             File.WriteAllBytes(fileName, data);
         }
+        //public void GetProject(string vcsPath, string localPath, DateTime timeStamp) {
+        //    if (string.IsNullOrEmpty(vcsPath))
+        //        throw new ArgumentException("vcsFile");
+        //    using (VcsClientCore vcsClientCore = new VcsClientCore(new FileSystem(), new ConsoleContactWithUser(true, true, false, true, true, null, null))) {
+        //        if (!VcsLogOn(vcsClientCore))
+        //            return;
+        //        vcsClientCore.GetLatestVersion(localPath, vcsPath, true, timeStamp, true, true, ReplaceWriteable.Replace, FileTime.Modification, new VcsClientBatchState());
+        //    }
+        //}
+        //bool VcsLogOn(VcsClientCore vcsClientCore) {
+        //    try {
+        //        vcsClientCore.LogOn(DefaultConfig.Config.AuxPath, false, false);
+        //        return true;
+        //    }
+        //    catch (Exception) {
+        //        return false;
+        //    }
+        //}
         public void GetProject(string vcsPath, string localPath, DateTime timeStamp) {
             if (string.IsNullOrEmpty(vcsPath))
                 throw new ArgumentException("vcsFile");
-            using (VcsClientCore vcsClientCore = new VcsClientCore(new FileSystem(), new ConsoleContactWithUser(true, true, false, true, true, null, null))) {
-                if (!VcsLogOn(vcsClientCore))
-                    return;
-                AsyncWorks async = new AsyncWorks(vcsClientCore);
-                Thread thread = async.GetLatestVersionThreaded(localPath, vcsPath, true, timeStamp.ToUniversalTime(), true, true, ReplaceWriteable.Default, FileTime.Current, true);
-                thread.Join();
-                //vcsClientCore.GetLatestVersion(localPath, vcsPath, true, timeStamp, true, true, ReplaceWriteable.Replace, FileTime.Modification, new VcsClientBatchState());
+            GetLatestVersion(vcsPath, localPath, true, timeStamp, true, true, ReplaceWriteable.Replace, FileTime.Current, new VcsClientBatchState());
+        }
+
+        public enum FileTime {
+            Default, Current, Modification, CheckIn
+        }
+        public enum ReplaceWriteable {
+            Default, Ask, Replace, Skip
+        } //, Merge TODO
+        class BlockInfo {
+            public int MagicPos;
+            public int BlockIndex;
+            public int[] Paths;
+            public FileStateInfo2[] Info;
+            public bool Last;
+        }
+        public enum FileBaseInfoState {
+            Exists = 0x00,
+            Missing = 0x01,
+            Modified = 0x02,
+            Outdated = 0x03,
+            NeedMerge = 0x04,
+            Locked = 0x05,
+            Error = 0x06
+        }
+
+        public bool GetLatestVersion(string vcsPath, string localProjectPath, bool buildTree, object option, bool recursive, bool makeWritable, ReplaceWriteable replaceWriteableState, FileTime fileTimeState, VcsClientBatchState batchState) {
+            CleanUpDirectory(localProjectPath);
+
+            Queue<Exception> exceptionQueue = new Queue<Exception>();
+            vcsPath = HelperPaths.RemoveFinishSlash(vcsPath);
+            localProjectPath = HelperPaths.RemoveFinishSlash(localProjectPath);
+            AutoResetEvent getDataEvent = new AutoResetEvent(true);
+            AutoResetEvent decompressEvent = new AutoResetEvent(true);
+            AutoResetEvent saveEvent = new AutoResetEvent(true);
+            AutoResetEvent getBlockEvent = new AutoResetEvent(false);
+            int magicCount;
+            string id = Service.Get(Environment.MachineName, vcsPath, option, recursive, out magicCount);
+            AccessDeniedInfo[] accessList = Service.TakeAccessInfo(id);
+            if (accessList != null) {
+                string path = vcsPath.TrimEnd('/');
+                foreach (AccessDeniedInfo accessInfo in accessList) {
+                    string message = string.Format("Resources.NoGetProjectPermissions", DateTime.Now.ToString(), path, accessInfo.ObjectName);
+                }
+            }
+            Dictionary<string, string> localPathDict = new Dictionary<string, string>(StringComparer.InvariantCultureIgnoreCase);
+            bool cancel = false;
+            ManualResetEvent touchEvent = StartTouchThread(id);
+            int lastMagic = 0;
+            BlockInfo blockInfo = new BlockInfo();
+            QueueBlock(id, getBlockEvent, blockInfo, exceptionQueue);
+            List<string> pathList = new List<string>();
+            try {
+                while (true) {
+                    getBlockEvent.WaitOne();
+                    ProcessException(exceptionQueue);
+                    if (!blockInfo.Last)
+                        break;
+                    int magicPos = blockInfo.MagicPos;
+                    int blockIndex = blockInfo.BlockIndex;
+                    int[] paths = blockInfo.Paths;
+                    FileStateInfo2[] info = blockInfo.Info;
+                    QueueBlock(id, getBlockEvent, blockInfo, exceptionQueue);
+                    if (paths != null && blockIndex >= 0) {
+                        bool[] restData = new bool[paths.Length];
+                        string[] localPath = new string[paths.Length];
+                        string[] path = new string[paths.Length];
+                        DateTime[] fileTime = new DateTime[paths.Length];
+                        bool[] setNormal = new bool[paths.Length];
+                        bool[] fileExists = new bool[paths.Length];
+                        bool[] doCheckOut = new bool[paths.Length];
+                        bool doGetData = false;
+                        bool wasCheckOut = false;
+                        double step = ((double)magicPos - lastMagic) / paths.Length;
+                        string curProject = string.Empty;
+                        DateTime curProjectDate = DateTime.MinValue;
+                        for (int i = 0; i < paths.Length; i++) {
+                            if (info[i].IsNull) {
+                                string curPostProject = HelperPaths.RemoveFinishSlash(info[i].Name);
+                                pathList.Add(curPostProject);
+                                if (!string.IsNullOrEmpty(curPostProject)) {
+                                    curProject = vcsPath + "/" + curPostProject;
+                                }
+                                else {
+                                    curProject = vcsPath;
+                                }
+                                string curLocalFolder;
+                                if (buildTree) {
+                                    curLocalFolder = localProjectPath + @"\" + curPostProject.Replace('/', '\\');
+                                }
+                                else {
+                                    curLocalFolder = info[i].CheckOutFolder; //Hack ;)
+                                }
+                                curLocalFolder = HelperPaths.RemoveFinishSlash(curLocalFolder);
+                                CreateDirectory(curLocalFolder);
+                                localPathDict.Add(curProject, curLocalFolder);
+                            }
+                            else {
+                                string curPostProject = pathList[paths[i]];
+                                string nextProject = HelperPaths.Combine(vcsPath, curPostProject);
+                                if (nextProject != curProject) {
+                                    curProject = nextProject;
+                                    curProjectDate = DateTime.MinValue;
+                                }
+                                string curLocalFolder;
+                                if (localPathDict.TryGetValue(curProject, out curLocalFolder)) {
+                                    string curFileName = info[i].Name;
+                                    string curLocalPath = curLocalFolder + @"\" + curFileName;
+                                    string curPath = curProject + "/" + curFileName;
+                                    try {
+                                        FileAttributes fa;
+                                        DateTime fileModification;
+                                        if (fileSystem.GetAttributes(curLocalPath, out fa, out fileModification)) {
+                                            fileExists[i] = true;
+                                            FileBaseInfoState fileState;
+                                            bool needWrite = GetLocalFileModified(info[i], curLocalPath, curPath, curProjectDate, out fileState, fileModification);
+                                            if (!needWrite && fileState == FileBaseInfoState.Locked) {
+                                                continue;
+                                            }
+                                            if ((fa & FileAttributes.ReadOnly) == FileAttributes.ReadOnly) {
+                                                if (needWrite) {
+                                                    doGetData = true;
+                                                    restData[i] = true;
+                                                    localPath[i] = curLocalPath;
+                                                    path[i] = curPath;
+                                                    fileTime[i] = SelectFileTime(info[i], fileTimeState);
+                                                }
+                                                continue;
+                                            }
+                                            if ((makeWritable) && !needWrite)
+                                                continue;
+                                            if (batchState.ActionToExistFile.Action == ActionWithCopy.Replace) {
+                                                doGetData = true;
+                                                restData[i] = needWrite;
+                                                localPath[i] = curLocalPath;
+                                                path[i] = curPath;
+                                                fileTime[i] = SelectFileTime(info[i], fileTimeState);
+                                                continue;
+                                            }
+                                            if (batchState.ActionToExistFile.Action == ActionWithCopy.Leave) { continue; }
+                                            if (batchState.ActionToExistFile.Action == ActionWithCopy.CheckOut) {
+                                                localPath[i] = curLocalPath;
+                                                path[i] = curPath;
+                                                doCheckOut[i] = true;
+                                                wasCheckOut = true;
+                                                setNormal[i] = true;
+                                            }
+                                        }
+                                        else
+                                            if (fileSystem.DirectoryExists(curLocalFolder)) {
+                                            doGetData = true;
+                                            restData[i] = true;
+                                            localPath[i] = curLocalPath;
+                                            path[i] = curPath;
+                                            bool differentHost;
+                                            setNormal[i] = (makeWritable || info[i].CheckedOut) && info[i].CheckedOutMe && EqualsCheckOutParams(info[i], curLocalPath, out differentHost);
+                                            fileTime[i] = SelectFileTime(info[i], fileTimeState);
+                                        }
+                                    }
+                                    finally {
+                                        if (makeWritable) {
+                                            doGetData = true;
+                                            localPath[i] = curLocalPath;
+                                            setNormal[i] = true;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        if (doGetData) {
+                            Service.GetBlockDataReq(id, blockIndex, restData);
+                            getDataEvent.WaitOne();
+                            getDataEvent.Set();
+                            ProcessException(exceptionQueue);
+                            getDataEvent.Reset();
+                            QueueAll(id, blockIndex, getDataEvent, decompressEvent, saveEvent, localPath, path, fileTime, doCheckOut, setNormal, fileExists, exceptionQueue, step);
+                        }
+                        else {
+                            getDataEvent.WaitOne();
+                            ProcessException(exceptionQueue);
+                            getDataEvent.Set();
+                        }
+                        if (wasCheckOut) {
+                            List<string> pathToCheckOut = new List<string>();
+                            List<string> localPathToCheckOut = new List<string>();
+                            List<string> commentToCheckOut = new List<string>();
+                            for (int i = 0; i < path.Length; i++) {
+                                if (doCheckOut[i]) {
+                                    pathToCheckOut.Add(path[i]);
+                                    localPathToCheckOut.Add(HelperPaths.GetDirectory(localPath[i]));
+                                    commentToCheckOut.Add(string.Empty);
+                                }
+                            }
+                            string checkOutId = Service.CheckOut(System.Environment.MachineName, pathToCheckOut.ToArray(), localPathToCheckOut.ToArray(), commentToCheckOut.ToArray(), null);
+                            Dictionary<int, AccessDeniedInfo> accessDict = CreateAccessDict(Service.TakeAccessInfo(checkOutId));
+                            for (int i = 0; i < localPathToCheckOut.Count; i++) {
+                                string local = HelperPaths.Combine(localPathToCheckOut[i], HelperPaths.GetFile(pathToCheckOut[i]));
+                                if (accessDict == null || !accessDict.ContainsKey(i)) {
+                                    fileSystem.SetAttributes(local, FileAttributes.Normal);
+                                }
+                                else {
+                                    string message = string.Format("Resources.NoCheckOutFilePermissions", DateTime.Now, pathToCheckOut[i]);
+                                }
+                            }
+                        }
+                        lastMagic = magicPos;
+                    }
+                }
+            }
+            finally {
+                getDataEvent.WaitOne();
+                decompressEvent.WaitOne();
+                saveEvent.WaitOne();
+                touchEvent.Set();
+                if (!cancel)
+                    Service.ConfirmGetEnd(id);
+            }
+            return true;
+        }
+        void CleanUpDirectory(string localProjectPath) {
+            CreateDirectory(localProjectPath);
+            foreach (var file in Directory.EnumerateFiles(localProjectPath))
+                File.Delete(file);
+            foreach (var dir in Directory.EnumerateDirectories(localProjectPath)) {
+                string dirName = Path.GetFileName(dir);
+                if (dirName == ".git")
+                    continue;
+                Directory.Delete(dir, true);
             }
         }
-        bool VcsLogOn(VcsClientCore vcsClientCore) {
-            try {
-                vcsClientCore.LogOn(DefaultConfig.Config.AuxPath, false, false);
-                return true;
+        static Dictionary<int, AccessDeniedInfo> CreateAccessDict(AccessDeniedInfo[] accessList) {
+            if (accessList == null)
+                return null;
+            Dictionary<int, AccessDeniedInfo> accessDict = new Dictionary<int, AccessDeniedInfo>();
+            foreach (AccessDeniedInfo accessInfo in accessList) {
+                if (accessInfo.Data != null && accessInfo.Data is int) {
+                    accessDict.Add((int)accessInfo.Data, accessInfo);
+                }
             }
-            catch (Exception) {
+            return accessDict;
+        }
+
+        void QueueAll(string id, int blockIndex, AutoResetEvent getDataEvent, AutoResetEvent decompressEvent, AutoResetEvent saveEvent,
+                            string[] localPath, string[] path, DateTime[] fileTime, bool[] doCheckOut, bool[] setNormal, bool[] fileExists, Queue<Exception> exceptionQueue, double step) {
+
+            byte[][] data;
+            try {
+                try {
+                    do {
+                        data = Service.GetBlockData(id, blockIndex, false);
+                    } while (data == null);
+                    decompressEvent.WaitOne();
+                }
+                finally {
+                    getDataEvent.Set();
+                }
+                try {
+                    for (int i = 0; i < data.Length; i++) {
+                        if (data[i] == null) { continue; }
+                        data[i] = DXVCSHelpers.TryToDecompressData(data[i]);
+                    }
+                    saveEvent.WaitOne();
+                }
+                finally {
+                    decompressEvent.Set();
+                }
+                try {
+                    for (int i = 0; i < data.Length; i++) {
+                        if (data[i] == null || localPath[i] == null || path[i] == null || doCheckOut[i]) {
+                            if (localPath[i] != null && fileSystem.Exists(localPath[i])) {
+                                if (setNormal[i])
+                                    fileSystem.SetAttributes(localPath[i], FileAttributes.Normal);
+                                else
+                                    fileSystem.SetAttributes(localPath[i], FileAttributes.ReadOnly);
+                            }
+                            continue;
+                        }
+                        GetLatestReplaceFile(new FileDataLocation(path[i], localPath[i], data[i]), fileTime[i], fileExists[i], null);
+                        if ((setNormal[i]) && localPath[i] != null && fileSystem.Exists(localPath[i]))
+                            fileSystem.SetAttributes(localPath[i], FileAttributes.Normal);
+                    }
+                }
+                finally {
+                    saveEvent.Set();
+                }
+            }
+            catch (DXVCSGetNextTimeoutException) { }
+            catch (Exception ex) {
+                lock (exceptionQueue) {
+                    exceptionQueue.Enqueue(ex);
+                }
+            }
+        }
+        public void GetLatestReplaceFile(FileDataLocation fileLocation, DateTime fileTime, bool? exists, bool? checkedOut) {
+            if (exists == null)
+                exists = fileSystem.Exists(fileLocation.LocalPath);
+            fileSystem.WriteAllBytes(fileLocation.LocalPath, fileLocation.Data);
+            if (fileTime != DateTime.MinValue) {
+                fileSystem.SetLastWriteTimeUtc(fileLocation.LocalPath, fileTime);
+            }
+            if (!(checkedOut.HasValue && checkedOut.Value)) {
+                fileSystem.SetAttributes(fileLocation.LocalPath, FileAttributes.ReadOnly);
+            }
+        }
+        public class FileDataLocation : FileLocation {
+            public byte[] Data;
+            public string FileName {
+                get { return HelperPaths.GetFile(this.Path); }
+            }
+            public FileDataLocation(string path, string localPath, byte[] data)
+                : base(path, localPath) {
+                this.Data = data;
+            }
+            public FileDataLocation(string path, string localPath, FileStateInfo info, byte[] data)
+                : base(path, localPath, info) {
+                this.Data = data;
+            }
+        }
+        DateTime SelectFileTime(FileStateInfo info, FileTime fileTimeState) {
+            switch (fileTimeState) {
+                case FileTime.CheckIn:
+                    return info.VersionDate;
+                case FileTime.Modification:
+                    return info.ModifiedOn;
+            }
+            return DateTime.UtcNow;
+        }
+        public class VcsClientBatchState {
+            public ActionToWritableCopy ActionToExistFile = new ActionToWritableCopy(ActionWithCopy.Replace, false);
+            public ActionToWritableCopy ActionToCheckedOutFile = new ActionToWritableCopy(ActionWithCopy.Leave, false);
+        }
+        public enum ActionWithCopy {
+            Leave, Replace, CheckOut, CheckOutMerge, Merge
+        };
+        public class ActionToWritableCopy {
+            bool applyToAll;
+            ActionWithCopy action;
+
+            public ActionWithCopy Action {
+                get { return action; }
+            }
+            public bool ApplyToAll {
+                get { return applyToAll; }
+            }
+            public ActionToWritableCopy(ActionWithCopy action, bool applyToAll) {
+                this.action = action;
+                this.applyToAll = applyToAll;
+            }
+        }
+        public class FileLocation {
+            public string Path;
+            public string LocalPath;
+            public FileStateInfo? Info;
+            public FileLocation(string path, string localPath) {
+                this.Path = path;
+                this.LocalPath = localPath;
+            }
+            public FileLocation(string path, string localPath, FileStateInfo info) : this(path, localPath) {
+                this.Info = info;
+            }
+        }
+        bool EqualsCheckOutParams(FileStateInfo fsi, FileLocation fl, out bool differentHost) {
+            return EqualsCheckOutParams(fsi, fl.LocalPath, out differentHost);
+        }
+        bool EqualsCheckOutParams(FileStateInfo fsi, string localPath, out bool differentHost) {
+            differentHost = !string.Equals(fsi.CheckOutHost, Environment.MachineName, StringComparison.CurrentCultureIgnoreCase);
+            return string.Equals(fsi.CheckOutFolder, HelperPaths.GetDirectory(localPath), StringComparison.CurrentCultureIgnoreCase)
+                && !differentHost;
+        }
+        public bool GetLocalFileModified(FileStateInfo info, string localPath, string vcsPath, DateTime projectDate, out FileBaseInfoState fileState, DateTime lastWrite) {
+            try {
+                using (Stream fileStream = fileSystem.OpenRead(localPath)) {
+                    byte[] localHash = DXVCSHelpers.GetHashMD5(fileStream);
+                    bool hashEquals = DXVCSHelpers.BytesAreEquals(localHash, info.Hash);
+                    fileState = FileBaseInfoState.Modified;
+                    return !hashEquals;
+                }
+            }
+            catch (IOException) {
+                fileState = FileBaseInfoState.Locked;
                 return false;
             }
+        }
+        void CreateDirectory(string curLocalFolder) {
+            fileSystem.CreateDirectory(curLocalFolder);
+        }
+        static void ProcessException(Queue<Exception> exceptionQueue) {
+            lock (exceptionQueue) {
+                if (exceptionQueue.Count > 0) {
+                    Exception ex = exceptionQueue.Dequeue();
+                    if (ex != null)
+                        throw new DXVCSException("In process thread error.", ex);
+                }
+            }
+        }
+        ManualResetEvent StartTouchThread(string id) {
+            ManualResetEvent waitEvent = new ManualResetEvent(false);
+            ThreadPool.QueueUserWorkItem(new WaitCallback(delegate (object o) {
+                try {
+                    while (!waitEvent.WaitOne(30000, false)) {
+                        Service.TouchSession(id);
+                    }
+                }
+                catch (Exception) { }
+            }));
+            return waitEvent;
+        }
+        void QueueBlock(string id, AutoResetEvent getBlockEvent, BlockInfo info, Queue<Exception> exceptionQueue) {
+            try {
+                info.Last = Service.GetNextBlockInfo2(id, out info.BlockIndex, out info.Paths, out info.Info, out info.MagicPos);
+            }
+            catch (DXVCSGetNextTimeoutException) { }
+            catch (Exception ex) {
+                lock (exceptionQueue) {
+                    exceptionQueue.Enqueue(ex);
+                }
+            }
+            getBlockEvent.Set();
         }
 
         public void CheckOutFile(string vcsFile, string localFile, string comment) {

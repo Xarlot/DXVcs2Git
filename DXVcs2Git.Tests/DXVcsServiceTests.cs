@@ -80,13 +80,11 @@ namespace DXVcs2Git.Tests {
                 previous = currentStamp;
             }
             var result = resultHistory.ToList();
-            var testItem = result.First();
-            int ii = 0;
             foreach (var item in result) {
                 repo.GetProject(item.Branch, path, item.TimeStamp);
-                if (!IsDirEmpty(path))
-                    break;
-                ii++;
+                if (IsDirEmpty(path))
+                    continue;
+
             }
         }
         bool IsDirEmpty(string path) {
