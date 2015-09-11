@@ -14,18 +14,17 @@ namespace DXvcs2Git.Console {
         static string path = @"z:\test\";
         static string testUrl = "http://litvinov-lnx/tester/testxpfall.git";
         static void Main(string[] args) {
-
             var repo = DXVcsConectionHelper.Connect(DefaultConfig.Config.AuxPath);
             List<string> branches = new List<string>() {
-                @"$/NET.OLD/2010.1/XPF/DevExpress.Xpf.Core",
-                @"$/NET.OLD/2010.2/XPF/DevExpress.Xpf.Core",
-                @"$/NET.OLD/2011.1/XPF/DevExpress.Xpf.Core",
-                @"$/NET.OLD/2011.2/XPF/DevExpress.Xpf.Core",
-                @"$/NET.OLD/2012.1/XPF/DevExpress.Xpf.Core",
-                @"$/NET.OLD/2012.2/XPF/DevExpress.Xpf.Core",
-                @"$/NET.OLD/2013.1/XPF/DevExpress.Xpf.Core",
-                @"$/NET.OLD/2013.2/XPF/DevExpress.Xpf.Core",
-                @"$/2014.1/XPF/DevExpress.Xpf.Core",
+                //@"$/NET.OLD/2010.1/XPF/DevExpress.Xpf.Core",
+                //@"$/NET.OLD/2010.2/XPF/DevExpress.Xpf.Core",
+                //@"$/NET.OLD/2011.1/XPF/DevExpress.Xpf.Core",
+                //@"$/NET.OLD/2011.2/XPF/DevExpress.Xpf.Core",
+                //@"$/NET.OLD/2012.1/XPF/DevExpress.Xpf.Core",
+                //@"$/NET.OLD/2012.2/XPF/DevExpress.Xpf.Core",
+                //@"$/NET.OLD/2013.1/XPF/DevExpress.Xpf.Core",
+                //@"$/NET.OLD/2013.2/XPF/DevExpress.Xpf.Core",
+                //@"$/2014.1/XPF/DevExpress.Xpf.Core",
                 @"$/2014.2/XPF/DevExpress.Xpf.Core",
                 @"$/2015.1/XPF/DevExpress.Xpf.Core",
                 @"$/2015.2/XPF/DevExpress.Xpf.Core",
