@@ -1,14 +1,15 @@
 ﻿using System;
+using System.Linq;
 using DXVcs2Git.Core;
 using LibGit2Sharp;
 
 namespace DXVcs2Git {
     public class GitWrapper : IDisposable {
-        string path;
-        Credentials credentials;
-        string repoPath;
-        string gitPath;
-        Repository repo;
+        readonly string path;
+        readonly Credentials credentials;
+        readonly string repoPath;
+        readonly string gitPath;
+        readonly Repository repo;
         public GitWrapper(string path, string gitPath, Credentials credentials) {
             this.path = path;
             this.credentials = credentials;
@@ -23,11 +24,17 @@ namespace DXVcs2Git {
             CloneOptions options = new CloneOptions();
             options.CredentialsProvider += (url, fromUrl, types) => credentials;
             string clonedRepoPath = Repository.Clone(gitPath, path, options);
-            System.Console.WriteLine($"========   Git repo Initialized   ===========");
+            Log.Message($"Git repo {clonedRepoPath} initialized");
             return clonedRepoPath;
         }
         public void Dispose() {
-            throw new NotImplementedException();
+        }
+        public void Fetch() {
+            var network = repo.Network.Remotes.First();
+            FetchOptions fetchOptions = new FetchOptions();
+            fetchOptions.CredentialsProvider += (url, fromUrl, types) => credentials;
+            repo.Fetch(network.Name, fetchOptions);
+            Log.Message("Git fetch performed");
         }
     }
 }
