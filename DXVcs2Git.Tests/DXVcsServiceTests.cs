@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Security.Policy;
+using DXVcs2Git.Core;
 using DXVcs2Git.DXVcs;
 using DXVCS;
 using NUnit.Framework;
@@ -11,16 +12,14 @@ using NUnit.Framework;
 namespace DXVcs2Git.Tests {
     [TestFixture]
     public class DXVcsServiceTests {
-        DXVcsConfig defaultConfig = new DXVcsConfig() { AuxPath = @"net.tcp://vcsservice.devexpress.devx:9091/DXVCSService" };
-
         [Test]
         public void SimpleStart() {
-            var repo = DXVcsConectionHelper.Connect(defaultConfig.AuxPath);
+            var repo = DXVcsConectionHelper.Connect(DefaultConfig.Config.AuxPath);
             Assert.IsNotNull(repo);
         }
         [Test]
         public void GetProjectHistoryFromTestHistory() {
-            var repo = DXVcsConectionHelper.Connect(defaultConfig.AuxPath);
+            var repo = DXVcsConectionHelper.Connect(DefaultConfig.Config.AuxPath);
             var history = repo.GetProjectHistory(@"$/Sandbox/litvinov/DXVcsTest/testhistory", true, new DateTime(2015, 9, 9), new DateTime(2015, 9, 10));
             Assert.AreEqual(3, history.Count());
             Assert.AreEqual(@"9/9/2015 7:30:57 PM,,,Create,,Project,Litvinov,1", FormatProjectHistoryItem(history[0]));
@@ -32,14 +31,14 @@ namespace DXVcs2Git.Tests {
         }
         [Test]
         public void GroupHistoryByTimeStampInFolderIfAddingOneFile() {
-            var repo = DXVcsConectionHelper.Connect(defaultConfig.AuxPath);
+            var repo = DXVcsConectionHelper.Connect(DefaultConfig.Config.AuxPath);
             var history = repo.GetProjectHistory(@"$/Sandbox/litvinov/DXVcsTest/testhistory", true, new DateTime(2015, 9, 9), new DateTime(2015, 9, 10));
             var grouped = history.GroupBy(x => x.ActionDate).ToList();
             Assert.AreEqual(3, grouped.Count);
         }
         [Test]
         public void GroupHistoryByTimeStampInFolderIfAddingTwoFiles() {
-            var repo = DXVcsConectionHelper.Connect(defaultConfig.AuxPath);
+            var repo = DXVcsConectionHelper.Connect(DefaultConfig.Config.AuxPath);
             var history = repo.GetProjectHistory(@"$/Sandbox/litvinov/DXVcsTest/testhistorybyaddingtwofiles", true, new DateTime(2015, 9, 9), new DateTime(2015, 9, 10));
             var grouped = history.GroupBy(x => x.ActionDate).ToList();
             Assert.AreEqual(4, grouped.Count);
@@ -51,12 +50,12 @@ namespace DXVcs2Git.Tests {
         }
         [Test]
         public void GetProjectForTimeStamp() {
-            var repo = DXVcsConectionHelper.Connect(defaultConfig.AuxPath);
+            var repo = DXVcsConectionHelper.Connect(DefaultConfig.Config.AuxPath);
         }
         [Test, Explicit]
         public void GetProjectHistoryForXpfCore152() {
             string path = @"c:\test\";
-            var repo = DXVcsConectionHelper.Connect(defaultConfig.AuxPath);
+            var repo = DXVcsConectionHelper.Connect(DefaultConfig.Config.AuxPath);
             List<string> branches = new List<string>() {
                 @"$/NET.OLD/2010.1/XPF/DevExpress.Xpf.Core",
                 @"$/NET.OLD/2010.2/XPF/DevExpress.Xpf.Core",
@@ -72,7 +71,7 @@ namespace DXVcs2Git.Tests {
                 DateTime currentStamp = branchesCreatedTime[i + 1];
                 string branch = branches[i];
                 var history = repo.GetProjectHistory(branch, true, previous, currentStamp);
-                var projectHistory = CalcProjectHistory(history).Where(x => x.TimeStamp >= previous && x.TimeStamp < currentStamp).OrderBy(x => x.TimeStamp).ToList();
+                var projectHistory = CalcProjectHistory(history).Where(x => x.ActionDate >= previous && x.ActionDate < currentStamp).OrderBy(x => x.ActionDate).ToList();
                 foreach (var historyItem in projectHistory) {
                     historyItem.Branch = branch;
                 }
@@ -81,7 +80,7 @@ namespace DXVcs2Git.Tests {
             }
             var result = resultHistory.ToList();
             foreach (var item in result) {
-                repo.GetProject(item.Branch, path, item.TimeStamp);
+                repo.GetProject(item.Branch, path, item.ActionDate);
                 if (IsDirEmpty(path))
                     continue;
 
@@ -95,7 +94,7 @@ namespace DXVcs2Git.Tests {
         }
         [Test]
         public void TestFindCreateBranchTimeStamp() {
-            var repo = DXVcsConectionHelper.Connect(defaultConfig.AuxPath);
+            var repo = DXVcsConectionHelper.Connect(DefaultConfig.Config.AuxPath);
             var vcsPath = @"$/2014.1/XPF/DevExpress.Xpf.Core/DevExpress.Xpf.Core";
             var history = repo.GetProjectHistory(vcsPath, true);
             var create = history.Where(IsBranchCreatedTimeStamp).ToList();
@@ -105,22 +104,21 @@ namespace DXVcs2Git.Tests {
             //var project = projectHistory.Where(x => x.History.Any(h => h.Message != null && h.Message.ToLowerInvariant().Contains("branch"))).ToList();
         }
         IEnumerable<HistoryItem> CalcProjectHistory(IEnumerable<ProjectHistoryInfo> history) {
-            return history.Reverse().GroupBy(x => x.ActionDate).Select(x => new HistoryItem(x.First().ActionDate, x.ToList()));
+            return history.Reverse().GroupBy(x => x.ActionDate).Select(x => new HistoryItem() { ActionDate = x.First().ActionDate });
         }
 
         static bool IsBranchCreatedTimeStamp(ProjectHistoryInfo x) {
             return x.Message != null && x.Message.ToLowerInvariant() == "create";
         }
-    }
-
-    public class HistoryItem {
-        public string Branch { get; set; }
-        public DateTime TimeStamp { get; private set; }
-        public IList<ProjectHistoryInfo> History { get; private set; }
-
-        public HistoryItem(DateTime timeStamp, IList<ProjectHistoryInfo> info) {
-            TimeStamp = timeStamp;
-            History = info;
+        [Test]
+        public void HistoryGeneratorTest() {
+            string configString = "$/2015.1/DB.Standard";
+            TrackConfig config = new TrackConfig(configString);
+            var tracker = new Tracker(config.TrackItems);
+            var history = HistoryGenerator.GenerateHistory(DefaultConfig.Config.AuxPath, tracker.Branches[0]);
+            var commits = HistoryGenerator.GenerateCommits(history);
+            Assert.Greater( commits.Count, 0);
         }
+
     }
 }

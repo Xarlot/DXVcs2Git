@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using DXVcs2Git;
+using DXVcs2Git.Core;
 using DXVcs2Git.DXVcs;
 using DXVcs2Git.Tests;
 using DXVcs2Git.Tests.TestHelpers;
@@ -29,48 +30,48 @@ namespace DXVcs2Git.Console {
             }).Concat(new[] {DateTime.Now}).ToList();
             System.Console.WriteLine($"========   Completed generating branch timings   ===========");
             System.Console.WriteLine($"========   Start generating project history   ===========");
-            var resultHistory = Enumerable.Empty<HistoryItem>();
-            DateTime previousStamp = branchesCreatedTime[0];
-            for (int i = 0; i < branches.Count; i++) {
-                DateTime currentStamp = branchesCreatedTime[i + 1];
-                string branch = branches[i];
-                System.Console.WriteLine($"========   Start generating project history for brahch {branch}  ===========");
-                var history = repo.GetProjectHistory(branch, true, previousStamp, currentStamp);
-                System.Console.WriteLine($"========   Completed generating project history for brahch {branch}  ===========");
+            //var resultHistory = Enumerable.Empty<HistoryItem>();
+            //DateTime previousStamp = branchesCreatedTime[0];
+            //for (int i = 0; i < branches.Count; i++) {
+            //    DateTime currentStamp = branchesCreatedTime[i + 1];
+            //    string branch = branches[i];
+            //    System.Console.WriteLine($"========   Start generating project history for brahch {branch}  ===========");
+            //    var history = repo.GetProjectHistory(branch, true, previousStamp, currentStamp);
+            //    System.Console.WriteLine($"========   Completed generating project history for brahch {branch}  ===========");
 
-                var projectHistory = CalcProjectHistory(history).Where(x => x.TimeStamp >= previousStamp && x.TimeStamp <= currentStamp).ToList();
-                foreach (var historyItem in projectHistory) {
-                    historyItem.Branch = branch;
-                }
-                resultHistory = resultHistory.Concat(projectHistory);
-                previousStamp = currentStamp;
-            }
-            resultHistory = resultHistory.ToList();
-            System.Console.WriteLine($"========   Completed generating project history   ===========");
-            InitUserCredentials();
-            GitWrapper gitRepo = new GitWrapper(path, testUrl, credentials);
-            System.Console.WriteLine($"========   Start updating git repo    ===========");
-            gitRepo.Fetch();
-            System.Console.WriteLine($"========   Startup git fetch completed   ===========");
-            foreach (var item in resultHistory) {
-                System.Console.WriteLine($"========   Start updating project {item.Branch} {item.TimeStamp} ===========");
-                CleanUpDir(path);
-                repo.GetProject(item.Branch, path, item.TimeStamp);
-                System.Console.WriteLine($"========   Completed updating project   ===========");
-                if (IsDirEmpty(path)) {
-                    System.Console.WriteLine($"========   No history for {item.Branch}  {item.TimeStamp}  ===========");
-                    continue;
-                }
-                PreprocessRepo(path);
+            //    var projectHistory = CalcProjectHistory(history).Where(x => x.ActionDate >= previousStamp && x.ActionDate <= currentStamp).ToList();
+            //    foreach (var historyItem in projectHistory) {
+            //        historyItem.Branch = branch;
+            //    }
+            //    resultHistory = resultHistory.Concat(projectHistory);
+            //    previousStamp = currentStamp;
+            //}
+            //resultHistory = resultHistory.ToList();
+            //System.Console.WriteLine($"========   Completed generating project history   ===========");
+            //InitUserCredentials();
+            //GitWrapper gitRepo = new GitWrapper(path, testUrl, credentials);
+            //System.Console.WriteLine($"========   Start updating git repo    ===========");
+            //gitRepo.Fetch();
+            //System.Console.WriteLine($"========   Startup git fetch completed   ===========");
+            //foreach (var item in resultHistory) {
+            //    System.Console.WriteLine($"========   Start updating project {item.Branch} {item.TimeStamp} ===========");
+            //    CleanUpDir(path);
+            //    repo.GetProject(item.Branch, path, item.ActionDate);
+            //    System.Console.WriteLine($"========   Completed updating project   ===========");
+            //    if (IsDirEmpty(path)) {
+            //        System.Console.WriteLine($"========   No history for {item.Branch}  {item.TimeStamp}  ===========");
+            //        continue;
+            //    }
+            //    PreprocessRepo(path);
 
-                gitRepo.Fetch();
-                gitRepo.Stage("*");
+            //    gitRepo.Fetch();
+            //    gitRepo.Stage("*");
 
-                string user = item.History.First().User;
-                gitRepo.Commit(CalcComment(item), user, item.TimeStamp);
+            //    string user = item.Items.First().User;
+            //    gitRepo.Commit(CalcComment(item), user, item.TimeStamp);
 
-                gitRepo.Push("master");
-            }
+            //    gitRepo.Push("master");
+            //}
         }
         static void CleanUpDir(string path) {
             string gitPath = Path.Combine(path, ".git");
@@ -103,11 +104,11 @@ namespace DXVcs2Git.Console {
                 return dirName != ".git";
             });
         }
-        static string CalcComment(HistoryItem item) {
-            var messageItem = item.History.FirstOrDefault(x => !string.IsNullOrEmpty(x.Message));
+        static string CalcComment(CommitItem item) {
+            var messageItem = item.Items.FirstOrDefault(x => !string.IsNullOrEmpty(x.Message));
             if (!string.IsNullOrEmpty(messageItem.Message))
                 return messageItem.Message;
-            var commentItem = item.History.FirstOrDefault(x => !string.IsNullOrEmpty(x.Comment));
+            var commentItem = item.Items.FirstOrDefault(x => !string.IsNullOrEmpty(x.Comment));
             if (!string.IsNullOrEmpty(commentItem.Comment))
                 return commentItem.Comment;
             return string.Empty;
@@ -122,9 +123,9 @@ namespace DXVcs2Git.Console {
         static bool IsBranchCreatedTimeStamp(ProjectHistoryInfo x) {
             return x.Message != null && x.Message.ToLowerInvariant() == "create";
         }
-        static IEnumerable<HistoryItem> CalcProjectHistory(IEnumerable<ProjectHistoryInfo> history) {
-            return history.Reverse().GroupBy(x => x.ActionDate).OrderBy(x => x.First().ActionDate).Select(x => new HistoryItem(x.First().ActionDate, x.ToList()));
-        }
+        //static IEnumerable<HistoryItem> CalcProjectHistory(IEnumerable<ProjectHistoryInfo> history) {
+        //    return history.Reverse().GroupBy(x => x.ActionDate).OrderBy(x => x.First().ActionDate).Select(x => new HistoryItem()x.First().ActionDate, x.ToList()));
+        //}
     }
 
 }

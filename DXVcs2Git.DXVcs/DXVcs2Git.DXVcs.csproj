@@ -51,7 +51,6 @@
   <ItemGroup>
     <Compile Include="AsyncWorks.cs" />
     <Compile Include="ConsoleContactWithUser.cs" />
-    <Compile Include="DXVcsConfig.cs" />
     <Compile Include="DXVcsConnectionHelper.cs" />
     <Compile Include="DXVcsRepository.cs" />
     <Compile Include="DXVcsRepositoryFactory.cs" />
@@ -59,6 +58,7 @@
     <Compile Include="FileDiffInfo.cs" />
     <Compile Include="FileHistory.cs" />
     <Compile Include="FileVersionInfo.cs" />
+    <Compile Include="HistoryGenerator.cs" />
     <Compile Include="IBlameLine.cs" />
     <Compile Include="IDXVcsRepository.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

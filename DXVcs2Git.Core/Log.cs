@@ -7,5 +7,8 @@ namespace DXVcs2Git.Core {
         public static void Message(string message, Exception ex = null) {
             log.Info(message, ex);
         }
+        public static void Error(string message, Exception exception) {
+            log.Error(message, exception);
+        }
     }
 }
