@@ -31,8 +31,8 @@ namespace DXVcs2Git.DXVcs {
         }
         public static IList<CommitItem> GenerateCommits(IEnumerable<HistoryItem> historyItems) {
             var grouped = historyItems.AsParallel().GroupBy(x => x.ActionDate);
-            var commits = grouped.Select(x => new CommitItem() {Author = x.First().User, TimeStamp = x.First().ActionDate, Items = x.ToList()});
+            var commits = grouped.Select(x => new CommitItem() { Author = x.First().User, TimeStamp = x.First().ActionDate, Items = x.ToList() }).OrderBy(x => x.TimeStamp);
             return commits.ToList();
         }
-}
+    }
 }
