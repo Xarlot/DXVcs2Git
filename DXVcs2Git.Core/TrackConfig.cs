@@ -5,16 +5,15 @@ using System.Text.RegularExpressions;
 
 namespace DXVcs2Git.Core {
     public class TrackConfig {
-        const string findBranchRegex = @"\$/(20)\d\d.\d/";
+        const string FindBranchRegex = @"\$/(20)\d\d.\d/";
         public IList<TrackItem> TrackItems { get; private set; }
-        Regex regex;
+        public readonly Regex Regex = new Regex(FindBranchRegex, RegexOptions.IgnoreCase);
         public TrackConfig(string path) {
-            regex = new Regex(findBranchRegex, RegexOptions.IgnoreCase);
             string[] lines = File.ReadAllLines(path);
             TrackItems = lines.Select(CreateTrackItem).ToList();
         }
         TrackItem CreateTrackItem(string path) {
-            var match = regex.Match(path);
+            var match = this.Regex.Match(path);
             string branchName = string.Empty;
             string branchPath = string.Empty;
             if (match.Success) {
