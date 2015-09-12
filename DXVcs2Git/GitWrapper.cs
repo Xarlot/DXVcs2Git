@@ -56,5 +56,10 @@ namespace DXVcs2Git {
             repo.Network.Push(repo.Branches[branch], options);
             Log.Message($"Push to branch {branch} completed");
         }
+        public void EnsureBranch(string name, string targetName) {
+            if (repo.Branches[name] != null)
+                return;
+            var branch = repo.CreateBranch(name);
+        }
     }
 }

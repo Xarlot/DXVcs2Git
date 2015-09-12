@@ -36,7 +36,9 @@ namespace DXVcs2Git.DXVcs {
                 HistoryItem historyItem = items.First();
                 return new CommitItem() { Author = historyItem.User, TimeStamp = historyItem.ActionDate, Items = items, Track = historyItem.Track };
             }).OrderBy(x => x.TimeStamp);
-            return commits.ToList();
+            var totalCommits = commits.ToList();
+            int index = totalCommits.FindIndex(x => x.Items.Any(y => y.Message.ToLowerInvariant() == "create"));
+            return totalCommits.Skip(index).ToList();
         }
     }
 }

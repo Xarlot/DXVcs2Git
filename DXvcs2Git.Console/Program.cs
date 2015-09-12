@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using DXVcs2Git;
 using DXVcs2Git.Core;
 using DXVcs2Git.DXVcs;
@@ -12,24 +13,34 @@ using LibGit2Sharp;
 
 namespace DXVcs2Git.Console {
     internal class Program {
-        static Credentials credentials;
         static string path = @"z:\test\";
-        static string testUrl = "http://litvinov-lnx/tester/testxpfall.git";
+        static string testUrl = "http://litvinov-lnx/XPF/Common.git";
         static void Main(string[] args) {
-            var repo = DXVcsConectionHelper.Connect(DefaultConfig.Config.AuxPath);
-            List<string> branches = new List<string>() {
-                @"$/2014.2/XPF/DevExpress.Xpf.Core",
-                @"$/2015.1/XPF/DevExpress.Xpf.Core",
-                @"$/2015.2/XPF/DevExpress.Xpf.Core",
-            };
+            GitWrapper gitWrapper = new GitWrapper(path, testUrl, new UsernamePasswordCredentials() { Username = "dxvcs2gitservice", Password = "q1w2e3r4t5y6" });
 
-            System.Console.WriteLine($"========   Start generating branch timings   ===========");
-            List<DateTime> branchesCreatedTime = branches.Select(x => {
-                var history = repo.GetProjectHistory(x, true);
-                return history.First(IsBranchCreatedTimeStamp).ActionDate;
-            }).Concat(new[] {DateTime.Now}).ToList();
-            System.Console.WriteLine($"========   Completed generating branch timings   ===========");
-            System.Console.WriteLine($"========   Start generating project history   ===========");
+            string localPath = Path.GetDirectoryName(Assembly.GetEntryAssembly().Location);
+            string configPath = Path.Combine(localPath, DefaultConfig.Config.TrackConfigPath);
+            TrackConfig trackConfig = new TrackConfig(File.ReadAllText(configPath));
+            var tracker = new Tracker(trackConfig.TrackItems);
+            string trunk = "master";
+            foreach (var branch in tracker.Branches) {
+                gitWrapper.Fetch();
+                gitWrapper.EnsureBranch(branch.Name, trunk);
+
+                var history = HistoryGenerator.GenerateHistory(DefaultConfig.Config.AuxPath, branch);
+                var commits = HistoryGenerator.GenerateCommits(history);
+            }
+
+
+
+
+            //System.Console.WriteLine($"========   Start generating branch timings   ===========");
+            //List<DateTime> branchesCreatedTime = branches.Select(x => {
+            //    var history = repo.GetProjectHistory(x, true);
+            //    return history.First(IsBranchCreatedTimeStamp).ActionDate;
+            //}).Concat(new[] {DateTime.Now}).ToList();
+            //System.Console.WriteLine($"========   Completed generating branch timings   ===========");
+            //System.Console.WriteLine($"========   Start generating project history   ===========");
             //var resultHistory = Enumerable.Empty<HistoryItem>();
             //DateTime previousStamp = branchesCreatedTime[0];
             //for (int i = 0; i < branches.Count; i++) {
@@ -112,13 +123,6 @@ namespace DXVcs2Git.Console {
             if (!string.IsNullOrEmpty(commentItem.Comment))
                 return commentItem.Comment;
             return string.Empty;
-        }
-        static void InitUserCredentials() {
-            var user = new UsernamePasswordCredentials();
-            user.Username = Constants.Identity.Name;
-            user.Password = "q1w2e3r4t5y6";
-            credentials = user;
-            System.Console.WriteLine($"========   User Initialized   ===========");
         }
         static bool IsBranchCreatedTimeStamp(ProjectHistoryInfo x) {
             return x.Message != null && x.Message.ToLowerInvariant() == "create";
