@@ -68,24 +68,24 @@ namespace DXVcs2Git.Tests {
             }).Concat(new[] { DateTime.Now }).ToList();
             DateTime previous = branchesCreatedTime[0];
             var resultHistory = Enumerable.Empty<HistoryItem>();
-            for (int i = 0; i < branches.Count; i++) {
-                DateTime currentStamp = branchesCreatedTime[i + 1];
-                string branch = branches[i];
-                var history = repo.GetProjectHistory(branch, true, previous, currentStamp);
-                var projectHistory = CalcProjectHistory(history).Where(x => x.ActionDate >= previous && x.ActionDate < currentStamp).OrderBy(x => x.ActionDate).ToList();
-                foreach (var historyItem in projectHistory) {
-                    historyItem.Path = branch;
-                }
-                resultHistory = resultHistory.Concat(projectHistory);
-                previous = currentStamp;
-            }
-            var result = resultHistory.ToList();
-            foreach (var item in result) {
-                repo.GetProject(item.Path, path, item.ActionDate);
-                if (IsDirEmpty(path))
-                    continue;
+            //for (int i = 0; i < branches.Count; i++) {
+            //    DateTime currentStamp = branchesCreatedTime[i + 1];
+            //    string branch = branches[i];
+            //    var history = repo.GetProjectHistory(branch, true, previous, currentStamp);
+            //    var projectHistory = CalcProjectHistory(history).Where(x => x.ActionDate >= previous && x.ActionDate < currentStamp).OrderBy(x => x.ActionDate).ToList();
+            //    foreach (var historyItem in projectHistory) {
+            //        historyItem.Path = branch;
+            //    }
+            //    resultHistory = resultHistory.Concat(projectHistory);
+            //    previous = currentStamp;
+            //}
+            //var result = resultHistory.ToList();
+            //foreach (var item in result) {
+            //    repo.GetProject(item.Path, path, item.ActionDate);
+            //    if (IsDirEmpty(path))
+            //        continue;
 
-            }
+            //}
         }
         bool IsDirEmpty(string path) {
             return !Directory.EnumerateDirectories(path).Any(x => {
@@ -132,8 +132,9 @@ namespace DXVcs2Git.Tests {
             ProjectExtractor extractor = new ProjectExtractor(commits, Extract);
             extractor.PerformExtraction();
         }
-        void Extract(string vcsPath, DateTime timeStamp) {
-            string localPath = vcsPath.Replace("$/", testFolder);
+        void Extract(TrackItem track, DateTime timeStamp) {
+            string vcsPath = track.FullPath;
+            string localPath = vcsPath.Replace($"$/{track.Branch}", testFolder);
 
             var repo = DXVcsConectionHelper.Connect(DefaultConfig.Config.AuxPath);
             repo.GetProject(vcsPath, localPath, timeStamp);
