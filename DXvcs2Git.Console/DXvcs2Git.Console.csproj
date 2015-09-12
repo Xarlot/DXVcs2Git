@@ -7,8 +7,8 @@
     <ProjectGuid>{B789F4E2-FA3C-4105-A078-1905982E5CBD}</ProjectGuid>
     <OutputType>Exe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>DXvcs2Git.Console</RootNamespace>
-    <AssemblyName>DXvcs2Git.Console</AssemblyName>
+    <RootNamespace>DXVcs2Git.Console</RootNamespace>
+    <AssemblyName>DXVcs2Git.Console</AssemblyName>
     <TargetFrameworkVersion>v4.6</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>

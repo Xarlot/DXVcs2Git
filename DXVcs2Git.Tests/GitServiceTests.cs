@@ -11,6 +11,7 @@ namespace DXVcs2Git.Tests {
     [TestFixture]
     public class GitServiceTests : BaseFixture {
         const string testUrl = @"http://litvinov-lnx/tester/testproject.git";
+        static readonly Credentials testCredentials = new UsernamePasswordCredentials() {Password = "q1w2e3r4t5y6", Username = Constants.Identity.Name};
         [Test]
         public void InitNewRepo() {
             string repoPath = InitNewRepository();
@@ -94,10 +95,11 @@ namespace DXVcs2Git.Tests {
         }
         protected string InitNewRepository() {
             SelfCleaningDirectory scd = BuildSelfCleaningDirectory();
-            return GitWrapper.GitInit(scd.DirectoryPath);
+            return InitNewRepository(scd.DirectoryPath);
         }
         protected string InitNewRepository(string path) {
-            return GitWrapper.GitInit(path);
+            var wrapper = new GitWrapper(path, testUrl, testCredentials);
+            return wrapper.GitDirectory;
         }
     }
 

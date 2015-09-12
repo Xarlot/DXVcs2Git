@@ -10,6 +10,10 @@ namespace DXVcs2Git {
         readonly string repoPath;
         readonly string gitPath;
         readonly Repository repo;
+        public string GitDirectory {
+            get { return repoPath; }
+        }
+
         public GitWrapper(string path, string gitPath, Credentials credentials) {
             this.path = path;
             this.credentials = credentials;
@@ -35,6 +39,22 @@ namespace DXVcs2Git {
             fetchOptions.CredentialsProvider += (url, fromUrl, types) => credentials;
             repo.Fetch(network.Name, fetchOptions);
             Log.Message("Git fetch performed");
+        }
+        public void Stage(string path) {
+            repo.Stage(path);
+        }
+        public void Commit(string comment, string user, DateTime timeStamp) {
+            CommitOptions commitOptions = new CommitOptions();
+            commitOptions.AllowEmptyCommit = true;
+            var author = new Signature(user, "test@mail.com", timeStamp);
+            repo.Commit(comment, author, author, commitOptions);
+            Log.Message($"Git commit performed for {user} {timeStamp}");
+        }
+        public void Push(string branch) {
+            PushOptions options = new PushOptions();
+            options.CredentialsProvider += (url, fromUrl, types) => credentials;
+            repo.Network.Push(repo.Branches[branch], options);
+            Log.Message($"Push to branch {branch} completed");
         }
     }
 }
