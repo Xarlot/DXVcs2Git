@@ -195,7 +195,6 @@ namespace DXVcs2Git.DXVcs {
             }
             Dictionary<string, string> localPathDict = new Dictionary<string, string>(StringComparer.InvariantCultureIgnoreCase);
             bool cancel = false;
-            ManualResetEvent touchEvent = StartTouchThread(id);
             int lastMagic = 0;
             BlockInfo blockInfo = new BlockInfo();
             QueueBlock(id, getBlockEvent, blockInfo, exceptionQueue);
@@ -361,7 +360,6 @@ namespace DXVcs2Git.DXVcs {
                 getDataEvent.WaitOne();
                 decompressEvent.WaitOne();
                 saveEvent.WaitOne();
-                touchEvent.Set();
                 if (!cancel)
                     Service.ConfirmGetEnd(id);
             }
