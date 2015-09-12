@@ -7,20 +7,17 @@ using System.Threading.Tasks;
 namespace DXVcs2Git.Core {
     public class ProjectExtractor {
         readonly IList<CommitItem> commits;
-        readonly Action<DateTime> extractHandler;
-        readonly Action<string> prepareHandler;
+        readonly Action<string, DateTime> extractHandler;
         int index;
-        public ProjectExtractor(IList<CommitItem> commits, Action<DateTime> extractHandler, Action<string> prepareHandler) {
+        public ProjectExtractor(IList<CommitItem> commits, Action<string, DateTime> extractHandler) {
             this.commits = commits;
             this.extractHandler = extractHandler;
-            this.prepareHandler = prepareHandler;
         }
         public bool PerformExtraction() {
             if (index >= this.commits.Count)
                 return false;
             CommitItem commitItem = this.commits[this.index];
-            prepareHandler(commitItem.Path);
-            extractHandler(commitItem.TimeStamp);
+            extractHandler(commitItem.Path, commitItem.TimeStamp);
             index++;
             return true;
         } 

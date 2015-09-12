@@ -8,6 +8,7 @@ using DXVcs2Git.Core;
 using DXVcs2Git.DXVcs;
 using DXVCS;
 using NUnit.Framework;
+using DirectoryHelper = DXVcs2Git.Tests.TestHelpers.DirectoryHelper;
 
 namespace DXVcs2Git.Tests {
     [TestFixture]
@@ -117,8 +118,25 @@ namespace DXVcs2Git.Tests {
             var tracker = new Tracker(config.TrackItems);
             var history = HistoryGenerator.GenerateHistory(DefaultConfig.Config.AuxPath, tracker.Branches[0]);
             var commits = HistoryGenerator.GenerateCommits(history);
-            Assert.Greater( commits.Count, 0);
+            Assert.Greater(commits.Count, 0);
         }
+        string testFolder = @"z:\test\";
+        [Test]
+        public void ProjectExtractorTest() {
+            string configString = "$/2015.1/DB.Standard";
+            TrackConfig config = new TrackConfig(configString);
+            var tracker = new Tracker(config.TrackItems);
+            var history = HistoryGenerator.GenerateHistory(DefaultConfig.Config.AuxPath, tracker.Branches[0]);
+            var commits = HistoryGenerator.GenerateCommits(history);
 
+            ProjectExtractor extractor = new ProjectExtractor(commits, Extract);
+            extractor.PerformExtraction();
+        }
+        void Extract(string vcsPath, DateTime timeStamp) {
+            string localPath = vcsPath.Replace("$/", testFolder);
+
+            var repo = DXVcsConectionHelper.Connect(DefaultConfig.Config.AuxPath);
+            repo.GetProject(vcsPath, localPath, timeStamp);
+        }
     }
 }
