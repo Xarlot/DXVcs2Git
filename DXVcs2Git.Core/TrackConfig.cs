@@ -17,7 +17,7 @@ namespace DXVcs2Git.Core {
             string branchName = string.Empty;
             string branchPath = string.Empty;
             if (match.Success) {
-                branchName = match.Value.Replace(@"$\/", string.Empty);
+                branchName = match.Value.Replace("$", string.Empty).Replace(@"\", string.Empty).Replace(@"/", string.Empty);
                 int index = match.Index + match.Length;
                 branchPath = path.Substring(index, path.Length - index);
             }
