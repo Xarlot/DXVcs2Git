@@ -45,6 +45,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="DirectoryHelper.cs" />
+    <Compile Include="CommitItem.cs" />
+    <Compile Include="HistoryItem.cs" />
     <Compile Include="Log.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

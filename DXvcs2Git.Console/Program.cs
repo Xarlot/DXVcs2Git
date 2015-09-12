@@ -17,15 +17,6 @@ namespace DXVcs2Git.Console {
         static void Main(string[] args) {
             var repo = DXVcsConectionHelper.Connect(DefaultConfig.Config.AuxPath);
             List<string> branches = new List<string>() {
-                //@"$/NET.OLD/2010.1/XPF/DevExpress.Xpf.Core",
-                //@"$/NET.OLD/2010.2/XPF/DevExpress.Xpf.Core",
-                //@"$/NET.OLD/2011.1/XPF/DevExpress.Xpf.Core",
-                //@"$/NET.OLD/2011.2/XPF/DevExpress.Xpf.Core",
-                //@"$/NET.OLD/2012.1/XPF/DevExpress.Xpf.Core",
-                //@"$/NET.OLD/2012.2/XPF/DevExpress.Xpf.Core",
-                //@"$/NET.OLD/2013.1/XPF/DevExpress.Xpf.Core",
-                //@"$/NET.OLD/2013.2/XPF/DevExpress.Xpf.Core",
-                //@"$/2014.1/XPF/DevExpress.Xpf.Core",
                 @"$/2014.2/XPF/DevExpress.Xpf.Core",
                 @"$/2015.1/XPF/DevExpress.Xpf.Core",
                 @"$/2015.2/XPF/DevExpress.Xpf.Core",
@@ -59,10 +50,6 @@ namespace DXVcs2Git.Console {
             InitUserCredentials();
             GitWrapper gitRepo = new GitWrapper(path, testUrl, credentials);
             System.Console.WriteLine($"========   Start updating git repo    ===========");
-            //var network = gitRepo.Network.Remotes.First();
-            //FetchOptions fetchOptions = new FetchOptions();
-            //fetchOptions.CredentialsProvider += (url, fromUrl, types) => credentials;
-            //gitRepo.Fetch(network.Name, fetchOptions);
             gitRepo.Fetch();
             System.Console.WriteLine($"========   Startup git fetch completed   ===========");
             foreach (var item in resultHistory) {
@@ -131,18 +118,6 @@ namespace DXVcs2Git.Console {
             user.Password = "q1w2e3r4t5y6";
             credentials = user;
             System.Console.WriteLine($"========   User Initialized   ===========");
-        }
-        static string InitGit(string path) {
-            if (Directory.Exists(path)) {
-                Directory.Delete(path, true);
-                Directory.CreateDirectory(path);
-            }
-
-            CloneOptions options = new CloneOptions();
-            options.CredentialsProvider += (url, fromUrl, types) => credentials;
-            string clonedRepoPath = Repository.Clone(testUrl, path, options);
-            System.Console.WriteLine($"========   Git repo Initialized   ===========");
-            return clonedRepoPath;
         }
         static bool IsBranchCreatedTimeStamp(ProjectHistoryInfo x) {
             return x.Message != null && x.Message.ToLowerInvariant() == "create";
