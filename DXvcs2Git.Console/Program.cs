@@ -35,7 +35,7 @@ namespace DXVcs2Git.Console {
                 DateTime lastCommit = gitWrapper.CalcLastCommitDate(branch.Name, username);
                 var commits = HistoryGenerator.GenerateCommits(history).Where(x => x.TimeStamp >= lastCommit).ToList();
                 ProjectExtractor extractor = new ProjectExtractor(commits, (item) => {
-                    string local = Path.Combine(path, item.Track.Path);
+                    string local = Path.Combine(path, item.Track.RelativeLocalPath);
                     DirectoryHelper.DeleteDirectory(local);
                     HistoryGenerator.GetProject(DefaultConfig.Config.AuxPath, item.Track.FullPath, local, item.TimeStamp);
                     gitWrapper.Fetch();
@@ -43,7 +43,7 @@ namespace DXVcs2Git.Console {
                     gitWrapper.Commit(CalcComment(item), item.Author, item.TimeStamp);
                     gitWrapper.Push(branch.Name);
                 });
-                while (!extractor.PerformExtraction()) {
+                while (extractor.PerformExtraction()) {
                 }
                 whereCreateBranch = gitWrapper.FindCommit(trunk, commits.First().TimeStamp);
             }

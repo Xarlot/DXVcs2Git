@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Linq;
 using DXVcs2Git.Core;
 using LibGit2Sharp;
@@ -21,6 +22,7 @@ namespace DXVcs2Git {
             this.gitPath = gitPath;
             this.repoPath = DirectoryHelper.IsGitDir(path) ? GitInit() : GitClone();
             repo = new Repository(repoPath);
+            InitEmptyRepo();
         }
         public string GitInit() {
             return Repository.Init(path);
@@ -31,6 +33,14 @@ namespace DXVcs2Git {
             string clonedRepoPath = Repository.Clone(gitPath, path, options);
             Log.Message($"Git repo {clonedRepoPath} initialized");
             return clonedRepoPath;
+        }
+        void InitEmptyRepo() {
+            if (repo.Branches.Any())
+                return;
+            File.WriteAllText(Path.Combine(path, ".gitignore"), string.Empty);
+            Stage("*");
+            Commit("initialize", "exmachina", new DateTime(2001, 1, 1));
+            Push("master");
         }
         public void Dispose() {
         }
@@ -54,17 +64,26 @@ namespace DXVcs2Git {
         public void Push(string branch) {
             PushOptions options = new PushOptions();
             options.CredentialsProvider += (url, fromUrl, types) => credentials;
-            repo.Network.Push(repo.Branches[branch], options);
+            Remote remote = this.repo.Network.Remotes.First();
+            repo.Network.Push(remote, $@"refs/heads/{branch}", options);
             Log.Message($"Push to branch {branch} completed");
         }
         public void EnsureBranch(string name, Commit whereCreateBranch) {
-            if (repo.Branches[name] != null)
-                return;
-            if (whereCreateBranch == null)
-                repo.CreateBranch(name);
-            else {
-                repo.CreateBranch(name, whereCreateBranch);
+            Branch localBranch = this.repo.Branches[name];
+            if (localBranch == null) {
+                if (whereCreateBranch == null)
+                    localBranch = repo.CreateBranch(name);
+                else {
+                     localBranch = repo.CreateBranch(name, whereCreateBranch);
+                }
             }
+            InitializePush(localBranch);
+        }
+        void InitializePush(Branch localBranch) {
+            Remote remote = this.repo.Network.Remotes["origin"];
+            this.repo.Branches.Update(localBranch,
+                b => b.Remote = remote.Name,
+                b => b.UpstreamBranch = localBranch.CanonicalName);
         }
         public Commit FindCommit(string branchName, DateTime timeStamp) {
             var branch = repo.Branches[branchName];
