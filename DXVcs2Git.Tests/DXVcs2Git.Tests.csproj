@@ -43,8 +43,13 @@
     <Compile Include="TestHelpers\DirectoryHelper.cs" />
     <Compile Include="TestHelpers\Interfaces.cs" />
     <Compile Include="TestHelpers\SelfCleaningDirectory.cs" />
+    <Compile Include="TrackConfigTest.cs" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\DXVcs2Git.Core\DXVcs2Git.Core.csproj">
+      <Project>{7CE585B7-1F19-442D-B1A4-0C1AD855A55C}</Project>
+      <Name>DXVcs2Git.Core</Name>
+    </ProjectReference>
     <ProjectReference Include="..\DXVcs2Git.DXVcs\DXVcs2Git.DXVcs.csproj">
       <Project>{8326BB06-73E9-44AD-8309-4AB0596455A9}</Project>
       <Name>DXVcs2Git.DXVcs</Name>

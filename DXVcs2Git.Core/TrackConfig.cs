@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -8,9 +9,8 @@ namespace DXVcs2Git.Core {
         const string FindBranchRegex = @"\$/(20)\d\d.\d/";
         public IList<TrackItem> TrackItems { get; private set; }
         public readonly Regex Regex = new Regex(FindBranchRegex, RegexOptions.IgnoreCase);
-        public TrackConfig(string path) {
-            string[] lines = File.ReadAllLines(path);
-            TrackItems = lines.Select(CreateTrackItem).ToList();
+        public TrackConfig(string config) {
+            TrackItems = config.Split(new[] {Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries).Select(CreateTrackItem).Where(x => !string.IsNullOrEmpty(x.Branch) && !string.IsNullOrEmpty(x.Path)).ToList();
         }
         TrackItem CreateTrackItem(string path) {
             var match = this.Regex.Match(path);
