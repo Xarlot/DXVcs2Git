@@ -8,6 +8,6 @@ namespace DXVcs2Git.Core {
         public string Message;
         public string Label;
         public string Comment;
-        public string Branch;
+        public string Path;
     }
 }

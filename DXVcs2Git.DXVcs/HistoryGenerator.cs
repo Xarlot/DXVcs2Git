@@ -18,7 +18,7 @@ namespace DXVcs2Git.DXVcs {
                             Message = x.Message,
                             Name = x.Name,
                             User = x.User,
-                            Branch = branch.Path
+                            Path = trackItem.FullPath,
                         });
                     history = history.Concat(historyForItem);
                 }
@@ -31,7 +31,11 @@ namespace DXVcs2Git.DXVcs {
         }
         public static IList<CommitItem> GenerateCommits(IEnumerable<HistoryItem> historyItems) {
             var grouped = historyItems.AsParallel().GroupBy(x => x.ActionDate);
-            var commits = grouped.Select(x => new CommitItem() { Author = x.First().User, TimeStamp = x.First().ActionDate, Items = x.ToList() }).OrderBy(x => x.TimeStamp);
+            var commits = grouped.Select(x => {
+                IList<HistoryItem> items = x.ToList();
+                HistoryItem historyItem = items.First();
+                return new CommitItem() { Author = historyItem.User, TimeStamp = historyItem.ActionDate, Items = items, Path = historyItem.Path };
+            }).OrderBy(x => x.TimeStamp);
             return commits.ToList();
         }
     }

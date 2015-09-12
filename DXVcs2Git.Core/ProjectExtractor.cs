@@ -8,15 +8,20 @@ namespace DXVcs2Git.Core {
     public class ProjectExtractor {
         readonly IList<CommitItem> commits;
         readonly Action<DateTime> extractHandler;
-        int index = 0
-        public ProjectExtractor(IList<CommitItem> commits, Action<DateTime> extractHandler) {
+        readonly Action<string> prepareHandler;
+        int index;
+        public ProjectExtractor(IList<CommitItem> commits, Action<DateTime> extractHandler, Action<string> prepareHandler) {
             this.commits = commits;
             this.extractHandler = extractHandler;
+            this.prepareHandler = prepareHandler;
         }
         public bool PerformExtraction() {
             if (index >= this.commits.Count)
                 return false;
-            extractHandler(commits[index++].TimeStamp);
+            CommitItem commitItem = this.commits[this.index];
+            prepareHandler(commitItem.Path);
+            extractHandler(commitItem.TimeStamp);
+            index++;
             return true;
         } 
     }

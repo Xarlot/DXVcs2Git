@@ -73,14 +73,14 @@ namespace DXVcs2Git.Tests {
                 var history = repo.GetProjectHistory(branch, true, previous, currentStamp);
                 var projectHistory = CalcProjectHistory(history).Where(x => x.ActionDate >= previous && x.ActionDate < currentStamp).OrderBy(x => x.ActionDate).ToList();
                 foreach (var historyItem in projectHistory) {
-                    historyItem.Branch = branch;
+                    historyItem.Path = branch;
                 }
                 resultHistory = resultHistory.Concat(projectHistory);
                 previous = currentStamp;
             }
             var result = resultHistory.ToList();
             foreach (var item in result) {
-                repo.GetProject(item.Branch, path, item.ActionDate);
+                repo.GetProject(item.Path, path, item.ActionDate);
                 if (IsDirEmpty(path))
                     continue;
 
