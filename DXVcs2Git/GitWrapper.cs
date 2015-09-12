@@ -13,6 +13,7 @@ namespace DXVcs2Git {
         public string GitDirectory {
             get { return repoPath; }
         }
+        public Credentials Credentials { get { return credentials; } }
 
         public GitWrapper(string path, string gitPath, Credentials credentials) {
             this.path = path;
@@ -56,10 +57,23 @@ namespace DXVcs2Git {
             repo.Network.Push(repo.Branches[branch], options);
             Log.Message($"Push to branch {branch} completed");
         }
-        public void EnsureBranch(string name, string targetName) {
+        public void EnsureBranch(string name, Commit whereCreateBranch) {
             if (repo.Branches[name] != null)
                 return;
-            var branch = repo.CreateBranch(name);
+            if (whereCreateBranch == null)
+                repo.CreateBranch(name);
+            else {
+                repo.CreateBranch(name, whereCreateBranch);
+            }
+        }
+        public Commit FindCommit(string branchName, DateTime timeStamp) {
+            var branch = repo.Branches[branchName];
+            return branch.Commits.FirstOrDefault(x => x.Author.When == timeStamp);
+        }
+        public DateTime CalcLastCommitDate(string branchName, string user) {
+            var branch = repo.Branches[branchName];
+            var commit = branch.Commits.LastOrDefault(x => x.Author.Name == user);
+            return commit?.Author.When.DateTime ?? DateTime.MinValue;
         }
     }
 }

@@ -55,19 +55,19 @@ namespace DXVcs2Git.Tests {
         }
         [Test, Explicit]
         public void GetProjectHistoryForXpfCore152() {
-            string path = @"c:\test\";
-            var repo = DXVcsConectionHelper.Connect(DefaultConfig.Config.AuxPath);
-            List<string> branches = new List<string>() {
-                @"$/NET.OLD/2010.1/XPF/DevExpress.Xpf.Core",
-                @"$/NET.OLD/2010.2/XPF/DevExpress.Xpf.Core",
-                @"$/NET.OLD/2011.1/XPF/DevExpress.Xpf.Core",
-            };
-            List<DateTime> branchesCreatedTime = branches.Select(x => {
-                var history = repo.GetProjectHistory(x, true);
-                return history.First(IsBranchCreatedTimeStamp).ActionDate;
-            }).Concat(new[] { DateTime.Now }).ToList();
-            DateTime previous = branchesCreatedTime[0];
-            var resultHistory = Enumerable.Empty<HistoryItem>();
+            //string path = @"c:\test\";
+            //var repo = DXVcsConectionHelper.Connect(DefaultConfig.Config.AuxPath);
+            //List<string> branches = new List<string>() {
+            //    @"$/NET.OLD/2010.1/XPF/DevExpress.Xpf.Core",
+            //    @"$/NET.OLD/2010.2/XPF/DevExpress.Xpf.Core",
+            //    @"$/NET.OLD/2011.1/XPF/DevExpress.Xpf.Core",
+            //};
+            //List<DateTime> branchesCreatedTime = branches.Select(x => {
+            //    var history = repo.GetProjectHistory(x, true);
+            //    return history.First(IsBranchCreatedTimeStamp).ActionDate;
+            //}).Concat(new[] { DateTime.Now }).ToList();
+            //DateTime previous = branchesCreatedTime[0];
+            //var resultHistory = Enumerable.Empty<HistoryItem>();
             //for (int i = 0; i < branches.Count; i++) {
             //    DateTime currentStamp = branchesCreatedTime[i + 1];
             //    string branch = branches[i];
@@ -132,12 +132,12 @@ namespace DXVcs2Git.Tests {
             ProjectExtractor extractor = new ProjectExtractor(commits, Extract);
             extractor.PerformExtraction();
         }
-        void Extract(TrackItem track, DateTime timeStamp) {
-            string vcsPath = track.FullPath;
-            string localPath = vcsPath.Replace($"$/{track.Branch}", testFolder);
+        void Extract(CommitItem item) {
+            string vcsPath = item.Track.FullPath;
+            string localPath = vcsPath.Replace($"$/{item.Track.Branch}", testFolder);
 
             var repo = DXVcsConectionHelper.Connect(DefaultConfig.Config.AuxPath);
-            repo.GetProject(vcsPath, localPath, timeStamp);
+            repo.GetProject(vcsPath, localPath, item.TimeStamp);
         }
     }
 }

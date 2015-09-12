@@ -15,20 +15,35 @@ namespace DXVcs2Git.Console {
     internal class Program {
         static string path = @"z:\test\";
         static string testUrl = "http://litvinov-lnx/XPF/Common.git";
+        static string username = "dxvcs2gitservice";
         static void Main(string[] args) {
-            GitWrapper gitWrapper = new GitWrapper(path, testUrl, new UsernamePasswordCredentials() { Username = "dxvcs2gitservice", Password = "q1w2e3r4t5y6" });
+            GitWrapper gitWrapper = new GitWrapper(path, testUrl, new UsernamePasswordCredentials() { Username = username, Password = "q1w2e3r4t5y6" });
 
             string localPath = Path.GetDirectoryName(Assembly.GetEntryAssembly().Location);
             string configPath = Path.Combine(localPath, DefaultConfig.Config.TrackConfigPath);
             TrackConfig trackConfig = new TrackConfig(File.ReadAllText(configPath));
             var tracker = new Tracker(trackConfig.TrackItems);
             string trunk = "master";
+            Commit whereCreateBranch = null;
             foreach (var branch in tracker.Branches) {
                 gitWrapper.Fetch();
-                gitWrapper.EnsureBranch(branch.Name, trunk);
+                gitWrapper.EnsureBranch(branch.Name, whereCreateBranch);
 
                 var history = HistoryGenerator.GenerateHistory(DefaultConfig.Config.AuxPath, branch);
-                var commits = HistoryGenerator.GenerateCommits(history);
+                DateTime lastCommit = gitWrapper.CalcLastCommitDate(branch.Name, username);
+                var commits = HistoryGenerator.GenerateCommits(history).Where(x => x.TimeStamp >= lastCommit).ToList();
+                ProjectExtractor extractor = new ProjectExtractor(commits, (item) => {
+                    string local = item.Track.FullPath;
+                    DirectoryHelper.
+                    HistoryGenerator.GetProject(testUrl, item.Track.FullPath, local, item.TimeStamp);
+                    gitWrapper.Fetch();
+                    gitWrapper.Stage("*");
+                    gitWrapper.Commit(CalcComment(item), item.Author, item.TimeStamp);
+                    gitWrapper.Push(branch.Name);
+                });
+                while (!extractor.PerformExtraction()) {
+                }
+                whereCreateBranch = gitWrapper.FindCommit(trunk, commits.First().TimeStamp);
             }
 
 
