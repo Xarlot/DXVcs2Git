@@ -70,9 +70,9 @@
       <Project>{3b9adc57-b49d-4de7-a532-dbeb0ca78c10}</Project>
       <Name>DXVcs2Git.UI</Name>
     </ProjectReference>
-    <ProjectReference Include="..\DXVcs2Git\DXVcs2Git.csproj">
+    <ProjectReference Include="..\DXVcs2Git\DXVcs2Git.Git.csproj">
       <Project>{b9c82b37-4d92-4903-907f-a1f7f3908062}</Project>
-      <Name>DXVcs2Git</Name>
+      <Name>DXVcs2Git.Git</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

@@ -8,8 +8,8 @@
     <ProjectGuid>{B9C82B37-4D92-4903-907F-A1F7F3908062}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>DXVcs2Git</RootNamespace>
-    <AssemblyName>DXVcs2Git</AssemblyName>
+    <RootNamespace>DXVcs2Git.Git</RootNamespace>
+    <AssemblyName>DXVcs2Git.Git</AssemblyName>
     <TargetFrameworkVersion>v4.6</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <NuGetPackageImportStamp>
