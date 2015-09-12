@@ -28,6 +28,14 @@ namespace DXVcs2Git.Tests {
             return CreateConfigurationWithDummyUser(identity.Name, identity.Email);
         }
         [Test]
+        public void InitNewRepoTwice() {
+            SelfCleaningDirectory scd = BuildSelfCleaningDirectory();
+
+            string repoPath = InitNewRepository(scd.DirectoryPath);
+            string repoPath2 = InitNewRepository(scd.DirectoryPath);
+            Assert.AreEqual(repoPath, repoPath2);
+        }
+        [Test]
         public void CloneRepo() {
             var scd = BuildSelfCleaningDirectory();
             CloneOptions options = new CloneOptions();
@@ -85,9 +93,12 @@ namespace DXVcs2Git.Tests {
 
             return filePath;
         }
-        protected string InitNewRepository(bool isBare = false) {
+        protected string InitNewRepository() {
             SelfCleaningDirectory scd = BuildSelfCleaningDirectory();
-            return Repository.Init(scd.DirectoryPath, isBare);
+            return GitWrapper.GitInit(scd.DirectoryPath);
+        }
+        protected string InitNewRepository(string path) {
+            return GitWrapper.GitInit(path);
         }
     }
 
