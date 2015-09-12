@@ -8,7 +8,7 @@ using DXVcs2Git.Core;
 using DXVcs2Git.DXVcs;
 using DXVCS;
 using NUnit.Framework;
-using DirectoryHelper = DXVcs2Git.Tests.TestHelpers.DirectoryHelper;
+
 
 namespace DXVcs2Git.Tests {
     [TestFixture]
@@ -111,33 +111,33 @@ namespace DXVcs2Git.Tests {
         static bool IsBranchCreatedTimeStamp(ProjectHistoryInfo x) {
             return x.Message != null && x.Message.ToLowerInvariant() == "create";
         }
-        [Test]
-        public void HistoryGeneratorTest() {
-            string configString = "$/2015.1/DB.Standard";
-            TrackConfig config = new TrackConfig(configString);
-            var tracker = new Tracker(config.TrackItems);
-            var history = HistoryGenerator.GenerateHistory(DefaultConfig.Config.AuxPath, tracker.Branches[0]);
-            var commits = HistoryGenerator.GenerateCommits(history);
-            Assert.Greater(commits.Count, 0);
-        }
-        string testFolder = @"z:\test\";
-        [Test]
-        public void ProjectExtractorTest() {
-            string configString = "$/2015.1/DB.Standard";
-            TrackConfig config = new TrackConfig(configString);
-            var tracker = new Tracker(config.TrackItems);
-            var history = HistoryGenerator.GenerateHistory(DefaultConfig.Config.AuxPath, tracker.Branches[0]);
-            var commits = HistoryGenerator.GenerateCommits(history);
+        //[Test]
+        //public void HistoryGeneratorTest() {
+        //    string configString = "$/2015.1/DB.Standard";
+        //    TrackConfig config = new TrackConfig(configString);
+        //    var tracker = new Tracker(config.TrackItems);
+        //    var history = HistoryGenerator.GenerateHistory(DefaultConfig.Config.AuxPath, tracker.Branches[0]);
+        //    var commits = HistoryGenerator.GenerateCommits(history);
+        //    Assert.Greater(commits.Count, 0);
+        //}
+        //string testFolder = @"z:\test\";
+        //[Test]
+        //public void ProjectExtractorTest() {
+        //    string configString = "$/2015.1/DB.Standard";
+        //    TrackConfig config = new TrackConfig(configString);
+        //    var tracker = new Tracker(config.TrackItems);
+        //    var history = HistoryGenerator.GenerateHistory(DefaultConfig.Config.AuxPath, tracker.Branches[0]);
+        //    var commits = HistoryGenerator.GenerateCommits(history);
 
-            ProjectExtractor extractor = new ProjectExtractor(commits, Extract);
-            extractor.PerformExtraction();
-        }
-        void Extract(CommitItem item) {
-            string vcsPath = item.Track.FullPath;
-            string localPath = vcsPath.Replace($"$/{item.Track.Branch}", testFolder);
+        //    ProjectExtractor extractor = new ProjectExtractor(commits, Extract);
+        //    extractor.PerformExtraction();
+        //}
+        //void Extract(CommitItem item) {
+        //    string vcsPath = item.Track.FullPath;
+        //    string localPath = vcsPath.Replace($"$/{item.Track.Branch}", testFolder);
 
-            var repo = DXVcsConectionHelper.Connect(DefaultConfig.Config.AuxPath);
-            repo.GetProject(vcsPath, localPath, item.TimeStamp);
-        }
+        //    var repo = DXVcsConectionHelper.Connect(DefaultConfig.Config.AuxPath);
+        //    repo.GetProject(vcsPath, localPath, item.TimeStamp);
+        //}
     }
 }

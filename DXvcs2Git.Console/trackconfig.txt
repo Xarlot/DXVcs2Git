@@ -1,25 +1,165 @@
-﻿$/2014.1/XPF/DevExpress.Xpf.Core/
-
-$/2014.2/XPF/DevExpress.Mvvm/
-$/2014.2/XPF/DevExpress.Xpf.Controls/
-$/2014.2/XPF/DevExpress.Xpf.Core/
-$/2014.2/XPF/DevExpress.Xpf.Grid/
-$/2014.2/XPF/DevExpress.Xpf.NavBar/
-$/2014.2/XPF/DevExpress.Xpf.PropertyGrid/
-$/2014.2/XPF/DevExpress.Xpf.Ribbon/
-
-$/2015.1/XPF/DevExpress.Mvvm/
-$/2015.1/XPF/DevExpress.Xpf.Controls/
-$/2015.1/XPF/DevExpress.Xpf.Core/
-$/2015.1/XPF/DevExpress.Xpf.Grid/
-$/2015.1/XPF/DevExpress.Xpf.NavBar/
-$/2015.1/XPF/DevExpress.Xpf.PropertyGrid/
-$/2015.1/XPF/DevExpress.Xpf.Ribbon/
-
-$/2015.2/XPF/DevExpress.Mvvm/
-$/2015.2/XPF/DevExpress.Xpf.Controls/
-$/2015.2/XPF/DevExpress.Xpf.Core/
-$/2015.2/XPF/DevExpress.Xpf.Grid/
-$/2015.2/XPF/DevExpress.Xpf.NavBar/
-$/2015.2/XPF/DevExpress.Xpf.PropertyGrid/
-$/2015.2/XPF/DevExpress.Xpf.Ribbon/
+﻿<Complex name="Root" type="DXVcs2Git.Core.TrackConfig, DXVcs2Git.Core, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null">
+  <Properties>
+    <Collection name="TrackItems" type="System.Collections.Generic.List`1[[DXVcs2Git.Core.TrackItem, DXVcs2Git.Core, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+      <Properties>
+        <Simple name="Capacity" value="32" />
+      </Properties>
+      <Items>
+        <Complex>
+          <Properties>
+            <Simple name="Branch" value="2014.1" />
+            <Simple name="Path" value="XPF/DevExpress.Xpf.Core/" />
+            <Simple name="RelativeLocalPath" value="DevExpress.Xpf.Core/" />
+          </Properties>
+        </Complex>
+        <Complex>
+          <Properties>
+            <Simple name="Branch" value="2014.2" />
+            <Simple name="Path" value="XPF/DevExpress.Mvvm/" />
+            <Simple name="RelativeLocalPath" value="DevExpress.Mvvm/" />
+          </Properties>
+        </Complex>
+        <Complex>
+          <Properties>
+            <Simple name="Branch" value="2014.2" />
+            <Simple name="Path" value="XPF/DevExpress.Xpf.Controls/" />
+            <Simple name="RelativeLocalPath" value="DevExpress.Xpf.Controls/" />
+          </Properties>
+        </Complex>
+        <Complex>
+          <Properties>
+            <Simple name="Branch" value="2014.2" />
+            <Simple name="Path" value="XPF/DevExpress.Xpf.Core/" />
+            <Simple name="RelativeLocalPath" value="DevExpress.Xpf.Core/" />
+          </Properties>
+        </Complex>
+        <Complex>
+          <Properties>
+            <Simple name="Branch" value="2014.2" />
+            <Simple name="Path" value="XPF/DevExpress.Xpf.Grid/" />
+            <Simple name="RelativeLocalPath" value="DevExpress.Xpf.Grid/" />
+          </Properties>
+        </Complex>
+        <Complex>
+          <Properties>
+            <Simple name="Branch" value="2014.2" />
+            <Simple name="Path" value="XPF/DevExpress.Xpf.NavBar/" />
+            <Simple name="RelativeLocalPath" value="DevExpress.Xpf.NavBar/" />
+          </Properties>
+        </Complex>
+        <Complex>
+          <Properties>
+            <Simple name="Branch" value="2014.2" />
+            <Simple name="Path" value="XPF/DevExpress.Xpf.PropertyGrid/" />
+            <Simple name="RelativeLocalPath" value="DevExpress.Xpf.PropertyGrid/" />
+          </Properties>
+        </Complex>
+        <Complex>
+          <Properties>
+            <Simple name="Branch" value="2014.2" />
+            <Simple name="Path" value="XPF/DevExpress.Xpf.Ribbon/" />
+            <Simple name="RelativeLocalPath" value="DevExpress.Xpf.Ribbon/" />
+          </Properties>
+        </Complex>
+        <Complex>
+          <Properties>
+            <Simple name="Branch" value="2015.1" />
+            <Simple name="Path" value="XPF/DevExpress.Mvvm/" />
+            <Simple name="RelativeLocalPath" value="DevExpress.Mvvm/" />
+          </Properties>
+        </Complex>
+        <Complex>
+          <Properties>
+            <Simple name="Branch" value="2015.1" />
+            <Simple name="Path" value="XPF/DevExpress.Xpf.Controls/" />
+            <Simple name="RelativeLocalPath" value="DevExpress.Xpf.Controls/" />
+          </Properties>
+        </Complex>
+        <Complex>
+          <Properties>
+            <Simple name="Branch" value="2015.1" />
+            <Simple name="Path" value="XPF/DevExpress.Xpf.Core/" />
+            <Simple name="RelativeLocalPath" value="DevExpress.Xpf.Core/" />
+          </Properties>
+        </Complex>
+        <Complex>
+          <Properties>
+            <Simple name="Branch" value="2015.1" />
+            <Simple name="Path" value="XPF/DevExpress.Xpf.Grid/" />
+            <Simple name="RelativeLocalPath" value="DevExpress.Xpf.Grid/" />
+          </Properties>
+        </Complex>
+        <Complex>
+          <Properties>
+            <Simple name="Branch" value="2015.1" />
+            <Simple name="Path" value="XPF/DevExpress.Xpf.NavBar/" />
+            <Simple name="RelativeLocalPath" value="DevExpress.Xpf.NavBar/" />
+          </Properties>
+        </Complex>
+        <Complex>
+          <Properties>
+            <Simple name="Branch" value="2015.1" />
+            <Simple name="Path" value="XPF/DevExpress.Xpf.PropertyGrid/" />
+            <Simple name="RelativeLocalPath" value="DevExpress.Xpf.PropertyGrid/" />
+          </Properties>
+        </Complex>
+        <Complex>
+          <Properties>
+            <Simple name="Branch" value="2015.1" />
+            <Simple name="Path" value="XPF/DevExpress.Xpf.Ribbon/" />
+            <Simple name="RelativeLocalPath" value="DevExpress.Xpf.Ribbon/" />
+          </Properties>
+        </Complex>
+        <Complex>
+          <Properties>
+            <Simple name="Branch" value="2015.2" />
+            <Simple name="Path" value="XPF/DevExpress.Mvvm/" />
+            <Simple name="RelativeLocalPath" value="DevExpress.Mvvm/" />
+          </Properties>
+        </Complex>
+        <Complex>
+          <Properties>
+            <Simple name="Branch" value="2015.2" />
+            <Simple name="Path" value="XPF/DevExpress.Xpf.Controls/" />
+            <Simple name="RelativeLocalPath" value="DevExpress.Xpf.Controls/" />
+          </Properties>
+        </Complex>
+        <Complex>
+          <Properties>
+            <Simple name="Branch" value="2015.2" />
+            <Simple name="Path" value="XPF/DevExpress.Xpf.Core/" />
+            <Simple name="RelativeLocalPath" value="DevExpress.Xpf.Core/" />
+          </Properties>
+        </Complex>
+        <Complex>
+          <Properties>
+            <Simple name="Branch" value="2015.2" />
+            <Simple name="Path" value="XPF/DevExpress.Xpf.Grid/" />
+            <Simple name="RelativeLocalPath" value="DevExpress.Xpf.Grid/" />
+          </Properties>
+        </Complex>
+        <Complex>
+          <Properties>
+            <Simple name="Branch" value="2015.2" />
+            <Simple name="Path" value="XPF/DevExpress.Xpf.NavBar/" />
+            <Simple name="RelativeLocalPath" value="DevExpress.Xpf.NavBar/" />
+          </Properties>
+        </Complex>
+        <Complex>
+          <Properties>
+            <Simple name="Branch" value="2015.2" />
+            <Simple name="Path" value="XPF/DevExpress.Xpf.PropertyGrid/" />
+            <Simple name="RelativeLocalPath" value="DevExpress.Xpf.PropertyGrid/" />
+          </Properties>
+        </Complex>
+        <Complex>
+          <Properties>
+            <Simple name="Branch" value="2015.2" />
+            <Simple name="Path" value="XPF/DevExpress.Xpf.Ribbon/" />
+            <Simple name="RelativeLocalPath" value="DevExpress.Xpf.Ribbon/" />
+          </Properties>
+        </Complex>
+      </Items>
+    </Collection>
+  </Properties>
+</Complex>

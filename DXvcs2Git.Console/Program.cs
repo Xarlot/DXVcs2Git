@@ -10,6 +10,7 @@ using DXVcs2Git.Tests;
 using DXVcs2Git.Tests.TestHelpers;
 using DXVCS;
 using LibGit2Sharp;
+using Polenter.Serialization;
 
 namespace DXVcs2Git.Console {
     internal class Program {
@@ -21,7 +22,8 @@ namespace DXVcs2Git.Console {
 
             string localPath = Path.GetDirectoryName(Assembly.GetEntryAssembly().Location);
             string configPath = Path.Combine(localPath, DefaultConfig.Config.TrackConfigPath);
-            TrackConfig trackConfig = new TrackConfig(File.ReadAllText(configPath));
+            var serializer = new SharpSerializer();
+            var trackConfig = (TrackConfig)serializer.Deserialize(configPath);
             var tracker = new Tracker(trackConfig.TrackItems);
             string trunk = "master";
             Commit whereCreateBranch = null;
@@ -33,9 +35,9 @@ namespace DXVcs2Git.Console {
                 DateTime lastCommit = gitWrapper.CalcLastCommitDate(branch.Name, username);
                 var commits = HistoryGenerator.GenerateCommits(history).Where(x => x.TimeStamp >= lastCommit).ToList();
                 ProjectExtractor extractor = new ProjectExtractor(commits, (item) => {
-                    string local = item.Track.FullPath;
-                    DirectoryHelper.
-                    HistoryGenerator.GetProject(testUrl, item.Track.FullPath, local, item.TimeStamp);
+                    string local = Path.Combine(path, item.Track.Path);
+                    DirectoryHelper.DeleteDirectory(local);
+                    HistoryGenerator.GetProject(DefaultConfig.Config.AuxPath, item.Track.FullPath, local, item.TimeStamp);
                     gitWrapper.Fetch();
                     gitWrapper.Stage("*");
                     gitWrapper.Commit(CalcComment(item), item.Author, item.TimeStamp);
