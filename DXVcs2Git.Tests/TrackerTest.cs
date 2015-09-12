@@ -9,7 +9,7 @@ using NUnit.Framework;
 
 namespace DXVcs2Git.Tests {
     [TestFixture]
-    public class TrackConfigTest {
+    public class TrackerTest {
         readonly List<string> directories = new List<string>();
         string GenerateConfig() {
             StringBuilder sb = new StringBuilder();

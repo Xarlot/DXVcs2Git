@@ -1,10 +1,15 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace DXVcs2Git.Core {
-    class Tracker {
+    public class Tracker {
+        public IList<TrackBranch> Branches { get; }
+        public Tracker(IEnumerable<TrackItem> trackItems) {
+            var grouped = trackItems.GroupBy(x => x.Branch);
+            Branches = grouped.Select(x => {
+                string branch = x.First().Branch;
+                return new TrackBranch(branch, $"$/{branch}", x);
+            }).ToList();
+        }
     }
 }

@@ -5,6 +5,15 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace DXVcs2Git.Core {
-    class TrackBranch {
+    public class TrackBranch {
+        public string BranchName { get; private set; }
+        public string BranchPath { get; private set; }
+        public IList<TrackItem> TrackItems { get; private set; }
+
+        public TrackBranch(string branchName, string branchPath, IEnumerable<TrackItem> trackItems) {
+            BranchName = branchName;
+            BranchPath = branchPath;
+            TrackItems = trackItems.ToList();
+        }
     }
 }
