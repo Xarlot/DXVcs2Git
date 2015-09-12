@@ -18,7 +18,7 @@ namespace DXVcs2Git {
             this.path = path;
             this.credentials = credentials;
             this.gitPath = gitPath;
-            this.repoPath = DirectoryHelper.IsGitDir(path) ? GitClone() : GitInit();
+            this.repoPath = DirectoryHelper.IsGitDir(path) ? GitInit() : GitClone();
             repo = new Repository(repoPath);
         }
         public string GitInit() {
@@ -34,9 +34,9 @@ namespace DXVcs2Git {
         public void Dispose() {
         }
         public void Fetch() {
-            var network = repo.Network.Remotes.First();
             FetchOptions fetchOptions = new FetchOptions();
             fetchOptions.CredentialsProvider += (url, fromUrl, types) => credentials;
+            var network = repo.Network.Remotes.First();
             repo.Fetch(network.Name, fetchOptions);
             Log.Message("Git fetch performed");
         }
