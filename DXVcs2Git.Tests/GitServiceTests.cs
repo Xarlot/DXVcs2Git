@@ -5,12 +5,11 @@ using System.Linq;
 using System.Text;
 using DXVcs2Git.Tests.TestHelpers;
 using LibGit2Sharp;
-using LibGit2Sharp.Handlers;
 using NUnit.Framework;
 
 namespace DXVcs2Git.Tests {
     [TestFixture]
-    public class PushToTestProject : BaseFixture {
+    public class GitServiceTests : BaseFixture {
         const string testUrl = @"http://litvinov-lnx/tester/testproject.git";
         [Test]
         public void InitNewRepo() {

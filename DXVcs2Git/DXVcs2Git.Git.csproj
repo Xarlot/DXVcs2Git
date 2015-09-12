@@ -67,6 +67,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CredentialProvider.cs" />
     <Compile Include="GitWrapper.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
@@ -74,6 +75,10 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\DXVcs2Git.Core\DXVcs2Git.Core.csproj">
+      <Project>{7CE585B7-1F19-442D-B1A4-0C1AD855A55C}</Project>
+      <Name>DXVcs2Git.Core</Name>
+    </ProjectReference>
     <ProjectReference Include="..\DXVcs2Git.DXVcs\DXVcs2Git.DXVcs.csproj">
       <Project>{8326bb06-73e9-44ad-8309-4ab0596455a9}</Project>
       <Name>DXVcs2Git.DXVcs</Name>

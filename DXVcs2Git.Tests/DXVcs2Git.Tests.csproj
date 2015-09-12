@@ -37,7 +37,7 @@
     <Compile Include="BaseFixture.cs" />
     <Compile Include="Config.cs" />
     <Compile Include="DXVcsServiceTests.cs" />
-    <Compile Include="PushToTestProject.cs" />
+    <Compile Include="GitServiceTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="TestHelpers\Constants.cs" />
     <Compile Include="TestHelpers\DirectoryHelper.cs" />
