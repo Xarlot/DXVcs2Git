@@ -29,8 +29,8 @@ namespace DXVcs2Git.Console {
             Commit whereCreateBranch = null;
             Log.Message("Start");
             foreach (var branch in tracker.Branches) {
-                gitWrapper.Fetch();
                 gitWrapper.EnsureBranch(branch.Name, whereCreateBranch);
+                gitWrapper.CheckOut(branch.Name);
                 Log.Message($"Branch {branch.Name} initialized");
 
                 var history = HistoryGenerator.GenerateHistory(DefaultConfig.Config.AuxPath, branch);

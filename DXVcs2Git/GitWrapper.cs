@@ -72,7 +72,7 @@ namespace DXVcs2Git {
             Branch localBranch = this.repo.Branches[name];
             if (localBranch == null) {
                 if (whereCreateBranch == null)
-                    localBranch = repo.CreateBranch(name);
+                    localBranch = repo.CreateBranch(name, $"origin/{name}");
                 else {
                      localBranch = repo.CreateBranch(name, whereCreateBranch);
                 }
@@ -97,6 +97,12 @@ namespace DXVcs2Git {
         public bool CalcHasModification() {
             RepositoryStatus status = repo.RetrieveStatus();
             return status.IsDirty;
+        }
+        public void CheckOut(string name) {
+            CheckoutOptions options = new CheckoutOptions();
+            options.CheckoutModifiers = CheckoutModifiers.Force;
+            repo.Checkout(repo.Branches[name], options);
+            Log.Message($"Checkout branch {name} completed");
         }
     }
 }
