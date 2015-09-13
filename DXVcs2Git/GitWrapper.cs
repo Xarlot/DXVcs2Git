@@ -39,7 +39,7 @@ namespace DXVcs2Git {
                 return;
             File.WriteAllText(Path.Combine(path, ".gitignore"), string.Empty);
             Stage("*");
-            Commit("initialize", "exmachina", new DateTime(2001, 1, 1));
+            Commit("initialize", "exmachina", "exmachina", new DateTime(2001, 1, 1));
             Push("master");
         }
         public void Dispose() {
@@ -54,18 +54,19 @@ namespace DXVcs2Git {
         public void Stage(string path) {
             repo.Stage(path);
         }
-        public void Commit(string comment, string user, DateTime timeStamp) {
+        public void Commit(string comment, string user, string committerName, DateTime timeStamp) {
             CommitOptions commitOptions = new CommitOptions();
             commitOptions.AllowEmptyCommit = true;
             var author = new Signature(user, "test@mail.com", timeStamp);
-            repo.Commit(comment, author, author, commitOptions);
+            var comitter = new Signature(committerName, "test@mail.com", timeStamp);
+            repo.Commit(comment, author, comitter, commitOptions);
             Log.Message($"Git commit performed for {user} {timeStamp}");
         }
         public void Push(string branch) {
             PushOptions options = new PushOptions();
             options.CredentialsProvider += (url, fromUrl, types) => credentials;
-            Remote remote = this.repo.Network.Remotes.First();
-            repo.Network.Push(remote, $@"refs/heads/{branch}", options);
+            Remote remote = this.repo.Network.Remotes["origin"];
+            repo.Network.Push(remote, "HEAD", $@"refs/heads/{branch}", options);
             Log.Message($"Push to branch {branch} completed");
         }
         public void EnsureBranch(string name, Commit whereCreateBranch) {
@@ -90,9 +91,13 @@ namespace DXVcs2Git {
             return branch.Commits.FirstOrDefault(x => x.Author.When == timeStamp);
         }
         public DateTime CalcLastCommitDate(string branchName, string user) {
-            var branch = repo.Branches[branchName];
-            var commit = branch.Commits.LastOrDefault(x => x.Author.Name == user);
+            var branch = repo.Branches["origin/" + branchName];
+            var commit = branch.Commits.FirstOrDefault(x => x.Committer.Name == user);
             return commit?.Author.When.DateTime ?? DateTime.MinValue;
+        }
+        public bool CalcHasModification() {
+            RepositoryStatus status = repo.RetrieveStatus();
+            return status.IsDirty;
         }
     }
 }

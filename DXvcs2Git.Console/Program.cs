@@ -18,6 +18,7 @@ namespace DXVcs2Git.Console {
         static string testUrl = "http://litvinov-lnx/XPF/Common.git";
         static string username = "dxvcs2gitservice";
         static void Main(string[] args) {
+            Log.Message("Start");
             GitWrapper gitWrapper = new GitWrapper(path, testUrl, new UsernamePasswordCredentials() { Username = username, Password = "q1w2e3r4t5y6" });
 
             string localPath = Path.GetDirectoryName(Assembly.GetEntryAssembly().Location);
@@ -39,9 +40,11 @@ namespace DXVcs2Git.Console {
                     DirectoryHelper.DeleteDirectory(local);
                     HistoryGenerator.GetProject(DefaultConfig.Config.AuxPath, item.Track.FullPath, local, item.TimeStamp);
                     gitWrapper.Fetch();
-                    gitWrapper.Stage("*");
-                    gitWrapper.Commit(CalcComment(item), item.Author, item.TimeStamp);
-                    gitWrapper.Push(branch.Name);
+                    if (gitWrapper.CalcHasModification()) {
+                        gitWrapper.Stage("*");
+                        gitWrapper.Commit(CalcComment(item), item.Author, username, item.TimeStamp);
+                        gitWrapper.Push(branch.Name);
+                    }
                 });
                 while (extractor.PerformExtraction()) {
                 }
