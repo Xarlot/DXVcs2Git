@@ -21,7 +21,7 @@ namespace DXVcs2Git.Console {
         static void Main(string[] args) {
             GitWrapper gitWrapper = new GitWrapper(path, testUrl, new UsernamePasswordCredentials() { Username = username, Password = "q1w2e3r4t5y6" });
             if (gitWrapper.IsEmpty) {
-                gitWrapper.Commit("Initial commit", username, username, new DateTime(2014, 3, 5));
+                gitWrapper.Commit("Initial commit", username, username, new DateTime(2013, 12, 1));
                 gitWrapper.Push("master");
             }
             string localPath = Path.GetDirectoryName(Assembly.GetEntryAssembly().Location);
@@ -41,7 +41,7 @@ namespace DXVcs2Git.Console {
                 Log.Message($"History generated. {history.Count} history items obtained");
                 DateTime lastCommit = gitWrapper.CalcLastCommitDate(branch.Name, username);
                 Log.Message($"Last commit has been performed at {lastCommit}");
-                var commits = HistoryGenerator.GenerateCommits(history).Where(x => x.TimeStamp >= lastCommit).Take(30).ToList();
+                var commits = HistoryGenerator.GenerateCommits(history).Where(x => x.TimeStamp >= lastCommit).ToList();
                 Log.Message($"Commits generated. {commits.Count} commits obtained");
                 ProjectExtractor extractor = new ProjectExtractor(commits, (item) => {
                     string local = Path.Combine(path, item.Track.RelativeLocalPath);
