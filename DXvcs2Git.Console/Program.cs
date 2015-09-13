@@ -88,7 +88,7 @@ namespace DXVcs2Git.Console {
         }
         static string CalcComment(CommitItem item) {
             var labelItem = item.Items.FirstOrDefault(x => !string.IsNullOrEmpty(x.Label));
-            if (labelItemItem != null && !string.IsNullOrEmpty(labelItem.Label))
+            if (labelItem != null && !string.IsNullOrEmpty(labelItem.Label))
                 return labelItem.Label;
             var commentItem = item.Items.FirstOrDefault(x => !string.IsNullOrEmpty(x.Comment));
             if (commentItem != null && !string.IsNullOrEmpty(commentItem.Comment))
