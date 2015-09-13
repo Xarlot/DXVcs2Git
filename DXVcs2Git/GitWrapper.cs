@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using DXVcs2Git.Core;
@@ -66,7 +67,7 @@ namespace DXVcs2Git {
                 if (whereCreateBranch == null)
                     localBranch = repo.CreateBranch(name);
                 else {
-                     localBranch = repo.CreateBranch(name, whereCreateBranch);
+                    localBranch = repo.CreateBranch(name, whereCreateBranch);
                 }
                 Push(name);
             }
@@ -77,10 +78,12 @@ namespace DXVcs2Git {
                 b => b.Remote = remote.Name,
                 b => b.UpstreamBranch = localBranch.CanonicalName);
         }
-        public Commit FindCommit(string branchName, DateTime timeStamp) {
+        public Commit FindCommit(string branchName, string comment) {
             var branch = repo.Branches[branchName];
-            return branch.Commits.FirstOrDefault(x => x.Author.When == timeStamp);
+
+            return branch.Commits.FirstOrDefault(x => x.Message == comment);
         }
+
         public DateTime CalcLastCommitDate(string branchName, string user) {
             var branch = repo.Branches["origin/" + branchName];
             var commit = branch.Commits.FirstOrDefault(x => x.Committer.Name == user);

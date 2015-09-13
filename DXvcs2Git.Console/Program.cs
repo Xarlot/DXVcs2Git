@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.Remoting.Messaging;
 using DXVcs2Git;
 using DXVcs2Git.Core;
 using DXVcs2Git.DXVcs;
@@ -20,7 +21,7 @@ namespace DXVcs2Git.Console {
         static void Main(string[] args) {
             GitWrapper gitWrapper = new GitWrapper(path, testUrl, new UsernamePasswordCredentials() { Username = username, Password = "q1w2e3r4t5y6" });
             if (gitWrapper.IsEmpty) {
-                gitWrapper.Commit("Initial commit", username, username, new DateTime(2014, 10, 1));
+                gitWrapper.Commit("Initial commit", username, username, new DateTime(2014, 3, 5));
                 gitWrapper.Push("master");
             }
             string localPath = Path.GetDirectoryName(Assembly.GetEntryAssembly().Location);
@@ -37,6 +38,7 @@ namespace DXVcs2Git.Console {
                 Log.Message($"Branch {branch.Name} initialized");
 
                 var history = HistoryGenerator.GenerateHistory(DefaultConfig.Config.AuxPath, branch);
+                var label = history.First(x => x.Label?.Contains("bra") ?? false);
                 Log.Message($"History generated. {history.Count} history items obtained");
                 DateTime lastCommit = gitWrapper.CalcLastCommitDate(branch.Name, username);
                 Log.Message($"Last commit has been performed at {lastCommit}");
@@ -57,61 +59,12 @@ namespace DXVcs2Git.Console {
                 while (extractor.PerformExtraction()) {
                     Log.Message($"{++i} from {commits.Count} push to branch {branch.Name} completed.");
                 }
-                whereCreateBranch = gitWrapper.FindCommit(trunk, commits.First().TimeStamp);
+                whereCreateBranch = gitWrapper.FindCommit(trunk, CalcBranchComent(branch));
             }
-
-
-
-
-            //System.Console.WriteLine($"========   Start generating branch timings   ===========");
-            //List<DateTime> branchesCreatedTime = branches.Select(x => {
-            //    var history = repo.GetProjectHistory(x, true);
-            //    return history.First(IsBranchCreatedTimeStamp).ActionDate;
-            //}).Concat(new[] {DateTime.Now}).ToList();
-            //System.Console.WriteLine($"========   Completed generating branch timings   ===========");
-            //System.Console.WriteLine($"========   Start generating project history   ===========");
-            //var resultHistory = Enumerable.Empty<HistoryItem>();
-            //DateTime previousStamp = branchesCreatedTime[0];
-            //for (int i = 0; i < branches.Count; i++) {
-            //    DateTime currentStamp = branchesCreatedTime[i + 1];
-            //    string branch = branches[i];
-            //    System.Console.WriteLine($"========   Start generating project history for brahch {branch}  ===========");
-            //    var history = repo.GetProjectHistory(branch, true, previousStamp, currentStamp);
-            //    System.Console.WriteLine($"========   Completed generating project history for brahch {branch}  ===========");
-
-            //    var projectHistory = CalcProjectHistory(history).Where(x => x.ActionDate >= previousStamp && x.ActionDate <= currentStamp).ToList();
-            //    foreach (var historyItem in projectHistory) {
-            //        historyItem.Branch = branch;
-            //    }
-            //    resultHistory = resultHistory.Concat(projectHistory);
-            //    previousStamp = currentStamp;
-            //}
-            //resultHistory = resultHistory.ToList();
-            //System.Console.WriteLine($"========   Completed generating project history   ===========");
-            //InitUserCredentials();
-            //GitWrapper gitRepo = new GitWrapper(path, testUrl, credentials);
-            //System.Console.WriteLine($"========   Start updating git repo    ===========");
-            //gitRepo.Fetch();
-            //System.Console.WriteLine($"========   Startup git fetch completed   ===========");
-            //foreach (var item in resultHistory) {
-            //    System.Console.WriteLine($"========   Start updating project {item.Branch} {item.TimeStamp} ===========");
-            //    CleanUpDir(path);
-            //    repo.GetProject(item.Branch, path, item.ActionDate);
-            //    System.Console.WriteLine($"========   Completed updating project   ===========");
-            //    if (IsDirEmpty(path)) {
-            //        System.Console.WriteLine($"========   No history for {item.Branch}  {item.TimeStamp}  ===========");
-            //        continue;
-            //    }
-            //    PreprocessRepo(path);
-
-            //    gitRepo.Fetch();
-            //    gitRepo.Stage("*");
-
-            //    string user = item.Items.First().User;
-            //    gitRepo.Commit(CalcComment(item), user, item.TimeStamp);
-
-            //    gitRepo.Push("master");
-            //}
+        }
+        static string CalcBranchComent(TrackBranch branch) {
+            string name = branch.Name.Remove(0, 2);
+            return $"branch {name}";
         }
         static void CleanUpDir(string path) {
             string gitPath = Path.Combine(path, ".git");
@@ -138,27 +91,18 @@ namespace DXVcs2Git.Console {
             using (var file = File.Create(Path.Combine(path, ".gitignore"))) {
             }
         }
-        static bool IsDirEmpty(string path) {
-            return !Directory.EnumerateDirectories(path).Any(x => {
-                string dirName = Path.GetFileName(x);
-                return dirName != ".git";
-            });
-        }
         static string CalcComment(CommitItem item) {
-            var messageItem = item.Items.FirstOrDefault(x => !string.IsNullOrEmpty(x.Message));
-            if (!string.IsNullOrEmpty(messageItem.Message))
-                return messageItem.Message;
+            var labelItem = item.Items.FirstOrDefault(x => !string.IsNullOrEmpty(x.Label));
+            if (!string.IsNullOrEmpty(labelItem.Comment))
+                return labelItem.Label;
             var commentItem = item.Items.FirstOrDefault(x => !string.IsNullOrEmpty(x.Comment));
             if (!string.IsNullOrEmpty(commentItem.Comment))
                 return commentItem.Comment;
+            var messageItem = item.Items.FirstOrDefault(x => !string.IsNullOrEmpty(x.Message));
+            if (!string.IsNullOrEmpty(messageItem.Message))
+                return messageItem.Message;
             return string.Empty;
         }
-        static bool IsBranchCreatedTimeStamp(ProjectHistoryInfo x) {
-            return x.Message != null && x.Message.ToLowerInvariant() == "create";
-        }
-        //static IEnumerable<HistoryItem> CalcProjectHistory(IEnumerable<ProjectHistoryInfo> history) {
-        //    return history.Reverse().GroupBy(x => x.ActionDate).OrderBy(x => x.First().ActionDate).Select(x => new HistoryItem()x.First().ActionDate, x.ToList()));
-        //}
     }
 
 }
