@@ -81,7 +81,7 @@ namespace DXVcs2Git {
         public Commit FindCommit(string branchName, string comment) {
             var branch = repo.Branches[branchName];
 
-            return branch.Commits.FirstOrDefault(x => x.Message == comment);
+            return branch.Commits.FirstOrDefault(x => x.Message?.Contains(comment) ?? false);
         }
 
         public DateTime CalcLastCommitDate(string branchName, string user) {

@@ -38,11 +38,10 @@ namespace DXVcs2Git.Console {
                 Log.Message($"Branch {branch.Name} initialized");
 
                 var history = HistoryGenerator.GenerateHistory(DefaultConfig.Config.AuxPath, branch);
-                var label = history.First(x => x.Label?.Contains("bra") ?? false);
                 Log.Message($"History generated. {history.Count} history items obtained");
                 DateTime lastCommit = gitWrapper.CalcLastCommitDate(branch.Name, username);
                 Log.Message($"Last commit has been performed at {lastCommit}");
-                var commits = HistoryGenerator.GenerateCommits(history).Where(x => x.TimeStamp >= lastCommit).ToList();
+                var commits = HistoryGenerator.GenerateCommits(history).Where(x => x.TimeStamp >= lastCommit).Take(30).ToList();
                 Log.Message($"Commits generated. {commits.Count} commits obtained");
                 ProjectExtractor extractor = new ProjectExtractor(commits, (item) => {
                     string local = Path.Combine(path, item.Track.RelativeLocalPath);
@@ -59,12 +58,8 @@ namespace DXVcs2Git.Console {
                 while (extractor.PerformExtraction()) {
                     Log.Message($"{++i} from {commits.Count} push to branch {branch.Name} completed.");
                 }
-                whereCreateBranch = gitWrapper.FindCommit(trunk, CalcBranchComent(branch));
+                whereCreateBranch = gitWrapper.FindCommit(trunk, "branch");
             }
-        }
-        static string CalcBranchComent(TrackBranch branch) {
-            string name = branch.Name.Remove(0, 2);
-            return $"branch {name}";
         }
         static void CleanUpDir(string path) {
             string gitPath = Path.Combine(path, ".git");
