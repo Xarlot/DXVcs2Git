@@ -88,15 +88,15 @@ namespace DXVcs2Git.Console {
         }
         static string CalcComment(CommitItem item) {
             var labelItem = item.Items.FirstOrDefault(x => !string.IsNullOrEmpty(x.Label));
-            if (!string.IsNullOrEmpty(labelItem.Comment))
+            if (labelItemItem != null && !string.IsNullOrEmpty(labelItem.Label))
                 return labelItem.Label;
             var commentItem = item.Items.FirstOrDefault(x => !string.IsNullOrEmpty(x.Comment));
-            if (!string.IsNullOrEmpty(commentItem.Comment))
+            if (commentItem != null && !string.IsNullOrEmpty(commentItem.Comment))
                 return commentItem.Comment;
             var messageItem = item.Items.FirstOrDefault(x => !string.IsNullOrEmpty(x.Message));
-            if (!string.IsNullOrEmpty(messageItem.Message))
+            if (messageItem != null && !string.IsNullOrEmpty(messageItem.Message))
                 return messageItem.Message;
-            return string.Empty;
+            return "default";
         }
     }
 
