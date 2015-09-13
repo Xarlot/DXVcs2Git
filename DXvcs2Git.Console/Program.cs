@@ -19,7 +19,10 @@ namespace DXVcs2Git.Console {
         static string username = "dxvcs2gitservice";
         static void Main(string[] args) {
             GitWrapper gitWrapper = new GitWrapper(path, testUrl, new UsernamePasswordCredentials() { Username = username, Password = "q1w2e3r4t5y6" });
-
+            if (gitWrapper.IsEmpty) {
+                gitWrapper.Commit("Initial commit", username, username, new DateTime(2014, 10, 1));
+                gitWrapper.Push("master");
+            }
             string localPath = Path.GetDirectoryName(Assembly.GetEntryAssembly().Location);
             string configPath = Path.Combine(localPath, DefaultConfig.Config.TrackConfigPath);
             var serializer = new SharpSerializer();

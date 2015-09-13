@@ -11,6 +11,7 @@ namespace DXVcs2Git {
         readonly string repoPath;
         readonly string gitPath;
         readonly Repository repo;
+        public bool IsEmpty { get { return !repo.Branches.Any(); } }
         public string GitDirectory {
             get { return repoPath; }
         }
@@ -22,7 +23,6 @@ namespace DXVcs2Git {
             this.gitPath = gitPath;
             this.repoPath = DirectoryHelper.IsGitDir(path) ? GitInit() : GitClone();
             repo = new Repository(repoPath);
-            InitEmptyRepo();
         }
         public string GitInit() {
             return Repository.Init(path);
@@ -33,14 +33,6 @@ namespace DXVcs2Git {
             string clonedRepoPath = Repository.Clone(gitPath, path, options);
             Log.Message($"Git repo {clonedRepoPath} initialized");
             return clonedRepoPath;
-        }
-        void InitEmptyRepo() {
-            if (repo.Branches.Any())
-                return;
-            File.WriteAllText(Path.Combine(path, ".gitignore"), string.Empty);
-            Stage("*");
-            Commit("initialize", "exmachina", "exmachina", new DateTime(2001, 1, 1));
-            Push("master");
         }
         public void Dispose() {
         }
@@ -72,12 +64,12 @@ namespace DXVcs2Git {
             Branch localBranch = this.repo.Branches[name];
             if (localBranch == null) {
                 if (whereCreateBranch == null)
-                    localBranch = repo.CreateBranch(name, $"origin/{name}");
+                    localBranch = repo.CreateBranch(name);
                 else {
                      localBranch = repo.CreateBranch(name, whereCreateBranch);
                 }
+                Push(name);
             }
-            InitializePush(localBranch);
         }
         void InitializePush(Branch localBranch) {
             Remote remote = this.repo.Network.Remotes["origin"];
