@@ -18,7 +18,6 @@ namespace DXVcs2Git.Console {
         static string testUrl = "http://litvinov-lnx/XPF/Common.git";
         static string username = "dxvcs2gitservice";
         static void Main(string[] args) {
-            Log.Message("Start");
             GitWrapper gitWrapper = new GitWrapper(path, testUrl, new UsernamePasswordCredentials() { Username = username, Password = "q1w2e3r4t5y6" });
 
             string localPath = Path.GetDirectoryName(Assembly.GetEntryAssembly().Location);
@@ -28,13 +27,18 @@ namespace DXVcs2Git.Console {
             var tracker = new Tracker(trackConfig.TrackItems);
             string trunk = "master";
             Commit whereCreateBranch = null;
+            Log.Message("Start");
             foreach (var branch in tracker.Branches) {
                 gitWrapper.Fetch();
                 gitWrapper.EnsureBranch(branch.Name, whereCreateBranch);
+                Log.Message($"Branch {branch.Name} initialized");
 
                 var history = HistoryGenerator.GenerateHistory(DefaultConfig.Config.AuxPath, branch);
+                Log.Message($"History generated. {history.Count} history items obtained");
                 DateTime lastCommit = gitWrapper.CalcLastCommitDate(branch.Name, username);
+                Log.Message($"Last commit has been performed at {lastCommit}");
                 var commits = HistoryGenerator.GenerateCommits(history).Where(x => x.TimeStamp >= lastCommit).ToList();
+                Log.Message($"Commits generated. {commits.Count} commits obtained");
                 ProjectExtractor extractor = new ProjectExtractor(commits, (item) => {
                     string local = Path.Combine(path, item.Track.RelativeLocalPath);
                     DirectoryHelper.DeleteDirectory(local);
@@ -46,7 +50,9 @@ namespace DXVcs2Git.Console {
                         gitWrapper.Push(branch.Name);
                     }
                 });
+                int i = 0;
                 while (extractor.PerformExtraction()) {
+                    Log.Message($"{++i} from {commits.Count} push to branch {branch.Name} completed.");
                 }
                 whereCreateBranch = gitWrapper.FindCommit(trunk, commits.First().TimeStamp);
             }

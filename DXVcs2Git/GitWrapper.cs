@@ -49,7 +49,6 @@ namespace DXVcs2Git {
             fetchOptions.CredentialsProvider += (url, fromUrl, types) => credentials;
             var network = repo.Network.Remotes.First();
             repo.Fetch(network.Name, fetchOptions);
-            Log.Message("Git fetch performed");
         }
         public void Stage(string path) {
             repo.Stage(path);
