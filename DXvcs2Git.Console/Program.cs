@@ -3,7 +3,9 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Runtime.Remoting.Messaging;
+using System.Text;
 using DXVcs2Git;
 using DXVcs2Git.Core;
 using DXVcs2Git.DXVcs;
@@ -48,7 +50,7 @@ namespace DXVcs2Git.Console {
                     DirectoryHelper.DeleteDirectory(local);
                     HistoryGenerator.GetProject(DefaultConfig.Config.AuxPath, item.Track.FullPath, local, item.TimeStamp);
                     gitWrapper.Fetch();
-                    if (gitWrapper.CalcHasModification()) {
+                    if (gitWrapper.CalcHasModification() || IsLabel(item)) {
                         gitWrapper.Stage("*");
                         gitWrapper.Commit(CalcComment(item), item.Author, username, item.TimeStamp);
                         gitWrapper.Push(branch.Name);
@@ -58,45 +60,33 @@ namespace DXVcs2Git.Console {
                 while (extractor.PerformExtraction()) {
                     Log.Message($"{++i} from {commits.Count} push to branch {branch.Name} completed.");
                 }
-                whereCreateBranch = gitWrapper.FindCommit(trunk, "branch");
+                whereCreateBranch = gitWrapper.FindCommit(branch.Name, CalcBranchComment(tracker.Branches, branch));
             }
         }
-        static void CleanUpDir(string path) {
-            string gitPath = Path.Combine(path, ".git");
-            foreach (var dir in Directory.EnumerateDirectories(path)) {
-                if (dir == gitPath)
-                    continue;
-                Directory.Delete(dir, true);
-                foreach (var file in Directory.EnumerateFiles(path)) {
-                    File.Delete(file);
-                }
-            }
+        static bool IsLabel(CommitItem item) {
+            return item.Items.Any(x => !string.IsNullOrEmpty(x.Label));
         }
-        static void PreprocessRepo(string path) {
-            string gitPath = Path.Combine(path, ".git");
-            foreach (var dir in Directory.EnumerateDirectories(path)) {
-                if (dir == gitPath)
-                    continue;
-                PreprocessRepo(dir);
-                if (!Directory.EnumerateFiles(dir).Any())
-                    AddEmptyGitIgnore(dir);
-            }
+        static string CalcBranchComment(IList<TrackBranch> branches, TrackBranch branch) {
+            int index = branches.IndexOf(branch);
+            if (index == branches.Count - 1)
+                return "Label: branch nothing";
+            return $"Label: branch {branches[index + 1].Name.Remove(0, 2)}";
         }
-        static void AddEmptyGitIgnore(string path) {
-            using (var file = File.Create(Path.Combine(path, ".gitignore"))) {
-            }
-        }
+
         static string CalcComment(CommitItem item) {
+            StringBuilder sb = new StringBuilder();
             var labelItem = item.Items.FirstOrDefault(x => !string.IsNullOrEmpty(x.Label));
             if (labelItem != null && !string.IsNullOrEmpty(labelItem.Label))
-                return labelItem.Label;
+                sb.AppendLine($"Label: {labelItem.Label}");
             var commentItem = item.Items.FirstOrDefault(x => !string.IsNullOrEmpty(x.Comment));
             if (commentItem != null && !string.IsNullOrEmpty(commentItem.Comment))
-                return commentItem.Comment;
-            var messageItem = item.Items.FirstOrDefault(x => !string.IsNullOrEmpty(x.Message));
-            if (messageItem != null && !string.IsNullOrEmpty(messageItem.Message))
-                return messageItem.Message;
-            return "default";
+                sb.AppendLine($"{FilterLabel(commentItem.Comment)}");
+            return sb.ToString();
+        }
+        static string FilterLabel(string comment) {
+            if (comment.StartsWith("Label: "))
+                return "default";
+            return comment;
         }
     }
 

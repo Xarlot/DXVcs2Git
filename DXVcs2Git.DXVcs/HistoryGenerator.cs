@@ -44,7 +44,7 @@ namespace DXVcs2Git.DXVcs {
             try {
                 var repo = DXVcsConectionHelper.Connect(server);
                 repo.GetProject(vcsPath, localPath, timeStamp);
-                Log.Message("HistoryGenerator.GetProject performed.");
+                Log.Message($"HistoryGenerator.GetProject performed for {vcsPath}");
             }
             catch (Exception ex) {
                 Log.Error("HistoryGenerator.GetProject failed.", ex);

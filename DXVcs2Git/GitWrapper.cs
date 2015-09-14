@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection.Emit;
 using DXVcs2Git.Core;
 using LibGit2Sharp;
 
@@ -40,7 +41,7 @@ namespace DXVcs2Git {
         public void Fetch() {
             FetchOptions fetchOptions = new FetchOptions();
             fetchOptions.CredentialsProvider += (url, fromUrl, types) => credentials;
-            var network = repo.Network.Remotes.First();
+            var network = repo.Network.Remotes.FirstOrDefault();
             repo.Fetch(network.Name, fetchOptions);
         }
         public void Stage(string path) {
@@ -49,10 +50,11 @@ namespace DXVcs2Git {
         public void Commit(string comment, string user, string committerName, DateTime timeStamp) {
             CommitOptions commitOptions = new CommitOptions();
             commitOptions.AllowEmptyCommit = true;
-            var author = new Signature(user, "test@mail.com", timeStamp);
-            var comitter = new Signature(committerName, "test@mail.com", timeStamp);
+            DateTime localTime = timeStamp.ToLocalTime();
+            var author = new Signature(user, "test@mail.com", localTime);
+            var comitter = new Signature(committerName, "test@mail.com", localTime);
             repo.Commit(comment, author, comitter, commitOptions);
-            Log.Message($"Git commit performed for {user} {timeStamp}");
+            Log.Message($"Git commit performed for {user} {localTime}");
         }
         public void Push(string branch) {
             PushOptions options = new PushOptions();
@@ -62,8 +64,14 @@ namespace DXVcs2Git {
             Log.Message($"Push to branch {branch} completed");
         }
         public void EnsureBranch(string name, Commit whereCreateBranch) {
+            Fetch();
             Branch localBranch = this.repo.Branches[name];
             if (localBranch == null) {
+                Branch remoteBranch = this.repo.Branches[GetOriginName(name)];
+                if (remoteBranch != null) {
+                    localBranch = repo.CreateBranch(name, remoteBranch.CanonicalName);
+                    return;
+                }
                 if (whereCreateBranch == null)
                     localBranch = repo.CreateBranch(name);
                 else {
@@ -71,6 +79,9 @@ namespace DXVcs2Git {
                 }
                 Push(name);
             }
+        }
+        string GetOriginName(string name) {
+            return $"origin/{name}";
         }
         void InitializePush(Branch localBranch) {
             Remote remote = this.repo.Network.Remotes["origin"];
@@ -81,13 +92,13 @@ namespace DXVcs2Git {
         public Commit FindCommit(string branchName, string comment) {
             var branch = repo.Branches[branchName];
 
-            return branch.Commits.FirstOrDefault(x => x.Message?.Contains(comment) ?? false);
+            return branch.Commits.FirstOrDefault(x => x.Message?.Equals(comment) ?? false);
         }
 
         public DateTime CalcLastCommitDate(string branchName, string user) {
             var branch = repo.Branches["origin/" + branchName];
             var commit = branch.Commits.FirstOrDefault(x => x.Committer.Name == user);
-            return commit?.Author.When.DateTime ?? DateTime.MinValue;
+            return commit?.Author.When.DateTime.ToUniversalTime() ?? DateTime.MinValue;
         }
         public bool CalcHasModification() {
             RepositoryStatus status = repo.RetrieveStatus();
