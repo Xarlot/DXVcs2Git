@@ -69,16 +69,25 @@ namespace DXVcs2Git {
             if (localBranch == null) {
                 Branch remoteBranch = this.repo.Branches[GetOriginName(name)];
                 if (remoteBranch != null) {
-                    localBranch = repo.CreateBranch(name, remoteBranch.CanonicalName);
-                    return;
+                    if (whereCreateBranch == null) {
+                        InitLocalBranch(name, remoteBranch);
+                        return;
+                    }
                 }
                 if (whereCreateBranch == null)
-                    localBranch = repo.CreateBranch(name);
+                    repo.CreateBranch(name);
                 else {
-                    localBranch = repo.CreateBranch(name, whereCreateBranch);
+                    CreateBranchFromCommit(name, whereCreateBranch); 
                 }
                 Push(name);
             }
+        }
+        void InitLocalBranch(string name, Branch remoteBranch) {
+            this.repo.CreateBranch(name, remoteBranch.CanonicalName);
+        }
+        void CreateBranchFromCommit(string name, Commit whereCreateBranch) {
+            CheckOut(whereCreateBranch);
+            repo.CreateBranch(name);
         }
         string GetOriginName(string name) {
             return $"origin/{name}";
@@ -92,7 +101,7 @@ namespace DXVcs2Git {
         public Commit FindCommit(string branchName, string comment) {
             var branch = repo.Branches[branchName];
 
-            return branch.Commits.FirstOrDefault(x => x.Message?.Equals(comment) ?? false);
+            return branch.Commits.FirstOrDefault(x => x.Message?.StartsWith(comment) ?? false);
         }
 
         public DateTime CalcLastCommitDate(string branchName, string user) {
@@ -109,6 +118,12 @@ namespace DXVcs2Git {
             options.CheckoutModifiers = CheckoutModifiers.Force;
             repo.Checkout(repo.Branches[name], options);
             Log.Message($"Checkout branch {name} completed");
+        }
+        public void CheckOut(Commit commit) {
+            CheckoutOptions options = new CheckoutOptions();
+            options.CheckoutModifiers = CheckoutModifiers.Force;
+            repo.Checkout(commit, options);
+            Log.Message($"Checkout commit {commit.Id} completed");
         }
     }
 }
