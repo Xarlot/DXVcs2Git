@@ -55,6 +55,9 @@ namespace DXVcs2Git.Console {
                         gitWrapper.Commit(CalcComment(item), item.Author, username, item.TimeStamp);
                         gitWrapper.Push(branch.Name);
                     }
+                    else {
+                        Log.Message($"Empty commit rejected for {item.Author} {item.TimeStamp}.");
+                    }
                 });
                 int i = 0;
                 while (extractor.PerformExtraction()) {

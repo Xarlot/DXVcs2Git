@@ -46,6 +46,7 @@ namespace DXVcs2Git {
         }
         public void Stage(string path) {
             repo.Stage(path);
+            Log.Message($"Git stage performed.");
         }
         public void Commit(string comment, string user, string committerName, DateTime timeStamp) {
             CommitOptions commitOptions = new CommitOptions();
@@ -69,17 +70,16 @@ namespace DXVcs2Git {
             if (localBranch == null) {
                 Branch remoteBranch = this.repo.Branches[GetOriginName(name)];
                 if (remoteBranch != null) {
-                    if (whereCreateBranch == null) {
-                        InitLocalBranch(name, remoteBranch);
-                        return;
-                    }
+                    InitLocalBranch(name, remoteBranch);
+                    return;
                 }
-                if (whereCreateBranch == null)
+                if (whereCreateBranch == null) {
                     repo.CreateBranch(name);
-                else {
-                    CreateBranchFromCommit(name, whereCreateBranch); 
+                    Push(name);
                 }
-                Push(name);
+                else {
+                    CreateBranchFromCommit(name, whereCreateBranch);
+                }
             }
         }
         void InitLocalBranch(string name, Branch remoteBranch) {
