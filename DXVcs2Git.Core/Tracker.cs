@@ -11,5 +11,8 @@ namespace DXVcs2Git.Core {
                 return new TrackBranch(branch, $"$/{branch}", x);
             }).ToList();
         }
+        public TrackBranch FindBranch(string name) {
+            return Branches.FirstOrDefault(x => x.Name == name);
+        }
     }
 }

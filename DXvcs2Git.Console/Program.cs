@@ -12,64 +12,120 @@ using Polenter.Serialization;
 
 namespace DXVcs2Git.Console {
     internal class Program {
-        static string path = @"z:\test\";
-        static string testUrl = "http://litvinov-lnx/XPF/Common.git";
-        static string username = "dxvcs2gitservice";
+        const string repoPath = "repo";
         static void Main(string[] args) {
             var result = Parser.Default.ParseArguments<CommandLineOptions>(args);
             var exitCode = result.MapResult(clo => {
-                DoWork(clo);
-                return 0;
+                return DoWork(clo);
             },
             errors => 1);
             Environment.Exit(exitCode);
         }
 
-        static void DoWork(CommandLineOptions clo) {
-            GitWrapper gitWrapper = new GitWrapper(path, testUrl, new UsernamePasswordCredentials() { Username = username, Password = "q1w2e3r4t5y6" });
+        static int DoWork(CommandLineOptions clo) {
+            string localGitDir = clo.LocalFolder ?? Path.Combine(Environment.CurrentDirectory, repoPath);
+
+            string auxPath = clo.Repo;
+            string username = clo.Login;
+            string password = clo.Password;
+
+            GitWrapper gitWrapper = new GitWrapper(localGitDir, auxPath, new UsernamePasswordCredentials() { Username = username, Password = password });
             if (gitWrapper.IsEmpty) {
                 gitWrapper.Commit("Initial commit", username, username, new DateTime(2013, 12, 1));
                 gitWrapper.Push("master");
             }
             string localPath = Path.GetDirectoryName(Assembly.GetEntryAssembly().Location);
-            string configPath = Path.Combine(localPath, DefaultConfig.Config.TrackConfigPath);
+            string configPath = Path.Combine(localPath, clo.Tracker);
             var serializer = new SharpSerializer();
-            var trackConfig = (TrackConfig)serializer.Deserialize(configPath);
-            var tracker = new Tracker(trackConfig.TrackItems);
-            string trunk = "master";
-            Commit whereCreateBranch = null;
-            Log.Message("Start");
-            foreach (var branch in tracker.Branches) {
-                gitWrapper.EnsureBranch(branch.Name, whereCreateBranch);
-                gitWrapper.CheckOut(branch.Name);
-                Log.Message($"Branch {branch.Name} initialized");
+            TrackConfig trackConfig;
 
-                var history = HistoryGenerator.GenerateHistory(DefaultConfig.Config.AuxPath, branch);
-                Log.Message($"History generated. {history.Count} history items obtained");
-                DateTime lastCommit = gitWrapper.CalcLastCommitDate(branch.Name, username);
-                Log.Message($"Last commit has been performed at {lastCommit}");
-                var commits = HistoryGenerator.GenerateCommits(history).Where(x => x.TimeStamp >= lastCommit).ToList();
-                Log.Message($"Commits generated. {commits.Count} commits obtained");
-                ProjectExtractor extractor = new ProjectExtractor(commits, (item) => {
-                    string local = Path.Combine(path, item.Track.RelativeLocalPath);
-                    DirectoryHelper.DeleteDirectory(local);
-                    HistoryGenerator.GetProject(DefaultConfig.Config.AuxPath, item.Track.FullPath, local, item.TimeStamp);
-                    gitWrapper.Fetch();
-                    if (gitWrapper.CalcHasModification() || IsLabel(item)) {
-                        gitWrapper.Stage("*");
-                        gitWrapper.Commit(CalcComment(item), item.Author, username, item.TimeStamp);
-                        gitWrapper.Push(branch.Name);
-                    }
-                    else {
-                        Log.Message($"Empty commit rejected for {item.Author} {item.TimeStamp}.");
-                    }
-                });
-                int i = 0;
-                while (extractor.PerformExtraction()) {
-                    Log.Message($"{++i} from {commits.Count} push to branch {branch.Name} completed.");
-                }
-                whereCreateBranch = gitWrapper.FindCommit(branch.Name, CalcBranchComment(tracker.Branches, branch));
+            try {
+                trackConfig = (TrackConfig)serializer.Deserialize(configPath);
             }
+            catch (Exception ex) {
+                Log.Error("Loading items for track failed", ex);
+                return 1;
+            }
+
+            var tracker = new Tracker(trackConfig.TrackItems);
+            var branch = tracker.FindBranch(clo.Branch);
+            if (branch == null) {
+                Log.Error($"Specified branch {clo.Branch} not found in track file.");
+                return 1;
+            }
+
+            gitWrapper.EnsureBranch(branch.Name, null);
+            gitWrapper.CheckOut(branch.Name);
+            Log.Message($"Branch {branch.Name} initialized.");
+            DateTime lastCommit = gitWrapper.CalcLastCommitDate(branch.Name, username);
+            Log.Message($"Last commit has been performed at {lastCommit.ToLocalTime()}.");
+
+            var history = HistoryGenerator.GenerateHistory(auxPath, branch, lastCommit);
+            Log.Message($"History generated. {history.Count} history items obtained.");
+
+            var commits = HistoryGenerator.GenerateCommits(history).Where(x => x.TimeStamp >= lastCommit).ToList();
+            if (commits.Count > clo.CommitsCount) {
+                Log.Message($"Commits generated. First {clo.CommitsCount} of {commits.Count} commits taken.");
+                commits = commits.Take(clo.CommitsCount).ToList();
+            }
+            else {
+                Log.Message($"Commits generated. {commits.Count} commits taken.");
+            }
+
+            ProjectExtractor extractor = new ProjectExtractor(commits, (item) => {
+                string local = Path.Combine(localGitDir, item.Track.RelativeLocalPath);
+                DirectoryHelper.DeleteDirectory(local);
+                HistoryGenerator.GetProject(auxPath, item.Track.FullPath, local, item.TimeStamp);
+                gitWrapper.Fetch();
+                if (gitWrapper.CalcHasModification() || IsLabel(item)) {
+                    gitWrapper.Stage("*");
+                    gitWrapper.Commit(CalcComment(item), item.Author, username, item.TimeStamp);
+                    gitWrapper.Push(branch.Name);
+                }
+                else {
+                    Log.Message($"Empty commit rejected for {item.Author} {item.TimeStamp}.");
+                }
+            });
+            int i = 0;
+            while (extractor.PerformExtraction()) {
+                Log.Message($"{++i} from {commits.Count} push to branch {branch.Name} completed.");
+            }
+
+            //string trunk = "master";
+            //Commit whereCreateBranch = null;
+            //Log.Message("Start");
+            //foreach (var branch in tracker.Branches) {
+            //    gitWrapper.EnsureBranch(branch.Name, whereCreateBranch);
+            //    gitWrapper.CheckOut(branch.Name);
+            //    Log.Message($"Branch {branch.Name} initialized");
+
+            //    var history = HistoryGenerator.GenerateHistory(DefaultConfig.Config.AuxPath, branch);
+            //    Log.Message($"History generated. {history.Count} history items obtained");
+            //    DateTime lastCommit = gitWrapper.CalcLastCommitDate(branch.Name, username);
+            //    Log.Message($"Last commit has been performed at {lastCommit}");
+            //    var commits = HistoryGenerator.GenerateCommits(history).Where(x => x.TimeStamp >= lastCommit).ToList();
+            //    Log.Message($"Commits generated. {commits.Count} commits obtained");
+            //    ProjectExtractor extractor = new ProjectExtractor(commits, (item) => {
+            //        string local = Path.Combine(localGitDir, item.Track.RelativeLocalPath);
+            //        DirectoryHelper.DeleteDirectory(local);
+            //        HistoryGenerator.GetProject(DefaultConfig.Config.AuxPath, item.Track.FullPath, local, item.TimeStamp);
+            //        gitWrapper.Fetch();
+            //        if (gitWrapper.CalcHasModification() || IsLabel(item)) {
+            //            gitWrapper.Stage("*");
+            //            gitWrapper.Commit(CalcComment(item), item.Author, username, item.TimeStamp);
+            //            gitWrapper.Push(branch.Name);
+            //        }
+            //        else {
+            //            Log.Message($"Empty commit rejected for {item.Author} {item.TimeStamp}.");
+            //        }
+            //    });
+            //    int i = 0;
+            //    while (extractor.PerformExtraction()) {
+            //        Log.Message($"{++i} from {commits.Count} push to branch {branch.Name} completed.");
+            //    }
+            //    whereCreateBranch = gitWrapper.FindCommit(branch.Name, CalcBranchComment(tracker.Branches, branch));
+            //}
+            return 0;
         }
         static bool IsLabel(CommitItem item) {
             return item.Items.Any(x => !string.IsNullOrEmpty(x.Label));

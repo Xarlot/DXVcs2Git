@@ -35,7 +35,6 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="BaseFixture.cs" />
-    <Compile Include="Config.cs" />
     <Compile Include="DXVcsServiceTests.cs" />
     <Compile Include="GitServiceTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

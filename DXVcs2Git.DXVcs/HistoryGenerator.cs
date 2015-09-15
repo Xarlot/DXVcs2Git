@@ -5,12 +5,12 @@ using DXVcs2Git.Core;
 
 namespace DXVcs2Git.DXVcs {
     public static class HistoryGenerator {
-        public static IList<HistoryItem> GenerateHistory(string server, TrackBranch branch) {
+        public static IList<HistoryItem> GenerateHistory(string server, TrackBranch branch, DateTime from) {
             try {
                 var repo = DXVcsConectionHelper.Connect(server);
                 var history = Enumerable.Empty<HistoryItem>();
                 foreach (var trackItem in branch.TrackItems) {
-                    var historyForItem = repo.GetProjectHistory(trackItem.FullPath, true).Select(x =>
+                    var historyForItem = repo.GetProjectHistory(trackItem.FullPath, true, from).Select(x =>
                         new HistoryItem() {
                             ActionDate = x.ActionDate,
                             Comment = x.Comment,

@@ -11,6 +11,22 @@ using NUnit.Framework;
 
 
 namespace DXVcs2Git.Tests {
+    public class Config {
+        public string AuxPath { get; set; }
+        public string TrackConfigPath { get; set; }
+    }
+
+    public static class DefaultConfig {
+        static Config config;
+        public static Config Config { get { return config ?? (config = CreateDefaultConfig()); } }
+        static Config CreateDefaultConfig() {
+            return new Config() {
+                AuxPath = @"net.tcp://vcsservice.devexpress.devx:9091/DXVCSService",
+                TrackConfigPath = "trackconfig_common.config",
+            };
+        }
+    }
+
     [TestFixture]
     public class DXVcsServiceTests {
         [Test]
