@@ -3,15 +3,10 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Runtime.InteropServices;
-using System.Runtime.Remoting.Messaging;
 using System.Text;
-using DXVcs2Git;
+using CommandLine;
 using DXVcs2Git.Core;
 using DXVcs2Git.DXVcs;
-using DXVcs2Git.Tests;
-using DXVcs2Git.Tests.TestHelpers;
-using DXVCS;
 using LibGit2Sharp;
 using Polenter.Serialization;
 
@@ -21,6 +16,16 @@ namespace DXVcs2Git.Console {
         static string testUrl = "http://litvinov-lnx/XPF/Common.git";
         static string username = "dxvcs2gitservice";
         static void Main(string[] args) {
+            var result = Parser.Default.ParseArguments<CommandLineOptions>(args);
+            var exitCode = result.MapResult(clo => {
+                DoWork(clo);
+                return 0;
+            },
+            errors => 1);
+            Environment.Exit(exitCode);
+        }
+
+        static void DoWork(CommandLineOptions clo) {
             GitWrapper gitWrapper = new GitWrapper(path, testUrl, new UsernamePasswordCredentials() { Username = username, Password = "q1w2e3r4t5y6" });
             if (gitWrapper.IsEmpty) {
                 gitWrapper.Commit("Initial commit", username, username, new DateTime(2013, 12, 1));
