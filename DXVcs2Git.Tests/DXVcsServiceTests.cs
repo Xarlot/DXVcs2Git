@@ -1,9 +1,7 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Security.Policy;
 using DXVcs2Git.Core;
 using DXVcs2Git.DXVcs;
 using DXVCS;
