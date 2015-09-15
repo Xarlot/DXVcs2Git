@@ -73,6 +73,10 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
     <None Include="packages.config" />
+    <None Include="trackconfig_reportdesigner.config">
+      <SubType>Designer</SubType>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Include="users.config">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
