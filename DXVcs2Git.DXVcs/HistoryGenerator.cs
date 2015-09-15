@@ -26,7 +26,7 @@ namespace DXVcs2Git.DXVcs {
             }
             catch (Exception ex) {
                 Log.Error("HistoryGenerator.GenerateHistory failed.", ex);
-                return new List<HistoryItem>();
+                throw;
             }
         }
         public static IList<CommitItem> GenerateCommits(IEnumerable<HistoryItem> historyItems) {
@@ -48,6 +48,7 @@ namespace DXVcs2Git.DXVcs {
             }
             catch (Exception ex) {
                 Log.Error("HistoryGenerator.GetProject failed.", ex);
+                throw;
             }
         }
     }
