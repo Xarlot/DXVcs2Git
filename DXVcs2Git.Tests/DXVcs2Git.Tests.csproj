@@ -42,6 +42,7 @@
     <Compile Include="TestHelpers\Constants.cs" />
     <Compile Include="TestHelpers\Interfaces.cs" />
     <Compile Include="TestHelpers\SelfCleaningDirectory.cs" />
+    <Compile Include="UsersConfigGenerator.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\DXVcs2Git.Core\DXVcs2Git.Core.csproj">
@@ -82,6 +83,10 @@
     </Reference>
     <Reference Include="pnunit.framework">
       <HintPath>..\packages\NUnit.2.5.10.11092\lib\pnunit.framework.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Polenter.SharpSerializer, Version=2.20.0.0, Culture=neutral, PublicKeyToken=8f4f20011571ee5f, processorArchitecture=MSIL">
+      <HintPath>..\packages\SharpSerializer.2.20\lib\net20\Polenter.SharpSerializer.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="ReactiveGit">

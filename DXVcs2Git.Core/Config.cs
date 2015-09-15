@@ -16,7 +16,7 @@ namespace DXVcs2Git.DXVcs {
         static Config CreateDefaultConfig() {
             return new Config() {
                 AuxPath = @"net.tcp://vcsservice.devexpress.devx:9091/DXVCSService",
-                TrackConfigPath = "trackconfig.txt",
+                TrackConfigPath = "trackconfig_common.config",
             };
         }
     }
