@@ -25,6 +25,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DXVcs2Git.Console", "DXvcs2
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DXVcs2Git.Core", "DXVcs2Git.Core\DXVcs2Git.Core.csproj", "{7CE585B7-1F19-442D-B1A4-0C1AD855A55C}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DXVcs2Git.Downloader", "DXVcs2Git.Downloader\DXVcs2Git.Downloader.csproj", "{38AEF8A9-B03A-41A7-A338-B5872C8290B7}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -55,6 +57,10 @@ Global
 		{7CE585B7-1F19-442D-B1A4-0C1AD855A55C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7CE585B7-1F19-442D-B1A4-0C1AD855A55C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{7CE585B7-1F19-442D-B1A4-0C1AD855A55C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{38AEF8A9-B03A-41A7-A338-B5872C8290B7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{38AEF8A9-B03A-41A7-A338-B5872C8290B7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{38AEF8A9-B03A-41A7-A338-B5872C8290B7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{38AEF8A9-B03A-41A7-A338-B5872C8290B7}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
