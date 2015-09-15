@@ -13,6 +13,7 @@ using Polenter.Serialization;
 namespace DXVcs2Git.Console {
     internal class Program {
         const string repoPath = "repo";
+        const string vcsPath = @"net.tcp://vcsservice.devexpress.devx:9091/DXVCSService";
         static void Main(string[] args) {
             var result = Parser.Default.ParseArguments<CommandLineOptions>(args);
             var exitCode = result.MapResult(clo => {
@@ -23,13 +24,13 @@ namespace DXVcs2Git.Console {
         }
 
         static int DoWork(CommandLineOptions clo) {
-            string localGitDir = clo.LocalFolder ?? Path.Combine(Environment.CurrentDirectory, repoPath);
+            string localGitDir = clo.LocalFolder != null && Path.IsPathRooted(clo.LocalFolder) ? clo.LocalFolder : Path.Combine(Environment.CurrentDirectory, clo.LocalFolder ?? repoPath);
 
-            string auxPath = clo.Repo;
+            string gitRepoPath = clo.Repo;
             string username = clo.Login;
             string password = clo.Password;
 
-            GitWrapper gitWrapper = new GitWrapper(localGitDir, auxPath, new UsernamePasswordCredentials() { Username = username, Password = password });
+            GitWrapper gitWrapper = new GitWrapper(localGitDir, gitRepoPath, new UsernamePasswordCredentials() { Username = username, Password = password });
             if (gitWrapper.IsEmpty) {
                 gitWrapper.Commit("Initial commit", username, username, new DateTime(2013, 12, 1));
                 gitWrapper.Push("master");
@@ -60,7 +61,7 @@ namespace DXVcs2Git.Console {
             DateTime lastCommit = gitWrapper.CalcLastCommitDate(branch.Name, username);
             Log.Message($"Last commit has been performed at {lastCommit.ToLocalTime()}.");
 
-            var history = HistoryGenerator.GenerateHistory(auxPath, branch, lastCommit);
+            var history = HistoryGenerator.GenerateHistory(vcsPath, branch, lastCommit);
             Log.Message($"History generated. {history.Count} history items obtained.");
 
             var commits = HistoryGenerator.GenerateCommits(history).Where(x => x.TimeStamp >= lastCommit).ToList();
@@ -75,7 +76,7 @@ namespace DXVcs2Git.Console {
             ProjectExtractor extractor = new ProjectExtractor(commits, (item) => {
                 string local = Path.Combine(localGitDir, item.Track.RelativeLocalPath);
                 DirectoryHelper.DeleteDirectory(local);
-                HistoryGenerator.GetProject(auxPath, item.Track.FullPath, local, item.TimeStamp);
+                HistoryGenerator.GetProject(vcsPath, item.Track.FullPath, local, item.TimeStamp);
                 gitWrapper.Fetch();
                 if (gitWrapper.CalcHasModification() || IsLabel(item)) {
                     gitWrapper.Stage("*");

@@ -127,24 +127,6 @@ namespace DXVcs2Git.DXVcs {
             byte[] data = DXVCSHelpers.TryToDecompressData(Service.GetFileData(vcsFile, version));
             File.WriteAllBytes(fileName, data);
         }
-        //public void GetProject(string vcsPath, string localPath, DateTime timeStamp) {
-        //    if (string.IsNullOrEmpty(vcsPath))
-        //        throw new ArgumentException("vcsFile");
-        //    using (VcsClientCore vcsClientCore = new VcsClientCore(new FileSystem(), new ConsoleContactWithUser(true, true, false, true, true, null, null))) {
-        //        if (!VcsLogOn(vcsClientCore))
-        //            return;
-        //        vcsClientCore.GetLatestVersion(localPath, vcsPath, true, timeStamp, true, true, ReplaceWriteable.Replace, FileTime.Modification, new VcsClientBatchState());
-        //    }
-        //}
-        //bool VcsLogOn(VcsClientCore vcsClientCore) {
-        //    try {
-        //        vcsClientCore.LogOn(DefaultConfig.Config.AuxPath, false, false);
-        //        return true;
-        //    }
-        //    catch (Exception) {
-        //        return false;
-        //    }
-        //}
         public void GetProject(string vcsPath, string localPath, DateTime timeStamp) {
             if (string.IsNullOrEmpty(vcsPath))
                 throw new ArgumentException("vcsFile");
