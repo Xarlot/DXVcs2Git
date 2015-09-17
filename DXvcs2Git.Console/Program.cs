@@ -1,8 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Net.Configuration;
 using System.Reflection;
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using CommandLine;
 using DXVcs2Git.Core;
@@ -13,7 +16,7 @@ using Polenter.Serialization;
 namespace DXVcs2Git.Console {
     internal class Program {
         const string repoPath = "repo";
-        const string vcsPath = @"net.tcp://vcsservice.devexpress.devx:9091/DXVCSService";
+        const string server = @"net.tcp://vcsservice.devexpress.devx:9091/DXVCSService";
         static void Main(string[] args) {
             var result = Parser.Default.ParseArguments<CommandLineOptions>(args);
             var exitCode = result.MapResult(clo => {
@@ -61,10 +64,10 @@ namespace DXVcs2Git.Console {
             DateTime lastCommit = gitWrapper.CalcLastCommitDate(branch.Name, username);
             Log.Message($"Last commit has been performed at {lastCommit.ToLocalTime()}.");
 
-            var history = HistoryGenerator.GenerateHistory(vcsPath, branch, lastCommit);
+            var history = HistoryGenerator.GenerateHistory(server, branch, lastCommit).OrderBy(x => x.ActionDate).ToList();
             Log.Message($"History generated. {history.Count} history items obtained.");
 
-            var commits = HistoryGenerator.GenerateCommits(history).Where(x => x.TimeStamp >= lastCommit).ToList();
+            var commits = HistoryGenerator.GenerateCommits(history).Where(x => x.TimeStamp > lastCommit).ToList();
             if (commits.Count > clo.CommitsCount) {
                 Log.Message($"Commits generated. First {clo.CommitsCount} of {commits.Count} commits taken.");
                 commits = commits.Take(clo.CommitsCount).ToList();
@@ -74,70 +77,53 @@ namespace DXVcs2Git.Console {
             }
 
             ProjectExtractor extractor = new ProjectExtractor(commits, (item) => {
-                string local = Path.Combine(localGitDir, item.Track.RelativeLocalPath);
-                DirectoryHelper.DeleteDirectory(local);
-                HistoryGenerator.GetProject(vcsPath, item.Track.FullPath, local, item.TimeStamp);
-                gitWrapper.Fetch();
-                if (gitWrapper.CalcHasModification() || IsLabel(item)) {
-                    gitWrapper.Stage("*");
-                    gitWrapper.Commit(CalcComment(item), item.Author, username, item.TimeStamp);
+                var localCommits = HistoryGenerator.GetCommits(item.Items).ToList();
+                bool hasModifications = false;
+                foreach (var localCommit in localCommits) {
+                    string localProjectPath = Path.Combine(localGitDir, localCommit.Track.RelativeLocalPath);
+                    DirectoryHelper.DeleteDirectory(localProjectPath);
+                    HistoryGenerator.GetProject(server, localCommit.Track.FullPath, localProjectPath, item.TimeStamp);
+
+                    gitWrapper.Fetch();
+                    bool isLabel = IsLabel(item);
+                    bool hasLocalModifications = gitWrapper.CalcHasModification() || isLabel;
+                    if (hasLocalModifications) {
+                        gitWrapper.Stage("*");
+                        try {
+                            gitWrapper.Commit(CalcComment(localCommit), localCommit.Author, username, localCommit.TimeStamp, isLabel);
+                            hasModifications = true;
+                        }
+                        catch (Exception ex) {
+                            Log.Message($"Empty commit detected for {localCommit.Author} {localCommit.TimeStamp}.");
+                        }
+                    }
+                }
+                if (hasModifications) {
+                    gitWrapper.AddTag(CreateTagName(branch.Name), gitWrapper.GetHead(branch.Name), username, item.TimeStamp, item.TimeStamp.Ticks.ToString());
                     gitWrapper.Push(branch.Name);
                 }
                 else {
-                    Log.Message($"Empty commit rejected for {item.Author} {item.TimeStamp}.");
+                    Log.Message($"Push empty commits rejected for {item.Author} {item.TimeStamp}.");
                 }
             });
             int i = 0;
             while (extractor.PerformExtraction()) {
                 Log.Message($"{++i} from {commits.Count} push to branch {branch.Name} completed.");
             }
-
-            //string trunk = "master";
-            //Commit whereCreateBranch = null;
-            //Log.Message("Start");
-            //foreach (var branch in tracker.Branches) {
-            //    gitWrapper.EnsureBranch(branch.Name, whereCreateBranch);
-            //    gitWrapper.CheckOut(branch.Name);
-            //    Log.Message($"Branch {branch.Name} initialized");
-
-            //    var history = HistoryGenerator.GenerateHistory(DefaultConfig.Config.AuxPath, branch);
-            //    Log.Message($"History generated. {history.Count} history items obtained");
-            //    DateTime lastCommit = gitWrapper.CalcLastCommitDate(branch.Name, username);
-            //    Log.Message($"Last commit has been performed at {lastCommit}");
-            //    var commits = HistoryGenerator.GenerateCommits(history).Where(x => x.TimeStamp >= lastCommit).ToList();
-            //    Log.Message($"Commits generated. {commits.Count} commits obtained");
-            //    ProjectExtractor extractor = new ProjectExtractor(commits, (item) => {
-            //        string local = Path.Combine(localGitDir, item.Track.RelativeLocalPath);
-            //        DirectoryHelper.DeleteDirectory(local);
-            //        HistoryGenerator.GetProject(DefaultConfig.Config.AuxPath, item.Track.FullPath, local, item.TimeStamp);
-            //        gitWrapper.Fetch();
-            //        if (gitWrapper.CalcHasModification() || IsLabel(item)) {
-            //            gitWrapper.Stage("*");
-            //            gitWrapper.Commit(CalcComment(item), item.Author, username, item.TimeStamp);
-            //            gitWrapper.Push(branch.Name);
-            //        }
-            //        else {
-            //            Log.Message($"Empty commit rejected for {item.Author} {item.TimeStamp}.");
-            //        }
-            //    });
-            //    int i = 0;
-            //    while (extractor.PerformExtraction()) {
-            //        Log.Message($"{++i} from {commits.Count} push to branch {branch.Name} completed.");
-            //    }
-            //    whereCreateBranch = gitWrapper.FindCommit(branch.Name, CalcBranchComment(tracker.Branches, branch));
-            //}
             return 0;
         }
         static bool IsLabel(CommitItem item) {
             return item.Items.Any(x => !string.IsNullOrEmpty(x.Label));
         }
-        static string CalcBranchComment(IList<TrackBranch> branches, TrackBranch branch) {
-            int index = branches.IndexOf(branch);
-            if (index == branches.Count - 1)
-                return "Label: branch nothing";
-            return $"Label: branch {branches[index + 1].Name.Remove(0, 2)}";
+        static string CreateTagName(string branchName) {
+            return $"dxvcs2gitservice_sync_{branchName}";
         }
-
+        //static string CalcBranchComment(IList<TrackBranch> branches, TrackBranch branch) {
+        //    int index = branches.IndexOf(branch);
+        //    if (index == branches.Count - 1)
+        //        return "Label: branch nothing";
+        //    return $"Label: branch {branches[index + 1].Name.Remove(0, 2)}";
+        //}
         static string CalcComment(CommitItem item) {
             StringBuilder sb = new StringBuilder();
             var labelItem = item.Items.FirstOrDefault(x => !string.IsNullOrEmpty(x.Label));
@@ -146,6 +132,7 @@ namespace DXVcs2Git.Console {
             var commentItem = item.Items.FirstOrDefault(x => !string.IsNullOrEmpty(x.Comment));
             if (commentItem != null && !string.IsNullOrEmpty(commentItem.Comment))
                 sb.AppendLine($"{FilterLabel(commentItem.Comment)}");
+            sb.AppendLine($"AutoSync: {item.TimeStamp}");
             return sb.ToString();
         }
         static string FilterLabel(string comment) {
@@ -154,5 +141,4 @@ namespace DXVcs2Git.Console {
             return comment;
         }
     }
-
 }

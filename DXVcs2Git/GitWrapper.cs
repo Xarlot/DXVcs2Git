@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.Tracing;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection.Emit;
@@ -13,11 +15,15 @@ namespace DXVcs2Git {
         readonly string repoPath;
         readonly string gitPath;
         readonly Repository repo;
-        public bool IsEmpty { get { return !repo.Branches.Any(); } }
+        public bool IsEmpty {
+            get { return !repo.Branches.Any(); }
+        }
         public string GitDirectory {
             get { return repoPath; }
         }
-        public Credentials Credentials { get { return credentials; } }
+        public Credentials Credentials {
+            get { return credentials; }
+        }
 
         public GitWrapper(string path, string gitPath, Credentials credentials) {
             this.path = path;
@@ -48,9 +54,9 @@ namespace DXVcs2Git {
             repo.Stage(path);
             Log.Message($"Git stage performed.");
         }
-        public void Commit(string comment, string user, string committerName, DateTime timeStamp) {
+        public void Commit(string comment, string user, string committerName, DateTime timeStamp, bool allowEmpty = true) {
             CommitOptions commitOptions = new CommitOptions();
-            commitOptions.AllowEmptyCommit = true;
+            commitOptions.AllowEmptyCommit = allowEmpty;
             DateTime localTime = timeStamp.ToLocalTime();
             var author = new Signature(user, "test@mail.com", localTime);
             var comitter = new Signature(committerName, "test@mail.com", localTime);
@@ -92,22 +98,38 @@ namespace DXVcs2Git {
         string GetOriginName(string name) {
             return $"origin/{name}";
         }
-        void InitializePush(Branch localBranch) {
-            Remote remote = this.repo.Network.Remotes["origin"];
-            this.repo.Branches.Update(localBranch,
-                b => b.Remote = remote.Name,
-                b => b.UpstreamBranch = localBranch.CanonicalName);
-        }
         public Commit FindCommit(string branchName, string comment) {
             var branch = repo.Branches[branchName];
-
             return branch.Commits.FirstOrDefault(x => x.Message?.StartsWith(comment) ?? false);
         }
 
         public DateTime CalcLastCommitDate(string branchName, string user) {
-            var branch = repo.Branches["origin/" + branchName];
+            var tags = repo.Tags.Where(x => {
+                bool isAnnotated = x.IsAnnotated;
+                return isAnnotated && x.FriendlyName.ToLowerInvariant().StartsWith("dxvcs2gitservice_sync_");
+            });
+            if (!tags.Any())
+                return GuessLastCommitTime(branchName, user);
+            var branchTags = tags.Where(x => x.Annotation.Name.ToLowerInvariant().Split(new[] { "_" }, StringSplitOptions.RemoveEmptyEntries).Any(chunk => chunk == branchName));
+            if (!branchTags.Any())
+                return GuessLastCommitTime(branchName, user);
+            var lastSyncTagTicks = branchTags.Max(x => {
+                var tagAnnotation = x.Annotation;
+                long ticks = Convert.ToInt64(tagAnnotation.Message);
+                return ticks;
+            });
+            if (lastSyncTagTicks > 0)
+                return new DateTime(lastSyncTagTicks);
+            return GuessLastCommitTime(branchName, user);
+        }
+        DateTime GuessLastCommitTime(string branchName, string user) {
+            var branch = this.repo.Branches[branchName];
             var commit = branch.Commits.FirstOrDefault(x => x.Committer.Name == user);
             return commit?.Author.When.DateTime.ToUniversalTime() ?? DateTime.MinValue;
+        }
+        DateTime CalcLastCommitTime(string message) {
+            long ticks = Convert.ToInt64(message);
+            return new DateTime(ticks);
         }
         public bool CalcHasModification() {
             RepositoryStatus status = repo.RetrieveStatus();
@@ -124,6 +146,14 @@ namespace DXVcs2Git {
             options.CheckoutModifiers = CheckoutModifiers.Force;
             repo.Checkout(commit, options);
             Log.Message($"Checkout commit {commit.Id} completed");
+        }
+        public void AddTag(string tagName, GitObject target, string commiterName, DateTime timeStamp, string message) {
+            repo.Tags.Add(tagName, target, new Signature(commiterName, "test@mail.com", timeStamp), message, true);
+            Log.Message($"Apply tag commit {tagName} completed");
+        }
+        public Commit GetHead(string branchName) {
+            var branch = repo.Branches[branchName];
+            return branch.Commits.First();
         }
     }
 }

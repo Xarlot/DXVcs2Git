@@ -3,9 +3,9 @@ using System.Collections.Generic;
 
 namespace DXVcs2Git.Core {
     public struct CommitItem {
-        public DateTime TimeStamp { get; set; }
         public string Author { get; set; }
-        public IList<HistoryItem> Items { get; set; }
         public TrackItem Track { get; set; }
+        public DateTime TimeStamp { get; set; }
+        public IList<HistoryItem> Items { get; set; }
     }
 }

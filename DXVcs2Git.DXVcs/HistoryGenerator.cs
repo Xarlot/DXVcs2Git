@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices.ComTypes;
 using DXVcs2Git.Core;
 
 namespace DXVcs2Git.DXVcs {
@@ -31,11 +32,7 @@ namespace DXVcs2Git.DXVcs {
         }
         public static IList<CommitItem> GenerateCommits(IEnumerable<HistoryItem> historyItems) {
             var grouped = historyItems.AsParallel().GroupBy(x => x.ActionDate);
-            var commits = grouped.Select(x => {
-                IList<HistoryItem> items = x.ToList();
-                HistoryItem historyItem = items.First();
-                return new CommitItem() {Author = historyItem.User.ToLowerInvariant(), TimeStamp = historyItem.ActionDate, Items = items, Track = historyItem.Track};
-            }).OrderBy(x => x.TimeStamp);
+            var commits = grouped.Select(x => new CommitItem() {Items = x.ToList(), TimeStamp = x.First().ActionDate}).OrderBy(x => x.TimeStamp);
             var totalCommits = commits.ToList();
             int index = totalCommits.FindIndex(x => x.Items.Any(y => y.Message.ToLowerInvariant() == "create"));
             return totalCommits.Skip(index).ToList();
@@ -49,6 +46,21 @@ namespace DXVcs2Git.DXVcs {
             catch (Exception ex) {
                 Log.Error("HistoryGenerator.GetProject failed.", ex);
                 throw;
+            }
+        }
+        public static IEnumerable<CommitItem> GetCommits(IList<HistoryItem> items) {
+            var changedProjects = items.GroupBy(x => x.Track.FullPath);
+            foreach (var project in changedProjects) {
+                var changeSet = project.GroupBy(x => x.User);
+                foreach (var changeItem in changeSet) {
+                    CommitItem item = new CommitItem();
+                    var first = changeItem.First();
+                    item.Author = first.User;
+                    item.Items = changeItem.ToList();
+                    item.Track = first.Track;
+                    item.TimeStamp = first.ActionDate;
+                    yield return item;
+                }
             }
         }
     }
