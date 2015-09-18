@@ -1,11 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Net.Configuration;
 using System.Reflection;
-using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using CommandLine;
 using DXVcs2Git.Core;
@@ -15,6 +12,7 @@ using Polenter.Serialization;
 
 namespace DXVcs2Git.Console {
     internal class Program {
+        const string autoSyncFormat = "{0:M/d/yyyy HH:mm:ss.ffffff}";
         const string repoPath = "repo";
         const string server = @"net.tcp://vcsservice.devexpress.devx:9091/DXVCSService";
         static void Main(string[] args) {
@@ -60,6 +58,7 @@ namespace DXVcs2Git.Console {
 
             gitWrapper.EnsureBranch(branch.Name, null);
             gitWrapper.CheckOut(branch.Name);
+            gitWrapper.Fetch(true);
             Log.Message($"Branch {branch.Name} initialized.");
             DateTime lastCommit = gitWrapper.CalcLastCommitDate(branch.Name, username);
             Log.Message($"Last commit has been performed at {lastCommit.ToLocalTime()}.");
@@ -79,6 +78,7 @@ namespace DXVcs2Git.Console {
             ProjectExtractor extractor = new ProjectExtractor(commits, (item) => {
                 var localCommits = HistoryGenerator.GetCommits(item.Items).ToList();
                 bool hasModifications = false;
+                Commit last = null;
                 foreach (var localCommit in localCommits) {
                     string localProjectPath = Path.Combine(localGitDir, localCommit.Track.RelativeLocalPath);
                     DirectoryHelper.DeleteDirectory(localProjectPath);
@@ -90,17 +90,20 @@ namespace DXVcs2Git.Console {
                     if (hasLocalModifications) {
                         gitWrapper.Stage("*");
                         try {
-                            gitWrapper.Commit(CalcComment(localCommit), localCommit.Author, username, localCommit.TimeStamp, isLabel);
+                            last = gitWrapper.Commit(CalcComment(localCommit), localCommit.Author, username, localCommit.TimeStamp, isLabel);
                             hasModifications = true;
                         }
-                        catch (Exception ex) {
+                        catch (Exception) {
                             Log.Message($"Empty commit detected for {localCommit.Author} {localCommit.TimeStamp}.");
                         }
                     }
                 }
                 if (hasModifications) {
-                    gitWrapper.AddTag(CreateTagName(branch.Name), gitWrapper.GetHead(branch.Name), username, item.TimeStamp, item.TimeStamp.Ticks.ToString());
                     gitWrapper.Push(branch.Name);
+                    if (last != null) {
+                        string tagName = CreateTagName(branch.Name);
+                        gitWrapper.AddTag(tagName, last, username, item.TimeStamp, string.Format(autoSyncFormat, item.TimeStamp));
+                    }
                 }
                 else {
                     Log.Message($"Push empty commits rejected for {item.Author} {item.TimeStamp}.");
@@ -118,12 +121,6 @@ namespace DXVcs2Git.Console {
         static string CreateTagName(string branchName) {
             return $"dxvcs2gitservice_sync_{branchName}";
         }
-        //static string CalcBranchComment(IList<TrackBranch> branches, TrackBranch branch) {
-        //    int index = branches.IndexOf(branch);
-        //    if (index == branches.Count - 1)
-        //        return "Label: branch nothing";
-        //    return $"Label: branch {branches[index + 1].Name.Remove(0, 2)}";
-        //}
         static string CalcComment(CommitItem item) {
             StringBuilder sb = new StringBuilder();
             var labelItem = item.Items.FirstOrDefault(x => !string.IsNullOrEmpty(x.Label));
@@ -132,7 +129,7 @@ namespace DXVcs2Git.Console {
             var commentItem = item.Items.FirstOrDefault(x => !string.IsNullOrEmpty(x.Comment));
             if (commentItem != null && !string.IsNullOrEmpty(commentItem.Comment))
                 sb.AppendLine($"{FilterLabel(commentItem.Comment)}");
-            sb.AppendLine($"AutoSync: {item.TimeStamp}");
+            sb.AppendLine(string.Format(autoSyncFormat, item.TimeStamp));
             return sb.ToString();
         }
         static string FilterLabel(string comment) {
