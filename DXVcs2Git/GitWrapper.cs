@@ -44,31 +44,38 @@ namespace DXVcs2Git {
         }
         public void Dispose() {
         }
-        public void Fetch() {
-            FetchOptions fetchOptions = new FetchOptions();
-            fetchOptions.CredentialsProvider += (url, fromUrl, types) => credentials;
+        public void Fetch(bool updateTags = false) {
+            FetchOptions options = new FetchOptions();
+            options.CredentialsProvider += (url, fromUrl, types) => credentials;
+            if (updateTags)
+                options.TagFetchMode = TagFetchMode.All;
             var network = repo.Network.Remotes.FirstOrDefault();
-            repo.Fetch(network.Name, fetchOptions);
+            repo.Fetch(network.Name, options);
         }
         public void Stage(string path) {
             repo.Stage(path);
             Log.Message($"Git stage performed.");
         }
-        public void Commit(string comment, string user, string committerName, DateTime timeStamp, bool allowEmpty = true) {
+        public Commit Commit(string comment, string user, string committerName, DateTime timeStamp, bool allowEmpty = true) {
             CommitOptions commitOptions = new CommitOptions();
             commitOptions.AllowEmptyCommit = allowEmpty;
             DateTime localTime = timeStamp.ToLocalTime();
             var author = new Signature(user, "test@mail.com", localTime);
             var comitter = new Signature(committerName, "test@mail.com", localTime);
-            repo.Commit(comment, author, comitter, commitOptions);
+            var commit = repo.Commit(comment, author, comitter, commitOptions);
             Log.Message($"Git commit performed for {user} {localTime}");
+            return commit;
         }
         public void Push(string branch) {
+            Push($@"refs/heads/{branch}", true);
+        }
+        public void Push(string refspec, bool force) {
             PushOptions options = new PushOptions();
             options.CredentialsProvider += (url, fromUrl, types) => credentials;
             Remote remote = this.repo.Network.Remotes["origin"];
-            repo.Network.Push(remote, "HEAD", $@"refs/heads/{branch}", options);
-            Log.Message($"Push to branch {branch} completed");
+            repo.Network.Push(remote, force ? $@"+{refspec}" : refspec, refspec, options);
+            Log.Message($"Push to refspec {refspec} completed");
+
         }
         public void EnsureBranch(string name, Commit whereCreateBranch) {
             Fetch();
@@ -102,34 +109,50 @@ namespace DXVcs2Git {
             var branch = repo.Branches[branchName];
             return branch.Commits.FirstOrDefault(x => x.Message?.StartsWith(comment) ?? false);
         }
-
         public DateTime CalcLastCommitDate(string branchName, string user) {
             var tags = repo.Tags.Where(x => {
                 bool isAnnotated = x.IsAnnotated;
                 return isAnnotated && x.FriendlyName.ToLowerInvariant().StartsWith("dxvcs2gitservice_sync_");
             });
             if (!tags.Any())
-                return GuessLastCommitTime(branchName, user);
+                return GetLastCommitTime(branchName, user);
             var branchTags = tags.Where(x => x.Annotation.Name.ToLowerInvariant().Split(new[] { "_" }, StringSplitOptions.RemoveEmptyEntries).Any(chunk => chunk == branchName));
-            if (!branchTags.Any())
-                return GuessLastCommitTime(branchName, user);
+            if (!branchTags.Any()) {
+                return GetLastCommitTime(branchName, user);
+            }
             var lastSyncTagTicks = branchTags.Max(x => {
                 var tagAnnotation = x.Annotation;
-                long ticks = Convert.ToInt64(tagAnnotation.Message);
-                return ticks;
+                DateTime dt = Convert.ToDateTime(tagAnnotation.Message);
+                return dt.Ticks;
             });
             if (lastSyncTagTicks > 0)
                 return new DateTime(lastSyncTagTicks);
+            return GetLastCommitTime(branchName, user);
+        }
+        DateTime GetLastCommitTime(string branchName, string user) {
+            var timeStamp = GetLastCommitTimeStamp(branchName, user);
+            if (timeStamp != null)
+                return timeStamp.Value;
             return GuessLastCommitTime(branchName, user);
+        }
+        DateTime? GetLastCommitTimeStamp(string branchName, string user) {
+            var branch = this.repo.Branches[branchName];
+            var commit = branch.Commits.FirstOrDefault();
+            if (commit.Author.Name == user)
+                return GetCommitTimeStampFromComment(commit);
+            return null;
+        }
+        DateTime? GetCommitTimeStampFromComment(Commit commit) {
+            var chunks = commit.Message.Split(new[] { "\n" }, StringSplitOptions.RemoveEmptyEntries);
+            var autoSync = chunks.FirstOrDefault(x => x.StartsWith("AutoSync: "));
+            if (autoSync == null)
+                return null;
+            return Convert.ToDateTime(autoSync.Remove(0, "AutoSync: ".Length));
         }
         DateTime GuessLastCommitTime(string branchName, string user) {
             var branch = this.repo.Branches[branchName];
             var commit = branch.Commits.FirstOrDefault(x => x.Committer.Name == user);
             return commit?.Author.When.DateTime.ToUniversalTime() ?? DateTime.MinValue;
-        }
-        DateTime CalcLastCommitTime(string message) {
-            long ticks = Convert.ToInt64(message);
-            return new DateTime(ticks);
         }
         public bool CalcHasModification() {
             RepositoryStatus status = repo.RetrieveStatus();
@@ -149,6 +172,7 @@ namespace DXVcs2Git {
         }
         public void AddTag(string tagName, GitObject target, string commiterName, DateTime timeStamp, string message) {
             repo.Tags.Add(tagName, target, new Signature(commiterName, "test@mail.com", timeStamp), message, true);
+            Push($@"refs/tags/{tagName}", true);
             Log.Message($"Apply tag commit {tagName} completed");
         }
         public Commit GetHead(string branchName) {
