@@ -16,6 +16,8 @@ namespace DXVcs2Git.DXVcs {
         void UndoCheckout(string vcsFile, string localFile);
         string GetFileWorkingPath(string vcsFile);
         bool IsUnderVss(string vcsFile);
+        bool IsCheckedOut(string vcsPath);
+        bool IsCheckedOutByMe(string vcsPath);
         void AddFile(string vcsFile, byte[] fileBytes, string comment);
     }
 }

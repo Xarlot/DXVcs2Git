@@ -9,15 +9,15 @@ namespace DXVcs2Git.Tests {
 
         [Test]
         public void GetProject() {
-            GitLabWrapper wrapper = new GitLabWrapper("http://litvinov-lnx", token);
+            GitLabWrapper wrapper = new GitLabWrapper("http://litvinov-lnx", "test2", token);
             var project = wrapper.FindProject("tester/testxpfall");
             Assert.IsNotNull(project);
         }
         [Test]
         public void GetMergeRequests() {
-            GitLabWrapper wrapper = new GitLabWrapper("http://litvinov-lnx", token);
+            GitLabWrapper wrapper = new GitLabWrapper("http://litvinov-lnx", "test2", token);
             var project = wrapper.FindProject("tester/testxpfall");
-            var requests = wrapper.GetMergeRequests(project, "test2");
+            var requests = wrapper.GetMergeRequests(project);
         }
     }
 }

@@ -6,7 +6,7 @@ namespace DXVcs2Git.Console {
     public enum WorkMode {
         Default = 0x0,
         History = 0x1,
-        MergeRequests = 0x2,
+        MergeRequests = Default | History,
     }
 
     public class CommandLineOptions {

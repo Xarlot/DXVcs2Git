@@ -6,15 +6,17 @@ using NGitLab.Models;
 namespace DXVcs2Git.Git {
     public class GitLabWrapper {
         readonly GitLabClient client;
-        public GitLabWrapper(string server, string token) {
+        readonly string branch;
+        public GitLabWrapper(string server, string branch, string token) {
             client = GitLabClient.Connect(server, token);
+            this.branch = branch;
         }
         public Project FindProject(string project) {
             return client.Projects.Accessible.FirstOrDefault(x => x.HttpUrl == project);
         }
-        public IEnumerable<MergeRequest> GetMergeRequests(Project project, string branch) {
+        public IEnumerable<MergeRequest> GetMergeRequests(Project project) {
             var mergeRequestsClient = client.GetMergeRequest(project.Id);
-            return mergeRequestsClient.All;
+            return mergeRequestsClient.AllInState(MergeRequestState.opened).Where(x => x.TargetBranch == branch);
         }
         public void RemoveMergeRequest(MergeRequest mergeRequest) {
         }

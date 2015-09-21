@@ -56,6 +56,7 @@
     <Compile Include="ProjectExtractor.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RegisteredUsers.cs" />
+    <Compile Include="SyncItem.cs" />
     <Compile Include="TrackBranch.cs" />
     <Compile Include="TrackConfig.cs" />
     <Compile Include="Tracker.cs" />

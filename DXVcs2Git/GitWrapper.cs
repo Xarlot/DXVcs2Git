@@ -151,7 +151,7 @@ namespace DXVcs2Git {
         }
         DateTime GuessLastCommitTime(string branchName, string user) {
             var branch = this.repo.Branches[branchName];
-            var commit = branch.Commits.FirstOrDefault(x => x.Committer.Name == user);
+            var commit = branch.Commits.FirstOrDefault(x => x.Committer.Name == user || x.Committer.Name == "Administrator");
             return commit?.Author.When.DateTime.ToUniversalTime() ?? DateTime.MinValue;
         }
         public bool CalcHasModification() {

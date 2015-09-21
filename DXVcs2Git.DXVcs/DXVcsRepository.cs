@@ -642,5 +642,16 @@ namespace DXVcs2Git.DXVcs {
             var file = Service.FindFile(vcsFile);
             return !file.IsNull;
         }
+        public FileStateInfo GetFile(string vcsFile) {
+            if (string.IsNullOrEmpty(vcsFile))
+                throw new ArgumentException("vcsFile");
+            return Service.GetFile(vcsFile);
+        }
+        public bool IsCheckedOut(string vcsFile) {
+            return GetFile(vcsFile).CheckedOut;
+        }
+        public bool IsCheckedOutByMe(string vcsFile) {
+            return GetFile(vcsFile).CheckedOutMe;
+        }
     }
 }

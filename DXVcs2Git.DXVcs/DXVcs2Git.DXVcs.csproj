@@ -55,6 +55,7 @@
     <Compile Include="DXVcsRepository.cs" />
     <Compile Include="DXVcsRepositoryFactory.cs" />
     <Compile Include="DXVcsServiceProvider.cs" />
+    <Compile Include="DXVcsWrapper.cs" />
     <Compile Include="FileDiffInfo.cs" />
     <Compile Include="FileHistory.cs" />
     <Compile Include="FileVersionInfo.cs" />

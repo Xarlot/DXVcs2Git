@@ -49,33 +49,65 @@ namespace DXVcs2Git.Console {
             return 0;
         }
         static int ProcessMergeRequests(string gitRepoPath, string localGitDir, string branch, string tracker, string username, string password) {
-            GitLabWrapper wrapper = new GitLabWrapper(gitServer, token);
-            var project = wrapper.FindProject(gitRepoPath);
-            var mergeRequests = wrapper.GetMergeRequests(project, branch).ToList();
+            DXVcsWrapper vcsWrapper = new DXVcsWrapper(vcsServer, branch, localGitDir);
+            GitLabWrapper gitWrapper = new GitLabWrapper(gitServer, branch, token);
+            var project = gitWrapper.FindProject(gitRepoPath);
+            var mergeRequests = gitWrapper.GetMergeRequests(project).ToList();
             if (!mergeRequests.Any()) {
                 Log.Message("Zero registered merge requests.");
                 return 0;
             }
             foreach (var mergeRequest in mergeRequests) {
-                ProcessMergeRequest(wrapper, mergeRequest);
+                ProcessMergeRequest(gitWrapper, vcsWrapper, mergeRequest);
             }
             return 0;
         }
-        static void ProcessMergeRequest(GitLabWrapper wrapper, MergeRequest mergeRequest) {
+        static void ProcessMergeRequest(GitLabWrapper gitWrapper, DXVcsWrapper vcsWrapper, MergeRequest mergeRequest) {
             switch (mergeRequest.State) {
                 case "merged":
-                    wrapper.RemoveMergeRequest(mergeRequest);
+                    gitWrapper.RemoveMergeRequest(mergeRequest);
                     break;
                 case "reopened":
                 case "opened":
-                    ProcessOpenedMergeRequest(wrapper, mergeRequest);
+                    ProcessOpenedMergeRequest(gitWrapper, vcsWrapper, mergeRequest);
                     break;
             }
         }
-        static void ProcessOpenedMergeRequest(GitLabWrapper wrapper, MergeRequest mergeRequest) {
+        static void ProcessOpenedMergeRequest(GitLabWrapper wrapper, DXVcsWrapper vcsWrapper, MergeRequest mergeRequest) {
             var changes = wrapper.GetMergeRequestChanges(mergeRequest).ToList();
+            var genericChange = changes.Select(ProcessMergeRequestChanges).ToList();
+            vcsWrapper.ProcessCheckout(genericChange);
         }
-        static int ProcessHistory(string gitRepoPath, string localGitDir, string trackerPath, string branchName, int commitsCount, string username, string password) {
+        static SyncItem ProcessMergeRequestChanges(MergeRequestFileData fileData) {
+            var syncItem = new SyncItem();
+            if (fileData.IsNew) {
+                syncItem.SyncAction = SyncAction.Modify;
+                syncItem.LocalPath = fileData.OldPath;
+                syncItem.VcsPath = CalcVcsPath(fileData.OldPath);
+            }
+            else if (fileData.IsDeleted) {
+                syncItem.SyncAction = SyncAction.Delete;
+                syncItem.LocalPath = fileData.OldPath;
+                syncItem.VcsPath = CalcVcsPath(fileData.OldPath);
+            }
+            else if (fileData.IsRenamed) {
+                syncItem.SyncAction = SyncAction.Move;
+                syncItem.LocalPath = fileData.OldPath;
+                syncItem.NewLocalPath = fileData.NewPath;
+                syncItem.VcsPath = CalcVcsPath(fileData.OldPath);
+                syncItem.NewVcsPath = CalcVcsPath(fileData.NewPath);
+            }
+            else {
+                syncItem.SyncAction = SyncAction.Modify;
+                syncItem.LocalPath = fileData.OldPath;
+                syncItem.VcsPath = CalcVcsPath(fileData.OldPath);
+            }
+            return syncItem;
+        }
+        static string CalcVcsPath(string oldPath) {
+            throw new NotImplementedException();
+        }
+        static int ProcessHistory(string gitRepoPath, string localGitDir, string branchName, string trackerPath, int commitsCount, string username, string password) {
             GitWrapper gitWrapper = new GitWrapper(localGitDir, gitRepoPath, new UsernamePasswordCredentials() { Username = username, Password = password });
             if (gitWrapper.IsEmpty) {
                 gitWrapper.Commit("Initial commit", username, username, new DateTime(2013, 12, 1));
