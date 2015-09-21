@@ -1,9 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using System.Net;
-using System.Net.Http;
-using System.Threading.Tasks;
 using NGitLab;
 using NGitLab.Models;
 
@@ -14,11 +10,18 @@ namespace DXVcs2Git.Git {
             client = GitLabClient.Connect(server, token);
         }
         public Project FindProject(string project) {
-            return client.Projects.Accessible.FirstOrDefault(x => x.PathWithNamespace == project);
+            return client.Projects.Accessible.FirstOrDefault(x => x.HttpUrl == project);
         }
-        public IEnumerable<MergeRequest> GetMergeRequests(Project project) {
+        public IEnumerable<MergeRequest> GetMergeRequests(Project project, string branch) {
             var mergeRequestsClient = client.GetMergeRequest(project.Id);
             return mergeRequestsClient.All;
+        }
+        public void RemoveMergeRequest(MergeRequest mergeRequest) {
+        }
+        public IEnumerable<MergeRequestFileData> GetMergeRequestChanges(MergeRequest mergeRequest) {
+            var mergeRequestsClient = client.GetMergeRequest(mergeRequest.ProjectId);
+            var changesClient = mergeRequestsClient.Changes(mergeRequest.Id);
+            return changesClient.Changes.Files;
         }
     }
 }

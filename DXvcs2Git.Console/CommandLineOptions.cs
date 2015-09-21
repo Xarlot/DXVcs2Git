@@ -1,6 +1,14 @@
-﻿using CommandLine;
+﻿using System;
+using CommandLine;
 
 namespace DXVcs2Git.Console {
+    [Flags]
+    public enum WorkMode {
+        Default = 0x0,
+        History = 0x1,
+        MergeRequests = 0x2,
+    }
+
     public class CommandLineOptions {
         [Option('b', "branch", Required = true, HelpText = "Local git branch name")]
         public string Branch { get; set; }
@@ -16,5 +24,7 @@ namespace DXVcs2Git.Console {
         public string LocalFolder { get; set; }
         [Option('t', "tracker", Required = true, HelpText = "Path to config with items to track")]
         public string Tracker { get; set; }
+        [Option('m', "mode", Required = false, Default = WorkMode.History, HelpText = "Work mode")]
+        public WorkMode WorkMode { get; set; }
     }
 }

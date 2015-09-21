@@ -7,14 +7,19 @@ using System.Text;
 using CommandLine;
 using DXVcs2Git.Core;
 using DXVcs2Git.DXVcs;
+using DXVcs2Git.Git;
 using LibGit2Sharp;
+using NGitLab.Models;
 using Polenter.Serialization;
+using Commit = LibGit2Sharp.Commit;
 
 namespace DXVcs2Git.Console {
     internal class Program {
+        const string token = "X6XV2G_ycz_U4pi4m93K";
         const string autoSyncFormat = "{0:M/d/yyyy HH:mm:ss.ffffff}";
         const string repoPath = "repo";
-        const string server = @"net.tcp://vcsservice.devexpress.devx:9091/DXVCSService";
+        const string gitServer = @"http://litvinov-lnx";
+        const string vcsServer = @"net.tcp://vcsservice.devexpress.devx:9091/DXVCSService";
         static void Main(string[] args) {
             var result = Parser.Default.ParseArguments<CommandLineOptions>(args);
             var exitCode = result.MapResult(clo => {
@@ -30,14 +35,54 @@ namespace DXVcs2Git.Console {
             string gitRepoPath = clo.Repo;
             string username = clo.Login;
             string password = clo.Password;
-
+            WorkMode workMode = clo.WorkMode;
+            if (workMode.HasFlag(WorkMode.History)) {
+                int result = ProcessHistory(gitRepoPath, localGitDir, clo.Branch, clo.Tracker, clo.CommitsCount, username, password);
+                if (result != 0)
+                    return result;
+            }
+            if (workMode.HasFlag(WorkMode.MergeRequests)) {
+                int result = ProcessMergeRequests(gitRepoPath, localGitDir, clo.Branch, clo.Tracker, username, password);
+                if (result != 0)
+                    return result;
+            }
+            return 0;
+        }
+        static int ProcessMergeRequests(string gitRepoPath, string localGitDir, string branch, string tracker, string username, string password) {
+            GitLabWrapper wrapper = new GitLabWrapper(gitServer, token);
+            var project = wrapper.FindProject(gitRepoPath);
+            var mergeRequests = wrapper.GetMergeRequests(project, branch).ToList();
+            if (!mergeRequests.Any()) {
+                Log.Message("Zero registered merge requests.");
+                return 0;
+            }
+            foreach (var mergeRequest in mergeRequests) {
+                ProcessMergeRequest(wrapper, mergeRequest);
+            }
+            return 0;
+        }
+        static void ProcessMergeRequest(GitLabWrapper wrapper, MergeRequest mergeRequest) {
+            switch (mergeRequest.State) {
+                case "merged":
+                    wrapper.RemoveMergeRequest(mergeRequest);
+                    break;
+                case "reopened":
+                case "opened":
+                    ProcessOpenedMergeRequest(wrapper, mergeRequest);
+                    break;
+            }
+        }
+        static void ProcessOpenedMergeRequest(GitLabWrapper wrapper, MergeRequest mergeRequest) {
+            var changes = wrapper.GetMergeRequestChanges(mergeRequest).ToList();
+        }
+        static int ProcessHistory(string gitRepoPath, string localGitDir, string trackerPath, string branchName, int commitsCount, string username, string password) {
             GitWrapper gitWrapper = new GitWrapper(localGitDir, gitRepoPath, new UsernamePasswordCredentials() { Username = username, Password = password });
             if (gitWrapper.IsEmpty) {
                 gitWrapper.Commit("Initial commit", username, username, new DateTime(2013, 12, 1));
                 gitWrapper.Push("master");
             }
             string localPath = Path.GetDirectoryName(Assembly.GetEntryAssembly().Location);
-            string configPath = Path.Combine(localPath, clo.Tracker);
+            string configPath = Path.Combine(localPath, trackerPath);
             var serializer = new SharpSerializer();
             TrackConfig trackConfig;
 
@@ -50,9 +95,9 @@ namespace DXVcs2Git.Console {
             }
 
             var tracker = new Tracker(trackConfig.TrackItems);
-            var branch = tracker.FindBranch(clo.Branch);
+            var branch = tracker.FindBranch(branchName);
             if (branch == null) {
-                Log.Error($"Specified branch {clo.Branch} not found in track file.");
+                Log.Error($"Specified branch {branchName} not found in track file.");
                 return 1;
             }
 
@@ -63,13 +108,13 @@ namespace DXVcs2Git.Console {
             DateTime lastCommit = gitWrapper.CalcLastCommitDate(branch.Name, username);
             Log.Message($"Last commit has been performed at {lastCommit.ToLocalTime()}.");
 
-            var history = HistoryGenerator.GenerateHistory(server, branch, lastCommit).OrderBy(x => x.ActionDate).ToList();
+            var history = HistoryGenerator.GenerateHistory(vcsServer, branch, lastCommit).OrderBy(x => x.ActionDate).ToList();
             Log.Message($"History generated. {history.Count} history items obtained.");
 
             var commits = HistoryGenerator.GenerateCommits(history).Where(x => x.TimeStamp > lastCommit).ToList();
-            if (commits.Count > clo.CommitsCount) {
-                Log.Message($"Commits generated. First {clo.CommitsCount} of {commits.Count} commits taken.");
-                commits = commits.Take(clo.CommitsCount).ToList();
+            if (commits.Count > commitsCount) {
+                Log.Message($"Commits generated. First {commitsCount} of {commits.Count} commits taken.");
+                commits = commits.Take(commitsCount).ToList();
             }
             else {
                 Log.Message($"Commits generated. {commits.Count} commits taken.");
@@ -82,7 +127,7 @@ namespace DXVcs2Git.Console {
                 foreach (var localCommit in localCommits) {
                     string localProjectPath = Path.Combine(localGitDir, localCommit.Track.RelativeLocalPath);
                     DirectoryHelper.DeleteDirectory(localProjectPath);
-                    HistoryGenerator.GetProject(server, localCommit.Track.FullPath, localProjectPath, item.TimeStamp);
+                    HistoryGenerator.GetProject(vcsServer, localCommit.Track.FullPath, localProjectPath, item.TimeStamp);
 
                     gitWrapper.Fetch();
                     bool isLabel = IsLabel(item);

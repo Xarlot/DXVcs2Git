@@ -17,7 +17,7 @@ namespace DXVcs2Git.Tests {
         public void GetMergeRequests() {
             GitLabWrapper wrapper = new GitLabWrapper("http://litvinov-lnx", token);
             var project = wrapper.FindProject("tester/testxpfall");
-            var requests = wrapper.GetMergeRequests(project);
+            var requests = wrapper.GetMergeRequests(project, "test2");
         }
     }
 }
