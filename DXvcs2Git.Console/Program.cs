@@ -27,7 +27,7 @@ namespace DXVcs2Git.Console {
         const string gitServer = @"http://litvinov-lnx";
         const string vcsServer = @"net.tcp://vcsservice.devexpress.devx:9091/DXVCSService";
         const string defaultUser = "dxvcs2gitservice";
-        const string tagName = "dxvcs2gitservice_sync{0}";
+        const string tagName = "dxvcs2gitservice_sync_{0}";
         static void Main(string[] args) {
             var result = Parser.Default.ParseArguments<CommandLineOptions>(args);
             var exitCode = result.MapResult(clo => {

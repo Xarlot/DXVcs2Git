@@ -67,15 +67,19 @@ namespace DXVcs2Git {
             return commit;
         }
         public void Push(string branch) {
-            Push($@"refs/heads/{branch}", true);
+            Push($@"refs/heads/{branch}", false);
         }
         public void Push(string refspec, bool force) {
             PushOptions options = new PushOptions();
             options.CredentialsProvider += (url, fromUrl, types) => credentials;
+            options.OnPushStatusError += errors => {
+                Log.Error($"Error: {errors.Message} in repo {errors.Reference}.");
+                throw new ArgumentException("error while push");
+            };
             Remote remote = this.repo.Network.Remotes["origin"];
             repo.Network.Push(remote, force ? $@"+{refspec}" : refspec, refspec, options);
-            Log.Message($"Push to refspec {refspec} completed");
-
+            Log.Message($"Push to refspec {refspec} failed.");
+            Log.Message($"Push to refspec {refspec} completed.");
         }
         public void EnsureBranch(string name, Commit whereCreateBranch) {
             Fetch();
