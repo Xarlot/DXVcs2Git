@@ -4,9 +4,9 @@ using CommandLine;
 namespace DXVcs2Git.Console {
     [Flags]
     public enum WorkMode {
-        Default = 0x0,
-        History = 0x1,
-        MergeRequests = Default | History,
+        DirectChanges = 0x1,
+        History = 0x2,
+        MergeRequests = 0x4,
     }
 
     public class CommandLineOptions {

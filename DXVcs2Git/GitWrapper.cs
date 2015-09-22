@@ -105,6 +105,10 @@ namespace DXVcs2Git {
         string GetOriginName(string name) {
             return $"origin/{name}";
         }
+        public Commit GetFirstCommit(string branchName) {
+            var branch = repo.Branches[branchName];
+            return branch.Commits.First();
+        }
         public Commit FindCommit(string branchName, string comment) {
             var branch = repo.Branches[branchName];
             return branch.Commits.FirstOrDefault(x => x.Message?.StartsWith(comment) ?? false);
@@ -174,6 +178,9 @@ namespace DXVcs2Git {
             repo.Tags.Add(tagName, target, new Signature(commiterName, "test@mail.com", timeStamp), message, true);
             Push($@"refs/tags/{tagName}", true);
             Log.Message($"Apply tag commit {tagName} completed");
+        }
+        public Tag GetTag(string tagName) {
+            return repo.Tags[tagName];
         }
         public Commit GetHead(string branchName) {
             var branch = repo.Branches[branchName];

@@ -6,6 +6,7 @@ using System.Linq;
 using System.Net.Http.Headers;
 using System.Reflection;
 using System.Text;
+using System.Text.RegularExpressions;
 using CommandLine;
 using DXVcs2Git.Core;
 using DXVcs2Git.DXVcs;
@@ -18,10 +19,14 @@ using Commit = LibGit2Sharp.Commit;
 namespace DXVcs2Git.Console {
     internal class Program {
         const string token = "X6XV2G_ycz_U4pi4m93K";
-        const string autoSyncFormat = "{0:M/d/yyyy HH:mm:ss.ffffff}";
+        static readonly string AutoSyncBranchRegexFormat = @"\[.*:autosync for {0}\]";
+        const string AutoSyncBranchFormat = @"{[{0}:autosync for {1}]}";
+        const string AutoSyncTimeStampFormat = "{0:M/d/yyyy HH:mm:ss.ffffff}";
         const string repoPath = "repo";
         const string gitServer = @"http://litvinov-lnx";
         const string vcsServer = @"net.tcp://vcsservice.devexpress.devx:9091/DXVCSService";
+        const string defaultUser = "dxvcs2gitservice";
+        const string tagName = "dxvcs2gitservice_sync{0}";
         static void Main(string[] args) {
             var result = Parser.Default.ParseArguments<CommandLineOptions>(args);
             var exitCode = result.MapResult(clo => {
@@ -38,8 +43,23 @@ namespace DXVcs2Git.Console {
             string username = clo.Login;
             string password = clo.Password;
             WorkMode workMode = clo.WorkMode;
+            string branchName = clo.Branch;
+            string trackerPath = clo.Tracker;
+
+            TrackBranch branch = FindBranch(branchName, trackerPath);
+            if (branch == null)
+                return 1;
+            GitWrapper gitWrapper = CreateGitWrapper(gitRepoPath, localGitDir, branch, username, password);
+            if (gitWrapper == null)
+                return 1;
+
+            if (workMode.HasFlag(WorkMode.DirectChanges)) {
+                int result = ProcessDirectChanges(gitWrapper, gitRepoPath, localGitDir, branch);
+                if (result != 0)
+                    return result;
+            }
             if (workMode.HasFlag(WorkMode.History)) {
-                int result = ProcessHistory(gitRepoPath, localGitDir, clo.Branch, clo.Tracker, clo.CommitsCount, username, password);
+                int result = ProcessHistory(gitWrapper, gitRepoPath, localGitDir, branch, clo.CommitsCount);
                 if (result != 0)
                     return result;
             }
@@ -49,6 +69,66 @@ namespace DXVcs2Git.Console {
                     return result;
             }
             return 0;
+        }
+        static GitWrapper CreateGitWrapper(string gitRepoPath, string localGitDir, TrackBranch branch, string username, string password) {
+            GitWrapper gitWrapper = new GitWrapper(localGitDir, gitRepoPath, new UsernamePasswordCredentials() { Username = username, Password = password });
+            if (gitWrapper.IsEmpty) {
+                Log.Error($"Specified branch {branch.Name} in repo {gitRepoPath} is empty. Initialize repo properly.");
+                return null;
+            }
+
+            gitWrapper.EnsureBranch(branch.Name, null);
+            gitWrapper.CheckOut(branch.Name);
+            gitWrapper.Fetch(true);
+            Log.Message($"Branch {branch.Name} initialized.");
+
+            return gitWrapper;
+        }
+        static TrackBranch FindBranch(string branchName, string trackerPath) {
+            string localPath = Path.GetDirectoryName(Assembly.GetEntryAssembly().Location);
+            string configPath = Path.Combine(localPath, trackerPath);
+            var branch = GetBranch(branchName, configPath);
+            if (branch == null) {
+                Log.Error($"Specified branch {branchName} not found in track file.");
+                return null;
+            }
+            return branch;
+        }
+        static int ProcessDirectChanges(GitWrapper gitWrapper, string gitRepoPath, string localGitDir, TrackBranch branch) {
+            bool hasChanges = HasDirectChanges(gitWrapper, branch, localGitDir);
+            if (!hasChanges) {
+                Log.Message($"Branch {branch.Name} checked. There is no direct changes.");
+                return 0;
+            }
+            Log.Message("$Branch {branch.Name} has local changes.");
+            return 1;
+        }
+        static bool HasDirectChanges(GitWrapper gitWrapper, TrackBranch branch, string localGitDir) {
+            var commit = gitWrapper.GetFirstCommit(branch.Name);
+            var tag = gitWrapper.GetTag(string.Format(tagName, branch.Name));
+            if (tag != null && tag.Target.Sha == commit.Sha)
+                return false;
+            if (tag == null) {
+                if (commit.Committer.Name == defaultUser && IsAutoSyncComment(branch.Name, commit.Message)) {
+                    Log.Message($"Branch {branch.Name} has no associated sync tag. Sync based on commit message.");
+                    return false;
+                }
+            }
+            return CheckLocalChanges(gitWrapper, branch, localGitDir);
+        }
+        static bool CheckLocalChanges(GitWrapper gitWrapper, TrackBranch branch, string localGitDir) {
+            foreach (var trackItem in branch.TrackItems) {
+                string localProjectPath = Path.Combine(localGitDir, trackItem.ProjectPath);
+                DirectoryHelper.DeleteDirectory(localProjectPath);
+                HistoryGenerator.GetProject(vcsServer, trackItem.Path, localProjectPath, DateTime.Now);
+            }
+            gitWrapper.Fetch();
+            return gitWrapper.CalcHasModification();
+        }
+        static bool IsAutoSyncComment(string branchName, string message) {
+            var chunks = message.Split(new[] {'\n'}, StringSplitOptions.RemoveEmptyEntries);
+            Regex regex = new Regex(string.Format(AutoSyncBranchRegexFormat, branchName));
+            return chunks.Any(x => regex.IsMatch(x));
         }
         static int ProcessMergeRequests(string gitRepoPath, string localGitDir, string branchName, string tracker, string username, string password) {
             DXVcsWrapper vcsWrapper = new DXVcsWrapper(vcsServer, branchName, localGitDir);
@@ -118,25 +198,8 @@ namespace DXVcs2Git.Console {
         static string CalcVcsPath(string vcsRoot, string path) {
             return Path.Combine(vcsRoot, path);
         }
-        static int ProcessHistory(string gitRepoPath, string localGitDir, string branchName, string trackerPath, int commitsCount, string username, string password) {
-            GitWrapper gitWrapper = new GitWrapper(localGitDir, gitRepoPath, new UsernamePasswordCredentials() { Username = username, Password = password });
-            if (gitWrapper.IsEmpty) {
-                gitWrapper.Commit("Initial commit", username, username, new DateTime(2013, 12, 1));
-                gitWrapper.Push("master");
-            }
-            string localPath = Path.GetDirectoryName(Assembly.GetEntryAssembly().Location);
-            string configPath = Path.Combine(localPath, trackerPath);
-            TrackBranch branch = GetBranch(branchName, configPath);
-            if (branch == null) {
-                Log.Error($"Specified branch {branchName} not found in track file.");
-                return 1;
-            }
-
-            gitWrapper.EnsureBranch(branch.Name, null);
-            gitWrapper.CheckOut(branch.Name);
-            gitWrapper.Fetch(true);
-            Log.Message($"Branch {branch.Name} initialized.");
-            DateTime lastCommit = gitWrapper.CalcLastCommitDate(branch.Name, username);
+        static int ProcessHistory(GitWrapper gitWrapper, string gitRepoPath, string localGitDir, TrackBranch branch, int commitsCount) {
+            DateTime lastCommit = gitWrapper.CalcLastCommitDate(branch.Name, defaultUser);
             Log.Message($"Last commit has been performed at {lastCommit.ToLocalTime()}.");
 
             var history = HistoryGenerator.GenerateHistory(vcsServer, branch, lastCommit).OrderBy(x => x.ActionDate).ToList();
@@ -166,7 +229,7 @@ namespace DXVcs2Git.Console {
                     if (hasLocalModifications) {
                         gitWrapper.Stage("*");
                         try {
-                            last = gitWrapper.Commit(CalcComment(localCommit), localCommit.Author, username, localCommit.TimeStamp, isLabel);
+                            last = gitWrapper.Commit(CalcComment(localCommit), localCommit.Author, defaultUser, localCommit.TimeStamp, isLabel);
                             hasModifications = true;
                         }
                         catch (Exception) {
@@ -178,7 +241,7 @@ namespace DXVcs2Git.Console {
                     gitWrapper.Push(branch.Name);
                     if (last != null) {
                         string tagName = CreateTagName(branch.Name);
-                        gitWrapper.AddTag(tagName, last, username, item.TimeStamp, string.Format(autoSyncFormat, item.TimeStamp));
+                        gitWrapper.AddTag(tagName, last, defaultUser, item.TimeStamp, string.Format(AutoSyncTimeStampFormat, item.TimeStamp));
                     }
                 }
                 else {
@@ -220,7 +283,8 @@ namespace DXVcs2Git.Console {
             var commentItem = item.Items.FirstOrDefault(x => !string.IsNullOrEmpty(x.Comment));
             if (commentItem != null && !string.IsNullOrEmpty(commentItem.Comment))
                 sb.AppendLine($"{FilterLabel(commentItem.Comment)}");
-            sb.AppendLine(string.Format(autoSyncFormat, item.TimeStamp));
+            sb.AppendLine(string.Format(AutoSyncBranchFormat, item.Author, item.Track.Branch));
+            sb.AppendLine(string.Format(AutoSyncTimeStampFormat, item.TimeStamp));
             return sb.ToString();
         }
         static string FilterLabel(string comment) {
