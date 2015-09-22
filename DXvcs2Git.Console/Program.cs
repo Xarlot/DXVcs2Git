@@ -118,15 +118,29 @@ namespace DXVcs2Git.Console {
             return branch;
         }
         static int ProcessDirectChanges(GitWrapper gitWrapper, string gitRepoPath, string localGitDir, TrackBranch branch) {
-            bool hasChanges = HasDirectChanges(gitWrapper, branch, localGitDir);
-            if (!hasChanges) {
+            bool hasChangesInGit = HasGitChanges(gitWrapper, branch, localGitDir);
+            if (!hasChangesInGit) {
                 Log.Message($"Branch {branch.Name} checked. There is no direct changes.");
                 return 0;
             }
             Log.Message("$Branch {branch.Name} has local changes.");
+
+            bool hasVcsChanged = HasVcsChanges(gitWrapper, branch, localGitDir);
+            if (hasVcsChanged) {
+                Log.Error("Repo is in inconsistent state (dxvcs and git has changes). Try to do something...");
+                return 1;
+            }
+
+
             return 1;
         }
-        static bool HasDirectChanges(GitWrapper gitWrapper, TrackBranch branch, string localGitDir) {
+        static bool HasVcsChanges(GitWrapper gitWrapper, TrackBranch branch, string localGitDir) {
+            DateTime lastSyncCommitTimeStamp = gitWrapper.CalcLastCommitDate(branch.Name, defaultUser);
+            var history = HistoryGenerator.GenerateHistory(vcsServer, branch, lastSyncCommitTimeStamp);
+            var commits = HistoryGenerator.GenerateCommits(history).Where(x => x.TimeStamp > lastSyncCommitTimeStamp).ToList();
+            return commits.Any();
+        }
+        static bool HasGitChanges(GitWrapper gitWrapper, TrackBranch branch, string localGitDir) {
             var commit = gitWrapper.FindCommit(branch.Name);
             var tag = gitWrapper.GetTag(string.Format(tagName, branch.Name));
             if (tag != null && tag.Target.Sha == commit.Sha)
@@ -137,13 +151,7 @@ namespace DXVcs2Git.Console {
                     return false;
                 }
             }
-            bool changesDetected = CheckLocalChanges(gitWrapper, branch, localGitDir);
-            Commit lastSyncCommit = gitWrapper.FindCommit(branch.Name, x => IsAutoSyncComment(branch.Name, x.Message));
-            if (lastSyncCommit == null) {
-                Log.Error("Last sync commit not found, repo is not initialized or damaged.");
-                throw new ArgumentException("Repo in inconsistent state");
-            }
-            return changesDetected;
+            return CheckLocalChanges(gitWrapper, branch, localGitDir);
         }
         static bool CheckLocalChanges(GitWrapper gitWrapper, TrackBranch branch, string localGitDir) {
             foreach (var trackItem in branch.TrackItems) {
