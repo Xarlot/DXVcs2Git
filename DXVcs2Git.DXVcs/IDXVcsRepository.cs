@@ -19,5 +19,6 @@ namespace DXVcs2Git.DXVcs {
         bool IsCheckedOut(string vcsPath);
         bool IsCheckedOutByMe(string vcsPath);
         void AddFile(string vcsFile, byte[] fileBytes, string comment);
+        void CreateLabel(string vcsPath, string labelName, string comment);
     }
 }

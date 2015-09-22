@@ -94,5 +94,14 @@ namespace DXVcs2Git.DXVcs {
             }
             return true;
         }
+        public void CreateLabel(string labelName) {
+            try {
+                var repo = DXVcsConectionHelper.Connect(server);
+                repo.CreateLabel(branchPath, labelName, "sync");
+            }
+            catch (Exception ex) {
+                Log.Error($"Create label {labelName} failed.", ex);
+            }
+        }
     }
 }

@@ -653,5 +653,10 @@ namespace DXVcs2Git.DXVcs {
         public bool IsCheckedOutByMe(string vcsFile) {
             return GetFile(vcsFile).CheckedOutMe;
         }
+        public void CreateLabel(string vcsPath, string labelName, string comment) {
+            if (string.IsNullOrEmpty(vcsPath))
+                throw new ArgumentException("vcsPath");
+            Service.CreateLabel(vcsPath, labelName, comment);
+        }
     }
 }

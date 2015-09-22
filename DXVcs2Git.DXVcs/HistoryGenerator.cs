@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.InteropServices.ComTypes;
 using DXVcs2Git.Core;
 
 namespace DXVcs2Git.DXVcs {

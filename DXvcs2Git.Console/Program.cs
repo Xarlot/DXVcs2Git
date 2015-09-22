@@ -90,7 +90,7 @@ namespace DXVcs2Git.Console {
                 Log.Error($"Repo has no commits since {from}. Initializing repo failed.");
                 return 1;
             }
-            ProcessHistoryInternal(gitWrapper, localGitDir, branch, new [] {startCommit});
+            ProcessHistoryInternal(gitWrapper, localGitDir, branch, new[] { startCommit });
             return 0;
         }
         static GitWrapper CreateGitWrapper(string gitRepoPath, string localGitDir, TrackBranch branch, string username, string password) {
@@ -130,15 +130,51 @@ namespace DXVcs2Git.Console {
                 Log.Error("Repo is in inconsistent state (dxvcs and git has changes). Try to do something...");
                 return 1;
             }
-
-
+            SetSyncLabel(gitWrapper, branch, localGitDir);
+            var syncItems = GenerateDirectChangeSet(gitWrapper, localGitDir, branch);
             return 1;
+        }
+        static void SetSyncLabel(GitWrapper gitWrapper, TrackBranch branch, string localGitDir) {
+            DateTime lastSyncTimeStamp = gitWrapper.CalcLastCommitDate(branch.Name, defaultUser);
+            foreach (var trackItem in branch.TrackItems) {
+                DXVcsWrapper vcsWrapper = new DXVcsWrapper(vcsServer, trackItem.Path, Path.Combine(localGitDir, trackItem.ProjectPath));
+                vcsWrapper.CreateLabel(string.Format(tagName, branch.Name));
+            }
+            var history = HistoryGenerator.GenerateHistory(vcsServer, branch, lastSyncTimeStamp);
+            var commits = HistoryGenerator.GenerateCommits(history).Where(x => x.TimeStamp > lastSyncTimeStamp).ToList();
+            if (HasUnsyncedCommits(branch, commits)) {
+                Log.Error("Set sync label failed. Commits in dxvcs detected.");
+                throw new ArgumentException("set sync label failed");
+            }
+        }
+        static bool HasUnsyncedCommits(TrackBranch branch, IList<CommitItem> commits) {
+            if (commits.Count > 1)
+                return true;
+            if (commits.Count == 0)
+                return false;
+            var commit = commits.First();
+            string tag = string.Format(tagName, branch.Name);
+            return commit.Items.All(x => x.Label == tag);
+        }
+        static IEnumerable<SyncItem> GenerateDirectChangeSet(GitWrapper gitWrapper, string localGitDir, TrackBranch branch) {
+            Commit lastSyncCommit = gitWrapper.FindCommit(branch.Name, x => IsAutoSyncComment(branch.Name, x.Message));
+            Commit lastCommit = gitWrapper.FindCommit(branch.Name);
+            var changes = gitWrapper.GetChanges(lastCommit, lastSyncCommit).Where(x => branch.TrackItems.FirstOrDefault(track => x.OldPath.StartsWith(track.ProjectPath)) != null);
+            var genericChanges = changes.Select(x => ProcessAddedDirectChanges(x, CalcVcsRoot(branch, x))).ToList();
+            return genericChanges;
+        }
+        static SyncItem ProcessAddedDirectChanges(TreeEntryChanges changes, string vcsRoot) {
+            SyncItem item = new SyncItem();
+            item.SyncAction = SyncAction.Modify;
+            item.LocalPath = changes.OldPath;
+            item.VcsPath = CalcVcsPath(vcsRoot, changes.OldPath);
+            return item;
         }
         static bool HasVcsChanges(GitWrapper gitWrapper, TrackBranch branch, string localGitDir) {
             DateTime lastSyncCommitTimeStamp = gitWrapper.CalcLastCommitDate(branch.Name, defaultUser);
             var history = HistoryGenerator.GenerateHistory(vcsServer, branch, lastSyncCommitTimeStamp);
             var commits = HistoryGenerator.GenerateCommits(history).Where(x => x.TimeStamp > lastSyncCommitTimeStamp).ToList();
-            return commits.Any();
+            return HasUnsyncedCommits(branch, commits);
         }
         static bool HasGitChanges(GitWrapper gitWrapper, TrackBranch branch, string localGitDir) {
             var commit = gitWrapper.FindCommit(branch.Name);
@@ -165,7 +201,7 @@ namespace DXVcs2Git.Console {
         static bool IsAutoSyncComment(string branchName, string message) {
             if (string.IsNullOrEmpty(message))
                 return false;
-            var chunks = message.Split(new[] {'\n'}, StringSplitOptions.RemoveEmptyEntries);
+            var chunks = message.Split(new[] { '\n' }, StringSplitOptions.RemoveEmptyEntries);
             Regex regex = new Regex(string.Format(AutoSyncBranchRegexFormat, branchName));
             return chunks.Any(x => regex.IsMatch(x));
         }
@@ -208,6 +244,10 @@ namespace DXVcs2Git.Console {
             var trackItem = branch.TrackItems.First(x => fileData.OldPath.StartsWith(x.ProjectPath, StringComparison.OrdinalIgnoreCase));
             return trackItem.Path;
         }
+        static string CalcVcsRoot(TrackBranch branch, TreeEntryChanges fileData) {
+            var trackItem = branch.TrackItems.First(x => fileData.OldPath.StartsWith(x.ProjectPath, StringComparison.OrdinalIgnoreCase));
+            return trackItem.Path;
+        }
         static SyncItem ProcessMergeRequestChanges(MergeRequestFileData fileData, string vcsRoot) {
             var syncItem = new SyncItem();
             if (fileData.IsNew) {
@@ -230,7 +270,7 @@ namespace DXVcs2Git.Console {
             else {
                 syncItem.SyncAction = SyncAction.Modify;
                 syncItem.LocalPath = fileData.OldPath;
-                syncItem.VcsPath = CalcVcsPath(vcsRoot ,fileData.OldPath);
+                syncItem.VcsPath = CalcVcsPath(vcsRoot, fileData.OldPath);
             }
             return syncItem;
         }
