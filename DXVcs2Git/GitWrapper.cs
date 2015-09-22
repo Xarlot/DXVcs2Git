@@ -190,5 +190,9 @@ namespace DXVcs2Git {
             var branch = repo.Branches[branchName];
             return branch.Commits.First();
         }
+        public TreeChanges CalcChanges(Commit commit, Commit parent) {
+            var treeChanges = repo.Diff.Compare<TreeChanges>(parent.Tree, commit.Tree);
+            return treeChanges;
+        }
     }
 }
