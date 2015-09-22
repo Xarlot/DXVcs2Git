@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
@@ -20,7 +21,7 @@ namespace DXVcs2Git.Console {
     internal class Program {
         const string token = "X6XV2G_ycz_U4pi4m93K";
         static readonly string AutoSyncBranchRegexFormat = @"\[.*:autosync for {0}\]";
-        const string AutoSyncBranchFormat = @"{[{0}:autosync for {1}]}";
+        const string AutoSyncBranchFormat = @"[{0}:autosync for {1}]";
         const string AutoSyncTimeStampFormat = "{0:M/d/yyyy HH:mm:ss.ffffff}";
         const string repoPath = "repo";
         const string gitServer = @"http://litvinov-lnx";
@@ -45,6 +46,7 @@ namespace DXVcs2Git.Console {
             WorkMode workMode = clo.WorkMode;
             string branchName = clo.Branch;
             string trackerPath = clo.Tracker;
+            DateTime from = clo.From;
 
             TrackBranch branch = FindBranch(branchName, trackerPath);
             if (branch == null)
@@ -53,6 +55,11 @@ namespace DXVcs2Git.Console {
             if (gitWrapper == null)
                 return 1;
 
+            if (workMode.HasFlag(WorkMode.Initialize)) {
+                int result = ProcessInitializeRepo(gitWrapper, gitRepoPath, localGitDir, branch, from);
+                if (result != 0)
+                    return result;
+            }
             if (workMode.HasFlag(WorkMode.DirectChanges)) {
                 int result = ProcessDirectChanges(gitWrapper, gitRepoPath, localGitDir, branch);
                 if (result != 0)
@@ -68,6 +75,22 @@ namespace DXVcs2Git.Console {
                 if (result != 0)
                     return result;
             }
+            return 0;
+        }
+        static int ProcessInitializeRepo(GitWrapper gitWrapper, string gitRepoPath, string localGitDir, TrackBranch branch, DateTime from) {
+            var commit = gitWrapper.FindCommit(branch.Name, x => IsAutoSyncComment(branch.Name, x.Message));
+            if (commit != null) {
+                Log.Message($"Branch {branch.Name} initialized already.");
+                return 0;
+            }
+            var history = HistoryGenerator.GenerateHistory(vcsServer, branch, from);
+            var commits = HistoryGenerator.GenerateCommits(history).Where(x => x.TimeStamp > from);
+            CommitItem startCommit = commits.FirstOrDefault();
+            if (object.Equals(startCommit, null)) {
+                Log.Error($"Repo has no commits since {from}. Initializing repo failed.");
+                return 1;
+            }
+            ProcessHistoryInternal(gitWrapper, localGitDir, branch, new [] {startCommit});
             return 0;
         }
         static GitWrapper CreateGitWrapper(string gitRepoPath, string localGitDir, TrackBranch branch, string username, string password) {
@@ -104,7 +127,7 @@ namespace DXVcs2Git.Console {
             return 1;
         }
         static bool HasDirectChanges(GitWrapper gitWrapper, TrackBranch branch, string localGitDir) {
-            var commit = gitWrapper.GetFirstCommit(branch.Name);
+            var commit = gitWrapper.FindCommit(branch.Name);
             var tag = gitWrapper.GetTag(string.Format(tagName, branch.Name));
             if (tag != null && tag.Target.Sha == commit.Sha)
                 return false;
@@ -114,7 +137,13 @@ namespace DXVcs2Git.Console {
                     return false;
                 }
             }
-            return CheckLocalChanges(gitWrapper, branch, localGitDir);
+            bool changesDetected = CheckLocalChanges(gitWrapper, branch, localGitDir);
+            Commit lastSyncCommit = gitWrapper.FindCommit(branch.Name, x => IsAutoSyncComment(branch.Name, x.Message));
+            if (lastSyncCommit == null) {
+                Log.Error("Last sync commit not found, repo is not initialized or damaged.");
+                throw new ArgumentException("Repo in inconsistent state");
+            }
+            return changesDetected;
         }
         static bool CheckLocalChanges(GitWrapper gitWrapper, TrackBranch branch, string localGitDir) {
             foreach (var trackItem in branch.TrackItems) {
@@ -126,6 +155,8 @@ namespace DXVcs2Git.Console {
             return gitWrapper.CalcHasModification();
         }
         static bool IsAutoSyncComment(string branchName, string message) {
+            if (string.IsNullOrEmpty(message))
+                return false;
             var chunks = message.Split(new[] {'\n'}, StringSplitOptions.RemoveEmptyEntries);
             Regex regex = new Regex(string.Format(AutoSyncBranchRegexFormat, branchName));
             return chunks.Any(x => regex.IsMatch(x));
@@ -214,6 +245,10 @@ namespace DXVcs2Git.Console {
                 Log.Message($"Commits generated. {commits.Count} commits taken.");
             }
 
+            ProcessHistoryInternal(gitWrapper, localGitDir, branch, commits);
+            return 0;
+        }
+        static void ProcessHistoryInternal(GitWrapper gitWrapper, string localGitDir, TrackBranch branch, IList<CommitItem> commits) {
             ProjectExtractor extractor = new ProjectExtractor(commits, (item) => {
                 var localCommits = HistoryGenerator.GetCommits(item.Items).ToList();
                 bool hasModifications = false;
@@ -244,15 +279,12 @@ namespace DXVcs2Git.Console {
                         gitWrapper.AddTag(tagName, last, defaultUser, item.TimeStamp, string.Format(AutoSyncTimeStampFormat, item.TimeStamp));
                     }
                 }
-                else {
+                else
                     Log.Message($"Push empty commits rejected for {item.Author} {item.TimeStamp}.");
-                }
             });
             int i = 0;
-            while (extractor.PerformExtraction()) {
+            while (extractor.PerformExtraction())
                 Log.Message($"{++i} from {commits.Count} push to branch {branch.Name} completed.");
-            }
-            return 0;
         }
         static TrackBranch GetBranch(string branchName, string configPath) {
             var serializer = new SharpSerializer();

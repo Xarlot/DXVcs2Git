@@ -105,13 +105,13 @@ namespace DXVcs2Git {
         string GetOriginName(string name) {
             return $"origin/{name}";
         }
-        public Commit GetFirstCommit(string branchName) {
+        public Commit FindCommit(string branchName, Func<Commit, bool> handler = null) {
             var branch = repo.Branches[branchName];
-            return branch.Commits.First();
+            var checkHandler = handler ?? (x => true);
+            return branch.Commits.FirstOrDefault(checkHandler);
         }
         public Commit FindCommit(string branchName, string comment) {
-            var branch = repo.Branches[branchName];
-            return branch.Commits.FirstOrDefault(x => x.Message?.StartsWith(comment) ?? false);
+            return FindCommit(branchName, x => x.Message?.StartsWith(comment) ?? false);
         }
         public DateTime CalcLastCommitDate(string branchName, string user) {
             var tags = repo.Tags.Where(x => {

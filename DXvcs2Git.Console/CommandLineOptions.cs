@@ -7,6 +7,7 @@ namespace DXVcs2Git.Console {
         DirectChanges = 0x1,
         History = 0x2,
         MergeRequests = 0x4,
+        Initialize = 0x8,
     }
 
     public class CommandLineOptions {
@@ -26,5 +27,7 @@ namespace DXVcs2Git.Console {
         public string Tracker { get; set; }
         [Option('m', "mode", Required = false, Default = WorkMode.History, HelpText = "Work mode")]
         public WorkMode WorkMode { get; set; }
+        [Option('f', "from", Required = false, HelpText = "Timestamp for history generation")]
+        public DateTime From { get; set; }
     }
 }
