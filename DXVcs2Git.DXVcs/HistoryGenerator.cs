@@ -11,7 +11,7 @@ namespace DXVcs2Git.DXVcs {
                 var repo = DXVcsConectionHelper.Connect(server);
                 var history = Enumerable.Empty<HistoryItem>();
                 foreach (var trackItem in branch.TrackItems) {
-                    var historyForItem = repo.GetProjectHistory(trackItem.FullPath, true, from).Select(x =>
+                    var historyForItem = repo.GetProjectHistory(trackItem.Path, true, from).Select(x =>
                         new HistoryItem() {
                             ActionDate = x.ActionDate,
                             Comment = x.Comment,
@@ -49,7 +49,7 @@ namespace DXVcs2Git.DXVcs {
             }
         }
         public static IEnumerable<CommitItem> GetCommits(IList<HistoryItem> items) {
-            var changedProjects = items.GroupBy(x => x.Track.FullPath);
+            var changedProjects = items.GroupBy(x => x.Track.Path);
             foreach (var project in changedProjects) {
                 var changeSet = project.GroupBy(x => x.User);
                 foreach (var changeItem in changeSet) {

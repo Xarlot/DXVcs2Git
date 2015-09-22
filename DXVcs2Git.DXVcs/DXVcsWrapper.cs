@@ -56,7 +56,7 @@ namespace DXVcs2Git.DXVcs {
                 case SyncAction.New:
                     return CreateItem(item);
                 case SyncAction.Modify:
-                    return CheckOut(item);
+                    return ProcessModify(item);
                 case SyncAction.Delete:
                     return CheckOut(item);
                 case SyncAction.Move:
@@ -64,6 +64,11 @@ namespace DXVcs2Git.DXVcs {
                 default:
                     throw new ArgumentException("SyncAction");
             }
+        }
+        bool ProcessModify(SyncItem item) {
+            bool result = CheckOut(item);
+            Log.Error($"Failed attempt to checkout modified file {item.VcsPath}");
+            return result;
         }
         public bool RollbackItem(SyncItem item) {
             return UndoCheckout(item.VcsPath);
@@ -83,6 +88,7 @@ namespace DXVcs2Git.DXVcs {
         public bool ProcessCheckout(IEnumerable<SyncItem> items) {
             var list = items.ToList();
             if (!list.All(ProcessItem)) {
+                Log.Message("Rollback changes after failed checkout.");
                 list.All(RollbackItem);
                 return false;
             }

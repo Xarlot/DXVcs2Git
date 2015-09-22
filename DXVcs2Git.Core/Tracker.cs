@@ -8,7 +8,7 @@ namespace DXVcs2Git.Core {
             var grouped = trackItems.GroupBy(x => x.Branch);
             Branches = grouped.Select(x => {
                 string branch = x.First().Branch;
-                return new TrackBranch(branch, $"$/{branch}", x);
+                return new TrackBranch(branch, x);
             }).ToList();
         }
         public TrackBranch FindBranch(string name) {

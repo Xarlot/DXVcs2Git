@@ -1,7 +1,9 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Net.Http.Headers;
 using System.Reflection;
 using System.Text;
 using CommandLine;
@@ -48,64 +50,73 @@ namespace DXVcs2Git.Console {
             }
             return 0;
         }
-        static int ProcessMergeRequests(string gitRepoPath, string localGitDir, string branch, string tracker, string username, string password) {
-            DXVcsWrapper vcsWrapper = new DXVcsWrapper(vcsServer, branch, localGitDir);
-            GitLabWrapper gitWrapper = new GitLabWrapper(gitServer, branch, token);
+        static int ProcessMergeRequests(string gitRepoPath, string localGitDir, string branchName, string tracker, string username, string password) {
+            DXVcsWrapper vcsWrapper = new DXVcsWrapper(vcsServer, branchName, localGitDir);
+            GitLabWrapper gitWrapper = new GitLabWrapper(gitServer, branchName, token);
             var project = gitWrapper.FindProject(gitRepoPath);
+            TrackBranch branch = GetBranch(branchName, tracker);
+            if (branch == null) {
+                Log.Error($"Specified branch {branchName} not found in track file.");
+                return 1;
+            }
             var mergeRequests = gitWrapper.GetMergeRequests(project).ToList();
             if (!mergeRequests.Any()) {
                 Log.Message("Zero registered merge requests.");
                 return 0;
             }
             foreach (var mergeRequest in mergeRequests) {
-                ProcessMergeRequest(gitWrapper, vcsWrapper, mergeRequest);
+                ProcessMergeRequest(gitWrapper, vcsWrapper, branch, mergeRequest);
             }
             return 0;
         }
-        static void ProcessMergeRequest(GitLabWrapper gitWrapper, DXVcsWrapper vcsWrapper, MergeRequest mergeRequest) {
+        static void ProcessMergeRequest(GitLabWrapper gitWrapper, DXVcsWrapper vcsWrapper, TrackBranch branch, MergeRequest mergeRequest) {
             switch (mergeRequest.State) {
                 case "merged":
                     gitWrapper.RemoveMergeRequest(mergeRequest);
                     break;
                 case "reopened":
                 case "opened":
-                    ProcessOpenedMergeRequest(gitWrapper, vcsWrapper, mergeRequest);
+                    ProcessOpenedMergeRequest(gitWrapper, vcsWrapper, branch, mergeRequest);
                     break;
             }
         }
-        static void ProcessOpenedMergeRequest(GitLabWrapper wrapper, DXVcsWrapper vcsWrapper, MergeRequest mergeRequest) {
-            var changes = wrapper.GetMergeRequestChanges(mergeRequest).ToList();
-            var genericChange = changes.Select(ProcessMergeRequestChanges).ToList();
+        static void ProcessOpenedMergeRequest(GitLabWrapper wrapper, DXVcsWrapper vcsWrapper, TrackBranch branch, MergeRequest mergeRequest) {
+            var changes = wrapper.GetMergeRequestChanges(mergeRequest).Where(x => branch.TrackItems.FirstOrDefault(track => x.OldPath.StartsWith(track.ProjectPath)) != null);
+            var genericChange = changes.Select(x => ProcessMergeRequestChanges(x, CalcVcsRoot(branch, x))).ToList();
             vcsWrapper.ProcessCheckout(genericChange);
         }
-        static SyncItem ProcessMergeRequestChanges(MergeRequestFileData fileData) {
+        static string CalcVcsRoot(TrackBranch branch, MergeRequestFileData fileData) {
+            var trackItem = branch.TrackItems.First(x => fileData.OldPath.StartsWith(x.ProjectPath, StringComparison.OrdinalIgnoreCase));
+            return trackItem.Path;
+        }
+        static SyncItem ProcessMergeRequestChanges(MergeRequestFileData fileData, string vcsRoot) {
             var syncItem = new SyncItem();
             if (fileData.IsNew) {
                 syncItem.SyncAction = SyncAction.Modify;
                 syncItem.LocalPath = fileData.OldPath;
-                syncItem.VcsPath = CalcVcsPath(fileData.OldPath);
+                syncItem.VcsPath = CalcVcsPath(vcsRoot, fileData.OldPath);
             }
             else if (fileData.IsDeleted) {
                 syncItem.SyncAction = SyncAction.Delete;
                 syncItem.LocalPath = fileData.OldPath;
-                syncItem.VcsPath = CalcVcsPath(fileData.OldPath);
+                syncItem.VcsPath = CalcVcsPath(vcsRoot, fileData.OldPath);
             }
             else if (fileData.IsRenamed) {
                 syncItem.SyncAction = SyncAction.Move;
                 syncItem.LocalPath = fileData.OldPath;
                 syncItem.NewLocalPath = fileData.NewPath;
-                syncItem.VcsPath = CalcVcsPath(fileData.OldPath);
-                syncItem.NewVcsPath = CalcVcsPath(fileData.NewPath);
+                syncItem.VcsPath = CalcVcsPath(vcsRoot, fileData.OldPath);
+                syncItem.NewVcsPath = CalcVcsPath(vcsRoot, fileData.NewPath);
             }
             else {
                 syncItem.SyncAction = SyncAction.Modify;
                 syncItem.LocalPath = fileData.OldPath;
-                syncItem.VcsPath = CalcVcsPath(fileData.OldPath);
+                syncItem.VcsPath = CalcVcsPath(vcsRoot ,fileData.OldPath);
             }
             return syncItem;
         }
-        static string CalcVcsPath(string oldPath) {
-            throw new NotImplementedException();
+        static string CalcVcsPath(string vcsRoot, string path) {
+            return Path.Combine(vcsRoot, path);
         }
         static int ProcessHistory(string gitRepoPath, string localGitDir, string branchName, string trackerPath, int commitsCount, string username, string password) {
             GitWrapper gitWrapper = new GitWrapper(localGitDir, gitRepoPath, new UsernamePasswordCredentials() { Username = username, Password = password });
@@ -115,19 +126,7 @@ namespace DXVcs2Git.Console {
             }
             string localPath = Path.GetDirectoryName(Assembly.GetEntryAssembly().Location);
             string configPath = Path.Combine(localPath, trackerPath);
-            var serializer = new SharpSerializer();
-            TrackConfig trackConfig;
-
-            try {
-                trackConfig = (TrackConfig)serializer.Deserialize(configPath);
-            }
-            catch (Exception ex) {
-                Log.Error("Loading items for track failed", ex);
-                return 1;
-            }
-
-            var tracker = new Tracker(trackConfig.TrackItems);
-            var branch = tracker.FindBranch(branchName);
+            TrackBranch branch = GetBranch(branchName, configPath);
             if (branch == null) {
                 Log.Error($"Specified branch {branchName} not found in track file.");
                 return 1;
@@ -157,9 +156,9 @@ namespace DXVcs2Git.Console {
                 bool hasModifications = false;
                 Commit last = null;
                 foreach (var localCommit in localCommits) {
-                    string localProjectPath = Path.Combine(localGitDir, localCommit.Track.RelativeLocalPath);
+                    string localProjectPath = Path.Combine(localGitDir, localCommit.Track.ProjectPath);
                     DirectoryHelper.DeleteDirectory(localProjectPath);
-                    HistoryGenerator.GetProject(vcsServer, localCommit.Track.FullPath, localProjectPath, item.TimeStamp);
+                    HistoryGenerator.GetProject(vcsServer, localCommit.Track.Path, localProjectPath, item.TimeStamp);
 
                     gitWrapper.Fetch();
                     bool isLabel = IsLabel(item);
@@ -191,6 +190,21 @@ namespace DXVcs2Git.Console {
                 Log.Message($"{++i} from {commits.Count} push to branch {branch.Name} completed.");
             }
             return 0;
+        }
+        static TrackBranch GetBranch(string branchName, string configPath) {
+            var serializer = new SharpSerializer();
+            TrackConfig trackConfig;
+
+            try {
+                trackConfig = (TrackConfig)serializer.Deserialize(configPath);
+            }
+            catch (Exception ex) {
+                Log.Error("Loading items for track failed", ex);
+                return null;
+            }
+
+            var tracker = new Tracker(trackConfig.TrackItems);
+            return tracker.FindBranch(branchName);
         }
         static bool IsLabel(CommitItem item) {
             return item.Items.Any(x => !string.IsNullOrEmpty(x.Label));
