@@ -180,22 +180,6 @@ namespace DXVcs2Git.Console {
         static string CalcTempBranchName(TrackBranch branch) {
             return branch.Name + "_temp";
         }
-        //static void SetSyncLabel(GitWrapper gitWrapper, TrackBranch branch, string localGitDir) {
-        //    DateTime lastSyncTimeStamp = gitWrapper.CalcLastCommitDate(branch.Name, defaultUser);
-        //    foreach (var trackItem in branch.TrackItems) {
-        //        DXVcsWrapper vcsWrapper = new DXVcsWrapper(vcsServer, trackItem.Path, Path.Combine(localGitDir, trackItem.ProjectPath));
-        //        vcsWrapper.CreateLabel(string.Format(tagName, branch.Name));
-        //    }
-        //    var history = HistoryGenerator.GenerateHistory(vcsServer, branch, lastSyncTimeStamp);
-        //    var commits = HistoryGenerator.GenerateCommits(history).Where(x => x.TimeStamp > lastSyncTimeStamp).ToList();
-        //    if (HasUnsyncedCommits(branch, commits)) {
-        //        Log.Error("Set sync label failed. Commits in dxvcs detected.");
-        //        throw new ArgumentException("set sync label failed");
-        //    }
-        //}
-        static string CalcLocalPath(string localGitDir, TrackItem track) {
-            return Path.Combine(localGitDir, track.ProjectPath);
-        }
         static bool HasUnsyncedCommits(TrackBranch branch, IList<CommitItem> commits) {
             if (commits.Count > 1)
                 return true;
@@ -224,15 +208,6 @@ namespace DXVcs2Git.Console {
             var history = HistoryGenerator.GenerateHistory(vcsServer, branch, lastCommit);
             var commits = HistoryGenerator.GenerateCommits(history).Where(x => x.TimeStamp > lastCommit).ToList();
             return HasUnsyncedCommits(branch, commits);
-        }
-        static bool CheckLocalChanges(GitWrapper gitWrapper, TrackBranch branch, string localGitDir) {
-            foreach (var trackItem in branch.TrackItems) {
-                string localProjectPath = Path.Combine(localGitDir, trackItem.ProjectPath);
-                DirectoryHelper.DeleteDirectory(localProjectPath);
-                HistoryGenerator.GetProject(vcsServer, trackItem.Path, localProjectPath, DateTime.Now);
-            }
-            gitWrapper.Fetch();
-            return gitWrapper.CalcHasModification();
         }
         static bool IsAutoSyncComment(string branchName, string message) {
             if (string.IsNullOrEmpty(message))
