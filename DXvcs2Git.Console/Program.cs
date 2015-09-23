@@ -39,6 +39,7 @@ namespace DXVcs2Git.Console {
 
         static int DoWork(CommandLineOptions clo) {
             string localGitDir = clo.LocalFolder != null && Path.IsPathRooted(clo.LocalFolder) ? clo.LocalFolder : Path.Combine(Environment.CurrentDirectory, clo.LocalFolder ?? repoPath);
+            EnsureGitDir(localGitDir);
 
             string gitRepoPath = clo.Repo;
             string username = clo.Login;
@@ -76,6 +77,10 @@ namespace DXVcs2Git.Console {
                     return result;
             }
             return 0;
+        }
+        static void EnsureGitDir(string localGitDir) {
+            if (Directory.Exists(localGitDir))
+                DirectoryHelper.DeleteDirectory(localGitDir);
         }
         static int ProcessInitializeRepo(GitWrapper gitWrapper, string gitRepoPath, string localGitDir, TrackBranch branch, DateTime from) {
             var commit = gitWrapper.FindCommit(branch.Name, x => IsAutoSyncComment(branch.Name, x.Message));
@@ -127,12 +132,26 @@ namespace DXVcs2Git.Console {
 
             bool hasVcsChanged = HasVcsChanges(gitWrapper, branch, localGitDir);
             if (hasVcsChanged) {
+                MoveGitChangesToTempBranch(gitWrapper, branch, localGitDir);
+                AddChangesFromVcs(gitWrapper, branch, gitRepoPath, localGitDir);
                 Log.Error("Repo is in inconsistent state (dxvcs and git has changes). Try to do something...");
                 return 1;
             }
             SetSyncLabel(gitWrapper, branch, localGitDir);
             var syncItems = GenerateDirectChangeSet(gitWrapper, localGitDir, branch);
             return 1;
+        }
+        static void AddChangesFromVcs(GitWrapper gitWrapper, TrackBranch branch, string gitRepoPath, string localGitDir) {
+            ProcessHistory(gitWrapper, gitRepoPath, localGitDir, branch, 100);
+
+        }
+        static void MoveGitChangesToTempBranch(GitWrapper gitWrapper, TrackBranch branch, string localGitDir) {
+            Commit lastSyncCommit = gitWrapper.FindCommit(branch.Name, x => IsAutoSyncComment(branch.Name, x.Message));
+            gitWrapper.EnsureBranch(CalcTempBranchName(branch), lastSyncCommit);
+            gitWrapper.Reset(lastSyncCommit);
+        }
+        static string CalcTempBranchName(TrackBranch branch) {
+            return branch.Name + "_temp";
         }
         static void SetSyncLabel(GitWrapper gitWrapper, TrackBranch branch, string localGitDir) {
             DateTime lastSyncTimeStamp = gitWrapper.CalcLastCommitDate(branch.Name, defaultUser);

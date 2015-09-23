@@ -199,5 +199,8 @@ namespace DXVcs2Git {
             changes = changes.Concat(treeChanges.Renamed);
             return changes;
         }
+        public void Reset(Commit commit) {
+            repo.Reset(ResetMode.Hard, commit);
+        }
     }
 }
