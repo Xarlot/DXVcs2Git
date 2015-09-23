@@ -6,10 +6,12 @@ using System.IO;
 using System.Linq;
 using System.Net.Http.Headers;
 using System.Reflection;
+using System.Reflection.Emit;
 using System.Text;
 using System.Text.RegularExpressions;
 using CommandLine;
 using DXVcs2Git.Core;
+using DXVcs2Git.Core.Serialization;
 using DXVcs2Git.DXVcs;
 using DXVcs2Git.Git;
 using LibGit2Sharp;
@@ -52,37 +54,48 @@ namespace DXVcs2Git.Console {
             TrackBranch branch = FindBranch(branchName, trackerPath);
             if (branch == null)
                 return 1;
+            string historyPath = GetVcsSyncHistory(branch.HistoryPath);
+            if (historyPath == null)
+                return 1;
+            SyncHistory history = SyncHistory.Deserialize(historyPath);
+            if (history == null)
+                return 1;
             GitWrapper gitWrapper = CreateGitWrapper(gitRepoPath, localGitDir, branch, username, password);
             if (gitWrapper == null)
                 return 1;
 
-            if (workMode.HasFlag(WorkMode.Initialize)) {
-                int result = ProcessInitializeRepo(gitWrapper, gitRepoPath, localGitDir, branch, from);
+            if (workMode.HasFlag(WorkMode.initialize)) {
+                int result = ProcessInitializeRepo(gitWrapper, gitRepoPath, localGitDir, branch, history, from);
+                if (result != 0)
+                    return result;
+                HistoryGenerator.SaveHistory(vcsServer, branch.HistoryPath, historyPath, history);
+            }
+            if (workMode.HasFlag(WorkMode.directchanges)) {
+                int result = ProcessDirectChanges(gitWrapper, gitRepoPath, localGitDir, branch, history);
                 if (result != 0)
                     return result;
             }
-            if (workMode.HasFlag(WorkMode.DirectChanges)) {
-                int result = ProcessDirectChanges(gitWrapper, gitRepoPath, localGitDir, branch);
-                if (result != 0)
-                    return result;
-            }
-            if (workMode.HasFlag(WorkMode.History)) {
+            if (workMode.HasFlag(WorkMode.history)) {
                 int result = ProcessHistory(gitWrapper, gitRepoPath, localGitDir, branch, clo.CommitsCount);
                 if (result != 0)
                     return result;
             }
-            if (workMode.HasFlag(WorkMode.MergeRequests)) {
+            if (workMode.HasFlag(WorkMode.mergerequests)) {
                 int result = ProcessMergeRequests(gitRepoPath, localGitDir, clo.Branch, clo.Tracker, username, password);
                 if (result != 0)
                     return result;
             }
             return 0;
         }
+        static string GetVcsSyncHistory(string historyPath) {
+            string local = Path.GetTempFileName();
+            return HistoryGenerator.GetFile(vcsServer, historyPath, local);
+        }
         static void EnsureGitDir(string localGitDir) {
             if (Directory.Exists(localGitDir))
                 DirectoryHelper.DeleteDirectory(localGitDir);
         }
-        static int ProcessInitializeRepo(GitWrapper gitWrapper, string gitRepoPath, string localGitDir, TrackBranch branch, DateTime from) {
+        static int ProcessInitializeRepo(GitWrapper gitWrapper, string gitRepoPath, string localGitDir, TrackBranch branch, SyncHistory syncHistory, DateTime from) {
             var commit = gitWrapper.FindCommit(branch.Name, x => IsAutoSyncComment(branch.Name, x.Message));
             if (commit != null) {
                 Log.Message($"Branch {branch.Name} initialized already.");
@@ -96,6 +109,8 @@ namespace DXVcs2Git.Console {
                 return 1;
             }
             ProcessHistoryInternal(gitWrapper, localGitDir, branch, new[] { startCommit });
+            Commit syncCommit = gitWrapper.FindCommit(branch.Name, x => IsAutoSyncComment(branch.Name, x.Message));
+            syncHistory.Add(syncCommit.Sha, startCommit.TimeStamp.Ticks);
             return 0;
         }
         static GitWrapper CreateGitWrapper(string gitRepoPath, string localGitDir, TrackBranch branch, string username, string password) {
@@ -122,24 +137,36 @@ namespace DXVcs2Git.Console {
             }
             return branch;
         }
-        static int ProcessDirectChanges(GitWrapper gitWrapper, string gitRepoPath, string localGitDir, TrackBranch branch) {
-            bool hasChangesInGit = HasGitChanges(gitWrapper, branch, localGitDir);
+        static int ProcessDirectChanges(GitWrapper gitWrapper, string gitRepoPath, string localGitDir, TrackBranch branch, SyncHistory syncHistory) {
+            var lastSync = syncHistory.GetHead();
+            bool hasChangesInGit = gitWrapper.FindCommit(branch.Name).Sha != lastSync.GitCommitSha;
             if (!hasChangesInGit) {
                 Log.Message($"Branch {branch.Name} checked. There is no direct changes.");
                 return 0;
             }
             Log.Message("$Branch {branch.Name} has local changes.");
 
-            bool hasVcsChanged = HasVcsChanges(gitWrapper, branch, localGitDir);
+            bool hasVcsChanged = HasVcsChanges(branch, lastSync.VcsCommitTimeStamp);
             if (hasVcsChanged) {
                 MoveGitChangesToTempBranch(gitWrapper, branch, localGitDir);
+                CheckOut(gitWrapper, branch);
                 AddChangesFromVcs(gitWrapper, branch, gitRepoPath, localGitDir);
                 Log.Error("Repo is in inconsistent state (dxvcs and git has changes). Try to do something...");
                 return 1;
             }
-            SetSyncLabel(gitWrapper, branch, localGitDir);
             var syncItems = GenerateDirectChangeSet(gitWrapper, localGitDir, branch);
+            ProcessGenericChangeSet(gitWrapper, branch, gitRepoPath, localGitDir, syncItems);
             return 1;
+        }
+        static void ProcessGenericChangeSet(GitWrapper gitWrapper, TrackBranch branch, string gitRepoPath, string localGitDir, IEnumerable<SyncItem> syncItems) {
+            foreach (var trackItem in branch.TrackItems) {
+                DXVcsWrapper wrapper = new DXVcsWrapper(vcsServer);
+                wrapper.ProcessCheckout(syncItems);
+            }
+        }
+        static void CheckOut(GitWrapper gitWrapper, TrackBranch branch) {
+            gitWrapper.CheckOut(branch.Name);
+            gitWrapper.Fetch();
         }
         static void AddChangesFromVcs(GitWrapper gitWrapper, TrackBranch branch, string gitRepoPath, string localGitDir) {
             ProcessHistory(gitWrapper, gitRepoPath, localGitDir, branch, 100);
@@ -153,18 +180,21 @@ namespace DXVcs2Git.Console {
         static string CalcTempBranchName(TrackBranch branch) {
             return branch.Name + "_temp";
         }
-        static void SetSyncLabel(GitWrapper gitWrapper, TrackBranch branch, string localGitDir) {
-            DateTime lastSyncTimeStamp = gitWrapper.CalcLastCommitDate(branch.Name, defaultUser);
-            foreach (var trackItem in branch.TrackItems) {
-                DXVcsWrapper vcsWrapper = new DXVcsWrapper(vcsServer, trackItem.Path, Path.Combine(localGitDir, trackItem.ProjectPath));
-                vcsWrapper.CreateLabel(string.Format(tagName, branch.Name));
-            }
-            var history = HistoryGenerator.GenerateHistory(vcsServer, branch, lastSyncTimeStamp);
-            var commits = HistoryGenerator.GenerateCommits(history).Where(x => x.TimeStamp > lastSyncTimeStamp).ToList();
-            if (HasUnsyncedCommits(branch, commits)) {
-                Log.Error("Set sync label failed. Commits in dxvcs detected.");
-                throw new ArgumentException("set sync label failed");
-            }
+        //static void SetSyncLabel(GitWrapper gitWrapper, TrackBranch branch, string localGitDir) {
+        //    DateTime lastSyncTimeStamp = gitWrapper.CalcLastCommitDate(branch.Name, defaultUser);
+        //    foreach (var trackItem in branch.TrackItems) {
+        //        DXVcsWrapper vcsWrapper = new DXVcsWrapper(vcsServer, trackItem.Path, Path.Combine(localGitDir, trackItem.ProjectPath));
+        //        vcsWrapper.CreateLabel(string.Format(tagName, branch.Name));
+        //    }
+        //    var history = HistoryGenerator.GenerateHistory(vcsServer, branch, lastSyncTimeStamp);
+        //    var commits = HistoryGenerator.GenerateCommits(history).Where(x => x.TimeStamp > lastSyncTimeStamp).ToList();
+        //    if (HasUnsyncedCommits(branch, commits)) {
+        //        Log.Error("Set sync label failed. Commits in dxvcs detected.");
+        //        throw new ArgumentException("set sync label failed");
+        //    }
+        //}
+        static string CalcLocalPath(string localGitDir, TrackItem track) {
+            return Path.Combine(localGitDir, track.ProjectPath);
         }
         static bool HasUnsyncedCommits(TrackBranch branch, IList<CommitItem> commits) {
             if (commits.Count > 1)
@@ -189,24 +219,11 @@ namespace DXVcs2Git.Console {
             item.VcsPath = CalcVcsPath(vcsRoot, changes.OldPath);
             return item;
         }
-        static bool HasVcsChanges(GitWrapper gitWrapper, TrackBranch branch, string localGitDir) {
-            DateTime lastSyncCommitTimeStamp = gitWrapper.CalcLastCommitDate(branch.Name, defaultUser);
-            var history = HistoryGenerator.GenerateHistory(vcsServer, branch, lastSyncCommitTimeStamp);
-            var commits = HistoryGenerator.GenerateCommits(history).Where(x => x.TimeStamp > lastSyncCommitTimeStamp).ToList();
+        static bool HasVcsChanges(TrackBranch branch, long timeStamp) {
+            DateTime lastCommit = new DateTime(timeStamp);
+            var history = HistoryGenerator.GenerateHistory(vcsServer, branch, lastCommit);
+            var commits = HistoryGenerator.GenerateCommits(history).Where(x => x.TimeStamp > lastCommit).ToList();
             return HasUnsyncedCommits(branch, commits);
-        }
-        static bool HasGitChanges(GitWrapper gitWrapper, TrackBranch branch, string localGitDir) {
-            var commit = gitWrapper.FindCommit(branch.Name);
-            var tag = gitWrapper.GetTag(string.Format(tagName, branch.Name));
-            if (tag != null && tag.Target.Sha == commit.Sha)
-                return false;
-            if (tag == null) {
-                if (commit.Committer.Name == defaultUser && IsAutoSyncComment(branch.Name, commit.Message)) {
-                    Log.Message($"Branch {branch.Name} has no associated sync tag. Sync based on commit message.");
-                    return false;
-                }
-            }
-            return CheckLocalChanges(gitWrapper, branch, localGitDir);
         }
         static bool CheckLocalChanges(GitWrapper gitWrapper, TrackBranch branch, string localGitDir) {
             foreach (var trackItem in branch.TrackItems) {
@@ -225,7 +242,7 @@ namespace DXVcs2Git.Console {
             return chunks.Any(x => regex.IsMatch(x));
         }
         static int ProcessMergeRequests(string gitRepoPath, string localGitDir, string branchName, string tracker, string username, string password) {
-            DXVcsWrapper vcsWrapper = new DXVcsWrapper(vcsServer, branchName, localGitDir);
+            DXVcsWrapper vcsWrapper = new DXVcsWrapper(vcsServer);
             GitLabWrapper gitWrapper = new GitLabWrapper(gitServer, branchName, token);
             var project = gitWrapper.FindProject(gitRepoPath);
             TrackBranch branch = GetBranch(branchName, tracker);
@@ -303,7 +320,7 @@ namespace DXVcs2Git.Console {
             var history = HistoryGenerator.GenerateHistory(vcsServer, branch, lastCommit).OrderBy(x => x.ActionDate).ToList();
             Log.Message($"History generated. {history.Count} history items obtained.");
 
-            var commits = HistoryGenerator.GenerateCommits(history).Where(x => x.TimeStamp > lastCommit).ToList();
+            var commits = HistoryGenerator.GenerateCommits(history).Where(x => x.TimeStamp >= lastCommit).ToList();
             if (commits.Count > commitsCount) {
                 Log.Message($"Commits generated. First {commitsCount} of {commits.Count} commits taken.");
                 commits = commits.Take(commitsCount).ToList();
@@ -354,19 +371,14 @@ namespace DXVcs2Git.Console {
                 Log.Message($"{++i} from {commits.Count} push to branch {branch.Name} completed.");
         }
         static TrackBranch GetBranch(string branchName, string configPath) {
-            var serializer = new SharpSerializer();
-            TrackConfig trackConfig;
-
             try {
-                trackConfig = (TrackConfig)serializer.Deserialize(configPath);
+                var branches = TrackBranch.Deserialize(configPath);
+                return branches.First(x => x.Name == branchName);
             }
             catch (Exception ex) {
                 Log.Error("Loading items for track failed", ex);
                 return null;
             }
-
-            var tracker = new Tracker(trackConfig.TrackItems);
-            return tracker.FindBranch(branchName);
         }
         static bool IsLabel(CommitItem item) {
             return item.Items.Any(x => !string.IsNullOrEmpty(x.Label));

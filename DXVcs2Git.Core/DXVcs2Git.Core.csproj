@@ -56,10 +56,11 @@
     <Compile Include="ProjectExtractor.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RegisteredUsers.cs" />
+    <Compile Include="Serialization\GitSyncItem.cs" />
+    <Compile Include="Serialization\SyncHistory.cs" />
+    <Compile Include="SyncHistoryItem.cs" />
     <Compile Include="SyncItem.cs" />
     <Compile Include="TrackBranch.cs" />
-    <Compile Include="TrackConfig.cs" />
-    <Compile Include="Tracker.cs" />
     <Compile Include="TrackItem.cs" />
     <Compile Include="User.cs" />
   </ItemGroup>

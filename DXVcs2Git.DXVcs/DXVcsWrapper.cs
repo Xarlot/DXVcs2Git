@@ -7,18 +7,14 @@ using DXVcs2Git.Core;
 namespace DXVcs2Git.DXVcs {
     public class DXVcsWrapper {
         readonly string server;
-        string branchPath;
-        string localPath;
-        public DXVcsWrapper(string server, string branchPath, string localPath) {
+        public DXVcsWrapper(string server) {
             this.server = server;
-            this.branchPath = branchPath;
-            this.localPath = localPath;
         }
-        public bool CheckOut(string vcsPath) {
+        public bool CheckOut(string vcsPath, string localPath) {
             try {
                 var repo = DXVcsConectionHelper.Connect(server);
                 if (repo.IsUnderVss(vcsPath)) {
-                    repo.CheckOutFile(vcsPath, repo.GetFileWorkingPath(vcsPath), "DXVcs2GitService: checkout for sync");
+                    repo.CheckOutFile(vcsPath, localPath, "DXVcs2GitService: checkout for sync");
                 }
                 else {
                     Log.Error($"File {vcsPath} is not under vss.");
@@ -49,7 +45,7 @@ namespace DXVcs2Git.DXVcs {
             }
         }
         public bool CheckOut(SyncItem item) {
-            return CheckOut(item.VcsPath);
+            return CheckOut(item.VcsPath, item.LocalPath);
         }
         public bool ProcessItem(SyncItem item) {
             switch (item.SyncAction) {
@@ -94,10 +90,10 @@ namespace DXVcs2Git.DXVcs {
             }
             return true;
         }
-        public void CreateLabel(string labelName) {
+        public void CreateLabel(string vcsPath, string labelName) {
             try {
                 var repo = DXVcsConectionHelper.Connect(server);
-                repo.CreateLabel(branchPath, labelName, "sync");
+                repo.CreateLabel(vcsPath, labelName, "sync");
             }
             catch (Exception ex) {
                 Log.Error($"Create label {labelName} failed.", ex);

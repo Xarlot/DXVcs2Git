@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using DXVcs2Git.Core;
+using DXVcs2Git.Core.Serialization;
 
 namespace DXVcs2Git.DXVcs {
     public static class HistoryGenerator {
@@ -60,6 +62,30 @@ namespace DXVcs2Git.DXVcs {
                     item.TimeStamp = first.ActionDate;
                     yield return item;
                 }
+            }
+        }
+        public static string GetFile(string server, string historyPath, string local) {
+            try {
+                var repo = DXVcsConectionHelper.Connect(server);
+                string localPath = Path.GetTempFileName();
+                repo.GetLatestFileVersion(historyPath, localPath);
+                return localPath;
+            }
+            catch (Exception) {
+                Log.Error($"Loading sync history from {historyPath} failed");
+                return null;
+            }
+        }
+        public static void SaveHistory(string server, string vcsFile, string localFile, SyncHistory history) {
+            try {
+                var repo = DXVcsConectionHelper.Connect(server);
+                repo.CheckOutFile(vcsFile, localFile, string.Empty);
+                SyncHistory.Serialize(history, localFile);
+                repo.CheckInFile(vcsFile, localFile, string.Empty);
+            }
+            catch (Exception ex) {
+                Log.Error($"Save history to {vcsFile} failed.", ex);
+                throw;
             }
         }
     }
