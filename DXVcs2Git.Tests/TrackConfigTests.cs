@@ -10,7 +10,7 @@ namespace DXVcs2Git.Tests {
         public void GenerateTestConfig() {
             List<TrackItem> items = new List<TrackItem>();
             items.Add(new TrackItem() { Path = @"$/Sandbox/litvinov/XPF/DevExpress.Xpf.Core", ProjectPath = "DevExpress.Xpf.Core" });
-            TrackBranch branch = new TrackBranch("2015.2", "$/Sandbox/litvinov/XPF/track2015.2.config", items);
+            TrackBranch branch = new TrackBranch("2015.2", "$/Sandbox/litvinov/XPF/track2015.2.config", "$/Sandbox/litvinov/XPF", items);
 
             SharpSerializerXmlSettings settings = new SharpSerializerXmlSettings();
             settings.IncludeAssemblyVersionInTypeName = false;

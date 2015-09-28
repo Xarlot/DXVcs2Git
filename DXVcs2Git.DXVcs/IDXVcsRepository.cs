@@ -11,7 +11,7 @@ namespace DXVcs2Git.DXVcs {
         void GetProject(string vcsPath, string localPath, DateTime timeStamp);
         void GetLatestFileVersion(string vcsFile, string fileName);
         void Get(string vcsFile, string fileName, int version);
-        void CheckOutFile(string vcsFile, string localFile, string comment);
+        void CheckOutFile(string vcsFile, string localFile, string comment, bool dontGetLocalCopy = false);
         void CheckInFile(string vcsFile, string localFile, string comment);
         void UndoCheckout(string vcsFile, string localFile);
         string GetFileWorkingPath(string vcsFile);
@@ -19,6 +19,9 @@ namespace DXVcs2Git.DXVcs {
         bool IsCheckedOut(string vcsPath);
         bool IsCheckedOutByMe(string vcsPath);
         void AddFile(string vcsFile, byte[] fileBytes, string comment);
+        void AddProject(string vcsPath, string comment);
         void CreateLabel(string vcsPath, string labelName, string comment);
+        void DeleteFile(string vcsPath);
+        string[] MoveFile(string vcsPath, string newVcsPath, string comment);
     }
 }

@@ -11,5 +11,6 @@
         public string NewLocalPath { get; set; }
         public string NewVcsPath { get; set; }
         public SyncAction SyncAction { get; set; }
+        public string Comment { get; set; }
     }
 }

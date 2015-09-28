@@ -20,13 +20,15 @@ namespace DXVcs2Git.Core {
         public string Name { get; private set; }
         public IList<TrackItem> TrackItems { get; private set; }
         public string HistoryPath { get; private set; }
+        public string RepoRoot { get; private set; }
 
         public TrackBranch() {
         }
-        public TrackBranch(string branchName, string historyPath, IEnumerable<TrackItem> trackItems) {
+        public TrackBranch(string branchName, string historyPath, string repoRoot, IEnumerable<TrackItem> trackItems) {
             Name = branchName;
             HistoryPath = historyPath;
             TrackItems = trackItems.ToList();
+            RepoRoot = repoRoot;
         }
     }
 }

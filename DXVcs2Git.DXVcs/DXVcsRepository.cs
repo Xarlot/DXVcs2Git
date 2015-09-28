@@ -1,11 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.IO;
-using System.Linq;
 using System.Threading;
 using DXVCS;
-using DXVCS.Properties;
 using DXVCSClient;
 
 namespace DXVcs2Git.DXVcs {
@@ -548,16 +545,15 @@ namespace DXVcs2Git.DXVcs {
             getBlockEvent.Set();
         }
 
-        public void CheckOutFile(string vcsFile, string localFile, string comment) {
+        public void CheckOutFile(string vcsFile, string localFile, string comment, bool dontGetLocalCopy = false) {
             if (string.IsNullOrEmpty(vcsFile))
                 throw new ArgumentException("vcsFile");
 
             if (string.IsNullOrEmpty(localFile))
                 throw new ArgumentException("localFile");
 
-            bool getLocalCopy = !File.Exists(localFile) || !Service.GetFile(vcsFile).CheckedOutMe;
+            bool getLocalCopy = !dontGetLocalCopy && (!File.Exists(localFile) || !Service.GetFile(vcsFile).CheckedOutMe);
             Service.CheckOut(Environment.MachineName, new[] { vcsFile }, new[] { Path.GetDirectoryName(localFile) }, new[] { comment }, null);
-
             if (File.Exists(localFile))
                 File.SetAttributes(localFile, FileAttributes.Normal);
 
@@ -618,6 +614,36 @@ namespace DXVcs2Git.DXVcs {
                     CreateProject(temp, folder, comment);
                 temp += @"/" + folder;
             }
+        }
+        public void AddProject(string vcsPath, string comment) {
+            AddFile(vcsPath, null, comment);
+        }
+        public void DeleteFile(string vcsPath) {
+            if (string.IsNullOrEmpty(vcsPath))
+                throw  new ArgumentException("vcsFile");
+            Service.SetDeletedFile(vcsPath, false);
+        }
+        public string[] MoveFile(string vcsPath, string newVcsPath, string comment) {
+            if (string.IsNullOrEmpty(vcsPath))
+                throw new ArgumentException("vcsPath");
+            if (string.IsNullOrEmpty(newVcsPath))
+                throw new ArgumentException("newVcsPath");
+            if (IsProject(vcsPath)) {
+                Service.MoveProject(vcsPath, newVcsPath, comment);
+                return null;
+            }
+            string[] exist;
+            Service.MoveFiles(new[] {vcsPath}, GetProjectPath(newVcsPath), out exist);
+            return exist;
+        }
+        string GetProjectPath(string vcsPath) {
+            return Path.GetDirectoryName(vcsPath);
+        }
+        bool IsProject(string vcsPath) {
+            var project = Service.FindProject(vcsPath);
+            if (!project.IsNull)
+                return true;
+            return false;
         }
         void CreateFile(string vcsFile, string fileName, byte[] fileBytes, string comment) {
             if (string.IsNullOrEmpty(vcsFile))

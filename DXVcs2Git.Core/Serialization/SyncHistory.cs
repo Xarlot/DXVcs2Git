@@ -30,7 +30,7 @@ namespace DXVcs2Git.Core.Serialization {
                 return (SyncHistory)serializer.Deserialize(path);
             }
             catch (Exception ex) {
-                Log.Error($"Loading history from {path} failed");
+                Log.Error($"Loading history from {path} failed", ex);
                 return new SyncHistory();
             }
         }
