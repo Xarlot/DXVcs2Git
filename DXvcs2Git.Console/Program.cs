@@ -355,11 +355,10 @@ namespace DXVcs2Git.Console {
                 }
                 if (hasModifications) {
                     gitWrapper.Push(branch.Name);
-                    if (last != null) {
-                        string tagName = CreateTagName(branch.Name);
-                        gitWrapper.AddTag(tagName, last, defaultUser, item.TimeStamp, CalcComment(last, branch, false));
-                        HistoryGenerator.SaveHistory(vcsServer, branch.HistoryPath, historyPath, syncHistory);
-                    }
+                    string tagName = CreateTagName(branch.Name);
+                    gitWrapper.AddTag(tagName, last, defaultUser, item.TimeStamp, CalcComment(last, branch, false));
+                    syncHistory.Add(last.Sha, item.TimeStamp.Ticks);
+                    HistoryGenerator.SaveHistory(vcsServer, branch.HistoryPath, historyPath, syncHistory);
                 }
                 else
                     Log.Message($"Push empty commits rejected for {item.Author} {item.TimeStamp}.");
