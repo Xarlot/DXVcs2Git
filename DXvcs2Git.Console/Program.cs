@@ -1,12 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Net.Http.Headers;
 using System.Reflection;
-using System.Reflection.Emit;
 using System.Text;
 using System.Text.RegularExpressions;
 using CommandLine;
@@ -16,19 +12,16 @@ using DXVcs2Git.DXVcs;
 using DXVcs2Git.Git;
 using LibGit2Sharp;
 using NGitLab.Models;
-using Polenter.Serialization;
 using Commit = LibGit2Sharp.Commit;
 
 namespace DXVcs2Git.Console {
     internal class Program {
         const string token = "X6XV2G_ycz_U4pi4m93K";
-        static readonly string AutoSyncBranchRegexFormat = @"\[.*:autosync for {0}\]";
-        const string AutoSyncBranchFormat = @"[{0}:autosync for {1}]";
         const string AutoSyncTimeStampFormat = "{0:M/d/yyyy HH:mm:ss.ffffff}";
         const string AutoSyncAuthor = "autosync author: {0}";
         const string AutoSyncBranch = "autosync branch: {0}";
         const string AutoSyncSha = "autosync commit sha: {0}";
-        const string AutoSyncShaSearchString = "autosync commit sha: ";
+        const string AutoSyncShaSearchString = @"(?<=sha:\s*)[0-9a-f]+";
         const string AutoSyncTimeStamp = "autosync commit timestamp: {0}";
         const string repoPath = "repo";
         const string gitServer = @"http://litvinov-lnx";
@@ -81,7 +74,7 @@ namespace DXVcs2Git.Console {
                     return result;
             }
             if (workMode.HasFlag(WorkMode.history)) {
-                int result = ProcessHistory(gitWrapper, gitRepoPath, localGitDir, branch, clo.CommitsCount);
+                int result = ProcessHistory(gitWrapper, gitRepoPath, localGitDir, branch, history, clo.CommitsCount);
                 if (result != 0)
                     return result;
             }
@@ -107,7 +100,7 @@ namespace DXVcs2Git.Console {
                 return 0;
             }
             var history = HistoryGenerator.GenerateHistory(vcsServer, branch, from);
-            var commits = HistoryGenerator.GenerateCommits(history).Where(x => x.TimeStamp > from);
+            var commits = HistoryGenerator.GenerateCommits(history).Where(x => x.TimeStamp > from && !IsLabel(x));
             CommitItem startCommit = commits.FirstOrDefault();
             if (object.Equals(startCommit, null)) {
                 Log.Error($"Repo has no commits since {from}. Initializing repo failed.");
@@ -187,14 +180,14 @@ namespace DXVcs2Git.Console {
             }
             return wrapper.ProcessCheckIn(syncItems);
         }
-        static void CheckOut(GitWrapper gitWrapper, TrackBranch branch) {
-            gitWrapper.CheckOut(branch.Name);
-            gitWrapper.Fetch();
-        }
-        static void AddChangesFromVcs(GitWrapper gitWrapper, TrackBranch branch, string gitRepoPath, string localGitDir) {
-            ProcessHistory(gitWrapper, gitRepoPath, localGitDir, branch, 100);
+        //static void CheckOut(GitWrapper gitWrapper, TrackBranch branch) {
+        //    gitWrapper.CheckOut(branch.Name);
+        //    gitWrapper.Fetch();
+        //}
+        //static void AddChangesFromVcs(GitWrapper gitWrapper, TrackBranch branch, string gitRepoPath, string localGitDir) {
+        //    ProcessHistory(gitWrapper, gitRepoPath, localGitDir, branch, 100);
 
-        }
+        //}
         static void MoveGitChangesToTempBranch(GitWrapper gitWrapper, TrackBranch branch, string localGitDir) {
             Commit lastSyncCommit = gitWrapper.FindCommit(branch.Name, x => IsAutoSyncComment(branch.Name, x.Message));
             gitWrapper.EnsureBranch(CalcTempBranchName(branch), lastSyncCommit);
@@ -235,8 +228,7 @@ namespace DXVcs2Git.Console {
             if (string.IsNullOrEmpty(message))
                 return false;
             var chunks = message.Split(new[] { '\n' }, StringSplitOptions.RemoveEmptyEntries);
-            Regex regex = new Regex(string.Format(AutoSyncBranchRegexFormat, branchName));
-            return chunks.Any(x => regex.IsMatch(x));
+            return chunks.Any(x => x.StartsWith(string.Format(AutoSyncBranch, branchName)));
         }
         static int ProcessMergeRequests(string gitRepoPath, string localGitDir, string branchName, string tracker, string username, string password) {
             DXVcsWrapper vcsWrapper = new DXVcsWrapper(vcsServer);
@@ -311,14 +303,14 @@ namespace DXVcs2Git.Console {
             string result = Path.Combine(vcsRoot, path);
             return result.Replace("\\", "/");
         }
-        static int ProcessHistory(GitWrapper gitWrapper, string gitRepoPath, string localGitDir, TrackBranch branch, int commitsCount) {
-            DateTime lastCommit = gitWrapper.CalcLastCommitDate(branch.Name, defaultUser);
+        static int ProcessHistory(GitWrapper gitWrapper, string gitRepoPath, string localGitDir, TrackBranch branch, SyncHistory syncHistory, int commitsCount) {
+            DateTime lastCommit = CalcLastCommitDate(gitWrapper, branch, syncHistory);
             Log.Message($"Last commit has been performed at {lastCommit.ToLocalTime()}.");
 
             var history = HistoryGenerator.GenerateHistory(vcsServer, branch, lastCommit).OrderBy(x => x.ActionDate).ToList();
             Log.Message($"History generated. {history.Count} history items obtained.");
 
-            var commits = HistoryGenerator.GenerateCommits(history).Where(x => x.TimeStamp >= lastCommit).ToList();
+            var commits = HistoryGenerator.GenerateCommits(history).Where(x => x.TimeStamp >= lastCommit && !IsLabel(x)).ToList();
             if (commits.Count > commitsCount) {
                 Log.Message($"Commits generated. First {commitsCount} of {commits.Count} commits taken.");
                 commits = commits.Take(commitsCount).ToList();
@@ -330,9 +322,15 @@ namespace DXVcs2Git.Console {
             ProcessHistoryInternal(gitWrapper, localGitDir, branch, commits);
             return 0;
         }
+        static DateTime CalcLastCommitDate(GitWrapper gitWrapper, TrackBranch branch, SyncHistory syncHistory) {
+            var head = syncHistory.GetHead();
+            if (head == null)
+                return gitWrapper.CalcLastCommitDate(branch.Name, defaultUser);
+            return new DateTime(head.VcsCommitTimeStamp);
+        }
         static void ProcessHistoryInternal(GitWrapper gitWrapper, string localGitDir, TrackBranch branch, IList<CommitItem> commits) {
             ProjectExtractor extractor = new ProjectExtractor(commits, (item) => {
-                var localCommits = HistoryGenerator.GetCommits(item.Items).ToList();
+                var localCommits = HistoryGenerator.GetCommits(item.Items).Where(x => !IsLabel(x)).ToList();
                 bool hasModifications = false;
                 Commit last = null;
                 foreach (var localCommit in localCommits) {
@@ -397,20 +395,17 @@ namespace DXVcs2Git.Console {
         }
         static string CalcComment(CommitItem item) {
             StringBuilder sb = new StringBuilder();
-            var labelItem = item.Items.FirstOrDefault(x => !string.IsNullOrEmpty(x.Label));
-            if (labelItem != null && !string.IsNullOrEmpty(labelItem.Label))
-                sb.AppendLine($"Label: {labelItem.Label}");
+            AppendAutoSyncInfo(sb, item.Author, item.TimeStamp, item.Track.Branch);
             var commentItem = item.Items.FirstOrDefault(x => !string.IsNullOrEmpty(x.Comment));
             if (commentItem != null && !string.IsNullOrEmpty(commentItem.Comment))
                 sb.AppendLine($"{FilterLabel(commentItem.Comment)}");
-            AppendAutoSyncInfo(sb, item.Author, item.TimeStamp, item.Track.Branch);
             return sb.ToString();
         }
         static string GetShaFromComment(CommitItem item) {
-            var shaCandidates = item.Items.Select(x => x.Comment.Split(new[] {'\n'}, StringSplitOptions.RemoveEmptyEntries).FirstOrDefault(str => str.StartsWith(AutoSyncShaSearchString))).Where(x => !string.IsNullOrEmpty(x)).ToList();
-            if (!shaCandidates.Any())
-                return string.Empty;
-            return shaCandidates.First().Remove(0, AutoSyncShaSearchString.Length);
+            Regex regex = new Regex(AutoSyncShaSearchString, RegexOptions.IgnoreCase);
+            var items = item.Items.Select(x => regex.Matches(x.Comment)).ToList();
+            var matches = items.FirstOrDefault(x => x.Count > 0);
+            return matches?[0].Value;
         }
         static void AppendAutoSyncInfo(StringBuilder sb, string author, DateTime timeStamp, string branchName, string sha = "") {
             sb.AppendLine(string.Format(AutoSyncAuthor, author));

@@ -14,7 +14,7 @@ namespace DXVcs2Git.Core.Serialization {
             Items.Add(new SyncHistoryItem() { GitCommitSha = sha, VcsCommitTimeStamp = timeStamp });
         }
         public SyncHistoryItem GetHead() {
-            return Items.Last();
+            return Items.LastOrDefault();
         }
 
         public static void Serialize(SyncHistory history, string path) {
