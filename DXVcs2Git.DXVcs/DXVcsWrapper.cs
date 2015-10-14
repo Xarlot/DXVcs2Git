@@ -165,10 +165,10 @@ namespace DXVcs2Git.DXVcs {
                     throw new ArgumentException("SyncAction");
             }
         }
-        public void CreateLabel(string vcsPath, string labelName) {
+        public void CreateLabel(string vcsPath, string labelName, string comment = "") {
             try {
                 var repo = DXVcsConectionHelper.Connect(server);
-                repo.CreateLabel(vcsPath, labelName, "sync");
+                repo.CreateLabel(vcsPath, labelName, comment);
             }
             catch (Exception ex) {
                 Log.Error($"Create label {labelName} failed.", ex);

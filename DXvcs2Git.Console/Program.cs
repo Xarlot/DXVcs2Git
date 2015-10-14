@@ -25,6 +25,11 @@ namespace DXVcs2Git.Console {
         static readonly string AutoSyncBranchRegexFormat = @"\[.*:autosync for {0}\]";
         const string AutoSyncBranchFormat = @"[{0}:autosync for {1}]";
         const string AutoSyncTimeStampFormat = "{0:M/d/yyyy HH:mm:ss.ffffff}";
+        const string AutoSyncAuthor = "autosync author: {0}";
+        const string AutoSyncBranch = "autosync branch: {0}";
+        const string AutoSyncSha = "autosync commit sha: {0}";
+        const string AutoSyncShaSearchString = "autosync commit sha: ";
+        const string AutoSyncTimeStamp = "autosync commit timestamp: {0}";
         const string repoPath = "repo";
         const string gitServer = @"http://litvinov-lnx";
         const string vcsServer = @"net.tcp://vcsservice.devexpress.devx:9091/DXVCSService";
@@ -158,14 +163,21 @@ namespace DXVcs2Git.Console {
             //}
             var syncItems = GenerateDirectChangeSet(gitWrapper, localGitDir, branch, lastSyncCommit, lastCommit);
             if (ProcessGenericChangeSet(gitWrapper, branch, gitRepoPath, localGitDir, syncItems)) {
-                SetSyncLabel(lastCommit, branch, localGitDir);
-                syncHistory.Add(lastCommit.Sha, 123);
+                CommitItem syncCommit = SetSyncLabel(vcsServer, lastCommit, branch, localGitDir);
+                if (syncCommit == null)
+                    throw new ArgumentException("set sync commit failed.");
+                syncHistory.Add(lastCommit.Sha, syncCommit.TimeStamp.Ticks);
                 HistoryGenerator.SaveHistory(vcsServer, branch.HistoryPath, historyPath, syncHistory);
             }
             return 1;
         }
-        static void SetSyncLabel(Commit commit, TrackBranch branch, string localGitDir) {
-
+        static CommitItem SetSyncLabel(string vcsServer, Commit commit, TrackBranch branch, string localGitDir) {
+            DXVcsWrapper vcsWrapper = new DXVcsWrapper(vcsServer);
+            vcsWrapper.CreateLabel(branch.RepoRoot, string.Format(tagName, branch.Name), CalcComment(commit, branch));
+            var timeStamp = commit.Author.When.DateTime;
+            var history = HistoryGenerator.GenerateHistory(vcsServer, branch, commit.Author.When.DateTime);
+            var commits = HistoryGenerator.GenerateCommits(history).Where(x => x.TimeStamp > timeStamp).ToList();
+            return commits.FirstOrDefault(x => IsSyncLabel(x, commit.Sha));
         }
         static bool ProcessGenericChangeSet(GitWrapper gitWrapper, TrackBranch branch, string gitRepoPath, string localGitDir, IEnumerable<SyncItem> syncItems) {
             DXVcsWrapper wrapper = new DXVcsWrapper(vcsServer);
@@ -210,7 +222,7 @@ namespace DXVcs2Git.Console {
             item.SyncAction = SyncAction.Modify;
             item.LocalPath = Path.Combine(localGitDir, changes.OldPath);
             item.VcsPath = CalcVcsPath(vcsRoot, changes.OldPath);
-            item.Comment = CalcComment(lastChange, branch, changes);
+            item.Comment = CalcComment(lastChange, branch);
             return item;
         }
         static bool HasVcsChanges(TrackBranch branch, long timeStamp) {
@@ -369,15 +381,18 @@ namespace DXVcs2Git.Console {
         static bool IsLabel(CommitItem item) {
             return item.Items.Any(x => !string.IsNullOrEmpty(x.Label));
         }
+        static bool IsSyncLabel(CommitItem item, string sha) {
+            return IsLabel(item) && GetShaFromComment(item) == sha;
+        }
         static string CreateTagName(string branchName) {
             return $"dxvcs2gitservice_sync_{branchName}";
         }
-        static string CalcComment(Commit commit, TrackBranch branch, TreeEntryChanges item) {
+        static string CalcComment(Commit commit, TrackBranch branch) {
             if (IsAutoSyncComment(branch.Name, commit.Message))
                 return commit.Message;
             StringBuilder sb = new StringBuilder();
             sb.Append(commit.Message);
-            AppendAutoSyncInfo(sb, commit.Author.Name, commit.Author.When.DateTime, branch.Name);
+            AppendAutoSyncInfo(sb, commit.Author.Name, commit.Author.When.DateTime, branch.Name, commit.Sha);
             return sb.ToString();
         }
         static string CalcComment(CommitItem item) {
@@ -391,9 +406,18 @@ namespace DXVcs2Git.Console {
             AppendAutoSyncInfo(sb, item.Author, item.TimeStamp, item.Track.Branch);
             return sb.ToString();
         }
-        static void AppendAutoSyncInfo(StringBuilder sb, string author, DateTime timeStamp, string branchName) {
-            sb.AppendLine(string.Format(AutoSyncBranchFormat, author, branchName));
-            sb.AppendLine(string.Format(AutoSyncTimeStampFormat, timeStamp));
+        static string GetShaFromComment(CommitItem item) {
+            var shaCandidates = item.Items.Select(x => x.Comment.Split(new[] {'\n'}, StringSplitOptions.RemoveEmptyEntries).FirstOrDefault(str => str.StartsWith(AutoSyncShaSearchString))).Where(x => !string.IsNullOrEmpty(x)).ToList();
+            if (!shaCandidates.Any())
+                return string.Empty;
+            return shaCandidates.First().Remove(0, AutoSyncShaSearchString.Length);
+        }
+        static void AppendAutoSyncInfo(StringBuilder sb, string author, DateTime timeStamp, string branchName, string sha = "") {
+            sb.AppendLine(string.Format(AutoSyncAuthor, author));
+            sb.AppendLine(string.Format(AutoSyncBranch, branchName));
+            sb.AppendLine(string.Format(AutoSyncTimeStamp, timeStamp.Ticks));
+            if (!string.IsNullOrEmpty(sha))
+                sb.AppendLine(string.Format(AutoSyncSha, sha));
         }
         static string FilterLabel(string comment) {
             if (comment.StartsWith("Label: "))

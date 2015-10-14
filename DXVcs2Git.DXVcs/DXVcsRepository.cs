@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Threading;
 using DXVCS;
 using DXVCSClient;
@@ -682,6 +683,9 @@ namespace DXVcs2Git.DXVcs {
         public void CreateLabel(string vcsPath, string labelName, string comment) {
             if (string.IsNullOrEmpty(vcsPath))
                 throw new ArgumentException("vcsPath");
+            var labels = Service.GetLabels(vcsPath);
+            if (labels.Any(x => x.Name == labelName))
+                Service.DeleteLabel(vcsPath, labelName);
             Service.CreateLabel(vcsPath, labelName, comment);
         }
     }
