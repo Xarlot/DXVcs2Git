@@ -256,24 +256,24 @@ namespace DXVcs2Git.Console {
                 return 0;
             }
             foreach (var mergeRequest in mergeRequests) {
-                ProcessMergeRequest(gitWrapper, vcsWrapper, branch, mergeRequest);
+                ProcessMergeRequest(gitWrapper, vcsWrapper, localGitDir, branch, mergeRequest);
             }
             return 0;
         }
-        static void ProcessMergeRequest(GitLabWrapper gitWrapper, DXVcsWrapper vcsWrapper, TrackBranch branch, MergeRequest mergeRequest) {
+        static void ProcessMergeRequest(GitLabWrapper gitWrapper, DXVcsWrapper vcsWrapper, string localGitDir, TrackBranch branch, MergeRequest mergeRequest) {
             switch (mergeRequest.State) {
                 case "merged":
                     gitWrapper.RemoveMergeRequest(mergeRequest);
                     break;
                 case "reopened":
                 case "opened":
-                    ProcessOpenedMergeRequest(gitWrapper, vcsWrapper, branch, mergeRequest);
+                    ProcessOpenedMergeRequest(gitWrapper, vcsWrapper, localGitDir, branch, mergeRequest);
                     break;
             }
         }
-        static void ProcessOpenedMergeRequest(GitLabWrapper wrapper, DXVcsWrapper vcsWrapper, TrackBranch branch, MergeRequest mergeRequest) {
+        static void ProcessOpenedMergeRequest(GitLabWrapper wrapper, DXVcsWrapper vcsWrapper, string localGitDir, TrackBranch branch, MergeRequest mergeRequest) {
             var changes = wrapper.GetMergeRequestChanges(mergeRequest).Where(x => branch.TrackItems.FirstOrDefault(track => x.OldPath.StartsWith(track.ProjectPath)) != null);
-            var genericChange = changes.Select(x => ProcessMergeRequestChanges(x, CalcVcsRoot(branch, x))).ToList();
+            var genericChange = changes.Select(x => ProcessMergeRequestChanges(x, localGitDir, branch, CalcVcsRoot(branch, x))).ToList();
             vcsWrapper.ProcessCheckout(genericChange);
         }
         static string CalcVcsRoot(TrackBranch branch, MergeRequestFileData fileData) {
@@ -284,31 +284,34 @@ namespace DXVcs2Git.Console {
             var trackItem = branch.TrackItems.First(x => fileData.OldPath.StartsWith(x.ProjectPath, StringComparison.OrdinalIgnoreCase));
             return trackItem.Path.Remove(trackItem.Path.Length - trackItem.ProjectPath.Length, trackItem.ProjectPath.Length);
         }
-        static SyncItem ProcessMergeRequestChanges(MergeRequestFileData fileData, string vcsRoot) {
+        static SyncItem ProcessMergeRequestChanges(MergeRequestFileData fileData, string localGitDir, TrackBranch branch, string vcsRoot) {
             var syncItem = new SyncItem();
             if (fileData.IsNew) {
-                syncItem.SyncAction = SyncAction.Modify;
-                syncItem.LocalPath = fileData.OldPath;
+                syncItem.SyncAction = SyncAction.New;
+                syncItem.LocalPath = CalcLocalPath(localGitDir, branch, fileData.OldPath);
                 syncItem.VcsPath = CalcVcsPath(vcsRoot, fileData.OldPath);
             }
             else if (fileData.IsDeleted) {
                 syncItem.SyncAction = SyncAction.Delete;
-                syncItem.LocalPath = fileData.OldPath;
+                syncItem.LocalPath = CalcLocalPath(localGitDir, branch, fileData.OldPath);
                 syncItem.VcsPath = CalcVcsPath(vcsRoot, fileData.OldPath);
             }
             else if (fileData.IsRenamed) {
                 syncItem.SyncAction = SyncAction.Move;
-                syncItem.LocalPath = fileData.OldPath;
-                syncItem.NewLocalPath = fileData.NewPath;
+                syncItem.LocalPath = CalcLocalPath(localGitDir, branch, fileData.OldPath);
+                syncItem.NewLocalPath = CalcLocalPath(localGitDir, branch, fileData.NewPath);
                 syncItem.VcsPath = CalcVcsPath(vcsRoot, fileData.OldPath);
                 syncItem.NewVcsPath = CalcVcsPath(vcsRoot, fileData.NewPath);
             }
             else {
                 syncItem.SyncAction = SyncAction.Modify;
-                syncItem.LocalPath = fileData.OldPath;
+                syncItem.LocalPath = CalcLocalPath(localGitDir, branch, fileData.OldPath);
                 syncItem.VcsPath = CalcVcsPath(vcsRoot, fileData.OldPath);
             }
             return syncItem;
+        }
+        static string CalcLocalPath(string localGitDir, TrackBranch branch, string path) {
+            return Path.Combine(localGitDir, path);
         }
         static string CalcVcsPath(string vcsRoot, string path) {
             string result = Path.Combine(vcsRoot, path);
