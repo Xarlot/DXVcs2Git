@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -90,8 +91,18 @@ namespace DXVcs2Git.Console {
             return HistoryGenerator.GetFile(vcsServer, historyPath, local);
         }
         static void EnsureGitDir(string localGitDir) {
-            if (Directory.Exists(localGitDir))
+            if (Directory.Exists(localGitDir)) {
+                KillProcess("tgitcache");
                 DirectoryHelper.DeleteDirectory(localGitDir);
+            }
+        }
+        static void KillProcess(string process) {
+            Process[] procs = Process.GetProcessesByName(process);
+
+            foreach (Process proc in procs) {
+                proc.Kill();
+                proc.WaitForExit();
+            }
         }
         static int ProcessInitializeRepo(GitWrapper gitWrapper, string gitRepoPath, string localGitDir, TrackBranch branch, SyncHistory syncHistory, string historyPath, DateTime from) {
             var commit = gitWrapper.FindCommit(branch.Name, x => IsAutoSyncComment(branch.Name, x.Message));
@@ -310,7 +321,7 @@ namespace DXVcs2Git.Console {
             var history = HistoryGenerator.GenerateHistory(vcsServer, branch, lastCommit).OrderBy(x => x.ActionDate).ToList();
             Log.Message($"History generated. {history.Count} history items obtained.");
 
-            var commits = HistoryGenerator.GenerateCommits(history).Where(x => x.TimeStamp >= lastCommit && !IsLabel(x)).ToList();
+            var commits = HistoryGenerator.GenerateCommits(history).Where(x => x.TimeStamp > lastCommit && !IsLabel(x)).ToList();
             if (commits.Count > commitsCount) {
                 Log.Message($"Commits generated. First {commitsCount} of {commits.Count} commits taken.");
                 commits = commits.Take(commitsCount).ToList();
