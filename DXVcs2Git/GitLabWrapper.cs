@@ -25,5 +25,13 @@ namespace DXVcs2Git.Git {
             var changesClient = mergeRequestsClient.Changes(mergeRequest.Id);
             return changesClient.Changes.Files;
         }
+        public MergeRequest ProcessMergeRequest(MergeRequest mergeRequest, string comment) {
+            var mergeRequestsClient = client.GetMergeRequest(mergeRequest.ProjectId);
+            return mergeRequestsClient.Accept(mergeRequest.Id, new MergeCommitMessage() { Message = comment});
+        }
+        public MergeRequest UpdateMergeRequest(MergeRequest mergeRequest, string autoMergeFailedComment) {
+            var mergeRequestsClient = client.GetMergeRequest(mergeRequest.ProjectId);
+            return mergeRequestsClient.Update(mergeRequest.Id, new MergeRequestUpdate() {Description = autoMergeFailedComment});
+        }
     }
 }

@@ -91,8 +91,8 @@ namespace DXVcs2Git.DXVcs {
                 var repo = DXVcsConectionHelper.Connect(server);
                 if (repo.IsUnderVss(vcsPath))
                     return true;
-                repo.AddFile(vcsPath, File.ReadAllBytes(localPath), "");
-                repo.CheckOutFile(vcsPath, localPath, "");
+                repo.AddFile(vcsPath, new byte[0], "");
+                repo.CheckOutFile(vcsPath, localPath, "", true);
                 return true;
             }
             catch (Exception ex) {

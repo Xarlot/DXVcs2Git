@@ -17,8 +17,8 @@ namespace DXVcs2Git.Console {
         public string Branch { get; set; }
         [Option('r', "repo", Required = true, HelpText = "Http git repo path")]
         public string Repo { get; set; }
-        [Option('s', "syncrepo", Required = true, HelpText = "Local git repo path for processing merge requests")]
-        public string SyncRepo { get; set; }
+        [Option('s', "syncdir", Required = true, HelpText = "Local git repo path for processing merge requests")]
+        public string SyncFolder { get; set; }
         [Option('c', "commits", Default = 100, HelpText = "Commits count to process")]
         public int CommitsCount { get; set; }
         [Option('l', "login", Required = true, HelpText = "Login to git master account")]

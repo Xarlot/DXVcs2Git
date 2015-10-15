@@ -202,5 +202,13 @@ namespace DXVcs2Git {
         public void Reset(Commit commit) {
             repo.Reset(ResetMode.Hard, commit);
         }
+        public MergeStatus CheckMerge(string sourceBranch, Signature merger) {
+            Branch branch = repo.Branches[sourceBranch];
+            MergeOptions mergeOptions = new MergeOptions();
+            mergeOptions.CommitOnSuccess = false;
+            mergeOptions.FileConflictStrategy = CheckoutFileConflictStrategy.Normal;
+            MergeResult result = repo.Merge(branch, merger, mergeOptions);
+            return result.Status;
+        }
     }
 }
