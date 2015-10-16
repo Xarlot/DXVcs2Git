@@ -51,6 +51,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="GitCommentsGenerator.cs" />
     <Compile Include="GitLabWrapper.cs" />
     <Compile Include="GitWrapper.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

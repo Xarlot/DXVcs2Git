@@ -24,13 +24,14 @@ namespace DXVcs2Git.Console {
         const string AutoSyncSha = "autosync commit sha: {0}";
         const string AutoSyncShaSearchString = @"(?<=sha:\s*)[0-9a-f]+";
         const string AutoSyncTimeStamp = "autosync commit timestamp: {0}";
+        const string AutoSyncTokenFormat = "autosync token: {0}";
         const string repoPath = "repo";
-        const string repoSyncPath = "syncrepo";
         const string gitServer = @"http://litvinov-lnx";
         const string vcsServer = @"net.tcp://vcsservice.devexpress.devx:9091/DXVCSService";
         const string defaultUser = "dxvcs2gitservice";
         const string tagName = "dxvcs2gitservice_sync_{0}";
-        const string autoSyncTokenFormat = "autosync token: {0}";
+        const string startSyncTagName = "dxvcs2gitservice_start_sync_{0}";
+        const string endSyncTagName = "dxvcs2gitservice_end_sync_{0}";
         const string AutoMergeFailedComment = "autosync merge failed";
         static void Main(string[] args) {
             var result = Parser.Default.ParseArguments<CommandLineOptions>(args);
@@ -270,7 +271,7 @@ namespace DXVcs2Git.Console {
 
             var result = gitWrapper.CheckMerge(sourceBranch, new Signature(defaultUser, "test@mail.com", DateTimeOffset.UtcNow));
             if (result != MergeStatus.Conflicts) {
-                string autoSyncToken = string.Format(autoSyncTokenFormat, Guid.NewGuid());
+                string autoSyncToken = Guid.NewGuid().ToString();
                 string comment = CalcComment(mergeRequest, branch, autoSyncToken);
                 mergeRequest = gitLabWrapper.ProcessMergeRequest(mergeRequest, comment);
                 if (mergeRequest.State == "merged") {
@@ -287,6 +288,15 @@ namespace DXVcs2Git.Console {
                 gitLabWrapper.UpdateMergeRequest(mergeRequest, AutoMergeFailedComment);
                 return true;
             }
+            return false;
+        }
+        static bool HasToken(Commit commit, string autoSyncToken) {
+            string comment = commit.Message;
+            if (string.IsNullOrEmpty(comment))
+                return false;
+            var chunks = comment.Split(new[] {'\n'}, StringSplitOptions.RemoveEmptyEntries);
+            string tokenString = string.Format(AutoSyncTokenFormat, autoSyncToken);
+            var tokenCandidates = chunks.FirstOrDefault(x => x.StartsWith(tokenString, StringComparison.InvariantCultureIgnoreCase));
             return false;
         }
         static string CalcVcsRoot(TrackBranch branch, TreeEntryChanges fileData) {
@@ -412,7 +422,7 @@ namespace DXVcs2Git.Console {
         }
         private static string CalcComment(MergeRequest mergeRequest, TrackBranch branch, string autoSyncToken) {
             StringBuilder sb = new StringBuilder();
-            sb.AppendLine(autoSyncToken);
+            sb.AppendLine(string.Format(AutoSyncTokenFormat, autoSyncToken));
             AppendAutoSyncInfo(sb, mergeRequest.Author.Name, DateTime.UtcNow, branch.Name);
             return sb.ToString();
         }

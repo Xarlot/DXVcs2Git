@@ -48,6 +48,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Comment.cs" />
+    <Compile Include="CommentsGenerator.cs" />
     <Compile Include="DirectoryHelper.cs" />
     <Compile Include="CommitItem.cs" />
     <Compile Include="Config.cs" />
