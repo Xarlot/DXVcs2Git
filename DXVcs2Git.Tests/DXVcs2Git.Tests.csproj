@@ -35,6 +35,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="BaseFixture.cs" />
+    <Compile Include="CommentsGenerator.cs" />
     <Compile Include="DXVcsServiceTests.cs" />
     <Compile Include="GitlabWrapperTests.cs" />
     <Compile Include="GitServiceTests.cs" />
