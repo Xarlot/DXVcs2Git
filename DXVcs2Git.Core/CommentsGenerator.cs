@@ -8,9 +8,11 @@ namespace DXVcs2Git.Core {
         const string sha = "sha:";
         const string branch = "branch:";
         const string timeStamp = "timestamp:";
+        const string author = "author:";
         static readonly Regex ParseShaRegex = new Regex(@"(?<=sha:\s*)[0-9a-f]+", RegexOptions.Compiled);
         static readonly Regex ParseBranchRegex = new Regex(@"(?<=branch:\s*)\w+", RegexOptions.Compiled);
         static readonly Regex ParseTimeStampRegex = new Regex(@"(?<=timestamp:\s*)[0-9]+", RegexOptions.Compiled);
+        static readonly Regex ParseAuthorRegex = new Regex(@"(?<=author:\s*)\w+", RegexOptions.Compiled);
         static CommentsGenerator() {
 
         }
@@ -39,6 +41,12 @@ namespace DXVcs2Git.Core {
                 comment.Branch = ParseBranch(clean);
             else if (clean.StartsWith(timeStamp))
                 comment.TimeStamp = ParseTimeStamp(clean);
+            else if (clean.StartsWith(author))
+                comment.Author = ParseAuthor(clean);
+        }
+        string ParseAuthor(string clean) {
+            var match = ParseAuthorRegex.Match(clean);
+            return match.Value;
         }
         string ParseTimeStamp(string clean) {
             var match = ParseTimeStampRegex.Match(clean);

@@ -51,5 +51,19 @@ namespace DXVcs2Git.Tests {
             comment = VcsCommentsGenerator.Instance.Parse(commentString);
             Assert.AreEqual("1", comment.TimeStamp);
         }
+        [Test]
+        public void ParseAuthor() {
+            string commentString = "dxvcs2gitservice author: test";
+            var comment = VcsCommentsGenerator.Instance.Parse(commentString);
+            Assert.AreEqual("test", comment.Author);
+
+            commentString = "dxvcs2gitservice author: 123";
+            comment = VcsCommentsGenerator.Instance.Parse(commentString);
+            Assert.AreEqual("123", comment.Author);
+
+            commentString = "dxvcs2gitservice author: 1 test";
+            comment = VcsCommentsGenerator.Instance.Parse(commentString);
+            Assert.AreEqual("1", comment.Author);
+        }
     }
 }
