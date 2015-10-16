@@ -9,7 +9,7 @@ namespace DXVcs2Git.DXVcs {
     public static class HistoryGenerator {
         public static IList<HistoryItem> GenerateHistory(string server, TrackBranch branch, DateTime from) {
             try {
-                var repo = DXVcsConectionHelper.Connect(server);
+                var repo = DXVcsConnectionHelper.Connect(server);
                 var history = Enumerable.Empty<HistoryItem>();
                 foreach (var trackItem in branch.TrackItems) {
                     var historyForItem = repo.GetProjectHistory(trackItem.Path, true, from).Select(x =>
@@ -40,7 +40,7 @@ namespace DXVcs2Git.DXVcs {
         }
         public static void GetProject(string server, string vcsPath, string localPath, DateTime timeStamp) {
             try {
-                var repo = DXVcsConectionHelper.Connect(server);
+                var repo = DXVcsConnectionHelper.Connect(server);
                 repo.GetProject(vcsPath, localPath, timeStamp);
                 Log.Message($"HistoryGenerator.GetProject performed for {vcsPath}");
             }
@@ -66,7 +66,7 @@ namespace DXVcs2Git.DXVcs {
         }
         public static string GetFile(string server, string historyPath, string local) {
             try {
-                var repo = DXVcsConectionHelper.Connect(server);
+                var repo = DXVcsConnectionHelper.Connect(server);
                 string localPath = Path.GetTempFileName();
                 repo.GetLatestFileVersion(historyPath, localPath);
                 return localPath;
@@ -78,7 +78,7 @@ namespace DXVcs2Git.DXVcs {
         }
         public static void SaveHistory(string server, string vcsFile, string localFile, SyncHistory history) {
             try {
-                var repo = DXVcsConectionHelper.Connect(server);
+                var repo = DXVcsConnectionHelper.Connect(server);
                 repo.CheckOutFile(vcsFile, localFile, string.Empty);
                 SyncHistory.Serialize(history, localFile);
                 repo.CheckInFile(vcsFile, localFile, string.Empty);

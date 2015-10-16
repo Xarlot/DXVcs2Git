@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using DXVcs2Git.DXVcs;
 
 namespace DXVcs2Git.DXVcs {
-    public static class DXVcsConectionHelper {
+    public static class DXVcsConnectionHelper {
         public static IDXVcsRepository Connect(string vcsService) {
             if (string.IsNullOrEmpty(vcsService))
                 throw new ArgumentException("vcsService");

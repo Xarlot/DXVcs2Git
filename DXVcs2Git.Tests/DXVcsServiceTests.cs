@@ -29,12 +29,12 @@ namespace DXVcs2Git.Tests {
     public class DXVcsServiceTests {
         [Test]
         public void SimpleStart() {
-            var repo = DXVcsConectionHelper.Connect(DefaultConfig.Config.AuxPath);
+            var repo = DXVcsConnectionHelper.Connect(DefaultConfig.Config.AuxPath);
             Assert.IsNotNull(repo);
         }
         [Test]
         public void GetProjectHistoryFromTestHistory() {
-            var repo = DXVcsConectionHelper.Connect(DefaultConfig.Config.AuxPath);
+            var repo = DXVcsConnectionHelper.Connect(DefaultConfig.Config.AuxPath);
             var history = repo.GetProjectHistory(@"$/Sandbox/litvinov/DXVcsTest/testhistory", true, new DateTime(2015, 9, 9), new DateTime(2015, 9, 10));
             Assert.AreEqual(3, history.Count());
             Assert.AreEqual(@"9/9/2015 7:30:57 PM,,,Create,,Project,Litvinov,1", FormatProjectHistoryItem(history[0]));
@@ -46,14 +46,14 @@ namespace DXVcs2Git.Tests {
         }
         [Test]
         public void GroupHistoryByTimeStampInFolderIfAddingOneFile() {
-            var repo = DXVcsConectionHelper.Connect(DefaultConfig.Config.AuxPath);
+            var repo = DXVcsConnectionHelper.Connect(DefaultConfig.Config.AuxPath);
             var history = repo.GetProjectHistory(@"$/Sandbox/litvinov/DXVcsTest/testhistory", true, new DateTime(2015, 9, 9), new DateTime(2015, 9, 10));
             var grouped = history.GroupBy(x => x.ActionDate).ToList();
             Assert.AreEqual(3, grouped.Count);
         }
         [Test]
         public void GroupHistoryByTimeStampInFolderIfAddingTwoFiles() {
-            var repo = DXVcsConectionHelper.Connect(DefaultConfig.Config.AuxPath);
+            var repo = DXVcsConnectionHelper.Connect(DefaultConfig.Config.AuxPath);
             var history = repo.GetProjectHistory(@"$/Sandbox/litvinov/DXVcsTest/testhistorybyaddingtwofiles", true, new DateTime(2015, 9, 9), new DateTime(2015, 9, 10));
             var grouped = history.GroupBy(x => x.ActionDate).ToList();
             Assert.AreEqual(4, grouped.Count);
@@ -65,7 +65,7 @@ namespace DXVcs2Git.Tests {
         }
         [Test]
         public void GetProjectForTimeStamp() {
-            var repo = DXVcsConectionHelper.Connect(DefaultConfig.Config.AuxPath);
+            var repo = DXVcsConnectionHelper.Connect(DefaultConfig.Config.AuxPath);
         }
         [Test, Explicit]
         public void GetProjectHistoryForXpfCore152() {
@@ -109,7 +109,7 @@ namespace DXVcs2Git.Tests {
         }
         [Test]
         public void TestFindCreateBranchTimeStamp() {
-            var repo = DXVcsConectionHelper.Connect(DefaultConfig.Config.AuxPath);
+            var repo = DXVcsConnectionHelper.Connect(DefaultConfig.Config.AuxPath);
             var vcsPath = @"$/2014.1/XPF/DevExpress.Xpf.Core/DevExpress.Xpf.Core";
             var history = repo.GetProjectHistory(vcsPath, true);
             var create = history.Where(IsBranchCreatedTimeStamp).ToList();

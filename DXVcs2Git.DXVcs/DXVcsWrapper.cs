@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using DXVcs2Git.Core;
 
@@ -12,7 +11,7 @@ namespace DXVcs2Git.DXVcs {
         }
         public bool CheckOut(string vcsPath, string localPath, bool dontGetLocalCopy) {
             try {
-                var repo = DXVcsConectionHelper.Connect(server);
+                var repo = DXVcsConnectionHelper.Connect(server);
                 if (repo.IsUnderVss(vcsPath)) {
                     repo.CheckOutFile(vcsPath, localPath, "DXVcs2GitService: checkout for sync", dontGetLocalCopy);
                 }
@@ -27,11 +26,11 @@ namespace DXVcs2Git.DXVcs {
                 return false;
             }
         }
-        public bool CheckIn(string vcsPath, string localPath) {
+        public bool CheckIn(string vcsPath, string localPath, string comment) {
             try {
-                var repo = DXVcsConectionHelper.Connect(server);
+                var repo = DXVcsConnectionHelper.Connect(server);
                 if (repo.IsUnderVss(vcsPath) && repo.IsCheckedOutByMe(vcsPath)) {
-                    repo.CheckInFile(vcsPath, localPath, "DXVcs2GitService: checkout for sync");
+                    repo.CheckInFile(vcsPath, localPath, comment);
                 }
                 else {
                     Log.Error($"File {vcsPath} is not under vss.");
@@ -46,7 +45,7 @@ namespace DXVcs2Git.DXVcs {
         }
         public bool UndoCheckout(string vcsPath) {
             try {
-                var repo = DXVcsConectionHelper.Connect(server);
+                var repo = DXVcsConnectionHelper.Connect(server);
                 if (repo.IsUnderVss(vcsPath) && repo.IsCheckedOutByMe(vcsPath)) {
                     repo.UndoCheckout(vcsPath, repo.GetFileWorkingPath(vcsPath));
                 }
@@ -64,12 +63,12 @@ namespace DXVcs2Git.DXVcs {
         public bool CheckOut(SyncItem item) {
             return CheckOut(item.VcsPath, item.LocalPath, true);
         }
-        public bool CheckIn(SyncItem item) {
+        public bool CheckIn(SyncItem item, string comment) {
             switch (item.SyncAction) {
                 case SyncAction.New:
-                    return CheckIn(item.VcsPath, item.LocalPath);
+                    return CheckIn(item.VcsPath, item.LocalPath, comment);
                 case SyncAction.Modify:
-                    return CheckIn(item.VcsPath, item.LocalPath);
+                    return CheckIn(item.VcsPath, item.LocalPath, comment);
                 case SyncAction.Delete:
                 case SyncAction.Move:
                     return true;
@@ -88,7 +87,7 @@ namespace DXVcs2Git.DXVcs {
         }
         bool CreateItem(string vcsPath, string localPath) {
             try {
-                var repo = DXVcsConectionHelper.Connect(server);
+                var repo = DXVcsConnectionHelper.Connect(server);
                 if (repo.IsUnderVss(vcsPath))
                     return true;
                 repo.AddFile(vcsPath, new byte[0], "");
@@ -102,7 +101,7 @@ namespace DXVcs2Git.DXVcs {
         }
         bool DeleteItem(string vcsPath, string localPath) {
             try {
-                var repo = DXVcsConectionHelper.Connect(server);
+                var repo = DXVcsConnectionHelper.Connect(server);
                 if (!repo.IsUnderVss(vcsPath))
                     return true;
                 if (repo.IsCheckedOut(vcsPath) && !repo.IsCheckedOutByMe(vcsPath)) {
@@ -119,7 +118,7 @@ namespace DXVcs2Git.DXVcs {
         }
         bool MoveFile(string vcsPath, string newVcsPath, string localPath, string newLocalPath) {
             try {
-                var repo = DXVcsConectionHelper.Connect(server);
+                var repo = DXVcsConnectionHelper.Connect(server);
                 if (!repo.IsUnderVss(vcsPath)) {
                     Log.Error($"Move file failed. Can`t locate {vcsPath}.");
                     return false;
@@ -167,16 +166,16 @@ namespace DXVcs2Git.DXVcs {
         }
         public void CreateLabel(string vcsPath, string labelName, string comment = "") {
             try {
-                var repo = DXVcsConectionHelper.Connect(server);
+                var repo = DXVcsConnectionHelper.Connect(server);
                 repo.CreateLabel(vcsPath, labelName, comment);
             }
             catch (Exception ex) {
                 Log.Error($"Create label {labelName} failed.", ex);
             }
         }
-        public bool ProcessCheckIn(IEnumerable<SyncItem> items) {
+        public bool ProcessCheckIn(IEnumerable<SyncItem> items, string comment) {
             var list = items.ToList();
-            if (!list.All(CheckIn)) {
+            if (!list.All(x => CheckIn(x, comment))) {
                 Log.Message("Check in changes failed.");
                 return false;
             }
