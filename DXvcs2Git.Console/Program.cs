@@ -241,9 +241,6 @@ namespace DXVcs2Git.Console {
             var changes = gitLabWrapper.GetMergeRequestChanges(mergeRequest).Where(x => branch.TrackItems.FirstOrDefault(track => x.OldPath.StartsWith(track.ProjectPath)) != null);
             var genericChange = changes.Select(x => ProcessMergeRequestChanges(x, localGitDir, branch)).ToList();
 
-            DXVcsWrapper vcsWrapper = new DXVcsWrapper(vcsServer);
-            if (!vcsWrapper.ProcessCheckout(genericChange))
-                throw new ArgumentException("checkout changeset failed.");
             string sourceBranch = mergeRequest.SourceBranch;
             gitWrapper.EnsureBranch(sourceBranch, null);
             gitWrapper.CheckOut(sourceBranch);
@@ -256,6 +253,10 @@ namespace DXVcs2Git.Console {
 
             var result = gitWrapper.CheckMerge(sourceBranch, new Signature(defaultUser, "test@mail.com", DateTimeOffset.UtcNow));
             if (result != MergeStatus.Conflicts) {
+                DXVcsWrapper vcsWrapper = new DXVcsWrapper(vcsServer);
+                if (!vcsWrapper.ProcessCheckout(genericChange))
+                    throw new ArgumentException("checkout changeset failed.");
+
                 string autoSyncToken = Guid.NewGuid().ToString();
                 Comment comment = CalcComment(mergeRequest, branch, autoSyncToken);
                 mergeRequest = gitLabWrapper.ProcessMergeRequest(mergeRequest, GitCommentsGenerator.Instance.ConvertToString(comment));

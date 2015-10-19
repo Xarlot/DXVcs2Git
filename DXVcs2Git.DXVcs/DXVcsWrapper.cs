@@ -182,5 +182,8 @@ namespace DXVcs2Git.DXVcs {
             Log.Message("Check in changes success.");
             return true;
         }
+        public bool ProcessUndoChechout(IEnumerable<SyncItem> items) {
+            return true;
+        }
     }
 }
