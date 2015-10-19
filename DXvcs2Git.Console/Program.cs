@@ -409,7 +409,7 @@ namespace DXVcs2Git.Console {
         static string CreateTagName(string branchName) {
             return $"dxvcs2gitservice_sync_{branchName}";
         }
-        private static Comment CalcComment(MergeRequest mergeRequest, TrackBranch branch, string autoSyncToken) {
+        static Comment CalcComment(MergeRequest mergeRequest, TrackBranch branch, string autoSyncToken) {
             Comment comment = new Comment();
             comment.Author = mergeRequest.Author.Name;
             comment.Branch = branch.Name;
