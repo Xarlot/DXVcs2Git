@@ -88,5 +88,15 @@ namespace DXVcs2Git.DXVcs {
                 throw;
             }
         }
+        public static HistoryItem FindCommit(string server, TrackBranch branch, Func<HistoryItem, bool> func) {
+            try {
+                var history = GenerateHistory(server, branch, DateTime.Now.AddDays(-1));
+                return history.FirstOrDefault(func);
+            }
+            catch (Exception ex) {
+                Log.Error($"Finc commit failed", ex);
+                throw;
+            }
+        }
     }
 }

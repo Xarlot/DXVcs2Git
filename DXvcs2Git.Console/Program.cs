@@ -163,34 +163,26 @@ namespace DXVcs2Git.Console {
             }
             Log.Message($"Branch {branch.Name} has local changes.");
 
-            //bool hasVcsChanged = HasVcsChanges(branch, lastSync.VcsCommitTimeStamp);
-            //if (hasVcsChanged) {
-            //    MoveGitChangesToTempBranch(gitWrapper, branch, localGitDir);
-            //    CheckOut(gitWrapper, branch);
-            //    AddChangesFromVcs(gitWrapper, branch, gitRepoPath, localGitDir);
-            //    Log.Error("Repo is in inconsistent state (dxvcs and git has changes). Try to do something...");
-            //    return 1;
-            //}
-            var syncItems = GenerateDirectChangeSet(gitWrapper, localGitDir, branch, lastSyncCommit, lastCommit);
-            if (ProcessGenericChangeSet(gitWrapper, branch, gitRepoPath, localGitDir, syncItems)) {
-                CommitItem syncCommit = SetSyncLabel(vcsServer, lastCommit, branch, localGitDir);
+            string token = Guid.NewGuid().ToString();
+            var syncItems = GenerateDirectChangeSet(gitWrapper, localGitDir, branch, lastSyncCommit, lastCommit, token);
+            if (ProcessGenericChangeSet(gitWrapper, branch, gitRepoPath, localGitDir, syncItems, token)) {
+                CommitItem syncCommit = SetSyncLabel(lastCommit, branch, localGitDir, token);
                 if (syncCommit == null)
                     throw new ArgumentException("set sync commit failed.");
-                string token = Guid.NewGuid().ToString();
                 syncHistory.Add(lastCommit.Sha, syncCommit.TimeStamp.Ticks, token);
                 HistoryGenerator.SaveHistory(vcsServer, branch.HistoryPath, historyPath, syncHistory);
             }
             return 1;
         }
-        static CommitItem SetSyncLabel(string vcsServer, Commit commit, TrackBranch branch, string localGitDir) {
+        static CommitItem SetSyncLabel(Commit commit, TrackBranch branch, string localGitDir, string token) {
             DXVcsWrapper vcsWrapper = new DXVcsWrapper(vcsServer);
-            vcsWrapper.CreateLabel(branch.RepoRoot, string.Format(tagName, branch.Name), CalcComment(commit, branch, false));
-            var timeStamp = commit.Author.When.DateTime.AddDays(-1);
-            var history = HistoryGenerator.GenerateHistory(vcsServer, branch, timeStamp);
-            var commits = HistoryGenerator.GenerateCommits(history).Where(x => x.TimeStamp > timeStamp).ToList();
-            return commits.FirstOrDefault(x => IsSyncLabel(x, commit.Sha));
+            var comment = CalcComment(commit, branch, token);
+            vcsWrapper.CreateLabel(branch.RepoRoot, string.Format(tagName, branch.Name), VcsCommentsGenerator.Instance.ConvertToString(comment));
+            var syncLabelItem = HistoryGenerator.FindCommit(vcsServer, branch, x => VcsCommentsGenerator.Instance.Parse(x.Message).Token == token);
+            var syncLabel = HistoryGenerator.GenerateCommits(new[] {syncLabelItem});
+            return syncLabel.First();
         }
-        static bool ProcessGenericChangeSet(GitWrapper gitWrapper, TrackBranch branch, string gitRepoPath, string localGitDir, IEnumerable<SyncItem> syncItems) {
+        static bool ProcessGenericChangeSet(GitWrapper gitWrapper, TrackBranch branch, string gitRepoPath, string localGitDir, IEnumerable<SyncItem> syncItems, string token) {
             DXVcsWrapper wrapper = new DXVcsWrapper(vcsServer);
             if (!wrapper.ProcessCheckout(syncItems)) {
                 Log.Error("Checkout for sync failed");
@@ -207,17 +199,17 @@ namespace DXVcs2Git.Console {
             string tag = string.Format(tagName, branch.Name);
             return commit.Items.All(x => x.Label == tag);
         }
-        static IEnumerable<SyncItem> GenerateDirectChangeSet(GitWrapper gitWrapper, string localGitDir, TrackBranch branch, Commit lastSync, Commit lastChange) {
+        static IEnumerable<SyncItem> GenerateDirectChangeSet(GitWrapper gitWrapper, string localGitDir, TrackBranch branch, Commit lastSync, Commit lastChange, string token) {
             var changes = gitWrapper.GetChanges(lastSync, lastChange).Where(x => branch.TrackItems.FirstOrDefault(track => x.OldPath.StartsWith(track.ProjectPath)) != null);
-            var genericChanges = changes.Select(x => ProcessAddedDirectChanges(lastChange, branch, x, CalcVcsRoot(branch, x), localGitDir)).ToList();
+            var genericChanges = changes.Select(x => ProcessDirectChanges(lastChange, branch, x, CalcVcsRoot(branch, x), localGitDir, token)).ToList();
             return genericChanges;
         }
-        static SyncItem ProcessAddedDirectChanges(Commit lastChange, TrackBranch branch, TreeEntryChanges changes, string vcsRoot, string localGitDir) {
+        static SyncItem ProcessDirectChanges(Commit lastChange, TrackBranch branch, TreeEntryChanges changes, string vcsRoot, string localGitDir, string token) {
             SyncItem item = new SyncItem();
             item.SyncAction = SyncAction.Modify;
             item.LocalPath = Path.Combine(localGitDir, changes.OldPath);
             item.VcsPath = CalcVcsPath(vcsRoot, changes.OldPath);
-            item.Comment = CalcComment(lastChange, branch);
+            item.Comment = CalcComment(lastChange, branch, token);
             return item;
         }
         static bool IsAutoSyncComment(string branchName, string message) {
@@ -275,11 +267,11 @@ namespace DXVcs2Git.Console {
             var result = gitWrapper.CheckMerge(sourceBranch, new Signature(defaultUser, "test@mail.com", DateTimeOffset.UtcNow));
             if (result != MergeStatus.Conflicts) {
                 string autoSyncToken = Guid.NewGuid().ToString();
-                string comment = CalcComment(mergeRequest, branch, autoSyncToken);
-                mergeRequest = gitLabWrapper.ProcessMergeRequest(mergeRequest, comment);
+                Comment comment = CalcComment(mergeRequest, branch, autoSyncToken);
+                mergeRequest = gitLabWrapper.ProcessMergeRequest(mergeRequest, GitCommentsGenerator.Instance.ConvertToString(comment));
                 if (mergeRequest.State == "merged") {
                     Log.Message("Merge request merged successfully.");
-                    if (vcsWrapper.ProcessCheckIn(genericChange, comment)) {
+                    if (vcsWrapper.ProcessCheckIn(genericChange, VcsCommentsGenerator.Instance.ConvertToString(comment))) {
                         Log.Message("Merge request checkin successfully.");
                         return true;
                     }
@@ -395,7 +387,8 @@ namespace DXVcs2Git.Console {
                 if (hasModifications) {
                     gitWrapper.Push(branch.Name);
                     string tagName = CreateTagName(branch.Name);
-                    gitWrapper.AddTag(tagName, last, defaultUser, item.TimeStamp, CalcComment(last, branch, false));
+                    Comment comment = CalcComment(last, branch, token);
+                    gitWrapper.AddTag(tagName, last, defaultUser, item.TimeStamp, GitCommentsGenerator.Instance.ConvertToString(comment));
                     syncHistory.Add(last.Sha, item.TimeStamp.Ticks, token);
                     HistoryGenerator.SaveHistory(vcsServer, branch.HistoryPath, historyPath, syncHistory);
                 }
@@ -425,19 +418,19 @@ namespace DXVcs2Git.Console {
         static string CreateTagName(string branchName) {
             return $"dxvcs2gitservice_sync_{branchName}";
         }
-        private static string CalcComment(MergeRequest mergeRequest, TrackBranch branch, string autoSyncToken) {
-            StringBuilder sb = new StringBuilder();
-            sb.AppendLine(string.Format(AutoSyncTokenFormat, autoSyncToken));
-            AppendAutoSyncInfo(sb, mergeRequest.Author.Name, DateTime.UtcNow, branch.Name);
-            return sb.ToString();
+        private static Comment CalcComment(MergeRequest mergeRequest, TrackBranch branch, string autoSyncToken) {
+            Comment comment = new Comment();
+            comment.Author = mergeRequest.Author.Name;
+            comment.Branch = branch.Name;
+            comment.Token = autoSyncToken;
+            return comment;
         }
-        static string CalcComment(Commit commit, TrackBranch branch, bool allowClone = true) {
-            if (allowClone && IsAutoSyncComment(branch.Name, commit.Message))
-                return commit.Message;
-            StringBuilder sb = new StringBuilder();
-            sb.Append(commit.Message);
-            AppendAutoSyncInfo(sb, commit.Author.Name, commit.Author.When.DateTime, branch.Name, commit.Sha);
-            return sb.ToString();
+        static Comment CalcComment(Commit commit, TrackBranch branch, string syncToken) {
+            Comment comment = new Comment();
+            comment.Author = commit.Author.Name;
+            comment.Branch = branch.Name;
+            comment.Token = syncToken;
+            return comment;
         }
         static Comment CalcComment(CommitItem item, string token) {
             Comment comment = new Comment();
