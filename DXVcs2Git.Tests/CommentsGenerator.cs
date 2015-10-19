@@ -65,5 +65,19 @@ namespace DXVcs2Git.Tests {
             comment = VcsCommentsGenerator.Instance.Parse(commentString);
             Assert.AreEqual("1", comment.Author);
         }
+        [Test]
+        public void ParseToken() {
+            string commentString = "dxvcs2gitservice token: test";
+            var comment = VcsCommentsGenerator.Instance.Parse(commentString);
+            Assert.AreEqual("test", comment.Token);
+
+            commentString = "dxvcs2gitservice token: 123";
+            comment = VcsCommentsGenerator.Instance.Parse(commentString);
+            Assert.AreEqual("123", comment.Token);
+
+            commentString = "dxvcs2gitservice token: 1 test";
+            comment = VcsCommentsGenerator.Instance.Parse(commentString);
+            Assert.AreEqual("1", comment.Token);
+        }
     }
 }
