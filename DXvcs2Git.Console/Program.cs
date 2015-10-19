@@ -72,7 +72,6 @@ namespace DXVcs2Git.Console {
                 int result = ProcessInitializeRepo(gitWrapper, gitRepoPath, localGitDir, branch, history, historyPath, from);
                 if (result != 0)
                     return result;
-//                HistoryGenerator.SaveHistory(vcsServer, branch.HistoryPath, historyPath, history);
             }
             if (workMode.HasFlag(WorkMode.directchanges)) {
                 int result = ProcessDirectChanges(gitWrapper, gitRepoPath, localGitDir, branch, history, historyPath);
