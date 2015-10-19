@@ -10,8 +10,13 @@ namespace DXVcs2Git.Core.Serialization {
         public SyncHistory() {
             Items = new List<SyncHistoryItem>();
         }
-        public void Add(string sha, long timeStamp) {
-            Items.Add(new SyncHistoryItem() { GitCommitSha = sha, VcsCommitTimeStamp = timeStamp });
+        public void Add(string sha, long timeStamp, string token, SyncHistoryStatus status = SyncHistoryStatus.Success) {
+            Items.Add(new SyncHistoryItem() {
+                GitCommitSha = sha,
+                VcsCommitTimeStamp = timeStamp,
+                Token = token,
+                Status = status,
+            });
         }
         public SyncHistoryItem GetHead() {
             return Items.LastOrDefault();

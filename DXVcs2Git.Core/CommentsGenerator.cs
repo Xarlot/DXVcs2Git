@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using System.Text;
 using System.Text.RegularExpressions;
 
 namespace DXVcs2Git.Core {
@@ -9,10 +10,12 @@ namespace DXVcs2Git.Core {
         const string branch = "branch:";
         const string timeStamp = "timestamp:";
         const string author = "author:";
+        const string token = "token:";
         static readonly Regex ParseShaRegex = new Regex(@"(?<=sha:\s*)[0-9a-f]+", RegexOptions.Compiled);
         static readonly Regex ParseBranchRegex = new Regex(@"(?<=branch:\s*)\w+", RegexOptions.Compiled);
         static readonly Regex ParseTimeStampRegex = new Regex(@"(?<=timestamp:\s*)[0-9]+", RegexOptions.Compiled);
         static readonly Regex ParseAuthorRegex = new Regex(@"(?<=author:\s*)\w+", RegexOptions.Compiled);
+        static readonly Regex ParseTokenRegex = new Regex(@"(?<=token:\s*)\w+", RegexOptions.Compiled);
         static CommentsGenerator() {
 
         }
@@ -43,25 +46,37 @@ namespace DXVcs2Git.Core {
                 comment.TimeStamp = ParseTimeStamp(clean);
             else if (clean.StartsWith(author))
                 comment.Author = ParseAuthor(clean);
+            else if (clean.StartsWith(token))
+                comment.Token = ParseToken(clean);
         }
-        string ParseAuthor(string clean) {
-            var match = ParseAuthorRegex.Match(clean);
+        string ParseAuthor(string value) {
+            var match = ParseAuthorRegex.Match(value);
             return match.Value;
         }
-        string ParseTimeStamp(string clean) {
-            var match = ParseTimeStampRegex.Match(clean);
+        string ParseTimeStamp(string value) {
+            var match = ParseTimeStampRegex.Match(value);
             return match.Value;
         }
-        string ParseBranch(string clean) {
-            var match = ParseBranchRegex.Match(clean);
+        string ParseBranch(string value) {
+            var match = ParseBranchRegex.Match(value);
             return match.Value;
         }
-        string ParseSha(string chunk) {
-            var match = ParseShaRegex.Match(chunk);
+        string ParseSha(string value) {
+            var match = ParseShaRegex.Match(value);
+            return match.Value;
+        }
+        string ParseToken(string value) {
+            var match = ParseTokenRegex.Match(value);
             return match.Value;
         }
         public string ConvertToString(Comment comment) {
-            return String.Empty;
+            StringBuilder sb = new StringBuilder();
+            sb.AppendLine(DefaultStart + " " + author + " " + comment.Author);
+            sb.AppendLine(DefaultStart + " " + branch + " " + comment.Branch);
+            sb.AppendLine(DefaultStart + " " + timeStamp + " " + comment.TimeStamp);
+            sb.AppendLine(DefaultStart + " " + sha + " " + comment.Sha);
+            sb.AppendLine(DefaultStart + " " + token + " " + comment.Token);
+            return sb.ToString();
         }
     }
 }
