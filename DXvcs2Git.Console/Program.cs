@@ -190,15 +190,6 @@ namespace DXVcs2Git.Console {
             }
             return wrapper.ProcessCheckIn(syncItems, string.Empty);
         }
-        static bool HasUnsyncedCommits(TrackBranch branch, IList<CommitItem> commits) {
-            if (commits.Count > 1)
-                return true;
-            if (commits.Count == 0)
-                return false;
-            var commit = commits.First();
-            string tag = string.Format(tagName, branch.Name);
-            return commit.Items.All(x => x.Label == tag);
-        }
         static IEnumerable<SyncItem> GenerateDirectChangeSet(GitWrapper gitWrapper, string localGitDir, TrackBranch branch, Commit lastSync, Commit lastChange, string token) {
             var changes = gitWrapper.GetChanges(lastSync, lastChange).Where(x => branch.TrackItems.FirstOrDefault(track => x.OldPath.StartsWith(track.ProjectPath)) != null);
             var genericChanges = changes.Select(x => ProcessDirectChanges(lastChange, branch, x, CalcVcsRoot(branch, x), localGitDir, token)).ToList();
