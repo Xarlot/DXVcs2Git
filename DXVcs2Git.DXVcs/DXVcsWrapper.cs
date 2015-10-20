@@ -185,5 +185,8 @@ namespace DXVcs2Git.DXVcs {
         public bool ProcessUndoChechout(IEnumerable<SyncItem> items) {
             return true;
         }
+        public HistoryItem FindCommit(TrackBranch branch, Func<object, bool> func) {
+            return HistoryGenerator.FindCommit(server, branch, func);
+        }
     }
 }

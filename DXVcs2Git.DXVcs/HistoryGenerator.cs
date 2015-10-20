@@ -76,18 +76,6 @@ namespace DXVcs2Git.DXVcs {
                 return null;
             }
         }
-        public static void SaveHistory(string server, string vcsFile, string localFile, SyncHistory history) {
-            try {
-                var repo = DXVcsConnectionHelper.Connect(server);
-                repo.CheckOutFile(vcsFile, localFile, string.Empty);
-                SyncHistory.Serialize(history, localFile);
-                repo.CheckInFile(vcsFile, localFile, string.Empty);
-            }
-            catch (Exception ex) {
-                Log.Error($"Save history to {vcsFile} failed.", ex);
-                throw;
-            }
-        }
         public static HistoryItem FindCommit(string server, TrackBranch branch, Func<HistoryItem, bool> func) {
             try {
                 var history = GenerateHistory(server, branch, DateTime.Now.AddDays(-1));

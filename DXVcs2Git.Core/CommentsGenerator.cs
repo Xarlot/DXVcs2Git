@@ -15,7 +15,7 @@ namespace DXVcs2Git.Core {
         static readonly Regex ParseBranchRegex = new Regex(@"(?<=branch:\s*)\w+", RegexOptions.Compiled);
         static readonly Regex ParseTimeStampRegex = new Regex(@"(?<=timestamp:\s*)[0-9]+", RegexOptions.Compiled);
         static readonly Regex ParseAuthorRegex = new Regex(@"(?<=author:\s*)\w+", RegexOptions.Compiled);
-        static readonly Regex ParseTokenRegex = new Regex(@"(?<=token:\s*)\w+", RegexOptions.Compiled);
+        static readonly Regex ParseTokenRegex = new Regex(@"(?<=token:\s*)\S+", RegexOptions.Compiled);
         static CommentsGenerator() {
 
         }
@@ -71,13 +71,13 @@ namespace DXVcs2Git.Core {
         }
         public string ConvertToString(Comment comment) {
             StringBuilder sb = new StringBuilder();
-            sb.AppendLine(DefaultStart + " " + author + " " + comment.Author);
-            sb.AppendLine(DefaultStart + " " + branch + " " + comment.Branch);
-            sb.AppendLine(DefaultStart + " " + token + " " + comment.Token);
+            sb.AppendLine(DefaultStart + author + " " + comment.Author);
+            sb.AppendLine(DefaultStart + branch + " " + comment.Branch);
+            sb.AppendLine(DefaultStart + token + " " + comment.Token);
             if (!string.IsNullOrEmpty(comment.TimeStamp))
-                sb.AppendLine(DefaultStart + " " + timeStamp + " " + comment.TimeStamp);
+                sb.AppendLine(DefaultStart + timeStamp + " " + comment.TimeStamp);
             if (!string.IsNullOrEmpty(comment.Sha))
-                sb.AppendLine(DefaultStart + " " + sha + " " + comment.Sha);
+                sb.AppendLine(DefaultStart + sha + " " + comment.Sha);
             return sb.ToString();
         }
     }
