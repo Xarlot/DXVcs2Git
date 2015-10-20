@@ -9,11 +9,11 @@ namespace DXVcs2Git.DXVcs {
         public DXVcsWrapper(string server) {
             this.server = server;
         }
-        public bool CheckOut(string vcsPath, string localPath, bool dontGetLocalCopy) {
+        public bool CheckOut(string vcsPath, string localPath, bool dontGetLocalCopy, string comment) {
             try {
                 var repo = DXVcsConnectionHelper.Connect(server);
                 if (repo.IsUnderVss(vcsPath)) {
-                    repo.CheckOutFile(vcsPath, localPath, "DXVcs2GitService: checkout for sync", dontGetLocalCopy);
+                    repo.CheckOutFile(vcsPath, localPath, comment, dontGetLocalCopy);
                 }
                 else {
                     Log.Error($"File {vcsPath} is not under vss.");
@@ -60,8 +60,8 @@ namespace DXVcs2Git.DXVcs {
                 return false;
             }
         }
-        public bool CheckOut(SyncItem item) {
-            return CheckOut(item.VcsPath, item.LocalPath, true);
+        public bool CheckOut(SyncItem item, string comment) {
+            return CheckOut(item.VcsPath, item.LocalPath, true, comment);
         }
         public bool CheckIn(SyncItem item, string comment) {
             switch (item.SyncAction) {
@@ -76,8 +76,8 @@ namespace DXVcs2Git.DXVcs {
                     throw new ArgumentException("SyncAction");
             }
         }
-        bool ModifyItem(SyncItem item) {
-            bool result = CheckOut(item);
+        bool ModifyItem(SyncItem item, string comment) {
+            bool result = CheckOut(item, comment);
             if (!result)
                 Log.Error($"Failed attempt to checkout modified file {item.VcsPath}");
             return result;
@@ -85,13 +85,13 @@ namespace DXVcs2Git.DXVcs {
         public bool RollbackItem(SyncItem item) {
             return UndoCheckout(item.VcsPath);
         }
-        bool CreateItem(string vcsPath, string localPath) {
+        bool CreateItem(string vcsPath, string localPath, string comment) {
             try {
                 var repo = DXVcsConnectionHelper.Connect(server);
                 if (repo.IsUnderVss(vcsPath))
                     return true;
-                repo.AddFile(vcsPath, new byte[0], "");
-                repo.CheckOutFile(vcsPath, localPath, "", true);
+                repo.AddFile(vcsPath, new byte[0], comment);
+                repo.CheckOutFile(vcsPath, localPath, comment, true);
                 return true;
             }
             catch (Exception ex) {
@@ -99,7 +99,7 @@ namespace DXVcs2Git.DXVcs {
                 return false;
             }
         }
-        bool DeleteItem(string vcsPath, string localPath) {
+        bool DeleteItem(string vcsPath, string localPath, string comment) {
             try {
                 var repo = DXVcsConnectionHelper.Connect(server);
                 if (!repo.IsUnderVss(vcsPath))
@@ -116,7 +116,7 @@ namespace DXVcs2Git.DXVcs {
                 return false;
             }
         }
-        bool MoveFile(string vcsPath, string newVcsPath, string localPath, string newLocalPath) {
+        bool MoveFile(string vcsPath, string newVcsPath, string localPath, string newLocalPath, string comment) {
             try {
                 var repo = DXVcsConnectionHelper.Connect(server);
                 if (!repo.IsUnderVss(vcsPath)) {
@@ -129,7 +129,7 @@ namespace DXVcs2Git.DXVcs {
                 }
                 string[] exist = repo.MoveFile(vcsPath, newVcsPath, string.Empty);
                 if (exist == null || exist.Length == 0) {
-                    CheckOut(newVcsPath, newLocalPath, true);
+                    CheckOut(newVcsPath, newLocalPath, true, comment);
                     return true;
                 }
                 foreach (var file in exist)
@@ -143,23 +143,23 @@ namespace DXVcs2Git.DXVcs {
         }
         public bool ProcessCheckout(IEnumerable<SyncItem> items) {
             var list = items.ToList();
-            if (!list.All(ProcessCheckoutItem)) {
+            if (!list.All(x => ProcessCheckoutItem(x, VcsCommentsGenerator.Instance.ConvertToString(x.Comment)))) {
                 Log.Message("Rollback changes after failed checkout.");
                 list.All(RollbackItem);
                 return false;
             }
             return true;
         }
-        bool ProcessCheckoutItem(SyncItem item) {
+        bool ProcessCheckoutItem(SyncItem item, string comment) {
             switch (item.SyncAction) {
                 case SyncAction.New:
-                    return CreateItem(item.VcsPath, item.LocalPath);
+                    return CreateItem(item.VcsPath, item.LocalPath, comment);
                 case SyncAction.Modify:
-                    return ModifyItem(item);
+                    return ModifyItem(item, comment);
                 case SyncAction.Delete:
-                    return DeleteItem(item.VcsPath, item.LocalPath);
+                    return DeleteItem(item.VcsPath, item.LocalPath, comment);
                 case SyncAction.Move:
-                    return MoveFile(item.VcsPath, item.NewVcsPath, item.LocalPath, item.NewLocalPath);
+                    return MoveFile(item.VcsPath, item.NewVcsPath, item.LocalPath, item.NewLocalPath, comment);
                 default:
                     throw new ArgumentException("SyncAction");
             }
