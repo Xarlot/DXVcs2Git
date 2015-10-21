@@ -7,6 +7,7 @@ using System.Linq;
 using System.Reflection.Emit;
 using DXVcs2Git.Core;
 using LibGit2Sharp;
+using LibGit2Sharp.Core;
 
 namespace DXVcs2Git {
     public class GitWrapper : IDisposable {
@@ -44,13 +45,22 @@ namespace DXVcs2Git {
         }
         public void Dispose() {
         }
-        public void Fetch(bool updateTags = false) {
+        public void Fetch(string remote = "", bool updateTags = false) {
             FetchOptions options = new FetchOptions();
             options.CredentialsProvider += (url, fromUrl, types) => credentials;
             if (updateTags)
                 options.TagFetchMode = TagFetchMode.All;
-            var network = repo.Network.Remotes.FirstOrDefault();
+            var network = string.IsNullOrEmpty(remote) ? repo.Network.Remotes.FirstOrDefault() : this.repo.Network.Remotes[remote];
             repo.Fetch(network.Name, options);
+        }
+        public MergeResult Pull(string user, string branchName) {
+            Branch head = this.repo.Branches[branchName];
+            if (!head.IsTracking)
+                throw new LibGit2SharpException("There is no tracking information for the current branch.");
+            if (head.Remote == (Remote)null)
+                throw new LibGit2SharpException("No upstream remote for the current branch.");
+            this.Fetch(head.Remote.Name);
+            return this.repo.MergeFetchedRefs(new Signature(user, "test@mail.com", DateTimeOffset.Now), new MergeOptions());
         }
         public void Stage(string path) {
             repo.Stage(path);
@@ -82,29 +92,31 @@ namespace DXVcs2Git {
             Log.Message($"Push to refspec {refspec} completed.");
         }
         public void EnsureBranch(string name, Commit whereCreateBranch) {
-            Fetch();
             Branch localBranch = this.repo.Branches[name];
+            string remoteName = GetOriginName(name);
+            Branch remoteBranch = this.repo.Branches[remoteName];
             if (localBranch == null) {
-                Branch remoteBranch = this.repo.Branches[GetOriginName(name)];
                 if (remoteBranch != null) {
-                    InitLocalBranch(name, remoteBranch);
-                    return;
+                    localBranch = InitLocalBranch(name, remoteBranch);
                 }
-                if (whereCreateBranch == null) {
-                    repo.CreateBranch(name);
+                else if (whereCreateBranch == null) {
+                    localBranch = repo.CreateBranch(name);
                     Push(name);
                 }
                 else {
-                    CreateBranchFromCommit(name, whereCreateBranch);
+                    localBranch = CreateBranchFromCommit(name, whereCreateBranch);
                 }
             }
+            this.repo.Branches.Update(localBranch,
+                b => b.Remote = name,
+                b => b.UpstreamBranch = $@"refs/remotes/{remoteName}");
         }
-        void InitLocalBranch(string name, Branch remoteBranch) {
-            this.repo.CreateBranch(name, remoteBranch.CanonicalName);
+        Branch InitLocalBranch(string name, Branch remoteBranch) {
+            return this.repo.CreateBranch(name, remoteBranch.CanonicalName);
         }
-        void CreateBranchFromCommit(string name, Commit whereCreateBranch) {
+        Branch CreateBranchFromCommit(string name, Commit whereCreateBranch) {
             CheckOut(whereCreateBranch);
-            repo.CreateBranch(name);
+            return repo.CreateBranch(name);
         }
         string GetOriginName(string name) {
             return $"origin/{name}";
@@ -199,10 +211,13 @@ namespace DXVcs2Git {
             changes = changes.Concat(treeChanges.Renamed);
             return changes;
         }
-        public void Reset(Commit commit) {
-            repo.Reset(ResetMode.Hard, commit);
+        public void Reset(string branchName) {
+            CheckOut(branchName);
+            Fetch();
+            this.repo.Reset(ResetMode.Hard);
+            this.repo.RemoveUntrackedFiles();
         }
-        public MergeStatus CheckMerge(string sourceBranch, Signature merger) {
+        public MergeStatus Merge(string sourceBranch, Signature merger) {
             Branch branch = repo.Branches[sourceBranch];
             MergeOptions mergeOptions = new MergeOptions();
             mergeOptions.CommitOnSuccess = false;

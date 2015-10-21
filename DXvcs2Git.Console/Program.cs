@@ -74,11 +74,11 @@ namespace DXVcs2Git.Console {
                 if (result != 0)
                     return result;
             }
-            if (workMode.HasFlag(WorkMode.directchanges)) {
-                int result = ProcessDirectChanges(gitWrapper, gitRepoPath, localGitDir, branch, syncHistory);
-                if (result != 0)
-                    return result;
-            }
+            //if (workMode.HasFlag(WorkMode.directchanges)) {
+            //    int result = ProcessDirectChanges(gitWrapper, gitRepoPath, localGitDir, branch, syncHistory);
+            //    if (result != 0)
+            //        return result;
+            //}
             if (workMode.HasFlag(WorkMode.history)) {
                 int result = ProcessHistory(gitWrapper, gitRepoPath, localGitDir, branch, clo.CommitsCount, syncHistory);
                 if (result != 0)
@@ -138,7 +138,7 @@ namespace DXVcs2Git.Console {
 
             gitWrapper.EnsureBranch(branch.Name, null);
             gitWrapper.CheckOut(branch.Name);
-            gitWrapper.Fetch(true);
+            gitWrapper.Fetch(updateTags:true);
             Log.Message($"Branch {branch.Name} initialized.");
 
             return gitWrapper;
@@ -247,16 +247,16 @@ namespace DXVcs2Git.Console {
 
             string sourceBranch = mergeRequest.SourceBranch;
             gitWrapper.EnsureBranch(sourceBranch, null);
-            gitWrapper.CheckOut(sourceBranch);
-            gitWrapper.Fetch(true);
+            gitWrapper.Reset(sourceBranch);
+            gitWrapper.Fetch(updateTags: true);
             Commit lastSource = gitWrapper.FindCommit(sourceBranch);
 
             string targetBranch = mergeRequest.TargetBranch;
             gitWrapper.EnsureBranch(targetBranch, null);
-            gitWrapper.CheckOut(targetBranch);
-            gitWrapper.Fetch(true);
+            gitWrapper.Reset(targetBranch);
+            gitWrapper.Fetch(updateTags: true);
 
-            var result = gitWrapper.CheckMerge(sourceBranch, new Signature(defaultUser, "test@mail.com", DateTimeOffset.UtcNow));
+            var result = gitWrapper.Merge(sourceBranch, new Signature(defaultUser, "test@mail.com", DateTimeOffset.UtcNow));
             if (result != MergeStatus.Conflicts) {
                 Comment comment = CalcComment(mergeRequest, branch, autoSyncToken);
                 DXVcsWrapper vcsWrapper = new DXVcsWrapper(vcsServer);
@@ -267,15 +267,11 @@ namespace DXVcs2Git.Console {
                 if (mergeRequest.State == "merged") {
                     Log.Message("Merge request merged successfully.");
                     if (vcsWrapper.ProcessCheckIn(genericChange, VcsCommentsGenerator.Instance.ConvertToString(comment))) {
-                        gitWrapper.CheckOut(branch.Name);
-                        gitWrapper.Fetch(true);
-                        Commit lastCommit = gitWrapper.FindCommit(branch.Name);
-                        if (lastCommit.Sha != lastSource.Sha)
-                            throw new ArgumentException("smth happens");
+                        gitWrapper.Pull(defaultUser, branch.Name);
 
-                        var gitCommit = lastCommit;
+                        var gitCommit = gitWrapper.FindCommit(branch.Name, x => GitCommentsGenerator.Instance.Parse(x.Message).Token == autoSyncToken);
                         var vcsCommit = HistoryGenerator.FindCommit(vcsServer, branch, x => VcsCommentsGenerator.Instance.Parse(x.Comment).Token == autoSyncToken);
-                        syncHistory.Add(gitCommit.Sha, vcsCommit.ActionDate.Ticks, gitlabauthtoken);
+                        syncHistory.Add(gitCommit.Sha, vcsCommit.ActionDate.Ticks, autoSyncToken);
                         syncHistory.Save();
                         Log.Message("Merge request checkin successfully.");
                         return true;
