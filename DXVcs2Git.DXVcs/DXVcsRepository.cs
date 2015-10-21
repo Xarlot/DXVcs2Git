@@ -621,24 +621,34 @@ namespace DXVcs2Git.DXVcs {
         }
         public void DeleteFile(string vcsPath) {
             if (string.IsNullOrEmpty(vcsPath))
-                throw  new ArgumentException("vcsFile");
+                throw new ArgumentException("vcsFile");
             Service.SetDeletedFile(vcsPath, false);
         }
-        public string[] MoveFile(string vcsPath, string newVcsPath, string comment) {
+        public void MoveFile(string vcsPath, string newVcsPath, string comment) {
             if (string.IsNullOrEmpty(vcsPath))
                 throw new ArgumentException("vcsPath");
             if (string.IsNullOrEmpty(newVcsPath))
                 throw new ArgumentException("newVcsPath");
-            if (IsProject(vcsPath)) {
-                Service.MoveProject(vcsPath, newVcsPath, comment);
-                return null;
+            string oldProjectPath = GetProjectPath(vcsPath);
+            string newProjectPath = GetProjectPath(newVcsPath);
+            if (oldProjectPath != newProjectPath) {
+                if (IsProject(vcsPath)) {
+                    Service.MoveProject(vcsPath, newVcsPath, comment);
+                    return;
+                }
+                string[] exist;
+                Service.MoveFiles(new[] {vcsPath}, newProjectPath, out exist);
             }
-            string[] exist;
-            Service.MoveFiles(new[] {vcsPath}, GetProjectPath(newVcsPath), out exist);
-            return exist;
+            string oldFileName = GetFileName(vcsPath);
+            string newFileName = GetFileName(newVcsPath);
+            if (oldFileName != newFileName)
+                Service.RenameFile(vcsPath, newFileName);
         }
         string GetProjectPath(string vcsPath) {
             return Path.GetDirectoryName(vcsPath);
+        }
+        string GetFileName(string vcsPath) {
+            return Path.GetFileName(vcsPath);
         }
         bool IsProject(string vcsPath) {
             var project = Service.FindProject(vcsPath);

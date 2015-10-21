@@ -60,7 +60,9 @@ namespace DXVcs2Git {
             if (head.Remote == (Remote)null)
                 throw new LibGit2SharpException("No upstream remote for the current branch.");
             this.Fetch(head.Remote.Name);
-            return this.repo.MergeFetchedRefs(new Signature(user, "test@mail.com", DateTimeOffset.Now), new MergeOptions());
+            MergeOptions options = new MergeOptions();
+            options.MergeFileFavor = MergeFileFavor.Theirs;
+            return this.repo.MergeFetchedRefs(new Signature(user, "test@mail.com", DateTimeOffset.Now), options);
         }
         public void Stage(string path) {
             repo.Stage(path);

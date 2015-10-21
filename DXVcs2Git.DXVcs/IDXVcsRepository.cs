@@ -22,6 +22,6 @@ namespace DXVcs2Git.DXVcs {
         void AddProject(string vcsPath, string comment);
         void CreateLabel(string vcsPath, string labelName, string comment);
         void DeleteFile(string vcsPath);
-        string[] MoveFile(string vcsPath, string newVcsPath, string comment);
+        void MoveFile(string vcsPath, string newVcsPath, string comment);
     }
 }

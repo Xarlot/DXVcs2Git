@@ -88,9 +88,8 @@ namespace DXVcs2Git.DXVcs {
         bool CreateItem(string vcsPath, string localPath, string comment) {
             try {
                 var repo = DXVcsConnectionHelper.Connect(server);
-                if (repo.IsUnderVss(vcsPath))
-                    return true;
-                repo.AddFile(vcsPath, new byte[0], comment);
+                if (!repo.IsUnderVss(vcsPath))
+                    repo.AddFile(vcsPath, new byte[0], comment);
                 repo.CheckOutFile(vcsPath, localPath, comment, true);
                 return true;
             }
@@ -127,14 +126,9 @@ namespace DXVcs2Git.DXVcs {
                     Log.Error($"Move file error. File {vcsPath} already exist.");
                     return false;
                 }
-                string[] exist = repo.MoveFile(vcsPath, newVcsPath, string.Empty);
-                if (exist == null || exist.Length == 0) {
-                    CheckOut(newVcsPath, newLocalPath, true, comment);
-                    return true;
-                }
-                foreach (var file in exist)
-                    Log.Error($"Move file error. File {file} already exist.");
-                return false;
+                repo.MoveFile(vcsPath, newVcsPath, string.Empty);
+                CheckOut(newVcsPath, newLocalPath, true, comment);
+                return true;
             }
             catch (Exception ex) {
                 Log.Error($"Add new file {vcsPath} failed.", ex);
