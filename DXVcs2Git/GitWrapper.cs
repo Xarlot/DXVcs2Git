@@ -107,9 +107,8 @@ namespace DXVcs2Git {
                     localBranch = CreateBranchFromCommit(name, whereCreateBranch);
                 }
             }
-            this.repo.Branches.Update(localBranch,
-                b => b.Remote = name,
-                b => b.UpstreamBranch = $@"refs/remotes/{remoteName}");
+            if (remoteBranch != null)
+                repo.Branches.Update(localBranch, b => b.TrackedBranch = remoteBranch.CanonicalName);
         }
         Branch InitLocalBranch(string name, Branch remoteBranch) {
             return this.repo.CreateBranch(name, remoteBranch.CanonicalName);
