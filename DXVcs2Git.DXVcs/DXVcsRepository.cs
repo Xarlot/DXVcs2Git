@@ -687,7 +687,7 @@ namespace DXVcs2Git.DXVcs {
                 return false;
             string path = $@"{vcsPath}/{fileName}";
             Service.RecoverDeletedFile(path);
-            string newFileName = fileName + "_deleted_" + new Guid();
+            string newFileName = fileName + "_deleted_" + Guid.NewGuid().ToString();
             Service.RenameFile(path, newFileName);
             Service.SetDeletedFile($@"{vcsPath}/{newFileName}", false);
             return true;
