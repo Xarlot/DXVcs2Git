@@ -248,13 +248,10 @@ namespace DXVcs2Git.Console {
             string sourceBranch = mergeRequest.SourceBranch;
             gitWrapper.EnsureBranch(sourceBranch, null);
             gitWrapper.Reset(sourceBranch);
-            gitWrapper.Fetch(updateTags: true);
-            Commit lastSource = gitWrapper.FindCommit(sourceBranch);
 
             string targetBranch = mergeRequest.TargetBranch;
             gitWrapper.EnsureBranch(targetBranch, null);
             gitWrapper.Reset(targetBranch);
-            gitWrapper.Fetch(updateTags: true);
 
             var result = gitWrapper.Merge(sourceBranch, new Signature(defaultUser, "test@mail.com", DateTimeOffset.UtcNow));
             if (result != MergeStatus.Conflicts) {
@@ -266,9 +263,9 @@ namespace DXVcs2Git.Console {
                 mergeRequest = gitLabWrapper.ProcessMergeRequest(mergeRequest, GitCommentsGenerator.Instance.ConvertToString(comment));
                 if (mergeRequest.State == "merged") {
                     Log.Message("Merge request merged successfully.");
+                    gitWrapper.Reset(branch.Name);
+                    gitWrapper.Pull(defaultUser, branch.Name);
                     if (vcsWrapper.ProcessCheckIn(genericChange, VcsCommentsGenerator.Instance.ConvertToString(comment))) {
-                        gitWrapper.Pull(defaultUser, branch.Name);
-
                         var gitCommit = gitWrapper.FindCommit(branch.Name, x => GitCommentsGenerator.Instance.Parse(x.Message).Token == autoSyncToken);
                         var vcsCommit = HistoryGenerator.FindCommit(vcsServer, branch, x => VcsCommentsGenerator.Instance.Parse(x.Comment).Token == autoSyncToken);
                         syncHistory.Add(gitCommit.Sha, vcsCommit.ActionDate.Ticks, autoSyncToken);

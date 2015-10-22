@@ -57,11 +57,12 @@ namespace DXVcs2Git {
             Branch head = this.repo.Branches[branchName];
             if (!head.IsTracking)
                 throw new LibGit2SharpException("There is no tracking information for the current branch.");
-            if (head.Remote == (Remote)null)
+            if (head.Remote == null)
                 throw new LibGit2SharpException("No upstream remote for the current branch.");
             this.Fetch(head.Remote.Name);
             MergeOptions options = new MergeOptions();
             options.MergeFileFavor = MergeFileFavor.Theirs;
+            options.FileConflictStrategy = CheckoutFileConflictStrategy.Theirs;
             return this.repo.MergeFetchedRefs(new Signature(user, "test@mail.com", DateTimeOffset.Now), options);
         }
         public void Stage(string path) {
