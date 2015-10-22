@@ -618,7 +618,17 @@ namespace DXVcs2Git.DXVcs {
             }
         }
         public void AddProject(string vcsPath, string comment) {
-            AddFile(vcsPath, null, comment);
+            if (string.IsNullOrEmpty(vcsPath))
+                throw new ArgumentException("vcsFile");
+            var folders = vcsPath.Split(@"/".ToCharArray(), StringSplitOptions.RemoveEmptyEntries);
+            var queue = new Queue<string>(folders);
+            string temp = queue.Dequeue();
+            while (queue.Count > 0) {
+                string folder = queue.Dequeue();
+                CreateProject(temp, folder, comment);
+                temp += @"/" + folder;
+            }
+
         }
         public void DeleteFile(string vcsPath) {
             if (string.IsNullOrEmpty(vcsPath))
@@ -633,12 +643,15 @@ namespace DXVcs2Git.DXVcs {
             string oldProjectPath = GetProjectPath(vcsPath);
             string newProjectPath = GetProjectPath(newVcsPath);
             if (oldProjectPath != newProjectPath) {
-                if (IsProject(vcsPath)) {
-                    Service.MoveProject(vcsPath, newVcsPath, comment);
-                    return;
-                }
+                AddProject(newProjectPath, comment);
                 string[] exist;
-                Service.MoveFiles(new[] {vcsPath}, newProjectPath, out exist);
+                Service.MoveFiles(new[] { vcsPath }, newProjectPath, out exist);
+                if (exist.Length > 0)
+                    if (!exist.All(x => SafeDeleteFile(GetProjectPath(x), GetFileName(x))))
+                        throw new ArgumentException("move file failed");
+                    else
+                        Service.MoveFiles(new[] { vcsPath }, newProjectPath, out exist);
+                return;
             }
             string oldFileName = GetFileName(vcsPath);
             string newFileName = GetFileName(newVcsPath);
@@ -695,7 +708,7 @@ namespace DXVcs2Git.DXVcs {
         void CreateProject(string vcsFile, string name, string comment) {
             if (string.IsNullOrEmpty(vcsFile))
                 throw new ArgumentException("vcsFile");
-            if (!IsUnderVss(vcsFile))
+            if (!IsUnderVss($@"{vcsFile}/{name}"))
                 Service.CreateProject(vcsFile, name, comment, false);
         }
         public bool IsUnderVss(string vcsFile) {
