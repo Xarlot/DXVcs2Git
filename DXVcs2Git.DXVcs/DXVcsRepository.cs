@@ -642,8 +642,16 @@ namespace DXVcs2Git.DXVcs {
             }
             string oldFileName = GetFileName(vcsPath);
             string newFileName = GetFileName(newVcsPath);
-            if (oldFileName != newFileName)
-                Service.RenameFile(vcsPath, newFileName);
+            if (oldFileName != newFileName) {
+                try {
+                    Service.RenameFile(vcsPath, newFileName);
+                }
+                catch (DXVCSFileAlreadyExistsException) {
+                    if (!SafeDeleteFile(newProjectPath, newFileName))
+                        throw;
+                    Service.RenameFile(vcsPath, newFileName);
+                }
+            }
         }
         string GetProjectPath(string vcsPath) {
             return Path.GetDirectoryName(vcsPath);

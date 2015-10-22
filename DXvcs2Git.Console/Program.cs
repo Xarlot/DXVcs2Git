@@ -267,8 +267,8 @@ namespace DXVcs2Git.Console {
                     gitWrapper.Pull(defaultUser, branch.Name);
                     if (vcsWrapper.ProcessCheckIn(genericChange, VcsCommentsGenerator.Instance.ConvertToString(comment))) {
                         var gitCommit = gitWrapper.FindCommit(branch.Name, x => GitCommentsGenerator.Instance.Parse(x.Message).Token == autoSyncToken);
-                        var vcsCommit = HistoryGenerator.FindCommit(vcsServer, branch, x => VcsCommentsGenerator.Instance.Parse(x.Comment).Token == autoSyncToken);
-                        syncHistory.Add(gitCommit.Sha, vcsCommit.ActionDate.Ticks, autoSyncToken);
+                        var vcsCommit = SetSyncLabel(gitCommit, branch, localGitDir, autoSyncToken);
+                        syncHistory.Add(gitCommit.Sha, vcsCommit.TimeStamp.Ticks, autoSyncToken);
                         syncHistory.Save();
                         Log.Message("Merge request checkin successfully.");
                         return true;
