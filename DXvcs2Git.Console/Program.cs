@@ -63,7 +63,14 @@ namespace DXVcs2Git.Console {
             SyncHistory history = SyncHistory.Deserialize(historyPath);
             if (history == null)
                 return 1;
+
             SyncHistoryWrapper syncHistory = new SyncHistoryWrapper(history, vcsServer, branch.HistoryPath, historyPath);
+            var head = syncHistory.GetHead();
+            if (head.Status == SyncHistoryStatus.Failed) {
+                Log.Error("Failed sync detected. Repair repo.");
+                return 1;
+            }
+
             GitWrapper gitWrapper = CreateGitWrapper(gitRepoPath, localGitDir, branch, username, password);
             if (gitWrapper == null)
                 return 1;

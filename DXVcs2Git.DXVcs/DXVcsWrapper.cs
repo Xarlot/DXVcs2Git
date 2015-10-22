@@ -77,7 +77,7 @@ namespace DXVcs2Git.DXVcs {
                 case SyncAction.Delete:
                     return CheckInDeletedFile(item.VcsPath, item.LocalPath, comment);
                 case SyncAction.Move:
-                    return CheckInMovedFile(item.VcsPath, item.NewVcsPath, item.LocalPath, item.NewVcsPath, comment);
+                    return CheckInMovedFile(item.VcsPath, item.NewVcsPath, item.LocalPath, item.NewLocalPath, comment);
                 default:
                     throw new ArgumentException("SyncAction");
             }
@@ -172,8 +172,13 @@ namespace DXVcs2Git.DXVcs {
                 }
                 repo.UndoCheckout(vcsPath, comment);
                 repo.MoveFile(vcsPath, newVcsPath, comment);
-                File.Move(localPath, newLocalPath);
-                CheckOutFile(newVcsPath, newLocalPath, true, comment);
+                if (File.Exists(localPath)) {
+                    File.Move(localPath, newLocalPath);
+                    CheckOutFile(newVcsPath, newLocalPath, true, comment);
+                }
+                else {
+                    CheckOutFile(newVcsPath, newLocalPath, false, comment);
+                }
                 CheckInFile(newVcsPath, newLocalPath, comment);
                 return true;
             }

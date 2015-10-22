@@ -654,7 +654,7 @@ namespace DXVcs2Git.DXVcs {
             }
         }
         string GetProjectPath(string vcsPath) {
-            return Path.GetDirectoryName(vcsPath);
+            return Path.GetDirectoryName(vcsPath).Replace("\\", "/");
         }
         string GetFileName(string vcsPath) {
             return Path.GetFileName(vcsPath);
