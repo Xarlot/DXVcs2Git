@@ -8,6 +8,10 @@ using System.Reflection.Emit;
 using DXVcs2Git.Core;
 using LibGit2Sharp;
 using LibGit2Sharp.Core;
+using NGitLab.Models;
+using Branch = LibGit2Sharp.Branch;
+using Commit = LibGit2Sharp.Commit;
+using Tag = LibGit2Sharp.Tag;
 
 namespace DXVcs2Git {
     public class GitWrapper : IDisposable {
@@ -227,6 +231,9 @@ namespace DXVcs2Git {
             mergeOptions.FileConflictStrategy = CheckoutFileConflictStrategy.Normal;
             MergeResult result = repo.Merge(branch, merger, mergeOptions);
             return result.Status;
+        }
+        public RevertStatus Revert(string branchName, Commit revertCommit, string user) {
+            return this.repo.Revert(revertCommit, new Signature(user, "test@mail.com", DateTimeOffset.Now)).Status;
         }
     }
 }

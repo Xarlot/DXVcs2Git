@@ -31,8 +31,7 @@ namespace DXVcs2Git.Console {
         const string vcsServer = @"net.tcp://vcsservice.devexpress.devx:9091/DXVCSService";
         const string defaultUser = "dxvcs2gitservice";
         const string tagName = "dxvcs2gitservice_sync_{0}";
-        const string startSyncTagName = "dxvcs2gitservice_start_sync_{0}";
-        const string endSyncTagName = "dxvcs2gitservice_end_sync_{0}";
+        const string failedTagName = "dxvcs2gitservice_sync_failed_{0}";
         const string AutoMergeFailedComment = "autosync merge failed";
         static void Main(string[] args) {
             var result = Parser.Default.ParseArguments<CommandLineOptions>(args);
@@ -167,7 +166,7 @@ namespace DXVcs2Git.Console {
             string token = Guid.NewGuid().ToString();
             var syncItems = GenerateDirectChangeSet(gitWrapper, localGitDir, branch, lastSyncCommit, lastCommit, token);
             if (ProcessGenericChangeSet(gitWrapper, branch, gitRepoPath, localGitDir, syncItems, token)) {
-                CommitItem syncCommit = SetSyncLabel(lastCommit, branch, localGitDir, token);
+                CommitItem syncCommit = SetSyncLabel(lastCommit, branch, CreateTagName(branch.Name), token);
                 if (syncCommit == null)
                     throw new ArgumentException("set sync commit failed.");
                 syncHistory.Add(lastCommit.Sha, syncCommit.TimeStamp.Ticks, token);
@@ -175,10 +174,10 @@ namespace DXVcs2Git.Console {
             }
             return 1;
         }
-        static CommitItem SetSyncLabel(Commit commit, TrackBranch branch, string localGitDir, string token) {
+        static CommitItem SetSyncLabel(Commit commit, TrackBranch branch, string tag, string token) {
             DXVcsWrapper vcsWrapper = new DXVcsWrapper(vcsServer);
             var comment = CalcComment(commit, branch, token);
-            vcsWrapper.CreateLabel(branch.RepoRoot, string.Format(tagName, branch.Name), VcsCommentsGenerator.Instance.ConvertToString(comment));
+            vcsWrapper.CreateLabel(branch.RepoRoot, tag, VcsCommentsGenerator.Instance.ConvertToString(comment));
             var syncLabelItem = HistoryGenerator.FindCommit(vcsServer, branch, x => VcsCommentsGenerator.Instance.Parse(x.Comment).Token == token);
             var syncLabel = HistoryGenerator.GenerateCommits(new[] {syncLabelItem});
             return syncLabel.First();
@@ -259,21 +258,34 @@ namespace DXVcs2Git.Console {
                 DXVcsWrapper vcsWrapper = new DXVcsWrapper(vcsServer);
                 if (!vcsWrapper.ProcessCheckout(genericChange))
                     throw new ArgumentException("checkout changeset failed.");
+                gitWrapper.Reset(branch.Name);
+                gitWrapper.Pull(defaultUser, branch.Name);
+                Commit beforeMerge = gitWrapper.FindCommit(branch.Name);
 
                 mergeRequest = gitLabWrapper.ProcessMergeRequest(mergeRequest, GitCommentsGenerator.Instance.ConvertToString(comment));
                 if (mergeRequest.State == "merged") {
-                    Log.Message("Merge request merged successfully.");
                     gitWrapper.Reset(branch.Name);
                     gitWrapper.Pull(defaultUser, branch.Name);
+                    Log.Message("Merge request merged successfully.");
+
                     if (vcsWrapper.ProcessCheckIn(genericChange, VcsCommentsGenerator.Instance.ConvertToString(comment))) {
                         var gitCommit = gitWrapper.FindCommit(branch.Name, x => GitCommentsGenerator.Instance.Parse(x.Message).Token == autoSyncToken);
-                        var vcsCommit = SetSyncLabel(gitCommit, branch, localGitDir, autoSyncToken);
+                        var vcsCommit = SetSyncLabel(gitCommit, branch, CreateTagName(branch.Name), autoSyncToken);
                         syncHistory.Add(gitCommit.Sha, vcsCommit.TimeStamp.Ticks, autoSyncToken);
                         syncHistory.Save();
                         Log.Message("Merge request checkin successfully.");
                         return true;
                     }
                     Log.Error("Merge request checkin failed.");
+                    mergeRequest = gitLabWrapper.ReopenMergeRequest(mergeRequest, GitCommentsGenerator.Instance.ConvertToString(comment));
+                    if (gitWrapper.Revert(branch.Name, beforeMerge, defaultUser) == RevertStatus.Reverted)
+                        gitWrapper.Pull(defaultUser, branch.Name);
+                    Log.Error("Revert merging completed.");
+                    var revertCommit = gitWrapper.FindCommit(branch.Name, x => GitCommentsGenerator.Instance.Parse(x.Message).Token == autoSyncToken);
+                    var vcsRevertCommit = SetSyncLabel(revertCommit, branch, CreateFailedTagName(branch.Name), autoSyncToken);
+                    syncHistory.Add(revertCommit.Sha, vcsRevertCommit.TimeStamp.Ticks, autoSyncToken, SyncHistoryStatus.Failed);
+                    syncHistory.Save();
+
                     return false;
                 }
 
@@ -403,7 +415,10 @@ namespace DXVcs2Git.Console {
             return item.Items.Any(x => !string.IsNullOrEmpty(x.Label));
         }
         static string CreateTagName(string branchName) {
-            return $"dxvcs2gitservice_sync_{branchName}";
+            return string.Format(tagName, branchName);
+        }
+        static string CreateFailedTagName(string branchName) {
+            return string.Format(failedTagName, branchName);
         }
         static Comment CalcComment(MergeRequest mergeRequest, TrackBranch branch, string autoSyncToken) {
             Comment comment = new Comment();
