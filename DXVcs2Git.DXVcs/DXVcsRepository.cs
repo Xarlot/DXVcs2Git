@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -661,7 +662,27 @@ namespace DXVcs2Git.DXVcs {
                 throw new ArgumentException("vcsFile");
             if (string.IsNullOrEmpty(fileName))
                 throw new ArgumentException("fileName");
-            Service.CreateFile(vcsFile, fileName, fileBytes, DateTime.Now, comment);
+            try {
+                Service.CreateFile(vcsFile, fileName, fileBytes, DateTime.Now, comment);
+            }
+            catch (DXVCSFileAlreadyExistsException) {
+                if (SafeDeleteFile(vcsFile, fileName))
+                    Service.CreateFile(vcsFile, fileName, fileBytes, DateTime.Now, comment);
+                else
+                    throw;
+            }
+        }
+        bool SafeDeleteFile(string vcsPath, string fileName) {
+            var fileStateInfo = Service.GetDeletedFiles(vcsPath);
+            var fileInfo = fileStateInfo.Where(x => x.Name == fileName).FirstOrDefault();
+            if (fileInfo.IsNull)
+                return false;
+            string path = $@"{vcsPath}/{fileName}";
+            Service.RecoverDeletedFile(path);
+            string newFileName = fileName + "_deleted_" + new Guid();
+            Service.RenameFile(path, newFileName);
+            Service.SetDeletedFile($@"{vcsPath}/{newFileName}", false);
+            return true;
         }
         void CreateProject(string vcsFile, string name, string comment) {
             if (string.IsNullOrEmpty(vcsFile))
