@@ -19,13 +19,7 @@ using Commit = LibGit2Sharp.Commit;
 namespace DXVcs2Git.Console {
     internal class Program {
         const string gitlabauthtoken = "X6XV2G_ycz_U4pi4m93K";
-        const string AutoSyncTimeStampFormat = "{0:M/d/yyyy HH:mm:ss.ffffff}";
-        const string AutoSyncAuthor = "autosync author: {0}";
         const string AutoSyncBranch = "autosync branch: {0}";
-        const string AutoSyncSha = "autosync commit sha: {0}";
-        const string AutoSyncShaSearchString = @"(?<=sha:\s*)[0-9a-f]+";
-        const string AutoSyncTimeStamp = "autosync commit timestamp: {0}";
-        const string AutoSyncTokenFormat = "autosync token: {0}";
         const string repoPath = "repo";
         const string gitServer = @"http://litvinov-lnx";
         const string vcsServer = @"net.tcp://vcsservice.devexpress.devx:9091/DXVCSService";
@@ -80,11 +74,6 @@ namespace DXVcs2Git.Console {
                 if (result != 0)
                     return result;
             }
-            //if (workMode.HasFlag(WorkMode.directchanges)) {
-            //    int result = ProcessDirectChanges(gitWrapper, gitRepoPath, localGitDir, branch, syncHistory);
-            //    if (result != 0)
-            //        return result;
-            //}
             if (workMode.HasFlag(WorkMode.history)) {
                 int result = ProcessHistory(gitWrapper, gitRepoPath, localGitDir, branch, clo.CommitsCount, syncHistory);
                 if (result != 0)
