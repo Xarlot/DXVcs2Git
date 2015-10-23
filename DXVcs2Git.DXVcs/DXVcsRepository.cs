@@ -635,6 +635,11 @@ namespace DXVcs2Git.DXVcs {
                 throw new ArgumentException("vcsFile");
             Service.SetDeletedFile(vcsPath, false);
         }
+        public void DeleteProject(string vcsPath) {
+            if (string.IsNullOrEmpty(vcsPath))
+                throw new ArgumentException("vcsPath");
+            Service.SetDeletedProject(vcsPath);
+        }
         public void MoveFile(string vcsPath, string newVcsPath, string comment) {
             if (string.IsNullOrEmpty(vcsPath))
                 throw new ArgumentException("vcsPath");
@@ -651,6 +656,9 @@ namespace DXVcs2Git.DXVcs {
                         throw new ArgumentException("move file failed");
                     else
                         Service.MoveFiles(new[] { vcsPath }, newProjectPath, out exist);
+                var projectFiles = Service.GetFiles(oldProjectPath);
+                if (projectFiles.Length == 0)
+                    DeleteProject(oldProjectPath);
                 return;
             }
             string oldFileName = GetFileName(vcsPath);
@@ -684,7 +692,8 @@ namespace DXVcs2Git.DXVcs {
             if (string.IsNullOrEmpty(fileName))
                 throw new ArgumentException("fileName");
             try {
-                Service.CreateFile(vcsFile, fileName, fileBytes, DateTime.Now, comment);
+                if (!IsUnderVss(vcsFile))
+                    Service.CreateFile(vcsFile, fileName, fileBytes, DateTime.Now, comment);
             }
             catch (DXVCSFileAlreadyExistsException) {
                 if (SafeDeleteFile(vcsFile, fileName))
@@ -700,16 +709,35 @@ namespace DXVcs2Git.DXVcs {
                 return false;
             string path = $@"{vcsPath}/{fileName}";
             Service.RecoverDeletedFile(path);
-            string newFileName = fileName + "_deleted_" + Guid.NewGuid().ToString();
+            string newFileName = fileName + "_deleted_" + Guid.NewGuid();
             Service.RenameFile(path, newFileName);
             Service.SetDeletedFile($@"{vcsPath}/{newFileName}", false);
             return true;
         }
-        void CreateProject(string vcsFile, string name, string comment) {
-            if (string.IsNullOrEmpty(vcsFile))
+        bool SafeDeleteProject(string vcsPath, string name) {
+            var projectStateInfo = Service.GetDeletedProjects(vcsPath);
+            var fileInfo = projectStateInfo.Where(x => x.Name == name).FirstOrDefault();
+            if (fileInfo.IsNull || string.IsNullOrEmpty(fileInfo.Name))
+                return false;
+            string path = $@"{vcsPath}/{name}";
+            Service.RecoverDeletedProject(path);
+            string newProjectName = name + "_deleted_" + Guid.NewGuid();
+            Service.RenameProject(path, newProjectName);
+            Service.SetDeletedProject($@"{vcsPath}/{newProjectName}");
+            return true;
+        }
+        void CreateProject(string vcsPath, string name, string comment) {
+            if (string.IsNullOrEmpty(vcsPath))
                 throw new ArgumentException("vcsFile");
-            if (!IsUnderVss($@"{vcsFile}/{name}"))
-                Service.CreateProject(vcsFile, name, comment, false);
+            try {
+                if (!IsUnderVss($@"{vcsPath}/{name}"))
+                    Service.CreateProject(vcsPath, name, comment, true);
+            }
+            catch (DXVCSProjectAlreadyExistsException) {
+                if (!SafeDeleteProject(vcsPath, name))
+                    throw;
+                Service.CreateProject(vcsPath, name, comment, true);
+            }
         }
         public bool IsUnderVss(string vcsFile) {
             if (string.IsNullOrEmpty(vcsFile))
