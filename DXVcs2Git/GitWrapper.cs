@@ -188,7 +188,6 @@ namespace DXVcs2Git {
             CheckoutOptions options = new CheckoutOptions();
             options.CheckoutModifiers = CheckoutModifiers.Force;
             repo.Checkout(repo.Branches[branchName], options);
-            Log.Message($"Checkout branch {branchName} completed");
         }
         public void CheckOut(Commit commit) {
             CheckoutOptions options = new CheckoutOptions();

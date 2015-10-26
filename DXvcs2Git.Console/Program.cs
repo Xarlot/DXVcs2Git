@@ -237,19 +237,24 @@ namespace DXVcs2Git.Console {
         static bool ProcessOpenedMergeRequest(GitWrapper gitWrapper, GitLabWrapper gitLabWrapper, string localGitDir, TrackBranch branch, MergeRequest mergeRequest, SyncHistoryWrapper syncHistory) {
             string autoSyncToken = Guid.NewGuid().ToString();
 
+            Log.Message($"Start merging mergerequest {mergeRequest.Title}");
+
             var changes = gitLabWrapper.GetMergeRequestChanges(mergeRequest).Where(x => branch.TrackItems.FirstOrDefault(track => x.OldPath.StartsWith(track.ProjectPath)) != null);
             var genericChange = changes.Select(x => ProcessMergeRequestChanges(mergeRequest, x, localGitDir, branch, autoSyncToken)).ToList();
 
             string sourceBranch = mergeRequest.SourceBranch;
             gitWrapper.EnsureBranch(sourceBranch, null);
             gitWrapper.Reset(sourceBranch);
+            Log.Message($"Reset branch {sourceBranch} completed.");
 
             string targetBranch = mergeRequest.TargetBranch;
             gitWrapper.EnsureBranch(targetBranch, null);
             gitWrapper.Reset(targetBranch);
+            Log.Message($"Reset branch {targetBranch} completed.");
 
             var result = gitWrapper.Merge(sourceBranch, new Signature(defaultUser, "test@mail.com", DateTimeOffset.UtcNow));
             if (result != MergeStatus.Conflicts) {
+                Log.Message($"Merge attempt from {targetBranch} to {sourceBranch} completed without conflicts");
                 Comment comment = CalcComment(mergeRequest, branch, autoSyncToken);
                 DXVcsWrapper vcsWrapper = new DXVcsWrapper(vcsServer);
                 if (!vcsWrapper.ProcessCheckout(genericChange))
@@ -289,6 +294,7 @@ namespace DXVcs2Git.Console {
                 gitLabWrapper.UpdateMergeRequest(mergeRequest, AutoMergeFailedComment);
                 return true;
             }
+            Log.Message($"Merge request merging from {targetBranch} to {sourceBranch} failed due conflicts. Resolve conflicts manually.");
             return false;
         }
         static string CalcVcsRoot(TrackBranch branch, TreeEntryChanges fileData) {
