@@ -11,6 +11,8 @@ namespace DXVcs2Git.DXVcs {
             WriteToken(comment, sb);
             WriteTimestamp(comment, sb);
             WriteSha(comment, sb);
+
+            WriteComment(comment, sb);
         }
     }
 }

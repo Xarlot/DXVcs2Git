@@ -426,7 +426,18 @@ namespace DXVcs2Git.Console {
             comment.Author = mergeRequest.Author.Name;
             comment.Branch = branch.Name;
             comment.Token = autoSyncToken;
+            comment.Comment = CalcCommentForMergeRequest(mergeRequest);
             return comment;
+        }
+        static string CalcCommentForMergeRequest(MergeRequest mergeRequest) {
+            StringBuilder sb = new StringBuilder();
+            if (!string.IsNullOrEmpty(mergeRequest.Title))
+                sb.AppendLine(mergeRequest.Title);
+            if (!string.IsNullOrEmpty(mergeRequest.Description)) {
+                sb.Append(mergeRequest.Description);
+                sb.AppendLine();
+            }
+            return sb.ToString();
         }
         static CommentWrapper CalcComment(Commit commit, TrackBranch branch, string syncToken) {
             CommentWrapper comment = new CommentWrapper();

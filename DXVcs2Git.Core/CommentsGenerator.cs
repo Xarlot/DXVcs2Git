@@ -36,8 +36,7 @@ namespace DXVcs2Git.Core {
         }
         void ParseChunk(CommentWrapper comment, string chunk) {
             if (!chunk.StartsWith(DefaultStart)) {
-                if (!string.IsNullOrEmpty(chunk) && !string.IsNullOrWhiteSpace(chunk))
-                    comment.Comment += chunk + Environment.NewLine;
+                comment.Comment += ParseComment(chunk);
                 return;
             }
             var clean = chunk.Remove(0, DefaultStart.Length);
@@ -51,6 +50,14 @@ namespace DXVcs2Git.Core {
                 comment.Author = ParseAuthor(clean);
             else if (clean.StartsWith(token))
                 comment.Token = ParseToken(clean);
+        }
+        private string ParseComment(string chunk) {
+            var cleaned = chunk.Replace("\r", string.Empty).Replace("\n", string.Empty);
+
+            if (string.IsNullOrEmpty(cleaned) || string.IsNullOrWhiteSpace(cleaned))
+                return string.Empty;
+            return cleaned;
+
         }
         string ParseAuthor(string value) {
             var match = ParseAuthorRegex.Match(value);
@@ -95,6 +102,10 @@ namespace DXVcs2Git.Core {
         }
         protected static void WriteAuthor(CommentWrapper comment, StringBuilder sb) {
             sb.AppendLine(DefaultStart + author + " " + comment.Author);
+        }
+        protected static void WriteComment(CommentWrapper comment, StringBuilder sb) {
+            if (!string.IsNullOrEmpty(comment.Comment))
+                sb.AppendLine(comment.Comment);
         }
     }
 }

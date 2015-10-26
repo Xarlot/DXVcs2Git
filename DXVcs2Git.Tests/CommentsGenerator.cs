@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Text;
 using DXVcs2Git.DXVcs;
 using NUnit.Framework;
 
@@ -84,6 +85,15 @@ namespace DXVcs2Git.Tests {
             commentString = "dxvcs2gitservice token: " + guid;
             comment = VcsCommentsGenerator.Instance.Parse(commentString);
             Assert.AreEqual(guid, comment.Token);
+        }
+        [Test]
+        public void ParseComment() {
+            StringBuilder sb = new StringBuilder();
+            sb.AppendLine("token: test");
+            sb.AppendLine("dxvcs2gitservice token: test");
+            var comment = VcsCommentsGenerator.Instance.Parse(sb.ToString());
+            Assert.AreEqual("test", comment.Token);
+            Assert.AreEqual("token: test", comment.Comment);
         }
     }
 }
