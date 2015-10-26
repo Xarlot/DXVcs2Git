@@ -35,8 +35,11 @@ namespace DXVcs2Git.Core {
                 ParseChunk(comment, chunk);
         }
         void ParseChunk(CommentWrapper comment, string chunk) {
-            if (!chunk.StartsWith(DefaultStart))
+            if (!chunk.StartsWith(DefaultStart)) {
+                if (!string.IsNullOrEmpty(chunk) && !string.IsNullOrWhiteSpace(chunk))
+                    comment.Comment += chunk + Environment.NewLine;
                 return;
+            }
             var clean = chunk.Remove(0, DefaultStart.Length);
             if (clean.StartsWith(sha))
                 comment.Sha = ParseSha(clean);

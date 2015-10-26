@@ -5,5 +5,6 @@
         public string Token { get; set; }
         public string Author { get; set; }
         public string Branch { get; set; }
+        public string Comment { get; set; }
     }
 }
