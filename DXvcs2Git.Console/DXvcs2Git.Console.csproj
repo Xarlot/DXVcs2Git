@@ -94,10 +94,6 @@
       <Project>{7CE585B7-1F19-442D-B1A4-0C1AD855A55C}</Project>
       <Name>DXVcs2Git.Core</Name>
     </ProjectReference>
-    <ProjectReference Include="..\DXVcs2Git.DXVcs\DXVcs2Git.DXVcs.csproj">
-      <Project>{8326bb06-73e9-44ad-8309-4ab0596455a9}</Project>
-      <Name>DXVcs2Git.DXVcs</Name>
-    </ProjectReference>
     <ProjectReference Include="..\DXVcs2Git.Tests\DXVcs2Git.Tests.csproj">
       <Project>{8cc237ef-3d03-456d-a101-c9dbe57ea6e5}</Project>
       <Name>DXVcs2Git.Tests</Name>
@@ -105,10 +101,6 @@
     <ProjectReference Include="..\DXVcs2Git.UI\DXVcs2Git.UI.csproj">
       <Project>{3b9adc57-b49d-4de7-a532-dbeb0ca78c10}</Project>
       <Name>DXVcs2Git.UI</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\DXVcs2Git\DXVcs2Git.Git.csproj">
-      <Project>{b9c82b37-4d92-4903-907f-a1f7f3908062}</Project>
-      <Name>DXVcs2Git.Git</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
