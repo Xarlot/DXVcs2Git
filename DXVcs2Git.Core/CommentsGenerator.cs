@@ -20,12 +20,12 @@ namespace DXVcs2Git.Core {
 
         }
 
-        public Comment Parse(string commentString) {
-            var comment = new Comment();
+        public CommentWrapper Parse(string commentString) {
+            var comment = new CommentWrapper();
             ParseInternal(comment, commentString);
             return comment;
         }
-        protected virtual void ParseInternal(Comment comment, string commentString) {
+        protected virtual void ParseInternal(CommentWrapper comment, string commentString) {
             if (string.IsNullOrEmpty(commentString))
                 return;
             var chunks = commentString.Split(new[] { '\n' }, StringSplitOptions.RemoveEmptyEntries);
@@ -34,7 +34,7 @@ namespace DXVcs2Git.Core {
             foreach (var chunk in chunks)
                 ParseChunk(comment, chunk);
         }
-        void ParseChunk(Comment comment, string chunk) {
+        void ParseChunk(CommentWrapper comment, string chunk) {
             if (!chunk.StartsWith(DefaultStart))
                 return;
             var clean = chunk.Remove(0, DefaultStart.Length);
@@ -69,16 +69,29 @@ namespace DXVcs2Git.Core {
             var match = ParseTokenRegex.Match(value);
             return match.Value;
         }
-        public string ConvertToString(Comment comment) {
+        public string ConvertToString(CommentWrapper comment) {
             StringBuilder sb = new StringBuilder();
-            sb.AppendLine(DefaultStart + author + " " + comment.Author);
-            sb.AppendLine(DefaultStart + branch + " " + comment.Branch);
-            sb.AppendLine(DefaultStart + token + " " + comment.Token);
-            if (!string.IsNullOrEmpty(comment.TimeStamp))
-                sb.AppendLine(DefaultStart + timeStamp + " " + comment.TimeStamp);
+            ConvertToStringInternal(comment, sb);
+            return sb.ToString();
+        }
+        protected virtual void ConvertToStringInternal(CommentWrapper comment, StringBuilder sb) {
+        }
+        protected static void WriteSha(CommentWrapper comment, StringBuilder sb) {
             if (!string.IsNullOrEmpty(comment.Sha))
                 sb.AppendLine(DefaultStart + sha + " " + comment.Sha);
-            return sb.ToString();
+        }
+        protected static void WriteTimestamp(CommentWrapper comment, StringBuilder sb) {
+            if (!string.IsNullOrEmpty(comment.TimeStamp))
+                sb.AppendLine(DefaultStart + timeStamp + " " + comment.TimeStamp);
+        }
+        protected static void WriteToken(CommentWrapper comment, StringBuilder sb) {
+            sb.AppendLine(DefaultStart + token + " " + comment.Token);
+        }
+        protected static void WriteBranch(CommentWrapper comment, StringBuilder sb) {
+            sb.AppendLine(DefaultStart + branch + " " + comment.Branch);
+        }
+        protected static void WriteAuthor(CommentWrapper comment, StringBuilder sb) {
+            sb.AppendLine(DefaultStart + author + " " + comment.Author);
         }
     }
 }

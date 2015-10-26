@@ -1,5 +1,5 @@
 ﻿namespace DXVcs2Git.Core {
-    public class Comment {
+    public class CommentWrapper {
         public string TimeStamp { get; set; }
         public string Sha { get; set; }
         public string Token { get; set; }

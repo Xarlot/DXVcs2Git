@@ -69,7 +69,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Comment.cs" />
+    <Compile Include="CommentWrapper.cs" />
     <Compile Include="CommentsGenerator.cs" />
     <Compile Include="DirectoryHelper.cs" />
     <Compile Include="CommitItem.cs" />
@@ -84,7 +84,7 @@
     <Compile Include="RegisteredUsers.cs" />
     <Compile Include="Serialization\GitSyncItem.cs" />
     <Compile Include="Serialization\SyncHistory.cs" />
-    <Compile Include="SyncHistoryItem.cs" />
+    <Compile Include="Serialization\SyncHistoryItem.cs" />
     <Compile Include="SyncItem.cs" />
     <Compile Include="TrackBranch.cs" />
     <Compile Include="TrackItem.cs" />

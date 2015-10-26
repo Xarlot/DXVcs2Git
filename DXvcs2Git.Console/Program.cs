@@ -13,7 +13,6 @@ using DXVcs2Git.DXVcs;
 using DXVcs2Git.Git;
 using LibGit2Sharp;
 using NGitLab.Models;
-using Comment = DXVcs2Git.Core.Comment;
 using Commit = LibGit2Sharp.Commit;
 
 namespace DXVcs2Git.Console {
@@ -255,7 +254,7 @@ namespace DXVcs2Git.Console {
             var result = gitWrapper.Merge(sourceBranch, new Signature(defaultUser, "test@mail.com", DateTimeOffset.UtcNow));
             if (result != MergeStatus.Conflicts) {
                 Log.Message($"Merge attempt from {targetBranch} to {sourceBranch} completed without conflicts");
-                Comment comment = CalcComment(mergeRequest, branch, autoSyncToken);
+                CommentWrapper comment = CalcComment(mergeRequest, branch, autoSyncToken);
                 DXVcsWrapper vcsWrapper = new DXVcsWrapper(vcsServer);
                 if (!vcsWrapper.ProcessCheckout(genericChange))
                     throw new ArgumentException("checkout changeset failed.");
@@ -391,7 +390,7 @@ namespace DXVcs2Git.Console {
                 if (hasModifications) {
                     gitWrapper.Push(branch.Name);
                     string tagName = CreateTagName(branch.Name);
-                    Comment comment = CalcComment(last, branch, token);
+                    CommentWrapper comment = CalcComment(last, branch, token);
                     gitWrapper.AddTag(tagName, last, defaultUser, item.TimeStamp, GitCommentsGenerator.Instance.ConvertToString(comment));
                     syncHistory.Add(last.Sha, item.TimeStamp.Ticks, token);
                     syncHistory.Save();
@@ -422,22 +421,22 @@ namespace DXVcs2Git.Console {
         static string CreateFailedTagName(string branchName) {
             return string.Format(failedTagName, branchName);
         }
-        static Comment CalcComment(MergeRequest mergeRequest, TrackBranch branch, string autoSyncToken) {
-            Comment comment = new Comment();
+        static CommentWrapper CalcComment(MergeRequest mergeRequest, TrackBranch branch, string autoSyncToken) {
+            CommentWrapper comment = new CommentWrapper();
             comment.Author = mergeRequest.Author.Name;
             comment.Branch = branch.Name;
             comment.Token = autoSyncToken;
             return comment;
         }
-        static Comment CalcComment(Commit commit, TrackBranch branch, string syncToken) {
-            Comment comment = new Comment();
+        static CommentWrapper CalcComment(Commit commit, TrackBranch branch, string syncToken) {
+            CommentWrapper comment = new CommentWrapper();
             comment.Author = commit.Author.Name;
             comment.Branch = branch.Name;
             comment.Token = syncToken;
             return comment;
         }
-        static Comment CalcComment(CommitItem item, string token) {
-            Comment comment = new Comment();
+        static CommentWrapper CalcComment(CommitItem item, string token) {
+            CommentWrapper comment = new CommentWrapper();
             comment.TimeStamp = item.TimeStamp.Ticks.ToString();
             comment.Author = item.Author;
             comment.Branch = item.Track.Branch;
