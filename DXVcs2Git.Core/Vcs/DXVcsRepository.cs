@@ -686,18 +686,19 @@ namespace DXVcs2Git.DXVcs {
                 return true;
             return false;
         }
-        void CreateFile(string vcsFile, string fileName, byte[] fileBytes, string comment) {
-            if (string.IsNullOrEmpty(vcsFile))
+        void CreateFile(string vcsPath, string fileName, byte[] fileBytes, string comment) {
+            if (string.IsNullOrEmpty(vcsPath))
                 throw new ArgumentException("vcsFile");
             if (string.IsNullOrEmpty(fileName))
                 throw new ArgumentException("fileName");
             try {
+                string vcsFile = $@"{vcsPath}/{fileName}";
                 if (!IsUnderVss(vcsFile))
-                    Service.CreateFile(vcsFile, fileName, fileBytes, DateTime.Now, comment);
+                    Service.CreateFile(vcsPath, fileName, fileBytes, DateTime.Now, comment);
             }
             catch (DXVCSFileAlreadyExistsException) {
-                if (SafeDeleteFile(vcsFile, fileName))
-                    Service.CreateFile(vcsFile, fileName, fileBytes, DateTime.Now, comment);
+                if (SafeDeleteFile(vcsPath, fileName))
+                    Service.CreateFile(vcsPath, fileName, fileBytes, DateTime.Now, comment);
                 else
                     throw;
             }
