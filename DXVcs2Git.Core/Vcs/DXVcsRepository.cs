@@ -656,6 +656,7 @@ namespace DXVcs2Git.DXVcs {
             }
         }
         void RenameFile(string vcsPath, string newFileName, string projectPath, string comment) {
+            var oldHistory = GetFileHistory(vcsPath);
             try {
                 Service.RenameFile(vcsPath, newFileName);
             }
@@ -665,7 +666,10 @@ namespace DXVcs2Git.DXVcs {
                 Service.RenameFile(vcsPath, newFileName);
             }
             string newVcsFileName = $"{projectPath}/{newFileName}";
-            Service.SetComment(newVcsFileName, -1, comment);
+            var newHistory = GetFileHistory(newVcsFileName);
+            var changeSet = newHistory.Where(x => x.Version > oldHistory.Last().Version);
+            foreach (var item in changeSet)
+                Service.SetComment(newVcsFileName, item.Version, comment);
         }
         void RemoveProjectIfNeeded(string oldProjectPath) {
             var projectFiles = Service.GetFiles(oldProjectPath);
