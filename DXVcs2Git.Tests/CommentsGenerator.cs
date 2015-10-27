@@ -25,14 +25,20 @@ namespace DXVcs2Git.Tests {
             comment = CommentWrapper.Parse(commentString);
             Assert.AreEqual(null, comment.Token);
         }
-        //[Test]
-        //public void ParseComment() {
-        //    StringBuilder sb = new StringBuilder();
-        //    sb.AppendLine("token: test");
-        //    sb.AppendLine("dxvcs2gitservice token: test");
-        //    var comment = VcsCommentsGenerator.Instance.Parse(sb.ToString());
-        //    Assert.AreEqual("test", comment.Token);
-        //    Assert.AreEqual("token: test", comment.Comment);
-        //}
+        [Test]
+        public void ParseComment() {
+            string commentString = @"[a:litvinov t:34] test \r\n test2";
+            var comment = CommentWrapper.Parse(commentString);
+            Assert.AreEqual(@"test \r\n test2", comment.Comment);
+            Assert.AreEqual("litvinov", comment.Author);
+            Assert.AreEqual("34", comment.Token);
+            commentString = "[a:litvinov t:34] test";
+            comment = CommentWrapper.Parse(commentString);
+            Assert.AreEqual("test", comment.Comment);
+
+            commentString = "[a:litvinov t:34] ";
+            comment = CommentWrapper.Parse(commentString);
+            Assert.AreEqual("", comment.Comment);
+        }
     }
 }
