@@ -118,7 +118,7 @@ namespace DXVcs2Git.Console {
             }
             ProcessHistoryInternal(gitWrapper, localGitDir, branch, new[] { startCommit }, syncHistory);
             Commit syncCommit = gitWrapper.FindCommit(branch.Name, x => IsAutoSyncComment(branch.Name, x.Message));
-            string token = Guid.NewGuid().ToString();
+            string token = syncHistory.CreateNewToken();
             syncHistory.Add(syncCommit.Sha, startCommit.TimeStamp.Ticks, token);
             syncHistory.Save();
             return 0;
@@ -147,28 +147,28 @@ namespace DXVcs2Git.Console {
             }
             return branch;
         }
-        static int ProcessDirectChanges(GitWrapper gitWrapper, string gitRepoPath, string localGitDir, TrackBranch branch, SyncHistoryWrapper syncHistory) {
-            var lastSync = syncHistory.GetHead();
-            var lastSyncCommit = gitWrapper.FindCommit(branch.Name, x => x.Sha == lastSync.GitCommitSha);
-            var lastCommit = gitWrapper.FindCommit(branch.Name);
-            bool hasChangesInGit = lastCommit.Sha != lastSync.GitCommitSha;
-            if (!hasChangesInGit) {
-                Log.Message($"Branch {branch.Name} checked. There is no direct changes.");
-                return 0;
-            }
-            Log.Message($"Branch {branch.Name} has local changes.");
+        //static int ProcessDirectChanges(GitWrapper gitWrapper, string gitRepoPath, string localGitDir, TrackBranch branch, SyncHistoryWrapper syncHistory) {
+        //    var lastSync = syncHistory.GetHead();
+        //    var lastSyncCommit = gitWrapper.FindCommit(branch.Name, x => x.Sha == lastSync.GitCommitSha);
+        //    var lastCommit = gitWrapper.FindCommit(branch.Name);
+        //    bool hasChangesInGit = lastCommit.Sha != lastSync.GitCommitSha;
+        //    if (!hasChangesInGit) {
+        //        Log.Message($"Branch {branch.Name} checked. There is no direct changes.");
+        //        return 0;
+        //    }
+        //    Log.Message($"Branch {branch.Name} has local changes.");
 
-            string token = Guid.NewGuid().ToString();
-            var syncItems = GenerateDirectChangeSet(gitWrapper, localGitDir, branch, lastSyncCommit, lastCommit, token);
-            if (ProcessGenericChangeSet(gitWrapper, branch, gitRepoPath, localGitDir, syncItems, token)) {
-                CommitItem syncCommit = SetSyncLabel(lastCommit, branch, CreateTagName(branch.Name), token);
-                if (syncCommit == null)
-                    throw new ArgumentException("set sync commit failed.");
-                syncHistory.Add(lastCommit.Sha, syncCommit.TimeStamp.Ticks, token);
-                syncHistory.Save();
-            }
-            return 1;
-        }
+        //    string token = Guid.NewGuid().ToString();
+        //    var syncItems = GenerateDirectChangeSet(gitWrapper, localGitDir, branch, lastSyncCommit, lastCommit, token);
+        //    if (ProcessGenericChangeSet(gitWrapper, branch, gitRepoPath, localGitDir, syncItems, token)) {
+        //        CommitItem syncCommit = SetSyncLabel(lastCommit, branch, CreateTagName(branch.Name), token);
+        //        if (syncCommit == null)
+        //            throw new ArgumentException("set sync commit failed.");
+        //        syncHistory.Add(lastCommit.Sha, syncCommit.TimeStamp.Ticks, token);
+        //        syncHistory.Save();
+        //    }
+        //    return 1;
+        //}
         static CommitItem SetSyncLabel(Commit commit, TrackBranch branch, string tag, string token) {
             DXVcsWrapper vcsWrapper = new DXVcsWrapper(vcsServer);
             var comment = CalcComment(commit, branch, token);
@@ -177,27 +177,27 @@ namespace DXVcs2Git.Console {
             var syncLabel = HistoryGenerator.GenerateCommits(new[] {syncLabelItem});
             return syncLabel.First();
         }
-        static bool ProcessGenericChangeSet(GitWrapper gitWrapper, TrackBranch branch, string gitRepoPath, string localGitDir, IEnumerable<SyncItem> syncItems, string token) {
-            DXVcsWrapper wrapper = new DXVcsWrapper(vcsServer);
-            if (!wrapper.ProcessCheckout(syncItems)) {
-                Log.Error("Checkout for sync failed");
-                return false;
-            }
-            return wrapper.ProcessCheckIn(syncItems, string.Empty);
-        }
-        static IEnumerable<SyncItem> GenerateDirectChangeSet(GitWrapper gitWrapper, string localGitDir, TrackBranch branch, Commit lastSync, Commit lastChange, string token) {
-            var changes = gitWrapper.GetChanges(lastSync, lastChange).Where(x => branch.TrackItems.FirstOrDefault(track => x.OldPath.StartsWith(track.ProjectPath)) != null);
-            var genericChanges = changes.Select(x => ProcessDirectChanges(lastChange, branch, x, CalcVcsRoot(branch, x), localGitDir, token)).ToList();
-            return genericChanges;
-        }
-        static SyncItem ProcessDirectChanges(Commit lastChange, TrackBranch branch, TreeEntryChanges changes, string vcsRoot, string localGitDir, string token) {
-            SyncItem item = new SyncItem();
-            item.SyncAction = SyncAction.Modify;
-            item.LocalPath = Path.Combine(localGitDir, changes.OldPath);
-            item.VcsPath = CalcVcsPath(vcsRoot, changes.OldPath);
-            item.Comment = CalcComment(lastChange, branch, token);
-            return item;
-        }
+        //static bool ProcessGenericChangeSet(GitWrapper gitWrapper, TrackBranch branch, string gitRepoPath, string localGitDir, IEnumerable<SyncItem> syncItems, string token) {
+        //    DXVcsWrapper wrapper = new DXVcsWrapper(vcsServer);
+        //    if (!wrapper.ProcessCheckout(syncItems)) {
+        //        Log.Error("Checkout for sync failed");
+        //        return false;
+        //    }
+        //    return wrapper.ProcessCheckIn(syncItems, string.Empty);
+        //}
+        //static IEnumerable<SyncItem> GenerateDirectChangeSet(GitWrapper gitWrapper, string localGitDir, TrackBranch branch, Commit lastSync, Commit lastChange, string token) {
+        //    var changes = gitWrapper.GetChanges(lastSync, lastChange).Where(x => branch.TrackItems.FirstOrDefault(track => x.OldPath.StartsWith(track.ProjectPath)) != null);
+        //    var genericChanges = changes.Select(x => ProcessDirectChanges(lastChange, branch, x, CalcVcsRoot(branch, x), localGitDir, token)).ToList();
+        //    return genericChanges;
+        //}
+        //static SyncItem ProcessDirectChanges(Commit lastChange, TrackBranch branch, TreeEntryChanges changes, string vcsRoot, string localGitDir, string token) {
+        //    SyncItem item = new SyncItem();
+        //    item.SyncAction = SyncAction.Modify;
+        //    item.LocalPath = Path.Combine(localGitDir, changes.OldPath);
+        //    item.VcsPath = CalcVcsPath(vcsRoot, changes.OldPath);
+        //    item.Comment = CalcComment(lastChange, branch, token);
+        //    return item;
+        //}
         static bool IsAutoSyncComment(string branchName, string message) {
             if (string.IsNullOrEmpty(message))
                 return false;
@@ -234,7 +234,7 @@ namespace DXVcs2Git.Console {
             }
         }
         static bool ProcessOpenedMergeRequest(GitWrapper gitWrapper, GitLabWrapper gitLabWrapper, string localGitDir, TrackBranch branch, MergeRequest mergeRequest, SyncHistoryWrapper syncHistory) {
-            string autoSyncToken = Guid.NewGuid().ToString();
+            string autoSyncToken = syncHistory.CreateNewToken();
 
             Log.Message($"Start merging mergerequest {mergeRequest.Title}");
 
@@ -366,7 +366,7 @@ namespace DXVcs2Git.Console {
                 var localCommits = HistoryGenerator.GetCommits(item.Items).Where(x => !IsLabel(x)).ToList();
                 bool hasModifications = false;
                 Commit last = null;
-                string token = Guid.NewGuid().ToString();
+                string token = syncHistory.CreateNewToken();
                 foreach (var localCommit in localCommits) {
                     string localProjectPath = Path.Combine(localGitDir, localCommit.Track.ProjectPath);
                     DirectoryHelper.DeleteDirectory(localProjectPath);

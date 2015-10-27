@@ -70,7 +70,6 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="CommentWrapper.cs" />
-    <Compile Include="CommentsGenerator.cs" />
     <Compile Include="DirectoryHelper.cs" />
     <Compile Include="CommitItem.cs" />
     <Compile Include="Config.cs" />

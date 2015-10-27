@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using Polenter.Serialization;
 
 namespace DXVcs2Git.Core.Serialization {

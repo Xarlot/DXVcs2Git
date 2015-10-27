@@ -25,6 +25,10 @@ namespace DXVcs2Git.Core.Serialization {
         public SyncHistoryItem GetHead() {
             return history.Items.LastOrDefault();
         }
+        public string CreateNewToken() {
+            int token = this.history.Items.Max(x => Convert.ToInt32(x.Token));
+            return (token + 1).ToString();
+        }
         public void Save() {
             try {
                 var repo = DXVcsConnectionHelper.Connect(server);
