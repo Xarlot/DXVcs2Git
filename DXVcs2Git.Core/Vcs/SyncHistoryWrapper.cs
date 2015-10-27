@@ -26,7 +26,12 @@ namespace DXVcs2Git.Core.Serialization {
             return history.Items.LastOrDefault();
         }
         public string CreateNewToken() {
-            int token = this.history.Items.Max(x => Convert.ToInt32(x.Token));
+            int token = this.history.Items.Max(x => {
+                int result;
+                if (Int32.TryParse(x.Token, out result))
+                    return result;
+                return 0;
+            });
             return (token + 1).ToString();
         }
         public void Save() {
