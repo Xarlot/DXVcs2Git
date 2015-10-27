@@ -7,12 +7,12 @@ namespace DXVcs2Git.Core.Serialization {
         readonly SyncHistory history;
         readonly string vcsHistoryPath;
         readonly string localHistoryPath;
-        readonly string server;
-        public SyncHistoryWrapper(SyncHistory history, string server, string vcsHistoryPath, string localHistoryPath) {
+        readonly DXVcsWrapper vcsWrapper;
+        public SyncHistoryWrapper(SyncHistory history, DXVcsWrapper vcsWrapper, string vcsHistoryPath, string localHistoryPath) {
             this.history = history;
             this.vcsHistoryPath = vcsHistoryPath;
             this.localHistoryPath = localHistoryPath;
-            this.server = server;
+            this.vcsWrapper = vcsWrapper;
         }
         public void Add(string sha, long timeStamp, string token, SyncHistoryStatus status = SyncHistoryStatus.Success) {
             history.Items.Add(new SyncHistoryItem() {
@@ -36,10 +36,9 @@ namespace DXVcs2Git.Core.Serialization {
         }
         public void Save() {
             try {
-                var repo = DXVcsConnectionHelper.Connect(server);
-                repo.CheckOutFile(vcsHistoryPath, localHistoryPath, string.Empty);
+                this.vcsWrapper.CheckOutFile(this.vcsHistoryPath, this.localHistoryPath, true, string.Empty);
                 SyncHistory.Serialize(history, localHistoryPath);
-                repo.CheckInFile(vcsHistoryPath, localHistoryPath, string.Empty);
+                this.vcsWrapper.CheckInFile(vcsHistoryPath, localHistoryPath, string.Empty);
             }
             catch (Exception ex) {
                 Log.Error($"Save history to {vcsHistoryPath} failed.", ex);

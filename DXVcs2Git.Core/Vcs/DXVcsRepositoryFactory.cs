@@ -11,7 +11,7 @@ namespace DXVcs2Git.DXVcs {
         static DXVcsRepositoryFactory() {
         }
 
-        public static IDXVcsRepository Create(string serviceUrl) {
+        public static IDXVcsRepository Create(string serviceUrl, string user, string password) {
             if (string.IsNullOrEmpty(serviceUrl))
                 throw new ArgumentException("serviceUrl");
             if (serviceProvider == null) {
@@ -22,7 +22,7 @@ namespace DXVcs2Git.DXVcs {
                 }
             }
 
-            return ProcessWithAssemblyLoadingGuard<IDXVcsRepository>(() => new DXVcsRepository(serviceUrl));
+            return ProcessWithAssemblyLoadingGuard<IDXVcsRepository>(() => new DXVcsRepository(serviceUrl, user, password));
         }
         static void CreateServiceProvider() {
             var domainSetup = new AppDomainSetup();

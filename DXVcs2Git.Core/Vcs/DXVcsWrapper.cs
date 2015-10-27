@@ -7,12 +7,16 @@ using DXVcs2Git.Core;
 namespace DXVcs2Git.DXVcs {
     public class DXVcsWrapper {
         readonly string server;
-        public DXVcsWrapper(string server) {
+        readonly string user;
+        readonly string password;
+        public DXVcsWrapper(string server, string user, string password) {
             this.server = server;
+            this.user = user;
+            this.password = password;
         }
         public bool CheckOutFile(string vcsPath, string localPath, bool dontGetLocalCopy, string comment) {
             try {
-                var repo = DXVcsConnectionHelper.Connect(server);
+                var repo = DXVcsConnectionHelper.Connect(server, this.user, this.password);
                 if (repo.IsUnderVss(vcsPath)) {
                     repo.CheckOutFile(vcsPath, localPath, comment, dontGetLocalCopy);
                 }
@@ -29,7 +33,7 @@ namespace DXVcs2Git.DXVcs {
         }
         public bool CheckInFile(string vcsPath, string localPath, string comment) {
             try {
-                var repo = DXVcsConnectionHelper.Connect(server);
+                var repo = DXVcsConnectionHelper.Connect(server, this.user, this.password);
                 if (repo.IsUnderVss(vcsPath) && repo.IsCheckedOutByMe(vcsPath)) {
                     repo.CheckInFile(vcsPath, localPath, comment);
                 }
@@ -46,7 +50,7 @@ namespace DXVcs2Git.DXVcs {
         }
         public bool UndoCheckoutFile(string vcsPath) {
             try {
-                var repo = DXVcsConnectionHelper.Connect(server);
+                var repo = DXVcsConnectionHelper.Connect(server, this.user, this.password);
                 if (repo.IsUnderVss(vcsPath) && repo.IsCheckedOutByMe(vcsPath)) {
                     repo.UndoCheckout(vcsPath, repo.GetFileWorkingPath(vcsPath));
                 }
@@ -93,7 +97,7 @@ namespace DXVcs2Git.DXVcs {
         }
         bool CheckOutCreateFile(string vcsPath, string localPath, string comment) {
             try {
-                var repo = DXVcsConnectionHelper.Connect(server);
+                var repo = DXVcsConnectionHelper.Connect(server, this.user, this.password);
                 if (!repo.IsUnderVss(vcsPath))
                     repo.AddFile(vcsPath, new byte[0], comment);
                 repo.CheckOutFile(vcsPath, localPath, comment, true);
@@ -106,7 +110,7 @@ namespace DXVcs2Git.DXVcs {
         }
         bool CheckOutDeleteFile(string vcsPath, string localPath, string comment) {
             try {
-                var repo = DXVcsConnectionHelper.Connect(server);
+                var repo = DXVcsConnectionHelper.Connect(server, this.user, this.password);
                 if (!repo.IsUnderVss(vcsPath))
                     return true;
                 if (repo.IsCheckedOut(vcsPath) && !repo.IsCheckedOutByMe(vcsPath)) {
@@ -123,7 +127,7 @@ namespace DXVcs2Git.DXVcs {
         }
         bool CheckInDeletedFile(string vcsPath, string localPath, string comment) {
             try {
-                var repo = DXVcsConnectionHelper.Connect(server);
+                var repo = DXVcsConnectionHelper.Connect(server, this.user, this.password);
                 if (!repo.IsUnderVss(vcsPath))
                     return true;
                 if (repo.IsCheckedOut(vcsPath) && !repo.IsCheckedOutByMe(vcsPath)) {
@@ -142,7 +146,7 @@ namespace DXVcs2Git.DXVcs {
         }
         bool CheckOutMoveFile(string vcsPath, string newVcsPath, string localPath, string newLocalPath, string comment) {
             try {
-                var repo = DXVcsConnectionHelper.Connect(server);
+                var repo = DXVcsConnectionHelper.Connect(server, this.user, this.password);
                 if (!repo.IsUnderVss(vcsPath)) {
                     Log.Error($"Move file failed. Can`t locate {vcsPath}.");
                     return false;
@@ -161,7 +165,7 @@ namespace DXVcs2Git.DXVcs {
         }
         bool CheckInMovedFile(string vcsPath, string newVcsPath, string localPath, string newLocalPath, string comment) {
             try {
-                var repo = DXVcsConnectionHelper.Connect(server);
+                var repo = DXVcsConnectionHelper.Connect(server, this.user, this.password);
                 if (!repo.IsUnderVss(vcsPath)) {
                     Log.Error($"Move file failed. Can`t locate {vcsPath}.");
                     return false;
@@ -212,7 +216,7 @@ namespace DXVcs2Git.DXVcs {
         }
         public void CreateLabel(string vcsPath, string labelName, string comment = "") {
             try {
-                var repo = DXVcsConnectionHelper.Connect(server);
+                var repo = DXVcsConnectionHelper.Connect(server, this.user, this.password);
                 repo.CreateLabel(vcsPath, labelName, comment);
             }
             catch (Exception ex) {
@@ -231,8 +235,84 @@ namespace DXVcs2Git.DXVcs {
         public bool ProcessUndoChechout(IEnumerable<SyncItem> items) {
             return true;
         }
-        public HistoryItem FindCommit(TrackBranch branch, Func<object, bool> func) {
-            return HistoryGenerator.FindCommit(server, branch, func);
+        public IList<HistoryItem> GenerateHistory(TrackBranch branch, DateTime from) {
+            try {
+                var repo = DXVcsConnectionHelper.Connect(server, user, password);
+                var history = Enumerable.Empty<HistoryItem>();
+                foreach (var trackItem in branch.TrackItems) {
+                    var historyForItem = repo.GetProjectHistory(trackItem.Path, true, from).Select(x =>
+                        new HistoryItem() {
+                            ActionDate = x.ActionDate,
+                            Comment = x.Comment,
+                            Label = x.Label,
+                            Message = x.Message,
+                            Name = x.Name,
+                            User = x.User,
+                            Track = trackItem,
+                        });
+                    history = history.Concat(historyForItem);
+                }
+                return history.ToList();
+            }
+            catch (Exception ex) {
+                Log.Error("HistoryGenerator.GenerateHistory failed.", ex);
+                throw;
+            }
+        }
+        public IList<CommitItem> GenerateCommits(IEnumerable<HistoryItem> historyItems) {
+            var grouped = historyItems.AsParallel().GroupBy(x => x.ActionDate);
+            var commits = grouped.Select(x => new CommitItem() { Items = x.ToList(), TimeStamp = x.First().ActionDate }).OrderBy(x => x.TimeStamp);
+            var totalCommits = commits.ToList();
+            int index = totalCommits.FindIndex(x => x.Items.Any(y => y.Message.ToLowerInvariant() == "create"));
+            return totalCommits.Skip(index).ToList();
+        }
+        public void GetProject(string server, string vcsPath, string localPath, DateTime timeStamp) {
+            try {
+                var repo = DXVcsConnectionHelper.Connect(server, this.user, this.password);
+                repo.GetProject(vcsPath, localPath, timeStamp);
+                Log.Message($"HistoryGenerator.GetProject performed for {vcsPath}");
+            }
+            catch (Exception ex) {
+                Log.Error("HistoryGenerator.GetProject failed.", ex);
+                throw;
+            }
+        }
+        public IEnumerable<CommitItem> GetCommits(IList<HistoryItem> items) {
+            var changedProjects = items.GroupBy(x => x.Track.Path);
+            foreach (var project in changedProjects) {
+                var changeSet = project.GroupBy(x => x.User);
+                foreach (var changeItem in changeSet) {
+                    CommitItem item = new CommitItem();
+                    var first = changeItem.First();
+                    item.Author = first.User;
+                    item.Items = changeItem.ToList();
+                    item.Track = first.Track;
+                    item.TimeStamp = first.ActionDate;
+                    yield return item;
+                }
+            }
+        }
+        public string GetFile(string historyPath, string local) {
+            try {
+                var repo = DXVcsConnectionHelper.Connect(server, this.user, this.password);
+                string localPath = Path.GetTempFileName();
+                repo.GetLatestFileVersion(historyPath, localPath);
+                return localPath;
+            }
+            catch (Exception) {
+                Log.Error($"Loading sync history from {historyPath} failed");
+                return null;
+            }
+        }
+        public HistoryItem FindCommit(TrackBranch branch, Func<HistoryItem, bool> func) {
+            try {
+                var history = GenerateHistory(branch, DateTime.Now.AddDays(-1));
+                return history.Reverse().FirstOrDefault(func);
+            }
+            catch (Exception ex) {
+                Log.Error($"Finc commit failed", ex);
+                throw;
+            }
         }
     }
 }

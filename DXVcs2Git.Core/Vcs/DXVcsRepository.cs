@@ -10,17 +10,20 @@ using DXVCSClient;
 namespace DXVcs2Git.DXVcs {
     class DXVcsRepository : IDXVcsRepository {
         readonly string serviceUrl;
+        readonly string user ;
+        readonly string password;
         readonly DXVcsServiceProvider serviceProvider;
-        readonly FileSystem fileSystem;
+        FileSystem fileSystem = new FileSystem();
 
         IDXVCSService Service {
-            get { return serviceProvider.GetService(serviceUrl); }
+            get { return serviceProvider.GetService(serviceUrl, this.user, this.password); }
         }
 
-        internal DXVcsRepository(string serviceUrl) {
+        internal DXVcsRepository(string serviceUrl, string user, string password) {
             this.serviceProvider = new DXVcsServiceProvider();
             this.serviceUrl = serviceUrl;
-            fileSystem = new FileSystem();
+            this.user = user;
+            this.password = password;
 
             ValidateService();
         }
@@ -656,7 +659,7 @@ namespace DXVcs2Git.DXVcs {
             }
         }
         void RenameFile(string vcsPath, string newFileName, string projectPath, string comment) {
-            var oldHistory = GetFileHistory(vcsPath);
+            DateTime time = DateTime.Now;
             try {
                 Service.RenameFile(vcsPath, newFileName);
             }
@@ -666,9 +669,8 @@ namespace DXVcs2Git.DXVcs {
                 Service.RenameFile(vcsPath, newFileName);
             }
             string newVcsFileName = $"{projectPath}/{newFileName}";
-            var newHistory = GetFileHistory(newVcsFileName);
-            var changeSet = newHistory.Where(x => x.Version > oldHistory.Last().Version);
-            foreach (var item in changeSet)
+            var newHistory = GetProjectHistory(projectPath, true, time);
+            foreach (var item in newHistory)
                 Service.SetComment(newVcsFileName, item.Version, comment);
         }
         void RemoveProjectIfNeeded(string oldProjectPath) {

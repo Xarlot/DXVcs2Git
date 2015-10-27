@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Net;
 using System.ServiceModel;
 using System.ServiceModel.Description;
 using DXVCS;
@@ -11,11 +12,13 @@ namespace DXVcs2Git.DXVcs {
             protected override void ApplyConfiguration(string configurationName) {
             }
         }
-        public IDXVCSService GetService(string serviceUrl) {
+        public IDXVCSService GetService(string serviceUrl, string user = "", string password = "") {
             EndpointAddress myEndpointAddress = new EndpointAddress(new Uri(serviceUrl), new SpnEndpointIdentity(String.Empty));
             ServiceEndpoint point = GZipMessageEncodingBindingElement.CreateEndpoint(myEndpointAddress);
             ChannelFactory<IDXVCSService> factory = new Factory(point);
             factory.Credentials.Windows.AllowedImpersonationLevel = System.Security.Principal.TokenImpersonationLevel.Identification;
+            if (!string.IsNullOrEmpty(user) && !string.IsNullOrEmpty(password))
+                factory.Credentials.Windows.ClientCredential = new NetworkCredential(user, password);
             IDXVCSService newService = factory.CreateChannel();
             IContextChannel newChannel = (IContextChannel)newService;
             newChannel.OperationTimeout = TimeSpan.FromSeconds(10);
