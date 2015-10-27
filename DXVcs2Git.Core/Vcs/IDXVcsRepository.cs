@@ -5,7 +5,7 @@ using DXVCS;
 namespace DXVcs2Git.DXVcs {
     public interface IDXVcsRepository {
         IList<ProjectHistoryInfo> GetProjectHistory(string vcsFile, bool resursive, DateTime? from = null, DateTime? to = null);
-        FileVersionInfo[] GetFileHistory(string vcsFile, out string fileName);
+        FileVersionInfo[] GetFileHistory(string vcsFile);
         FileDiffInfo GetFileDiffInfo(string vcsFile, SpacesAction spacesAction = SpacesAction.IgnoreAll);
         FileDiffInfo GetFileDiffInfo(string vcsFile, Action<int, int> progressAction, SpacesAction spacesAction);
         void GetProject(string vcsPath, string localPath, DateTime timeStamp);

@@ -32,13 +32,9 @@ namespace DXVcs2Git.DXVcs {
             if (!service.IsCorrectUser(out isAdmin))
                 throw new ApplicationException("Invalid user name");
         }
-
-        public FileVersionInfo[] GetFileHistory(string vcsFile, out string fileName) {
+        public FileVersionInfo[] GetFileHistory(string vcsFile) {
             if (string.IsNullOrEmpty(vcsFile))
                 throw new ArgumentException("vcsFile");
-
-            fileName = Path.GetFileName(vcsFile);
-
             var fileHistory = new FileHistory(vcsFile, Service);
             var result = new List<FileVersionInfo>(fileHistory.Count);
             result.AddRange(fileHistory);
@@ -678,13 +674,20 @@ namespace DXVcs2Git.DXVcs {
         }
         void MoveFileInternal(string vcsPath, string newProjectPath, string comment) {
             string[] exist;
+            var oldHistory = GetFileHistory(vcsPath);
+
             Service.MoveFiles(new[] {vcsPath}, newProjectPath, out exist);
             if (exist.Length > 0) {
                 if (!exist.All(x => SafeDeleteFile(GetProjectPath(x), GetFileName(x))))
                     throw new ArgumentException("move file failed");
                 Service.MoveFiles(new[] {vcsPath}, newProjectPath, out exist);
             }
-            Service.SetComment(vcsPath, -1, comment);
+
+            string newFilePath = $@"{newProjectPath}/{GetFileName(vcsPath)}";
+            var newHistory = GetFileHistory(newFilePath);
+            var changeSet = newHistory.Where(x => x.Version > oldHistory.Last().Version);
+            foreach (var item in changeSet)
+                Service.SetComment(vcsPath, item.Version, comment);
         }
         string GetProjectPath(string vcsPath) {
             return Path.GetDirectoryName(vcsPath).Replace("\\", "/");
