@@ -1,10 +1,11 @@
 ﻿using System;
 using System.Linq;
-using System.Text;
 using System.Text.RegularExpressions;
 
 namespace DXVcs2Git.Core {
-    public abstract class CommentsGenerator {
+    public class CommentsGenerator {
+        string commentFormat = @"[a:{0} t:{1}]";
+
         const string DefaultStart = "dxvcs2gitservice ";
         const string sha = "sha:";
         const string branch = "branch:";
@@ -80,32 +81,7 @@ namespace DXVcs2Git.Core {
             return match.Value;
         }
         public string ConvertToString(CommentWrapper comment) {
-            StringBuilder sb = new StringBuilder();
-            ConvertToStringInternal(comment, sb);
-            return sb.ToString();
-        }
-        protected virtual void ConvertToStringInternal(CommentWrapper comment, StringBuilder sb) {
-        }
-        protected static void WriteSha(CommentWrapper comment, StringBuilder sb) {
-            if (!string.IsNullOrEmpty(comment.Sha))
-                sb.AppendLine(DefaultStart + sha + " " + comment.Sha);
-        }
-        protected static void WriteTimestamp(CommentWrapper comment, StringBuilder sb) {
-            if (!string.IsNullOrEmpty(comment.TimeStamp))
-                sb.AppendLine(DefaultStart + timeStamp + " " + comment.TimeStamp);
-        }
-        protected static void WriteToken(CommentWrapper comment, StringBuilder sb) {
-            sb.AppendLine(DefaultStart + token + " " + comment.Token);
-        }
-        protected static void WriteBranch(CommentWrapper comment, StringBuilder sb) {
-            sb.AppendLine(DefaultStart + branch + " " + comment.Branch);
-        }
-        protected static void WriteAuthor(CommentWrapper comment, StringBuilder sb) {
-            sb.AppendLine(DefaultStart + author + " " + comment.Author);
-        }
-        protected static void WriteComment(CommentWrapper comment, StringBuilder sb) {
-            if (!string.IsNullOrEmpty(comment.Comment))
-                sb.AppendLine(comment.Comment);
+            return string.Format(this.commentFormat, comment.Author, comment.Token);
         }
     }
 }
