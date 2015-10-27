@@ -649,30 +649,42 @@ namespace DXVcs2Git.DXVcs {
             string newProjectPath = GetProjectPath(newVcsPath);
             if (oldProjectPath != newProjectPath) {
                 AddProject(newProjectPath, comment);
-                string[] exist;
-                Service.MoveFiles(new[] { vcsPath }, newProjectPath, out exist);
-                if (exist.Length > 0)
-                    if (!exist.All(x => SafeDeleteFile(GetProjectPath(x), GetFileName(x))))
-                        throw new ArgumentException("move file failed");
-                    else
-                        Service.MoveFiles(new[] { vcsPath }, newProjectPath, out exist);
-                var projectFiles = Service.GetFiles(oldProjectPath);
-                if (projectFiles.Length == 0)
-                    DeleteProject(oldProjectPath);
+                MoveFileInternal(vcsPath, newProjectPath, comment);
+                RemoveProjectIfNeeded(oldProjectPath);
                 return;
             }
             string oldFileName = GetFileName(vcsPath);
             string newFileName = GetFileName(newVcsPath);
             if (oldFileName != newFileName) {
-                try {
-                    Service.RenameFile(vcsPath, newFileName);
-                }
-                catch (DXVCSFileAlreadyExistsException) {
-                    if (!SafeDeleteFile(newProjectPath, newFileName))
-                        throw;
-                    Service.RenameFile(vcsPath, newFileName);
-                }
+                RenameFile(vcsPath, newFileName, newProjectPath, comment);
             }
+        }
+        void RenameFile(string vcsPath, string newFileName, string projectPath, string comment) {
+            try {
+                Service.RenameFile(vcsPath, newFileName);
+            }
+            catch (DXVCSFileAlreadyExistsException) {
+                if (!SafeDeleteFile(projectPath, newFileName))
+                    throw;
+                Service.RenameFile(vcsPath, newFileName);
+            }
+            string newVcsFileName = $"{projectPath}/{newFileName}";
+            Service.SetComment(newVcsFileName, -1, comment);
+        }
+        void RemoveProjectIfNeeded(string oldProjectPath) {
+            var projectFiles = Service.GetFiles(oldProjectPath);
+            if (projectFiles.Length == 0)
+                DeleteProject(oldProjectPath);
+        }
+        void MoveFileInternal(string vcsPath, string newProjectPath, string comment) {
+            string[] exist;
+            Service.MoveFiles(new[] {vcsPath}, newProjectPath, out exist);
+            if (exist.Length > 0) {
+                if (!exist.All(x => SafeDeleteFile(GetProjectPath(x), GetFileName(x))))
+                    throw new ArgumentException("move file failed");
+                Service.MoveFiles(new[] {vcsPath}, newProjectPath, out exist);
+            }
+            Service.SetComment(vcsPath, -1, comment);
         }
         string GetProjectPath(string vcsPath) {
             return Path.GetDirectoryName(vcsPath).Replace("\\", "/");
