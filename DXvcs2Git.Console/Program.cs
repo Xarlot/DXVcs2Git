@@ -19,8 +19,8 @@ using User = DXVcs2Git.Core.User;
 
 namespace DXVcs2Git.Console {
     internal class Program {
-        const string password = "DKG % @S1sp";
-        const string gitlabauthtoken = "X6XV2G_ycz_U4pi4m93K";
+        const string password = @"5O5+NitKdsK8+XapL28jIsw7GxrElr3asn5S0S1G8JA=";
+        const string gitlabauthtoken = @"DidEcvpG/IxWQqDmZOFmez8pI94kuEoHSFzkxbzywxygrtiC3/2mf6VLu3hcZMX8";
         const string AutoSyncBranch = "autosync branch: {0}";
         const string repoPath = "repo";
         const string gitServer = @"http://litvinov-lnx";
@@ -44,16 +44,19 @@ namespace DXVcs2Git.Console {
 
             string gitRepoPath = clo.Repo;
             string username = clo.Login;
-            string password = Program.password;
+            string cipherKey = clo.Password;
+            string password = EncryptionHelper.Decrypt(Program.password, cipherKey);
+            string gitlabauthtoken = EncryptionHelper.Decrypt(Program.gitlabauthtoken, cipherKey);
             WorkMode workMode = clo.WorkMode;
             string branchName = clo.Branch;
             string trackerPath = clo.Tracker;
             DateTime from = clo.From;
 
+
             TrackBranch branch = FindBranch(branchName, trackerPath);
             if (branch == null)
                 return 1;
-            DXVcsWrapper vcsWrapper = new DXVcsWrapper(vcsServer);
+            DXVcsWrapper vcsWrapper = new DXVcsWrapper(vcsServer, defaultUserName, password);
 
             string historyPath = GetVcsSyncHistory(vcsWrapper, branch.HistoryPath);
             if (historyPath == null)
@@ -86,7 +89,7 @@ namespace DXVcs2Git.Console {
                     return result;
             }
             if (workMode.HasFlag(WorkMode.mergerequests)) {
-                int result = ProcessMergeRequests(vcsWrapper, gitWrapper, registeredUsers, gitRepoPath, localGitDir, clo.Branch, clo.Tracker, syncHistory);
+                int result = ProcessMergeRequests(vcsWrapper, gitWrapper, gitLabWrapper, registeredUsers, gitRepoPath, localGitDir, clo.Branch, clo.Tracker, syncHistory);
                 if (result != 0)
                     return result;
             }
@@ -193,8 +196,7 @@ namespace DXVcs2Git.Console {
             var chunks = message.Split(new[] { '\n' }, StringSplitOptions.RemoveEmptyEntries);
             return chunks.Any(x => x.StartsWith(string.Format(AutoSyncBranch, branchName)));
         }
-        static int ProcessMergeRequests(DXVcsWrapper vcsWrapper, GitWrapper gitWrapper, RegisteredUsers users, string gitRepoPath, string localGitDir, string branchName, string tracker, SyncHistoryWrapper syncHistory) {
-            GitLabWrapper gitLabWrapper = new GitLabWrapper(gitServer, gitlabauthtoken);
+        static int ProcessMergeRequests(DXVcsWrapper vcsWrapper, GitWrapper gitWrapper, GitLabWrapper gitLabWrapper, RegisteredUsers users, string gitRepoPath, string localGitDir, string branchName, string tracker, SyncHistoryWrapper syncHistory) {
             var project = gitLabWrapper.FindProject(gitRepoPath);
             TrackBranch branch = GetBranch(branchName, tracker);
             if (branch == null) {

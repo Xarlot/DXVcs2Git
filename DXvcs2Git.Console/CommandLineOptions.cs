@@ -21,6 +21,8 @@ namespace DXVcs2Git.Console {
         public int CommitsCount { get; set; }
         [Option('l', "login", Required = true, HelpText = "Login to git master account")]
         public string Login { get; set; }
+        [Option('p', "password", Required = true, HelpText = "Cipher key to decrypt password")]
+        public string Password { get; set; }
         [Option('d', "dir", HelpText = "Path to local git repo")]
         public string LocalFolder { get; set; }
         [Option('t', "tracker", Required = true, HelpText = "Path to config with items to track")]

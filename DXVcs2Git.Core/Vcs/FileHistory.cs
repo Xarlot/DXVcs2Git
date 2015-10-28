@@ -42,9 +42,10 @@ namespace DXVcs2Git.DXVcs {
                 if (!previousIsBranch) {
                     byte[] revisionData = DXVCSHelpers.TryToDecompressData(data[i]);
                     int version;
-                    if (Diff.IsDiffs(revisionData, out version)) {
+                    bool binDiff;
+                    if (Diff.IsDiffs(revisionData, out version, out binDiff)) {
                         byte[] curSplitter;
-                        DiffByteItem[] diffs = Diff.BytesToDiffs(revisionData, out curSplitter);
+                        DiffByteItem[] diffs = Diff.BytesToDiffs(revisionData, binDiff, out curSplitter);
                         revisionData = Diff.GetDataFromDiff(previousData, diffs, curSplitter);
                     }
                     previousData = revisionData;
