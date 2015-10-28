@@ -203,7 +203,7 @@ namespace DXVcs2Git.Console {
                 Log.Error($"Specified branch {branchName} not found in track file.");
                 return 1;
             }
-            var mergeRequests = gitLabWrapper.GetMergeRequests(project, branchName).ToList();
+            var mergeRequests = gitLabWrapper.GetMergeRequests(project, branchName).Where(x => x.Assignee?.Name == defaultUserName).ToList();
             if (!mergeRequests.Any()) {
                 Log.Message("Zero registered merge requests.");
                 return 0;
@@ -410,7 +410,7 @@ namespace DXVcs2Git.Console {
         }
         static CommentWrapper CalcComment(MergeRequest mergeRequest, TrackBranch branch, string autoSyncToken) {
             CommentWrapper comment = new CommentWrapper();
-            comment.Author = mergeRequest.Author.Name;
+            comment.Author = mergeRequest.Author.Username;
             comment.Branch = branch.Name;
             comment.Token = autoSyncToken;
             comment.Comment = CalcCommentForMergeRequest(mergeRequest);
