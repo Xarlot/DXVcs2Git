@@ -64,7 +64,7 @@ namespace DXVcs2Git.Console {
 
             SyncHistoryWrapper syncHistory = new SyncHistoryWrapper(history, vcsWrapper, branch.HistoryPath, historyPath);
             var head = syncHistory.GetHead();
-            if (head.Status == SyncHistoryStatus.Failed) {
+            if (head != null && head.Status == SyncHistoryStatus.Failed) {
                 Log.Error("Failed sync detected. Repair repo.");
                 return 1;
             }
@@ -111,6 +111,11 @@ namespace DXVcs2Git.Console {
             }
         }
         static int ProcessInitializeRepo(DXVcsWrapper vcsWrapper, GitWrapper gitWrapper, RegisteredUsers users, string gitRepoPath, string localGitDir, TrackBranch branch, SyncHistoryWrapper syncHistory, DateTime from) {
+            var head = syncHistory.GetHead();
+            if (head != null) {
+                Log.Message($"Branch {branch.Name} initialized already.");
+                return 0;
+            }
             var commit = gitWrapper.FindCommit(branch.Name, x => IsAutoSyncComment(branch.Name, x.Message));
             if (commit != null) {
                 Log.Message($"Branch {branch.Name} initialized already.");

@@ -1,0 +1,1 @@
+-l dxvcs2gitservice -b 2015.2 -r http://litvinov-lnx/tester/XPF.git -m all -c 15 -d z:\repo -t trackconfig_testxpf.config -f 9/22/2015
