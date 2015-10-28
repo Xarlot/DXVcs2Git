@@ -23,5 +23,6 @@ namespace DXVcs2Git.DXVcs {
         void CreateLabel(string vcsPath, string labelName, string comment);
         void DeleteFile(string vcsPath);
         void MoveFile(string vcsPath, string newVcsPath, string comment);
+        UserInfo[] GetUsers();
     }
 }

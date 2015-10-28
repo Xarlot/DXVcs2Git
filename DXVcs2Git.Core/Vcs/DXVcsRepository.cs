@@ -4,6 +4,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Threading;
+using DXVcs2Git.Core;
 using DXVCS;
 using DXVCSClient;
 
@@ -13,7 +14,7 @@ namespace DXVcs2Git.DXVcs {
         readonly string user ;
         readonly string password;
         readonly DXVcsServiceProvider serviceProvider;
-        FileSystem fileSystem = new FileSystem();
+        readonly FileSystem fileSystem = new FileSystem();
 
         IDXVCSService Service {
             get { return serviceProvider.GetService(serviceUrl, this.user, this.password); }
@@ -659,7 +660,8 @@ namespace DXVcs2Git.DXVcs {
             }
         }
         void RenameFile(string vcsPath, string newFileName, string projectPath, string comment) {
-            DateTime time = DateTime.Now;
+            DateTime time = DateTime.UtcNow.AddDays(-1);
+            var oldHistory = GetProjectHistory(projectPath, true, time);
             try {
                 Service.RenameFile(vcsPath, newFileName);
             }
@@ -669,7 +671,8 @@ namespace DXVcs2Git.DXVcs {
                 Service.RenameFile(vcsPath, newFileName);
             }
             string newVcsFileName = $"{projectPath}/{newFileName}";
-            var newHistory = GetProjectHistory(projectPath, true, time);
+            var lastRecord = oldHistory.LastOrDefault();
+            var newHistory = GetProjectHistory(projectPath, true, time).Where(x => x.ActionDate > lastRecord.ActionDate);
             foreach (var item in newHistory)
                 Service.SetComment(newVcsFileName, item.Version, comment);
         }
@@ -789,6 +792,9 @@ namespace DXVcs2Git.DXVcs {
             if (labels.Any(x => x.Name == labelName))
                 Service.DeleteLabel(vcsPath, labelName);
             Service.CreateLabel(vcsPath, labelName, comment);
+        }
+        public UserInfo[] GetUsers() {
+            return Service.GetUsers();
         }
     }
 }

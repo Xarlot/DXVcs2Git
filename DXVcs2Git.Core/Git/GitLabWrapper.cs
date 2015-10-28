@@ -1,24 +1,22 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using NGitLab;
 using NGitLab.Models;
+using User = DXVcs2Git.Core.User;
 
 namespace DXVcs2Git.Git {
     public class GitLabWrapper {
         readonly GitLabClient client;
-        readonly string branch;
-        public GitLabWrapper(string server, string branch, string token) {
+        public GitLabWrapper(string server, string token) {
             client = GitLabClient.Connect(server, token);
-            this.branch = branch;
         }
         public Project FindProject(string project) {
             return client.Projects.Accessible.FirstOrDefault(x => x.HttpUrl == project);
         }
-        public IEnumerable<MergeRequest> GetMergeRequests(Project project) {
+        public IEnumerable<MergeRequest> GetMergeRequests(Project project, string branch) {
             var mergeRequestsClient = client.GetMergeRequest(project.Id);
             return mergeRequestsClient.AllInState(MergeRequestState.opened).Where(x => x.TargetBranch == branch);
-        }
-        public void RemoveMergeRequest(MergeRequest mergeRequest) {
         }
         public IEnumerable<MergeRequestFileData> GetMergeRequestChanges(MergeRequest mergeRequest) {
             var mergeRequestsClient = client.GetMergeRequest(mergeRequest.ProjectId);
@@ -36,6 +34,15 @@ namespace DXVcs2Git.Git {
         public MergeRequest ReopenMergeRequest(MergeRequest mergeRequest, string autoMergeFailedComment) {
             var mergeRequestsClient = client.GetMergeRequest(mergeRequest.ProjectId);
             return mergeRequestsClient.Update(mergeRequest.Id, new MergeRequestUpdate() { NewState = "reopen", Description = autoMergeFailedComment });
+        }
+        public IEnumerable<User> GetUsers() {
+            var usersClient = this.client.Users;
+            return usersClient.All.Select(x => new User(x.Username, x.Email, x.Name));
+        }
+        public void RegisterUser(User user) {
+            var userClient = this.client.Users;
+            var userUpsert = new UserUpsert() {Username = user.UserName, Name = user.DisplayName, Email = user.Email, Password = new Guid().ToString()};
+            userClient.Create(userUpsert);
         }
     }
 }

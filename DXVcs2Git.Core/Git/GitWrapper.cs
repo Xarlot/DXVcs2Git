@@ -1,17 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics.Tracing;
-using System.Globalization;
-using System.IO;
 using System.Linq;
-using System.Reflection.Emit;
 using DXVcs2Git.Core;
 using LibGit2Sharp;
-using LibGit2Sharp.Core;
-using NGitLab.Models;
 using Branch = LibGit2Sharp.Branch;
 using Commit = LibGit2Sharp.Commit;
 using Tag = LibGit2Sharp.Tag;
+using User = DXVcs2Git.Core.User;
 
 namespace DXVcs2Git {
     public class GitWrapper : IDisposable {
@@ -57,7 +52,7 @@ namespace DXVcs2Git {
             var network = string.IsNullOrEmpty(remote) ? repo.Network.Remotes.FirstOrDefault() : this.repo.Network.Remotes[remote];
             repo.Fetch(network.Name, options);
         }
-        public MergeResult Pull(string user, string branchName) {
+        public MergeResult Pull(User user, string branchName) {
             Branch head = this.repo.Branches[branchName];
             if (!head.IsTracking)
                 throw new LibGit2SharpException("There is no tracking information for the current branch.");
@@ -67,18 +62,21 @@ namespace DXVcs2Git {
             MergeOptions options = new MergeOptions();
             options.MergeFileFavor = MergeFileFavor.Theirs;
             options.FileConflictStrategy = CheckoutFileConflictStrategy.Theirs;
-            return this.repo.MergeFetchedRefs(new Signature(user, "test@mail.com", DateTimeOffset.Now), options);
+            return this.repo.MergeFetchedRefs(ToSignature(user), options);
+        }
+        Signature ToSignature(User user, DateTimeOffset? dateTime = null) {
+            return new Signature(user.UserName, user.Email, dateTime ?? DateTimeOffset.Now);
         }
         public void Stage(string path) {
             repo.Stage(path);
             Log.Message($"Git stage performed.");
         }
-        public Commit Commit(string comment, string user, string committerName, DateTime timeStamp, bool allowEmpty = true) {
+        public Commit Commit(string comment, User user, string committerName, DateTime timeStamp, bool allowEmpty = true) {
             CommitOptions commitOptions = new CommitOptions();
             commitOptions.AllowEmptyCommit = allowEmpty;
             DateTime localTime = timeStamp.ToLocalTime();
-            var author = new Signature(user, "test@mail.com", localTime);
-            var comitter = new Signature(committerName, "test@mail.com", localTime);
+            var author = ToSignature(user, localTime);
+            var comitter = ToSignature(user, localTime);
             var commit = repo.Commit(comment, author, comitter, commitOptions);
             Log.Message($"Git commit performed for {user} {localTime}");
             return commit;
@@ -135,7 +133,7 @@ namespace DXVcs2Git {
         public Commit FindCommit(string branchName, string comment) {
             return FindCommit(branchName, x => x.Message?.StartsWith(comment) ?? false);
         }
-        public DateTime CalcLastCommitDate(string branchName, string user) {
+        public DateTime CalcLastCommitDate(string branchName, User user) {
             var tags = repo.Tags.Where(x => {
                 bool isAnnotated = x.IsAnnotated;
                 return isAnnotated && x.FriendlyName.ToLowerInvariant().StartsWith("dxvcs2gitservice_sync_");
@@ -155,16 +153,16 @@ namespace DXVcs2Git {
                 return new DateTime(lastSyncTagTicks);
             return GetLastCommitTime(branchName, user);
         }
-        DateTime GetLastCommitTime(string branchName, string user) {
+        DateTime GetLastCommitTime(string branchName, User user) {
             var timeStamp = GetLastCommitTimeStamp(branchName, user);
             if (timeStamp != null)
                 return timeStamp.Value;
             return GuessLastCommitTime(branchName, user);
         }
-        DateTime? GetLastCommitTimeStamp(string branchName, string user) {
+        DateTime? GetLastCommitTimeStamp(string branchName, User user) {
             var branch = this.repo.Branches[branchName];
             var commit = branch.Commits.FirstOrDefault();
-            if (commit.Author.Name == user)
+            if (commit.Author.Name == user.UserName)
                 return GetCommitTimeStampFromComment(commit);
             return null;
         }
@@ -175,9 +173,9 @@ namespace DXVcs2Git {
                 return null;
             return Convert.ToDateTime(autoSync.Remove(0, "AutoSync: ".Length));
         }
-        DateTime GuessLastCommitTime(string branchName, string user) {
+        DateTime GuessLastCommitTime(string branchName, User user) {
             var branch = this.repo.Branches[branchName];
-            var commit = branch.Commits.FirstOrDefault(x => x.Committer.Name == user || x.Committer.Name == "Administrator");
+            var commit = branch.Commits.FirstOrDefault(x => x.Committer.Name == user.UserName || x.Committer.Name == "Administrator");
             return commit?.Author.When.DateTime.ToUniversalTime() ?? DateTime.MinValue;
         }
         public bool CalcHasModification() {
@@ -222,17 +220,17 @@ namespace DXVcs2Git {
             this.repo.Reset(ResetMode.Hard);
             this.repo.RemoveUntrackedFiles();
         }
-        public MergeStatus Merge(string sourceBranch, Signature merger) {
+        public MergeStatus Merge(string sourceBranch, User merger) {
             Branch branch = repo.Branches[sourceBranch];
             MergeOptions mergeOptions = new MergeOptions();
             mergeOptions.CommitOnSuccess = false;
             mergeOptions.FastForwardStrategy = FastForwardStrategy.NoFastForward;
             mergeOptions.FileConflictStrategy = CheckoutFileConflictStrategy.Normal;
-            MergeResult result = repo.Merge(branch, merger, mergeOptions);
+            MergeResult result = repo.Merge(branch, ToSignature(merger), mergeOptions);
             return result.Status;
         }
-        public RevertStatus Revert(string branchName, Commit revertCommit, string user) {
-            return this.repo.Revert(revertCommit, new Signature(user, "test@mail.com", DateTimeOffset.Now)).Status;
+        public RevertStatus Revert(string branchName, Commit revertCommit, User user) {
+            return this.repo.Revert(revertCommit, ToSignature(user)).Status;
         }
     }
 }

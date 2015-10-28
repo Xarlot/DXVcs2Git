@@ -1,17 +1,19 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.DirectoryServices.ActiveDirectory;
 using System.IO;
 using System.Linq;
 using DXVcs2Git.Core;
+using DXVCS;
 
 namespace DXVcs2Git.DXVcs {
     public class DXVcsWrapper {
         readonly string server;
         readonly string user;
         readonly string password;
-        public DXVcsWrapper(string server, string user, string password) {
+        public DXVcsWrapper(string server, string user = null, string password = null) {
             this.server = server;
-            this.user = user;
+            this.user = $@"corp\{user}";
             this.password = password;
         }
         public bool CheckOutFile(string vcsPath, string localPath, bool dontGetLocalCopy, string comment) {
@@ -311,6 +313,16 @@ namespace DXVcs2Git.DXVcs {
             }
             catch (Exception ex) {
                 Log.Error($"Finc commit failed", ex);
+                throw;
+            }
+        }
+        public IEnumerable<UserInfo> GetUsers() {
+            try {
+                var repo = DXVcsConnectionHelper.Connect(server, user, password);
+                return repo.GetUsers();
+            }
+            catch (Exception ex) {
+                Log.Error($"Get users from vcs failed.", ex);
                 throw;
             }
         }
