@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.DirectoryServices.ActiveDirectory;
 using System.IO;
 using System.Linq;
 using DXVcs2Git.Core;
@@ -20,7 +19,13 @@ namespace DXVcs2Git.DXVcs {
             try {
                 var repo = DXVcsConnectionHelper.Connect(server, this.user, this.password);
                 if (repo.IsUnderVss(vcsPath)) {
-                    repo.CheckOutFile(vcsPath, localPath, comment, dontGetLocalCopy);
+                    if (repo.IsCheckedOut(vcsPath)) {
+                        if (repo.IsCheckedOutByMe(vcsPath))
+                            return true;
+                        var fileData = repo.GetFileData(vcsPath);
+                        Log.Message($"File {vcsPath} is checked out by {fileData.CheckedOutUser} already. Check out failed.");
+                        return false;
+                    }
                 }
                 else {
                     Log.Error($"File {vcsPath} is not under vss.");
@@ -53,8 +58,9 @@ namespace DXVcs2Git.DXVcs {
         public bool UndoCheckoutFile(string vcsPath) {
             try {
                 var repo = DXVcsConnectionHelper.Connect(server, this.user, this.password);
-                if (repo.IsUnderVss(vcsPath) && repo.IsCheckedOutByMe(vcsPath)) {
-                    repo.UndoCheckout(vcsPath, repo.GetFileWorkingPath(vcsPath));
+                if (repo.IsUnderVss(vcsPath)) {
+                    if (repo.IsCheckedOutByMe(vcsPath))
+                        repo.UndoCheckout(vcsPath, repo.GetFileWorkingPath(vcsPath));
                 }
                 else {
                     Log.Error($"File {vcsPath} is not under vss.");
@@ -89,10 +95,7 @@ namespace DXVcs2Git.DXVcs {
             }
         }
         bool CheckOutModifyFile(string vcsFile, string localFile, string comment) {
-            bool result = CheckOutFile(vcsFile, localFile, true, comment);
-            if (!result)
-                Log.Error($"Failed attempt to checkout modified file {vcsFile}");
-            return result; 
+            return CheckOutFile(vcsFile, localFile, true, comment);
         }
         public bool RollbackItem(SyncItem item) {
             return UndoCheckoutFile(item.VcsPath);

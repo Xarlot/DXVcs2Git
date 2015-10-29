@@ -25,7 +25,6 @@ namespace DXVcs2Git.DXVcs {
             this.serviceUrl = serviceUrl;
             this.user = user;
             this.password = password;
-
             ValidateService();
         }
         void ValidateService() {
@@ -774,16 +773,16 @@ namespace DXVcs2Git.DXVcs {
             var file = Service.FindFile(vcsFile);
             return !file.IsNull;
         }
-        public FileStateInfo GetFile(string vcsFile) {
+        public FileStateInfo GetFileData(string vcsFile) {
             if (string.IsNullOrEmpty(vcsFile))
                 throw new ArgumentException("vcsFile");
             return Service.GetFile(vcsFile);
         }
         public bool IsCheckedOut(string vcsFile) {
-            return GetFile(vcsFile).CheckedOut;
+            return GetFileData(vcsFile).CheckedOut;
         }
         public bool IsCheckedOutByMe(string vcsFile) {
-            return GetFile(vcsFile).CheckedOutMe;
+            return GetFileData(vcsFile).CheckedOutMe;
         }
         public void CreateLabel(string vcsPath, string labelName, string comment) {
             if (string.IsNullOrEmpty(vcsPath))
