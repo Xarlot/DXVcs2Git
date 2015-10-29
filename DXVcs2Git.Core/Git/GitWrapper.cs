@@ -133,47 +133,7 @@ namespace DXVcs2Git {
         public Commit FindCommit(string branchName, string comment) {
             return FindCommit(branchName, x => x.Message?.StartsWith(comment) ?? false);
         }
-        public DateTime CalcLastCommitDate(string branchName, User user) {
-            var tags = repo.Tags.Where(x => {
-                bool isAnnotated = x.IsAnnotated;
-                return isAnnotated && x.FriendlyName.ToLowerInvariant().StartsWith("dxvcs2gitservice_sync_");
-            });
-            if (!tags.Any())
-                return GetLastCommitTime(branchName, user);
-            var branchTags = tags.Where(x => x.Annotation.Name.ToLowerInvariant().Split(new[] { "_" }, StringSplitOptions.RemoveEmptyEntries).Any(chunk => chunk == branchName));
-            if (!branchTags.Any()) {
-                return GetLastCommitTime(branchName, user);
-            }
-            var lastSyncTagTicks = branchTags.Max(x => {
-                var tagAnnotation = x.Annotation;
-                DateTime dt = Convert.ToDateTime(tagAnnotation.Message);
-                return dt.Ticks;
-            });
-            if (lastSyncTagTicks > 0)
-                return new DateTime(lastSyncTagTicks);
-            return GetLastCommitTime(branchName, user);
-        }
-        DateTime GetLastCommitTime(string branchName, User user) {
-            var timeStamp = GetLastCommitTimeStamp(branchName, user);
-            if (timeStamp != null)
-                return timeStamp.Value;
-            return GuessLastCommitTime(branchName, user);
-        }
-        DateTime? GetLastCommitTimeStamp(string branchName, User user) {
-            var branch = this.repo.Branches[branchName];
-            var commit = branch.Commits.FirstOrDefault();
-            if (commit.Author.Name == user.UserName)
-                return GetCommitTimeStampFromComment(commit);
-            return null;
-        }
-        DateTime? GetCommitTimeStampFromComment(Commit commit) {
-            var chunks = commit.Message.Split(new[] { "\n" }, StringSplitOptions.RemoveEmptyEntries);
-            var autoSync = chunks.FirstOrDefault(x => x.StartsWith("AutoSync: "));
-            if (autoSync == null)
-                return null;
-            return Convert.ToDateTime(autoSync.Remove(0, "AutoSync: ".Length));
-        }
-        DateTime GuessLastCommitTime(string branchName, User user) {
+        public DateTime GetLastCommitTimeStamp(string branchName, User user) {
             var branch = this.repo.Branches[branchName];
             var commit = branch.Commits.FirstOrDefault(x => x.Committer.Name == user.UserName || x.Committer.Name == "Administrator");
             return commit?.Author.When.DateTime.ToUniversalTime() ?? DateTime.MinValue;

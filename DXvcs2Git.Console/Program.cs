@@ -147,7 +147,7 @@ namespace DXVcs2Git.Console {
 
             gitWrapper.EnsureBranch(branch.Name, null);
             gitWrapper.CheckOut(branch.Name);
-            gitWrapper.Fetch(updateTags:true);
+            gitWrapper.Fetch(updateTags: true);
             Log.Message($"Branch {branch.Name} initialized.");
 
             return gitWrapper;
@@ -166,7 +166,7 @@ namespace DXVcs2Git.Console {
             var comment = CalcComment(commit, branch, token);
             vcsWrapper.CreateLabel(branch.RepoRoot, tag, comment.ToString());
             var syncLabelItem = vcsWrapper.FindCommit(branch, x => CommentWrapper.Parse(x.Comment).Token == token);
-            var syncLabel = vcsWrapper.GenerateCommits(new[] {syncLabelItem});
+            var syncLabel = vcsWrapper.GenerateCommits(new[] { syncLabelItem });
             return syncLabel.First();
         }
         //static bool ProcessGenericChangeSet(GitWrapper gitWrapper, TrackBranch branch, string gitRepoPath, string localGitDir, IEnumerable<SyncItem> syncItems, string token) {
@@ -344,9 +344,9 @@ namespace DXVcs2Git.Console {
         }
         static DateTime CalcLastCommitDate(GitWrapper gitWrapper, RegisteredUsers users, TrackBranch branch, SyncHistoryWrapper syncHistory) {
             var head = syncHistory.GetHead();
-            if (head == null)
-                return gitWrapper.CalcLastCommitDate(branch.Name, users.GetUser(defaultUserName));
-            return new DateTime(head.VcsCommitTimeStamp);
+            if (head != null)
+                return new DateTime(head.VcsCommitTimeStamp);
+            return gitWrapper.GetLastCommitTimeStamp(branch.Name, users.GetUser(defaultUserName));
         }
         static void ProcessHistoryInternal(DXVcsWrapper vcsWrapper, GitWrapper gitWrapper, RegisteredUsers users, string localGitDir, TrackBranch branch, IList<CommitItem> commits, SyncHistoryWrapper syncHistory) {
             ProjectExtractor extractor = new ProjectExtractor(commits, (item) => {
@@ -366,7 +366,8 @@ namespace DXVcs2Git.Console {
                         gitWrapper.Stage("*");
                         try {
                             var comment = CalcComment(localCommit, token);
-                            last = gitWrapper.Commit(comment.ToString(), users.GetUser(localCommit.Author), defaultUserName, localCommit.TimeStamp, isLabel);
+                            string author = CalcAuthor(localCommit);
+                            last = gitWrapper.Commit(comment.ToString(), users.GetUser(author), defaultUserName, localCommit.TimeStamp, isLabel);
                             hasModifications = true;
                         }
                         catch (Exception) {
@@ -376,9 +377,6 @@ namespace DXVcs2Git.Console {
                 }
                 if (hasModifications) {
                     gitWrapper.Push(branch.Name);
-                    string tagName = CreateTagName(branch.Name);
-                    CommentWrapper comment = CalcComment(last, branch, token);
-                    gitWrapper.AddTag(tagName, last, defaultUserName, item.TimeStamp, comment.ToString());
                     syncHistory.Add(last.Sha, item.TimeStamp.Ticks, token);
                     syncHistory.Save();
                 }
@@ -388,6 +386,16 @@ namespace DXVcs2Git.Console {
             int i = 0;
             while (extractor.PerformExtraction())
                 Log.Message($"{++i} from {commits.Count} push to branch {branch.Name} completed.");
+        }
+        static string CalcAuthor(CommitItem localCommit) {
+            string author = localCommit.Author;
+            if (author != defaultUserName)
+                return author;
+            var comment = localCommit.Items.FirstOrDefault(x => CommentWrapper.IsAutoSyncComment(x.Comment));
+            if (comment == null)
+                return author;
+            var commentWrapper = CommentWrapper.Parse(comment.Comment);
+            return commentWrapper.Author;
         }
         static TrackBranch GetBranch(string branchName, string configPath) {
             try {
@@ -439,6 +447,10 @@ namespace DXVcs2Git.Console {
             comment.Author = item.Author;
             comment.Branch = item.Track.Branch;
             comment.Token = token;
+            if (item.Items.Any(x => CommentWrapper.IsAutoSyncComment(x.Comment)))
+                comment.Comment = item.Items.Select(x => CommentWrapper.Parse(x.Message).Comment).FirstOrDefault(x => !string.IsNullOrEmpty(x));
+            else
+                comment.Comment = item.Items.FirstOrDefault(x => !string.IsNullOrEmpty(x.Comment))?.Comment;
             return comment;
         }
     }

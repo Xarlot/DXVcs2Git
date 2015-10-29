@@ -17,12 +17,15 @@ namespace DXVcs2Git.Core {
 
         public static CommentWrapper Parse(string comment) {
             if (!CheckStructure(comment))
-                return new CommentWrapper();
+                return new CommentWrapper() {Comment = comment};
             return new CommentWrapper() {
                 Author = ParseAuthor(comment),
                 Token = ParseToken(comment),
                 Comment = ParseComment(comment),
             };
+        }
+        public static bool IsAutoSyncComment(string comment) {
+            return CheckStructure(comment);
         }
         static string ParseComment(string comment) {
             return parseCommentRegex.Match(comment).Value;
