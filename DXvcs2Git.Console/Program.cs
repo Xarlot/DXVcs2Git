@@ -357,10 +357,14 @@ namespace DXVcs2Git.Console {
                 if (hasModifications) {
                     gitWrapper.Push(branch.Name);
                     syncHistory.Add(last.Sha, item.TimeStamp.Ticks, token);
-                    syncHistory.Save();
                 }
-                else
-                    Log.Message($"Push empty commits rejected for {item.Author} {item.TimeStamp}.");
+                else {
+                    var head = syncHistory.GetHead();
+                    syncHistory.Add(head.GitCommitSha, item.TimeStamp.Ticks, token);
+                    string author = CalcAuthor(item);
+                    Log.Message($"Push empty commits rejected for {author} {item.TimeStamp}.");
+                }
+                syncHistory.Save();
             });
             int i = 0;
             while (extractor.PerformExtraction())
@@ -368,6 +372,8 @@ namespace DXVcs2Git.Console {
         }
         static string CalcAuthor(CommitItem localCommit) {
             string author = localCommit.Author;
+            if (string.IsNullOrEmpty(author))
+                author = localCommit.Items.FirstOrDefault(x => !string.IsNullOrEmpty(x.User))?.User;
             if (author != defaultUserName)
                 return author;
             var comment = localCommit.Items.FirstOrDefault(x => CommentWrapper.IsAutoSyncComment(x.Comment));

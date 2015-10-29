@@ -26,6 +26,7 @@ namespace DXVcs2Git.DXVcs {
                         Log.Message($"File {vcsPath} is checked out by {fileData.CheckedOutUser} already. Check out failed.");
                         return false;
                     }
+                    repo.CheckOutFile(vcsPath, localPath, comment, dontGetLocalCopy);
                 }
                 else {
                     Log.Error($"File {vcsPath} is not under vss.");
