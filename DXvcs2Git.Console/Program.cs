@@ -181,24 +181,29 @@ namespace DXVcs2Git.Console {
                 return 1;
             }
             var mergeRequests = gitLabWrapper.GetMergeRequests(project, branchName).Where(x => x.Assignee?.Name == defaultUserName).ToList();
-            var mergeRequest = mergeRequests.FirstOrDefault();
-            if (mergeRequest == null) {
+            if (!mergeRequests.Any()) {
                 Log.Message("Zero registered merge requests.");
                 return 0;
             }
-            if (ProcessMergeRequest(vcsWrapper, gitWrapper, gitLabWrapper, users, localGitDir, branch, mergeRequest, syncHistory))
-                return 1;
-            return 0;
+            int result = 0;
+            foreach (var mergeRequest in mergeRequests) {
+                var mergeRequestResult = ProcessMergeRequest(vcsWrapper, gitWrapper, gitLabWrapper, users, localGitDir, branch, mergeRequest, syncHistory);
+                if (mergeRequestResult == MergeRequestResult.Failed)
+                    return 1;
+                if (mergeRequestResult == MergeRequestResult.Conflicts)
+                    result = 1;
+            }
+            return result;
         }
-        static bool ProcessMergeRequest(DXVcsWrapper vcsWrapper, GitWrapper gitWrapper, GitLabWrapper gitLabWrapper, RegisteredUsers users, string localGitDir, TrackBranch branch, MergeRequest mergeRequest, SyncHistoryWrapper syncHistory) {
+        static MergeRequestResult ProcessMergeRequest(DXVcsWrapper vcsWrapper, GitWrapper gitWrapper, GitLabWrapper gitLabWrapper, RegisteredUsers users, string localGitDir, TrackBranch branch, MergeRequest mergeRequest, SyncHistoryWrapper syncHistory) {
             switch (mergeRequest.State) {
                 case "reopened":
                 case "opened":
                     return ProcessOpenedMergeRequest(vcsWrapper, gitWrapper, gitLabWrapper, users, localGitDir, branch, mergeRequest, syncHistory);
             }
-            return false;
+            return MergeRequestResult.Conflicts;
         }
-        static bool ProcessOpenedMergeRequest(DXVcsWrapper vcsWrapper, GitWrapper gitWrapper, GitLabWrapper gitLabWrapper, RegisteredUsers users, string localGitDir, TrackBranch branch, MergeRequest mergeRequest, SyncHistoryWrapper syncHistory) {
+        static MergeRequestResult ProcessOpenedMergeRequest(DXVcsWrapper vcsWrapper, GitWrapper gitWrapper, GitLabWrapper gitLabWrapper, RegisteredUsers users, string localGitDir, TrackBranch branch, MergeRequest mergeRequest, SyncHistoryWrapper syncHistory) {
             string autoSyncToken = syncHistory.CreateNewToken();
 
             Log.Message($"Start merging mergerequest {mergeRequest.Title}");
@@ -222,7 +227,7 @@ namespace DXVcs2Git.Console {
                 CommentWrapper comment = CalcComment(mergeRequest, branch, autoSyncToken);
                 if (!vcsWrapper.ProcessCheckout(genericChange)) {
                     Log.Message("Merging merge request failed.");
-                    return true;
+                    return MergeRequestResult.Conflicts;
                 }
                 gitWrapper.Reset(branch.Name);
                 gitWrapper.Pull(defaultUser, branch.Name);
@@ -232,39 +237,30 @@ namespace DXVcs2Git.Console {
                 if (mergeRequest.State == "merged") {
                     gitWrapper.Reset(branch.Name);
                     gitWrapper.Pull(defaultUser, branch.Name);
+                    var gitCommit = gitWrapper.FindCommit(branch.Name, x => CommentWrapper.Parse(x.Message).Token == autoSyncToken);
                     Log.Message("Merge request merged successfully.");
 
                     if (vcsWrapper.ProcessCheckIn(genericChange, comment.ToString())) {
-                        var gitCommit = gitWrapper.FindCommit(branch.Name, x => CommentWrapper.Parse(x.Message).Token == autoSyncToken);
                         var vcsCommit = SetSyncLabel(vcsWrapper, gitCommit, branch, CreateTagName(branch.Name), autoSyncToken);
                         syncHistory.Add(gitCommit.Sha, vcsCommit.TimeStamp.Ticks, autoSyncToken);
                         syncHistory.Save();
                         Log.Message("Merge request checkin successfully.");
-                        return true;
+                        return MergeRequestResult.Success;
                     }
                     Log.Error("Merge request checkin failed.");
-                    mergeRequest = gitLabWrapper.ReopenMergeRequest(mergeRequest, comment.ToString());
-                    if (gitWrapper.Revert(branch.Name, beforeMerge, defaultUser) == RevertStatus.Reverted)
-                        gitWrapper.Pull(defaultUser, branch.Name);
-                    Log.Error("Revert merging completed.");
-                    var revertCommit = gitWrapper.FindCommit(branch.Name, x => CommentWrapper.Parse(x.Message).Token == autoSyncToken);
-                    var vcsRevertCommit = SetSyncLabel(vcsWrapper, revertCommit, branch, CreateFailedTagName(branch.Name), autoSyncToken);
-                    syncHistory.Add(revertCommit.Sha, vcsRevertCommit.TimeStamp.Ticks, autoSyncToken, SyncHistoryStatus.Failed);
+                    var vcsRevertCommit = SetSyncLabel(vcsWrapper, gitCommit, branch, CreateFailedTagName(branch.Name), autoSyncToken);
+                    syncHistory.Add(gitCommit.Sha, vcsRevertCommit.TimeStamp.Ticks, autoSyncToken, SyncHistoryStatus.Failed);
                     syncHistory.Save();
+                    Log.Error("Revert merging completed.");
 
-                    return false;
+                    return MergeRequestResult.Failed;
                 }
 
                 Log.Message("Merge request merging failed");
-                gitLabWrapper.UpdateMergeRequest(mergeRequest, AutoMergeFailedComment);
-                return true;
+                return MergeRequestResult.Conflicts;
             }
             Log.Message($"Merge request merging from {targetBranch} to {sourceBranch} failed due conflicts. Resolve conflicts manually.");
-            return false;
-        }
-        static string CalcVcsRoot(TrackBranch branch, TreeEntryChanges fileData) {
-            var trackItem = branch.TrackItems.First(x => fileData.OldPath.StartsWith(x.ProjectPath, StringComparison.OrdinalIgnoreCase));
-            return trackItem.Path.Remove(trackItem.Path.Length - trackItem.ProjectPath.Length, trackItem.ProjectPath.Length);
+            return MergeRequestResult.Conflicts;
         }
         static SyncItem ProcessMergeRequestChanges(MergeRequest mergeRequest, MergeRequestFileData fileData, string localGitDir, TrackBranch branch, string token) {
             string vcsRoot = branch.RepoRoot;
@@ -438,5 +434,10 @@ namespace DXVcs2Git.Console {
                 comment.Comment = item.Items.FirstOrDefault(x => !string.IsNullOrEmpty(x.Comment))?.Comment;
             return comment;
         }
+    }
+    public enum MergeRequestResult {
+        Success,
+        Failed,
+        Conflicts,
     }
 }
