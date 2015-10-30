@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using Polenter.Serialization;
 
 namespace DXVcs2Git.Core.Serialization {
@@ -25,6 +26,10 @@ namespace DXVcs2Git.Core.Serialization {
                 Log.Error($"Loading history from {path} failed", ex);
                 return new SyncHistory();
             }
+        }
+        public SyncHistory Clone(int limit) {
+            var items = Items.Cast<SyncHistoryItem>().Reverse().Take(limit).Reverse().ToList();
+            return new SyncHistory() {Items = items};
         }
     }
 }

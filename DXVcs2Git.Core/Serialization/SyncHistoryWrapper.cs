@@ -4,6 +4,7 @@ using DXVcs2Git.DXVcs;
 
 namespace DXVcs2Git.Core.Serialization {
     public class SyncHistoryWrapper {
+        readonly int historyLimit = 100;
         readonly SyncHistory history;
         readonly string vcsHistoryPath;
         readonly string localHistoryPath;
@@ -37,7 +38,7 @@ namespace DXVcs2Git.Core.Serialization {
         public void Save() {
             try {
                 this.vcsWrapper.CheckOutFile(this.vcsHistoryPath, this.localHistoryPath, true, string.Empty);
-                SyncHistory.Serialize(history, localHistoryPath);
+                SyncHistory.Serialize(this.history.Clone(this.historyLimit), localHistoryPath);
                 this.vcsWrapper.CheckInFile(vcsHistoryPath, localHistoryPath, string.Empty);
             }
             catch (Exception ex) {

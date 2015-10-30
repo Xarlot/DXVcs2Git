@@ -84,7 +84,6 @@
     <Compile Include="ProjectExtractor.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RegisteredUsers.cs" />
-    <Compile Include="Serialization\GitSyncItem.cs" />
     <Compile Include="Serialization\SyncHistory.cs" />
     <Compile Include="Serialization\SyncHistoryItem.cs" />
     <Compile Include="SyncItem.cs" />
@@ -102,7 +101,7 @@
     <Compile Include="Vcs\IBlameLine.cs" />
     <Compile Include="Vcs\IDXVcsRepository.cs" />
     <Compile Include="Vcs\StringsDiff.cs" />
-    <Compile Include="Vcs\SyncHistoryWrapper.cs" />
+    <Compile Include="Serialization\SyncHistoryWrapper.cs" />
     <Compile Include="Vcs\WCFServiceHelper.cs" />
   </ItemGroup>
   <ItemGroup>
