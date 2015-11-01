@@ -41,7 +41,7 @@ namespace DXVcs2Git.Tests {
             items.Add(new TrackItem() { Path = $@"$/{branchName}/XPF/DevExpress.Xpf.Ribbon", ProjectPath = "DevExpress.Xpf.Ribbon" });
             items.Add(new TrackItem() { Path = $@"$/{branchName}/XPF/DevExpress.Xpf.Layout", ProjectPath = "DevExpress.Xpf.Layout" });
             items.Add(new TrackItem() { Path = $@"$/{branchName}/XPF/DevExpress.Xpf.LayoutControl", ProjectPath = "DevExpress.Xpf.LayoutControl" });
-            TrackBranch branch = new TrackBranch("branchName", $@"$/{branchName}/xpf_common_sync.config", $@"$/{branchName}/XPF", items);
+            TrackBranch branch = new TrackBranch($"{branchName}", $@"$/{branchName}/xpf_common_sync.config", $@"$/{branchName}/XPF", items);
 
             SharpSerializerXmlSettings settings = new SharpSerializerXmlSettings();
             settings.IncludeAssemblyVersionInTypeName = false;
