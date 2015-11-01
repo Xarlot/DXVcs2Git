@@ -7,18 +7,18 @@
         xmlns:dxr="http://schemas.devexpress.com/winfx/2008/xaml/ribbon"
         xmlns:dxlc="http://schemas.devexpress.com/winfx/2008/xaml/layoutcontrol"
         xmlns:dxe="http://schemas.devexpress.com/winfx/2008/xaml/editors"
+        xmlns:dxb="http://schemas.devexpress.com/winfx/2008/xaml/bars"
         mc:Ignorable="d"
         Title="MainWindow" Height="350" Width="525">
     <Grid>
         <dxr:RibbonControl>
-            <dxlc:LayoutControl>
-                <dxlc:LayoutGroup>
-                    <dxe:ListBoxEdit/>
-                </dxlc:LayoutGroup>
-                <dxlc:LayoutGroup>
-                    <
-                </dxlc:LayoutGroup>
-            </dxlc:LayoutControl>
+            <dxr:RibbonDefaultPageCategory >
+                <dxr:RibbonPage>
+                    <dxr:RibbonPageGroup>
+                        <dxb:BarButtonItem/>
+                    </dxr:RibbonPageGroup>
+                </dxr:RibbonPage>
+            </dxr:RibbonDefaultPageCategory>
         </dxr:RibbonControl>
     </Grid>
 </Window>
