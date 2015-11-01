@@ -177,6 +177,12 @@
       <Install>false</Install>
     </BootstrapperPackage>
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\DXVcs2Git.Core\DXVcs2Git.Core.csproj">
+      <Project>{7ce585b7-1f19-442d-b1a4-0c1ad855a55c}</Project>
+      <Name>DXVcs2Git.Core</Name>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
