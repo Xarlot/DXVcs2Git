@@ -1,6 +1,9 @@
-﻿namespace DXVcs2Git.Core {
+﻿using Polenter.Serialization;
+
+namespace DXVcs2Git.Core {
     public class TrackItem {
-        public string Branch { get; set; }
+        [ExcludeFromSerialization]
+        public string Branch { get; internal set; }
         public string Path { get; set; }
         public string ProjectPath { get; set; }
     }
