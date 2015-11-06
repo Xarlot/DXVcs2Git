@@ -56,12 +56,12 @@ namespace DXVcs2Git.DXVcs {
                 return false;
             }
         }
-        public bool UndoCheckoutFile(string vcsPath) {
+        public bool UndoCheckoutFile(string vcsPath, string localPath) {
             try {
                 var repo = DXVcsConnectionHelper.Connect(server, this.user, this.password);
                 if (repo.IsUnderVss(vcsPath)) {
                     if (repo.IsCheckedOutByMe(vcsPath))
-                        repo.UndoCheckout(vcsPath, repo.GetFileWorkingPath(vcsPath));
+                        repo.UndoCheckout(vcsPath, localPath);
                 }
                 else {
                     Log.Error($"File {vcsPath} is not under vss.");
@@ -99,7 +99,7 @@ namespace DXVcs2Git.DXVcs {
             return CheckOutFile(vcsFile, localFile, true, comment);
         }
         public bool RollbackItem(SyncItem item) {
-            return UndoCheckoutFile(item.VcsPath);
+            return UndoCheckoutFile(item.VcsPath, item.LocalPath);
         }
         bool CheckOutCreateFile(string vcsPath, string localPath, string comment) {
             try {
@@ -140,7 +140,7 @@ namespace DXVcs2Git.DXVcs {
                     Log.Error($"File {vcsPath} is checked out already.");
                     return false;
                 }
-                UndoCheckoutFile(vcsPath);
+                UndoCheckoutFile(vcsPath, localPath);
                 repo.DeleteFile(vcsPath);
                 File.Delete(localPath);
                 return true;

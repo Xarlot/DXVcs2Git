@@ -26,7 +26,6 @@ namespace DXVcs2Git.Console {
         const string defaultUserName = "dxvcs2gitservice";
         const string tagName = "dxvcs2gitservice_sync_{0}";
         const string failedTagName = "dxvcs2gitservice_sync_failed_{0}";
-        const string AutoMergeFailedComment = "autosync merge failed";
         static void Main(string[] args) {
             var result = Parser.Default.ParseArguments<CommandLineOptions>(args);
             var exitCode = result.MapResult(clo => {

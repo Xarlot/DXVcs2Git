@@ -16,7 +16,7 @@ namespace DXVcs2Git.Core {
         public RegisteredUsers(GitLabWrapper gitLabWrapper, DXVcsWrapper vcsWrapper) {
             this.gitLabWrapper = gitLabWrapper;
             this.vcsWrapper = vcsWrapper;
-            ADUsers = ADWrapper.GetUsers().ToDictionary(x => x.UserName);
+            ADUsers = ADWrapper.GetUsers().ToDictionary(x => x.UserName.ToLowerInvariant());
             Users = gitLabWrapper.GetUsers().ToDictionary(x => x.UserName);
             this.VcsUsers = vcsWrapper.GetUsers().ToList();
         }
