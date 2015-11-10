@@ -60,8 +60,9 @@ namespace DXVcs2Git.DXVcs {
             try {
                 var repo = DXVcsConnectionHelper.Connect(server, this.user, this.password);
                 if (repo.IsUnderVss(vcsPath)) {
-                    if (repo.IsCheckedOutByMe(vcsPath))
+                    if (repo.IsCheckedOutByMe(vcsPath)) {
                         repo.UndoCheckout(vcsPath, localPath);
+                    }
                 }
                 else {
                     Log.Error($"File {vcsPath} is not under vss.");
