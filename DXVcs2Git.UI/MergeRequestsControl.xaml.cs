@@ -12,14 +12,13 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
-using DevExpress.Xpf.Ribbon;
 
 namespace DXVcs2Git.UI {
     /// <summary>
-    /// Interaction logic for MainWindow.xaml
+    /// Interaction logic for MergeRequestsControl.xaml
     /// </summary>
-    public partial class MainWindow : DXRibbonWindow {
-        public MainWindow() {
+    public partial class MergeRequestsControl : UserControl {
+        public MergeRequestsControl() {
             InitializeComponent();
         }
     }
