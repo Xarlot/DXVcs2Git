@@ -11,14 +11,13 @@
         mc:Ignorable="d"
         Title="MainWindow" Height="350" Width="525">
     <Grid>
-        <dxr:RibbonControl>
-            <dxr:RibbonDefaultPageCategory >
-                <dxr:RibbonPage>
-                    <dxr:RibbonPageGroup>
-                        <dxb:BarButtonItem/>
-                    </dxr:RibbonPageGroup>
-                </dxr:RibbonPage>
-            </dxr:RibbonDefaultPageCategory>
-        </dxr:RibbonControl>
+        <dxlc:DockLayoutControl>
+            <dxlc:LayoutGroup Header="MergeRequests" HorizontalAlignment="Left">
+                <dxe:ListBoxEdit MinWidth="200"/>
+            </dxlc:LayoutGroup>
+            <dxlc:LayoutGroup HorizontalAlignment="Stretch">
+                <local:ProcessMergeRequestControl/>
+            </dxlc:LayoutGroup>
+        </dxlc:DockLayoutControl>
     </Grid>
 </Window>

@@ -14,7 +14,6 @@ namespace DXVcs2Git.UI {
     public partial class App : Application {
         protected override void OnStartup(StartupEventArgs e) {
             base.OnStartup(e);
-            ThemeManager.ApplicationThemeName = "Office2013";
         }
     }
 }
