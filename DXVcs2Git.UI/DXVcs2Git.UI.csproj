@@ -138,6 +138,8 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="ViewModels\BranchViewModel.cs" />
+    <Compile Include="ViewModels\NewMergeRequestViewModel.cs" />
     <Compile Include="Views\AvalonEditTextToDocumentBehavior.cs" />
     <Compile Include="ViewModels\MergeRequestFileDataViewModel.cs" />
     <Compile Include="ViewModels\Options.cs" />

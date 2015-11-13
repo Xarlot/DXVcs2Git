@@ -4,14 +4,73 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:dxe="http://schemas.devexpress.com/winfx/2008/xaml/editors"
-             xmlns:dx="http://schemas.devexpress.com/winfx/2008/xaml/core"
+             xmlns:dxr="http://schemas.devexpress.com/winfx/2008/xaml/ribbon"
+             xmlns:dxb="http://schemas.devexpress.com/winfx/2008/xaml/bars"
+             xmlns:dxlc="http://schemas.devexpress.com/winfx/2008/xaml/layoutcontrol"
              mc:Ignorable="d" 
              d:DesignHeight="300" d:DesignWidth="300">
     <Grid>
+        <dxr:RibbonControl>
+            <dxr:RibbonDefaultPageCategory>
+                <dxr:RibbonPage Caption="Page">
+                    <dxr:RibbonPageGroup>
+                        <dxb:BarSubItem 
+                            RibbonStyle="Large" 
+                            GlyphSize="Large" 
+                            Content="New merge request"
+                            ItemLinksSource="{Binding Path=Branches}">
+                            <dxb:BarSubItem.ItemTemplate>
+                                <DataTemplate>
+                                    <ContentControl>
+                                        <dxb:BarButtonItem 
+                                            Content="{Binding Path=Name}" 
+                                            Command="{Binding Path=CreateNewMergeRequestCommand}" 
+                                            CommandParameter="{Binding Path=MergeRequests}">
+                                            <dxb:BarButtonItem.ContentTemplate>
+                                                <DataTemplate>
+                                                    <TextBlock Text="{Binding}"/>
+                                                </DataTemplate>
+                                            </dxb:BarButtonItem.ContentTemplate>
+                                        </dxb:BarButtonItem>
+                                    </ContentControl>
+                                </DataTemplate>
+                            </dxb:BarSubItem.ItemTemplate>
+                        </dxb:BarSubItem>
+                    </dxr:RibbonPageGroup>
+                </dxr:RibbonPage>
+            </dxr:RibbonDefaultPageCategory>
+        </dxr:RibbonControl>
         <dxe:ListBoxEdit 
-            DisplayMember="Title"
             ItemsSource="{Binding Path=MergeRequests}" 
             EditValue="{Binding Path=SelectedMergeRequest}">
+            <dxe:ListBoxEdit.ItemTemplate>
+                <DataTemplate>
+                    <dxlc:LayoutControl>
+                        <dxlc:LayoutGroup Orientation="Vertical">
+                            <dxlc:LayoutItem Label="Title:">
+                                <dxlc:LayoutItem.Content>
+                                    <TextBlock Text="{Binding Path=Title}"/>
+                                </dxlc:LayoutItem.Content>
+                            </dxlc:LayoutItem>
+                            <dxlc:LayoutItem Label="Author:">
+                                <dxlc:LayoutItem>
+                                    <TextBlock Text="{Binding Path=Author}"/>
+                                </dxlc:LayoutItem>
+                            </dxlc:LayoutItem>
+                            <dxlc:LayoutItem Label="Source branch:">
+                                <dxlc:LayoutItem>
+                                    <TextBlock Text="{Binding Path=SourceBranch}"/>
+                                </dxlc:LayoutItem>
+                            </dxlc:LayoutItem>
+                            <dxlc:LayoutItem Label="Target branch:">
+                                <dxlc:LayoutItem>
+                                    <TextBlock Text="{Binding Path=TargetBranch}"/>
+                                </dxlc:LayoutItem>
+                            </dxlc:LayoutItem>
+                        </dxlc:LayoutGroup>
+                    </dxlc:LayoutControl>
+                </DataTemplate>
+            </dxe:ListBoxEdit.ItemTemplate>
         </dxe:ListBoxEdit>
     </Grid>
 </UserControl>

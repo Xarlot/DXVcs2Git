@@ -1,7 +1,9 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Windows.Input;
 using DevExpress.Mvvm;
+using DevExpress.Mvvm.Native;
 using DXVcs2Git.Core;
 using DXVcs2Git.Git;
 using NGitLab.Models;
@@ -16,13 +18,13 @@ namespace DXVcs2Git.UI.ViewModels {
             get { return this.selectedMergeRequest; }
             set { SetProperty(ref this.selectedMergeRequest, value, () => SelectedMergeRequest); }
         }
+        public IEnumerable<BranchViewModel> Branches { get; private set; }
 
         public MergeRequestsViewModel(GitLabWrapper gitLabWrapper, string repo) {
             this.repo = repo;
             this.gitLabWrapper = gitLabWrapper;
             Update();
         }
-
         public void Update() {
             Project project = gitLabWrapper.FindProject(repo);
             if (project == null) {
@@ -33,6 +35,9 @@ namespace DXVcs2Git.UI.ViewModels {
             var mergeRequests = gitLabWrapper.GetMergeRequests(project);
             MergeRequests = mergeRequests.Select(x => new MergeRequestViewModel(this.gitLabWrapper, x)).ToList();
             SelectedMergeRequest = MergeRequests.FirstOrDefault();
+
+            var branches = this.gitLabWrapper.GetBranches(project);
+            Branches = branches.Select(x => new BranchViewModel(this, x)).ToList();
         }
     }
 }

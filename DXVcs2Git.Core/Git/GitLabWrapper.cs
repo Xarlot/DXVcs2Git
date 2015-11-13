@@ -48,5 +48,10 @@ namespace DXVcs2Git.Git {
             var userUpsert = new UserUpsert() {Username = user.UserName, Name = user.DisplayName, Email = user.Email, Password = new Guid().ToString()};
             userClient.Create(userUpsert);
         }
+        public IEnumerable<Branch> GetBranches(Project project) {
+            var repo = this.client.GetRepository(project.Id);
+            var branchesClient = repo.Branches;
+            return branchesClient.All;
+        }
     }
 }

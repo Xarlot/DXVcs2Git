@@ -19,7 +19,10 @@
         <dxr:RibbonControl Grid.Row="0" RibbonStyle="Office2010"/>
         <dxlc:DockLayoutControl Grid.Row="1">
             <dxlc:LayoutGroup Header="MergeRequests" dxlc:DockLayoutControl.Dock="Left" MinWidth="300">
-                <local:MergeRequestsControl DataContext="{Binding Path=MergeRequests}"/>
+                <local:MergeRequestsControl 
+                    dxb:MergingProperties.ElementMergingBehavior="InternalWithExternal"
+                    DataContext="{Binding Path=MergeRequests}">
+                </local:MergeRequestsControl>
             </dxlc:LayoutGroup>
             <dxlc:LayoutGroup dxlc:DockLayoutControl.Dock="Client">
                 <local:ProcessMergeRequestControl DataContext="{Binding Path=MergeRequests.SelectedMergeRequest}"/>
