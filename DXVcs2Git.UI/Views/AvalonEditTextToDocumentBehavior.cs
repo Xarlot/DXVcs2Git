@@ -1,5 +1,6 @@
 ﻿using System.Windows;
 using DevExpress.Mvvm.UI.Interactivity;
+using DXVcs2Git.UI.Views;
 using ICSharpCode.AvalonEdit;
 
 namespace DXVcs2Git.UI.ViewModels {
@@ -22,6 +23,7 @@ namespace DXVcs2Git.UI.ViewModels {
         protected override void OnAttached() {
             base.OnAttached();
             AssociatedObject.Text = Text;
+            AssociatedObject.TextArea.TextView.BackgroundRenderers.Add(new DiffLineBackgroundRenderer(AssociatedObject));
         }
     }
 }

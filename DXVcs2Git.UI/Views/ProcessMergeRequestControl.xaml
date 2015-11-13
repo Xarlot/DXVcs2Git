@@ -20,7 +20,7 @@
                 <dxg:TableView NavigationStyle="Row"/>
             </dxg:GridControl.View>
         </dxg:GridControl>
-        <avalonEdit:TextEditor Grid.Column="1">
+        <avalonEdit:TextEditor Grid.Column="1" FontFamily="Consolas">
             <dxmvvm:Interaction.Behaviors>
                 <viewModels:AvalonEditTextBindingBehavior Text="{Binding Path=SelectedItem.Diff, ElementName=grid}"/>
             </dxmvvm:Interaction.Behaviors>
