@@ -14,9 +14,10 @@ namespace DXVcs2Git.Git {
         public Project FindProject(string project) {
             return client.Projects.Accessible.FirstOrDefault(x => x.HttpUrl == project);
         }
-        public IEnumerable<MergeRequest> GetMergeRequests(Project project, string branch) {
+        public IEnumerable<MergeRequest> GetMergeRequests(Project project, Func<MergeRequest, bool> mergeRequestsHandler = null) {
+            mergeRequestsHandler = mergeRequestsHandler ?? (x => true);
             var mergeRequestsClient = client.GetMergeRequest(project.Id);
-            return mergeRequestsClient.AllInState(MergeRequestState.opened).Where(x => x.TargetBranch == branch);
+            return mergeRequestsClient.AllInState(MergeRequestState.opened).Where(x => mergeRequestsHandler(x));
         }
         public IEnumerable<MergeRequestFileData> GetMergeRequestChanges(MergeRequest mergeRequest) {
             var mergeRequestsClient = client.GetMergeRequest(mergeRequest.ProjectId);
