@@ -1,11 +1,18 @@
-﻿using DevExpress.Mvvm;
+﻿using System.Collections.Generic;
+using System.Linq;
+using DevExpress.Mvvm;
+using DXVcs2Git.Git;
 using NGitLab.Models;
 
 namespace DXVcs2Git.UI.ViewModels {
     public class MergeRequestViewModel : BindableBase {
+        GitLabWrapper gitLabWrapper;
         MergeRequest MergeRequest { get; }
-        public MergeRequestViewModel(MergeRequest mergeRequest) {
+        public IEnumerable<MergeRequestFileDataViewModel> Changes { get; private set; }
+        public MergeRequestViewModel(GitLabWrapper gitLabWrapper, MergeRequest mergeRequest) {
+            this.gitLabWrapper = gitLabWrapper;
             MergeRequest = mergeRequest;
+            Changes = gitLabWrapper.GetMergeRequestChanges(mergeRequest).Select(x => new MergeRequestFileDataViewModel(x)).ToList();
         }
     }
 }

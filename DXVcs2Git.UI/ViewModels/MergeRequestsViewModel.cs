@@ -31,7 +31,7 @@ namespace DXVcs2Git.UI.ViewModels {
             }
 
             var mergeRequests = gitLabWrapper.GetMergeRequests(project);
-            MergeRequests = mergeRequests.Select(x => new MergeRequestViewModel(x)).ToList();
+            MergeRequests = mergeRequests.Select(x => new MergeRequestViewModel(this.gitLabWrapper, x)).ToList();
         }
     }
 }

@@ -21,8 +21,8 @@
             <dxlc:LayoutGroup Header="MergeRequests" HorizontalAlignment="Left" MinWidth="200">
                 <local:MergeRequestsControl DataContext="{Binding Path=MergeRequests}"/>
             </dxlc:LayoutGroup>
-            <dxlc:LayoutGroup HorizontalAlignment="Stretch">
-                <local:ProcessMergeRequestControl/>
+            <dxlc:LayoutGroup HorizontalAlignment="Stretch" Width="500">
+                <local:ProcessMergeRequestControl DataContext="{Binding Path=MergeRequests.SelectedMergeRequest}"/>
             </dxlc:LayoutGroup>
         </dxlc:DockLayoutControl>
     </Grid>

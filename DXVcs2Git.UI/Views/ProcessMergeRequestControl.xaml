@@ -5,9 +5,25 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:DXVcs2Git.UI"
              xmlns:dxg="http://schemas.devexpress.com/winfx/2008/xaml/grid"
+             xmlns:avalonEdit="http://icsharpcode.net/sharpdevelop/avalonedit"
+             xmlns:dxmvvm="http://schemas.devexpress.com/winfx/2008/xaml/mvvm"
+             xmlns:viewModels="clr-namespace:DXVcs2Git.UI.ViewModels"
              mc:Ignorable="d" 
              d:DesignHeight="300" d:DesignWidth="300">
     <Grid>
-          <dxg:GridControl/>  
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition/>
+            <ColumnDefinition/>
+        </Grid.ColumnDefinitions>
+        <dxg:GridControl x:Name="grid" AutoGenerateColumns="AddNew" ItemsSource="{Binding Path=Changes}">
+            <dxg:GridControl.View>
+                <dxg:TableView NavigationStyle="Row"/>
+            </dxg:GridControl.View>
+        </dxg:GridControl>
+        <avalonEdit:TextEditor Grid.Column="1">
+            <dxmvvm:Interaction.Behaviors>
+                <viewModels:AvalonEditTextBindingBehavior Text="{Binding Path=SelectedItem.Diff, ElementName=grid}"/>
+            </dxmvvm:Interaction.Behaviors>
+        </avalonEdit:TextEditor>
     </Grid>
 </UserControl>
