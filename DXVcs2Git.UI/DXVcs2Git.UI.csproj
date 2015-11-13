@@ -50,6 +50,10 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="CommandLine, Version=2.0.261.0, Culture=neutral, PublicKeyToken=de6f01bd326f8c32, processorArchitecture=MSIL">
+      <HintPath>..\packages\CommandLineParser.2.0.261-beta\lib\net45\CommandLine.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="DevExpress.Data.v15.1, Version=15.1.0.0, Culture=neutral, PublicKeyToken=79868b8147b5eae4, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\Lib\DX\DevExpress.Data.v15.1.dll</HintPath>
@@ -106,6 +110,10 @@
       <HintPath>..\packages\log4net.2.0.3\lib\net40-full\log4net.dll</HintPath>
       <Private>True</Private>
     </Reference>
+    <Reference Include="NGitLab, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\Lib\NGitLab\NGitLab.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
@@ -126,10 +134,13 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
-    <Compile Include="MergeRequestsControl.xaml.cs">
+    <Compile Include="ViewModels\Options.cs" />
+    <Compile Include="ViewModels\MergeRequestsViewModel.cs" />
+    <Compile Include="ViewModels\MergeRequestViewModel.cs" />
+    <Compile Include="Views\MergeRequestsControl.xaml.cs">
       <DependentUpon>MergeRequestsControl.xaml</DependentUpon>
     </Compile>
-    <Compile Include="RootViewModel.cs" />
+    <Compile Include="ViewModels\RootViewModel.cs" />
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
@@ -142,17 +153,17 @@
       <DependentUpon>MainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
-    <Page Include="MergeRequestsControl.xaml">
+    <Page Include="Views\MergeRequestsControl.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="ProcessMergeRequestControl.xaml">
+    <Page Include="Views\ProcessMergeRequestControl.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="ProcessMergeRequestControl.xaml.cs">
+    <Compile Include="Views\ProcessMergeRequestControl.xaml.cs">
       <DependentUpon>ProcessMergeRequestControl.xaml</DependentUpon>
     </Compile>
     <Compile Include="Properties\AssemblyInfo.cs">
