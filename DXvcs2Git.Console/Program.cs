@@ -179,7 +179,7 @@ namespace DXVcs2Git.Console {
                 Log.Error($"Specified branch {branchName} not found in track file.");
                 return 1;
             }
-            var mergeRequests = gitLabWrapper.GetMergeRequests(project, branchName).Where(x => x.Assignee?.Name == defaultUserName).ToList();
+            var mergeRequests = gitLabWrapper.GetMergeRequests(project, x => x.TargetBranch == branchName).Where(x => x.Assignee?.Name == defaultUserName).ToList();
             if (!mergeRequests.Any()) {
                 Log.Message("Zero registered merge requests.");
                 return 0;
