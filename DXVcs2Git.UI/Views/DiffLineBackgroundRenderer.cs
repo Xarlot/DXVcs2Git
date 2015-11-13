@@ -33,19 +33,15 @@ namespace DXVcs2Git.UI.Views {
             blackBrush.Freeze();
             pen = new Pen(blackBrush, 0.0);
         }
-
         public DiffLineBackgroundRenderer(TextEditor host) {
             this.host = host;
         }
-
         public KnownLayer Layer {
             get { return KnownLayer.Background; }
         }
-
         public void Draw(TextView textView, DrawingContext drawingContext) {
             foreach (var v in textView.VisualLines) {
                 var rc = BackgroundGeometryBuilder.GetRectsFromVisualSegment(textView, v, 0, 1000).First();
-                var linenum = v.FirstDocumentLine.LineNumber - 1;
                 int offset = v.FirstDocumentLine.Offset;
                 int length = v.FirstDocumentLine.Length;
                 var text = this.host.Text.Substring(offset, length);
