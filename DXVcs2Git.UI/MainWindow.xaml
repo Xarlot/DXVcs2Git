@@ -9,7 +9,7 @@
         xmlns:dxe="http://schemas.devexpress.com/winfx/2008/xaml/editors"
         xmlns:dxb="http://schemas.devexpress.com/winfx/2008/xaml/bars"
         mc:Ignorable="d"
-        Title="MainWindow" Height="350" Width="525" 
+        Title="MainWindow" Height="800" Width="1024" 
         UseLayoutRounding="True" DataContext="{x:Static local:App.RootModel}">
     <Grid>
         <Grid.RowDefinitions>
@@ -18,10 +18,10 @@
         </Grid.RowDefinitions>
         <dxr:RibbonControl Grid.Row="0" RibbonStyle="Office2010"/>
         <dxlc:DockLayoutControl Grid.Row="1">
-            <dxlc:LayoutGroup Header="MergeRequests" HorizontalAlignment="Left" MinWidth="200">
+            <dxlc:LayoutGroup Header="MergeRequests" dxlc:DockLayoutControl.Dock="Left" MinWidth="300">
                 <local:MergeRequestsControl DataContext="{Binding Path=MergeRequests}"/>
             </dxlc:LayoutGroup>
-            <dxlc:LayoutGroup HorizontalAlignment="Stretch" Width="500">
+            <dxlc:LayoutGroup dxlc:DockLayoutControl.Dock="Client">
                 <local:ProcessMergeRequestControl DataContext="{Binding Path=MergeRequests.SelectedMergeRequest}"/>
             </dxlc:LayoutGroup>
         </dxlc:DockLayoutControl>

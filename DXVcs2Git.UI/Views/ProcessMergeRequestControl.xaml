@@ -8,16 +8,25 @@
              xmlns:avalonEdit="http://icsharpcode.net/sharpdevelop/avalonedit"
              xmlns:dxmvvm="http://schemas.devexpress.com/winfx/2008/xaml/mvvm"
              xmlns:viewModels="clr-namespace:DXVcs2Git.UI.ViewModels"
-             mc:Ignorable="d" 
-             d:DesignHeight="300" d:DesignWidth="300">
+             mc:Ignorable="d" >
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition/>
             <ColumnDefinition/>
         </Grid.ColumnDefinitions>
-        <dxg:GridControl x:Name="grid" AutoGenerateColumns="AddNew" ItemsSource="{Binding Path=Changes}">
+        <dxg:GridControl x:Name="grid" ItemsSource="{Binding Path=Changes}">
+            <dxg:GridControl.Columns>
+                <dxg:GridColumn FieldName="ChangeMode" FixedWidth="True" Width="70">
+                </dxg:GridColumn>
+                <dxg:GridColumn FieldName="Path">
+                </dxg:GridColumn>
+            </dxg:GridControl.Columns>
             <dxg:GridControl.View>
-                <dxg:TableView NavigationStyle="Row"/>
+                <dxg:TableView 
+                    ShowGroupPanel="False" 
+                    NavigationStyle="Row" 
+                    AutoWidth="True">
+                </dxg:TableView>
             </dxg:GridControl.View>
         </dxg:GridControl>
         <avalonEdit:TextEditor Grid.Column="1" FontFamily="Consolas">

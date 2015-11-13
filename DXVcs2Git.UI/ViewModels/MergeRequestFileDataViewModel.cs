@@ -13,7 +13,6 @@ namespace DXVcs2Git.UI.ViewModels {
         public FileChangeMode ChangeMode { get; private set; }
         public string Path { get; private set; }
         public string Diff { get; private set; }
-        public TextDocument Document { get; private set; }
 
         readonly MergeRequestFileData fileData;
         public MergeRequestFileDataViewModel(MergeRequestFileData fileData) {
@@ -21,7 +20,6 @@ namespace DXVcs2Git.UI.ViewModels {
             ChangeMode = CalcChangeMode();
             Path = fileData.OldPath;
             Diff = fileData.Diff;
-            Document = new TextDocument(Diff.ToCharArray());
         }
         FileChangeMode CalcChangeMode() {
             if (this.fileData.IsDeleted)

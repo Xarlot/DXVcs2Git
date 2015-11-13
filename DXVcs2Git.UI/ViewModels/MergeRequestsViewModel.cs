@@ -8,8 +8,8 @@ using NGitLab.Models;
 
 namespace DXVcs2Git.UI.ViewModels {
     public class MergeRequestsViewModel : BindableBase {
-        GitLabWrapper gitLabWrapper;
-        string repo;
+        readonly GitLabWrapper gitLabWrapper;
+        readonly string repo;
         MergeRequestViewModel selectedMergeRequest;
         public IEnumerable<MergeRequestViewModel> MergeRequests { get; private set; }
         public MergeRequestViewModel SelectedMergeRequest {
@@ -32,6 +32,7 @@ namespace DXVcs2Git.UI.ViewModels {
 
             var mergeRequests = gitLabWrapper.GetMergeRequests(project);
             MergeRequests = mergeRequests.Select(x => new MergeRequestViewModel(this.gitLabWrapper, x)).ToList();
+            SelectedMergeRequest = MergeRequests.FirstOrDefault();
         }
     }
 }
