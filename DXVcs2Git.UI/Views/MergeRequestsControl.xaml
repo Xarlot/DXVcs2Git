@@ -12,8 +12,14 @@
     <Grid>
         <dxr:RibbonControl>
             <dxr:RibbonDefaultPageCategory>
-                <dxr:RibbonPage Caption="Page">
+                <dxr:RibbonPage Caption="Main">
                     <dxr:RibbonPageGroup>
+                        <dxb:BarButtonItem
+                            RibbonStyle="Large" 
+                            GlyphSize="Large" 
+                            Content="Update"
+                            Command="{Binding Path=UpdateCommand}">
+                        </dxb:BarButtonItem>
                         <dxb:BarSubItem 
                             RibbonStyle="Large" 
                             GlyphSize="Large" 

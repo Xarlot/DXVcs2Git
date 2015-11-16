@@ -1,5 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Input;
 using DevExpress.Mvvm;
@@ -19,10 +18,13 @@ namespace DXVcs2Git.UI.ViewModels {
             set { SetProperty(ref this.selectedMergeRequest, value, () => SelectedMergeRequest); }
         }
         public IEnumerable<BranchViewModel> Branches { get; private set; }
+        public ICommand UpdateCommand { get; private set; }
 
         public MergeRequestsViewModel(GitLabWrapper gitLabWrapper, string repo) {
             this.repo = repo;
             this.gitLabWrapper = gitLabWrapper;
+            UpdateCommand = DelegateCommandFactory.Create(Update, CanUpdate);
+
             Update();
         }
         public void Update() {
@@ -34,10 +36,13 @@ namespace DXVcs2Git.UI.ViewModels {
 
             var mergeRequests = gitLabWrapper.GetMergeRequests(project);
             MergeRequests = mergeRequests.Select(x => new MergeRequestViewModel(this.gitLabWrapper, x)).ToList();
-            SelectedMergeRequest = MergeRequests.FirstOrDefault();
+            SelectedMergeRequest = SelectedMergeRequest ?? MergeRequests.FirstOrDefault();
 
             var branches = this.gitLabWrapper.GetBranches(project);
             Branches = branches.Select(x => new BranchViewModel(this, x)).ToList();
+        }
+        bool CanUpdate() {
+            return true;
         }
     }
 }
