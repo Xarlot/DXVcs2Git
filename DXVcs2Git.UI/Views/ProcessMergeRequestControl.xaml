@@ -34,10 +34,14 @@
             </dxg:GridControl.View>
         </dxg:GridControl>
         <views:EditMergeRequestControl 
-            DataContext="{Binding}"
+            DataContext="{Binding Path=EditMergeRequest}"
             Grid.Row="1">
         </views:EditMergeRequestControl>
-        <avalonEdit:TextEditor Grid.Column="1" FontFamily="Consolas" Grid.Row="0" Grid.RowSpan="2">
+        <avalonEdit:TextEditor 
+            Grid.Column="1" 
+            FontFamily="Consolas" 
+            Grid.Row="0" Grid.RowSpan="2"
+            IsReadOnly="True">
             <dxmvvm:Interaction.Behaviors>
                 <viewModels:AvalonEditTextBindingBehavior Text="{Binding Path=SelectedItem.Diff, ElementName=grid}"/>
             </dxmvvm:Interaction.Behaviors>

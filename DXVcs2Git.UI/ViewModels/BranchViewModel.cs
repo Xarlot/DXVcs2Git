@@ -11,22 +11,24 @@ namespace DXVcs2Git.UI.ViewModels {
         public string Name { get; }
 
         public ICommand CreateNewMergeRequestCommand { get; private set; }
-
+        public MergeRequestViewModel MergeRequest { get; private set; }
+        public EditMergeRequestViewModel EditMergeRequest {
+            get { return GetProperty(() => EditMergeRequest); }
+            private set { SetProperty(() => EditMergeRequest, value); }
+        }
         public BranchViewModel(MergeRequestsViewModel mergeRequests, Branch branch) {
             Branch = branch;
             Name = branch.Name;
             MergeRequests = mergeRequests;
+            MergeRequest = mergeRequests.MergeRequests.FirstOrDefault(x => x.SourceBranch == branch.Name);
 
             CreateNewMergeRequestCommand = DelegateCommandFactory.Create<MergeRequestsViewModel>(CreateNewMergeRequest, CanCreateNewMergeRequest);
         }
         bool CanCreateNewMergeRequest(MergeRequestsViewModel model) {
-            if (model == null)
-                return false;
-            return model.MergeRequests.All(x => x.MergeRequest.SourceBranch != Branch.Name);
+            return MergeRequest == null && EditMergeRequest == null;
         }
-        void CreateNewMergeRequest(MergeRequestsViewModel model) {
-            EditMergeRequestViewModel editMergeRequest = new EditMergeRequestViewModel(this);
-            MergeRequests.AddMergeRequest(editMergeRequest);
+        public void CreateNewMergeRequest(MergeRequestsViewModel model) {
+            EditMergeRequest = new EditMergeRequestViewModel(this);
         }
     }
 }
