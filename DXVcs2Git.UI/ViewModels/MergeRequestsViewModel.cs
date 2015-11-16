@@ -48,7 +48,7 @@ namespace DXVcs2Git.UI.ViewModels {
         bool CanUpdate() {
             return true;
         }
-        public void AddMergeRequest(NewMergeRequestViewModel mergeRequest) {
+        public void AddMergeRequest(EditMergeRequestViewModel mergeRequest) {
             
         }
     }

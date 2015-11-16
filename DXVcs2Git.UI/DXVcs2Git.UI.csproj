@@ -139,13 +139,16 @@
       <SubType>Designer</SubType>
     </ApplicationDefinition>
     <Compile Include="ViewModels\BranchViewModel.cs" />
-    <Compile Include="ViewModels\NewMergeRequestViewModel.cs" />
+    <Compile Include="ViewModels\EditMergeRequestViewModel.cs" />
     <Compile Include="Views\AvalonEditTextToDocumentBehavior.cs" />
     <Compile Include="ViewModels\MergeRequestFileDataViewModel.cs" />
     <Compile Include="ViewModels\Options.cs" />
     <Compile Include="ViewModels\MergeRequestsViewModel.cs" />
     <Compile Include="ViewModels\MergeRequestViewModel.cs" />
     <Compile Include="Views\DiffLineBackgroundRenderer.cs" />
+    <Compile Include="Views\EditMergeRequestControl.xaml.cs">
+      <DependentUpon>EditMergeRequestControl.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Views\MergeRequestsControl.xaml.cs">
       <DependentUpon>MergeRequestsControl.xaml</DependentUpon>
     </Compile>
@@ -162,6 +165,10 @@
       <DependentUpon>MainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
+    <Page Include="Views\EditMergeRequestControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="Views\MergeRequestsControl.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>

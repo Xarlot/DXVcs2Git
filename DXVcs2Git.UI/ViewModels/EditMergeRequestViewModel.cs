@@ -1,10 +1,10 @@
 ﻿using DevExpress.Mvvm;
 
 namespace DXVcs2Git.UI.ViewModels {
-    public class NewMergeRequestViewModel : BindableBase {
+    public class EditMergeRequestViewModel : BindableBase {
         BranchViewModel model;
 
-        public NewMergeRequestViewModel(BranchViewModel model) {
+        public EditMergeRequestViewModel(BranchViewModel model) {
             this.model = model;
         }
 
