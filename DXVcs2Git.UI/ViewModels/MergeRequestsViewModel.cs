@@ -14,6 +14,7 @@ namespace DXVcs2Git.UI.ViewModels {
         readonly GitLabWrapper gitLabWrapper;
         readonly string repo;
         MergeRequestViewModel selectedMergeRequest;
+        BranchViewModel selectedBranch;
         public ObservableCollection<MergeRequestViewModel> MergeRequests {
             get { return this.mergeRequests; }
             private set { SetProperty(ref this.mergeRequests, value, () => MergeRequests); }
@@ -23,6 +24,12 @@ namespace DXVcs2Git.UI.ViewModels {
             set { SetProperty(ref this.selectedMergeRequest, value, () => SelectedMergeRequest); }
         }
         public IEnumerable<BranchViewModel> Branches { get; private set; }
+        public IEnumerable<Branch> ProtectedBranches { get; set; }
+        public BranchViewModel SelectedBranch {
+            get { return this.selectedBranch; }
+            set { SetProperty(ref this.selectedBranch, value, () => SelectedBranch); }
+        }
+
         public ICommand UpdateCommand { get; private set; }
 
         public MergeRequestsViewModel(GitLabWrapper gitLabWrapper, string repo) {
@@ -41,9 +48,9 @@ namespace DXVcs2Git.UI.ViewModels {
 
             MergeRequests = new ObservableCollection<MergeRequestViewModel>(gitLabWrapper.GetMergeRequests(project).Select(x => new MergeRequestViewModel(gitLabWrapper, x)).ToList());
             SelectedMergeRequest = SelectedMergeRequest != null && MergeRequests.Contains(SelectedMergeRequest) ? SelectedMergeRequest : MergeRequests.FirstOrDefault();
-
-            var branches = this.gitLabWrapper.GetBranches(project);
-            Branches = branches.Select(x => new BranchViewModel(this, x)).ToList();
+            var branches = this.gitLabWrapper.GetBranches(project).ToList();
+            ProtectedBranches = branches.Where(x => x.Protected).ToList();
+            Branches = branches.Where(x => !x.Protected).Select(x => new BranchViewModel(this, x)).ToList();
         }
         bool CanUpdate() {
             return true;

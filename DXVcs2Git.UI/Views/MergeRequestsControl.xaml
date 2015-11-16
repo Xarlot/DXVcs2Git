@@ -20,7 +20,7 @@
                             Content="Update"
                             Command="{Binding Path=UpdateCommand}">
                         </dxb:BarButtonItem>
-                        <dxb:BarSubItem 
+                        <!--<dxb:BarSubItem 
                             RibbonStyle="Large" 
                             GlyphSize="Large" 
                             Content="New merge request"
@@ -41,37 +41,22 @@
                                     </ContentControl>
                                 </DataTemplate>
                             </dxb:BarSubItem.ItemTemplate>
-                        </dxb:BarSubItem>
+                        </dxb:BarSubItem>-->
                     </dxr:RibbonPageGroup>
                 </dxr:RibbonPage>
             </dxr:RibbonDefaultPageCategory>
         </dxr:RibbonControl>
         <dxe:ListBoxEdit 
-            ItemsSource="{Binding Path=MergeRequests}" 
-            EditValue="{Binding Path=SelectedMergeRequest}">
+            ItemsSource="{Binding Path=Branches}" 
+            EditValue="{Binding Path=SelectedBranch}">
             <dxe:ListBoxEdit.ItemTemplate>
                 <DataTemplate>
                     <dxlc:LayoutControl>
                         <dxlc:LayoutGroup Orientation="Vertical">
-                            <dxlc:LayoutItem Label="Title:">
+                            <dxlc:LayoutItem Label="Name: ">
                                 <dxlc:LayoutItem.Content>
-                                    <TextBlock Text="{Binding Path=Title}"/>
+                                    <TextBlock Text="{Binding Path=Name}"/>
                                 </dxlc:LayoutItem.Content>
-                            </dxlc:LayoutItem>
-                            <dxlc:LayoutItem Label="Author:">
-                                <dxlc:LayoutItem>
-                                    <TextBlock Text="{Binding Path=Author}"/>
-                                </dxlc:LayoutItem>
-                            </dxlc:LayoutItem>
-                            <dxlc:LayoutItem Label="Source branch:">
-                                <dxlc:LayoutItem>
-                                    <TextBlock Text="{Binding Path=SourceBranch}"/>
-                                </dxlc:LayoutItem>
-                            </dxlc:LayoutItem>
-                            <dxlc:LayoutItem Label="Target branch:">
-                                <dxlc:LayoutItem>
-                                    <TextBlock Text="{Binding Path=TargetBranch}"/>
-                                </dxlc:LayoutItem>
                             </dxlc:LayoutItem>
                         </dxlc:LayoutGroup>
                     </dxlc:LayoutControl>
