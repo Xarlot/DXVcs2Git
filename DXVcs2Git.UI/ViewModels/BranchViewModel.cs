@@ -25,8 +25,8 @@ namespace DXVcs2Git.UI.ViewModels {
             return model.MergeRequests.All(x => x.MergeRequest.SourceBranch != Branch.Name);
         }
         void CreateNewMergeRequest(MergeRequestsViewModel model) {
-            NewMergeRequestViewModel newMergeRequest = new NewMergeRequestViewModel(this);
-            MergeRequests.AddMergeRequest(newMergeRequest);
+            EditMergeRequestViewModel editMergeRequest = new EditMergeRequestViewModel(this);
+            MergeRequests.AddMergeRequest(editMergeRequest);
         }
     }
 }
