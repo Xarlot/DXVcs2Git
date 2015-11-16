@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Windows.Input;
 using DevExpress.Mvvm;
@@ -9,10 +10,14 @@ using NGitLab.Models;
 
 namespace DXVcs2Git.UI.ViewModels {
     public class MergeRequestsViewModel : BindableBase {
+        ObservableCollection<MergeRequestViewModel> mergeRequests;
         readonly GitLabWrapper gitLabWrapper;
         readonly string repo;
         MergeRequestViewModel selectedMergeRequest;
-        public IEnumerable<MergeRequestViewModel> MergeRequests { get; private set; }
+        public ObservableCollection<MergeRequestViewModel> MergeRequests {
+            get { return this.mergeRequests; }
+            private set { SetProperty(ref this.mergeRequests, value, () => MergeRequests); }
+        }
         public MergeRequestViewModel SelectedMergeRequest {
             get { return this.selectedMergeRequest; }
             set { SetProperty(ref this.selectedMergeRequest, value, () => SelectedMergeRequest); }
@@ -34,15 +39,17 @@ namespace DXVcs2Git.UI.ViewModels {
                 return;
             }
 
-            var mergeRequests = gitLabWrapper.GetMergeRequests(project);
-            MergeRequests = mergeRequests.Select(x => new MergeRequestViewModel(this.gitLabWrapper, x)).ToList();
-            SelectedMergeRequest = SelectedMergeRequest ?? MergeRequests.FirstOrDefault();
+            MergeRequests = new ObservableCollection<MergeRequestViewModel>(gitLabWrapper.GetMergeRequests(project).Select(x => new MergeRequestViewModel(gitLabWrapper, x)).ToList());
+            SelectedMergeRequest = SelectedMergeRequest != null && MergeRequests.Contains(SelectedMergeRequest) ? SelectedMergeRequest : MergeRequests.FirstOrDefault();
 
             var branches = this.gitLabWrapper.GetBranches(project);
             Branches = branches.Select(x => new BranchViewModel(this, x)).ToList();
         }
         bool CanUpdate() {
             return true;
+        }
+        public void AddMergeRequest(NewMergeRequestViewModel mergeRequest) {
+            
         }
     }
 }

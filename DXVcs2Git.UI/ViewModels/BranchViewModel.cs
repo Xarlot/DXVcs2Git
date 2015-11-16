@@ -26,6 +26,7 @@ namespace DXVcs2Git.UI.ViewModels {
         }
         void CreateNewMergeRequest(MergeRequestsViewModel model) {
             NewMergeRequestViewModel newMergeRequest = new NewMergeRequestViewModel(this);
+            MergeRequests.AddMergeRequest(newMergeRequest);
         }
     }
 }
