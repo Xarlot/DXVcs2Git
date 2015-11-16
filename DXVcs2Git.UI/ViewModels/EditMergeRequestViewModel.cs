@@ -10,20 +10,14 @@ namespace DXVcs2Git.UI.ViewModels {
         }
 
         public bool IsModified { get; private set; }
-        public string Title {
-            get { return GetProperty(() => Title); }
-            set { SetProperty(() => Title, value, () => IsModified = true); }
-        }
-        public string Description {
-            get { return GetProperty(() => Description); }
-            set { SetProperty(() => Description, value, () => IsModified = true); }
+        public string Comment {
+            get { return GetProperty(() => Comment); }
+            set { SetProperty(() => Comment, value, () => IsModified = true); }
         }
         public string this[string columnName] {
             get {
                 if (columnName == "Title")
-                    return string.IsNullOrEmpty(Title) ? "error" : null;
-                if (columnName == "Description")
-                    return string.IsNullOrEmpty(Description) ? "error" : null;
+                    return string.IsNullOrEmpty(Comment) ? "error" : null;
                 return null;
             }
         }

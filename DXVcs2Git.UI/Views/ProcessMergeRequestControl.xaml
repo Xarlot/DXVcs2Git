@@ -16,7 +16,7 @@
         </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
             <RowDefinition/>
-            <RowDefinition/>
+            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
         <dxg:GridControl x:Name="grid" ItemsSource="{Binding Path=Changes}">
             <dxg:GridControl.Columns>
