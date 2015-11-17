@@ -21,7 +21,7 @@
                                 <TextBlock Text="{Binding Path=Name}"/>
                             </dxlc:LayoutItem.Content>
                         </dxlc:LayoutItem>
-                        <dxlc:LayoutItem Label="Merge request: ">
+                        <dxlc:LayoutItem Label="Merge request: " VerticalContentAlignment="Center">
                             <dxlc:LayoutItem.Content>
                                 <TextBlock Text="{Binding Path=MergeRequest.Title}"/>
                             </dxlc:LayoutItem.Content>

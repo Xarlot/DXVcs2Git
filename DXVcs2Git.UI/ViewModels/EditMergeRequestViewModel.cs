@@ -8,19 +8,20 @@ using DevExpress.Xpf.Core;
 namespace DXVcs2Git.UI.ViewModels {
     public class EditMergeRequestViewModel : BindableBase, IDataErrorInfo {
         readonly BranchViewModel model;
-        
+
         public ICommand CloseMergeRequestCommand { get; private set; }
         public ICommand ApplyMergeRequestCommand { get; private set; }
         public ICommand CancelMergeRequestCommand { get; private set; }
-        
+
         public EditMergeRequestViewModel(BranchViewModel model) {
             this.model = model;
+
             CloseMergeRequestCommand = DelegateCommandFactory.Create(PerformCloseMergeRequest);
             ApplyMergeRequestCommand = DelegateCommandFactory.Create(PerformApplyMergeRequest, CanApplyMergeRequest);
             CancelMergeRequestCommand = DelegateCommandFactory.Create(PerformCancelMergeRequest, CanCancelMergeRequest);
 
             model.IsInEditingMergeRequest = true;
-
+            Comment = model.MergeRequest?.MergeRequest.Title ?? model.Branch.Commit.Message;
         }
         bool CanCancelMergeRequest() {
             return true;
@@ -44,7 +45,12 @@ namespace DXVcs2Git.UI.ViewModels {
         public bool IsModified { get; private set; }
         public string Comment {
             get { return GetProperty(() => Comment); }
-            set { SetProperty(() => Comment, value, () => IsModified = true); }
+            set {
+                SetProperty(() => Comment, value, () => {
+                    IsModified = true;
+                    CommandManager.InvalidateRequerySuggested();
+                });
+            }
         }
         public string this[string columnName] {
             get {
