@@ -7,10 +7,38 @@
              xmlns:dxr="http://schemas.devexpress.com/winfx/2008/xaml/ribbon"
              xmlns:dxb="http://schemas.devexpress.com/winfx/2008/xaml/bars"
              xmlns:dxlc="http://schemas.devexpress.com/winfx/2008/xaml/layoutcontrol"
+             xmlns:views="clr-namespace:DXVcs2Git.UI.Views"
              mc:Ignorable="d" 
              d:DesignHeight="300" d:DesignWidth="300">
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <views:BranchesTemplateSelector x:Key="branchesSelector"/>
+            <DataTemplate x:Key="editMergeRequestTemplate">
+                <dxlc:LayoutControl>
+                    <dxlc:LayoutGroup Orientation="Vertical">
+                        <dxlc:LayoutItem Label="Name: ">
+                            <dxlc:LayoutItem.Content>
+                                <TextBlock Text="{Binding Path=Name}"/>
+                            </dxlc:LayoutItem.Content>
+                        </dxlc:LayoutItem>
+                    </dxlc:LayoutGroup>
+                </dxlc:LayoutControl>
+            </DataTemplate>
+            <DataTemplate x:Key="noMergeRequestTemplate">
+                <dxlc:LayoutControl>
+                    <dxlc:LayoutGroup Orientation="Vertical">
+                        <dxlc:LayoutItem Label="Name: ">
+                            <dxlc:LayoutItem.Content>
+                                <TextBlock Text="{Binding Path=Name}"/>
+                            </dxlc:LayoutItem.Content>
+                        </dxlc:LayoutItem>
+                    </dxlc:LayoutGroup>
+                </dxlc:LayoutControl>
+            </DataTemplate>
+        </ResourceDictionary>
+    </UserControl.Resources>
     <Grid>
-        <dxr:RibbonControl>
+        <dxr:RibbonControl >
             <dxr:RibbonDefaultPageCategory>
                 <dxr:RibbonPage Caption="Main">
                     <dxr:RibbonPageGroup>
@@ -20,48 +48,14 @@
                             Content="Update"
                             Command="{Binding Path=UpdateCommand}">
                         </dxb:BarButtonItem>
-                        <!--<dxb:BarSubItem 
-                            RibbonStyle="Large" 
-                            GlyphSize="Large" 
-                            Content="New merge request"
-                            ItemLinksSource="{Binding Path=Branches}">
-                            <dxb:BarSubItem.ItemTemplate>
-                                <DataTemplate>
-                                    <ContentControl>
-                                        <dxb:BarButtonItem 
-                                            Content="{Binding Path=Name}" 
-                                            Command="{Binding Path=CreateNewMergeRequestCommand}" 
-                                            CommandParameter="{Binding Path=MergeRequests}">
-                                            <dxb:BarButtonItem.ContentTemplate>
-                                                <DataTemplate>
-                                                    <TextBlock Text="{Binding}"/>
-                                                </DataTemplate>
-                                            </dxb:BarButtonItem.ContentTemplate>
-                                        </dxb:BarButtonItem>
-                                    </ContentControl>
-                                </DataTemplate>
-                            </dxb:BarSubItem.ItemTemplate>
-                        </dxb:BarSubItem>-->
                     </dxr:RibbonPageGroup>
                 </dxr:RibbonPage>
             </dxr:RibbonDefaultPageCategory>
         </dxr:RibbonControl>
         <dxe:ListBoxEdit 
             ItemsSource="{Binding Path=Branches}" 
-            EditValue="{Binding Path=SelectedBranch}">
-            <dxe:ListBoxEdit.ItemTemplate>
-                <DataTemplate>
-                    <dxlc:LayoutControl>
-                        <dxlc:LayoutGroup Orientation="Vertical">
-                            <dxlc:LayoutItem Label="Name: ">
-                                <dxlc:LayoutItem.Content>
-                                    <TextBlock Text="{Binding Path=Name}"/>
-                                </dxlc:LayoutItem.Content>
-                            </dxlc:LayoutItem>
-                        </dxlc:LayoutGroup>
-                    </dxlc:LayoutControl>
-                </DataTemplate>
-            </dxe:ListBoxEdit.ItemTemplate>
+            EditValue="{Binding Path=SelectedBranch}"
+            ItemTemplateSelector="{StaticResource branchesSelector}">
         </dxe:ListBoxEdit>
     </Grid>
 </UserControl>

@@ -10,19 +10,10 @@ using NGitLab.Models;
 
 namespace DXVcs2Git.UI.ViewModels {
     public class MergeRequestsViewModel : BindableBase {
-        ObservableCollection<MergeRequestViewModel> mergeRequests;
         readonly GitLabWrapper gitLabWrapper;
         readonly string repo;
-        MergeRequestViewModel selectedMergeRequest;
         BranchViewModel selectedBranch;
-        public ObservableCollection<MergeRequestViewModel> MergeRequests {
-            get { return this.mergeRequests; }
-            private set { SetProperty(ref this.mergeRequests, value, () => MergeRequests); }
-        }
-        public MergeRequestViewModel SelectedMergeRequest {
-            get { return this.selectedMergeRequest; }
-            set { SetProperty(ref this.selectedMergeRequest, value, () => SelectedMergeRequest); }
-        }
+
         public IEnumerable<BranchViewModel> Branches { get; private set; }
         public IEnumerable<Branch> ProtectedBranches { get; set; }
         public BranchViewModel SelectedBranch {
@@ -46,11 +37,12 @@ namespace DXVcs2Git.UI.ViewModels {
                 return;
             }
 
-            MergeRequests = new ObservableCollection<MergeRequestViewModel>(gitLabWrapper.GetMergeRequests(project).Select(x => new MergeRequestViewModel(gitLabWrapper, x)).ToList());
-            SelectedMergeRequest = SelectedMergeRequest != null && MergeRequests.Contains(SelectedMergeRequest) ? SelectedMergeRequest : MergeRequests.FirstOrDefault();
+            var mergeRequests = this.gitLabWrapper.GetMergeRequests(project);
             var branches = this.gitLabWrapper.GetBranches(project).ToList();
             ProtectedBranches = branches.Where(x => x.Protected).ToList();
-            Branches = branches.Where(x => !x.Protected).Select(x => new BranchViewModel(this, x)).ToList();
+            Branches = branches.Where(x => !x.Protected)
+                .Select(x => new BranchViewModel(this.gitLabWrapper, this, mergeRequests.FirstOrDefault(mr => mr.SourceBranch == x.Name), x)).ToList();
+            SelectedBranch = Branches.FirstOrDefault();
         }
         bool CanUpdate() {
             return true;

@@ -7,6 +7,7 @@ namespace DXVcs2Git.UI.ViewModels {
 
         public EditMergeRequestViewModel(BranchViewModel model) {
             this.model = model;
+            model.IsInEditingMergeRequest = true;
         }
 
         public bool IsModified { get; private set; }

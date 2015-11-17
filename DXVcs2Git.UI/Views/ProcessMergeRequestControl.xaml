@@ -8,7 +8,14 @@
              xmlns:dxmvvm="http://schemas.devexpress.com/winfx/2008/xaml/mvvm"
              xmlns:viewModels="clr-namespace:DXVcs2Git.UI.ViewModels"
              xmlns:views="clr-namespace:DXVcs2Git.UI.Views"
+             xmlns:dxr="http://schemas.devexpress.com/winfx/2008/xaml/ribbon"
+             xmlns:dxb="http://schemas.devexpress.com/winfx/2008/xaml/bars"
              mc:Ignorable="d" >
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <dxmvvm:BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"></dxmvvm:BooleanToVisibilityConverter>
+        </ResourceDictionary>
+    </UserControl.Resources>
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition/>
@@ -18,7 +25,28 @@
             <RowDefinition/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
-        <dxg:GridControl x:Name="grid" ItemsSource="{Binding Path=Changes}">
+        <dxr:RibbonControl >
+            <dxr:RibbonDefaultPageCategory>
+                <dxr:RibbonPage Caption="Main">
+                    <dxr:RibbonPageGroup>
+                        <dxb:BarButtonItem
+                            RibbonStyle="Large" 
+                            GlyphSize="Large" 
+                            Content="Create"
+                            Command="{Binding Path=CreateMergeRequestCommand}">
+                        </dxb:BarButtonItem>
+                        <dxb:BarButtonItem
+                            RibbonStyle="Large" 
+                            GlyphSize="Large" 
+                            Content="Edit"
+                            Command="{Binding Path=EditMergeRequestCommand}">
+                        </dxb:BarButtonItem>
+                    </dxr:RibbonPageGroup>
+                </dxr:RibbonPage>
+            </dxr:RibbonDefaultPageCategory>
+        </dxr:RibbonControl>
+
+        <dxg:GridControl x:Name="grid" ItemsSource="{Binding Path=MergeRequest.Changes}">
             <dxg:GridControl.Columns>
                 <dxg:GridColumn FieldName="ChangeMode" FixedWidth="True" Width="70">
                 </dxg:GridColumn>
@@ -35,6 +63,7 @@
         </dxg:GridControl>
         <views:EditMergeRequestControl 
             DataContext="{Binding Path=EditMergeRequest}"
+            Visibility="{Binding Path=IsInEditingMergeRequest, Converter={StaticResource BooleanToVisibilityConverter}}"
             Grid.Row="1">
         </views:EditMergeRequestControl>
         <avalonEdit:TextEditor 

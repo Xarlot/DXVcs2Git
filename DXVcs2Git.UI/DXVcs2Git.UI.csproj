@@ -141,6 +141,7 @@
     <Compile Include="ViewModels\Options.cs" />
     <Compile Include="ViewModels\MergeRequestsViewModel.cs" />
     <Compile Include="ViewModels\MergeRequestViewModel.cs" />
+    <Compile Include="Views\BranchesTemplateSelector.cs" />
     <Compile Include="Views\DiffLineBackgroundRenderer.cs" />
     <Compile Include="Views\EditMergeRequestControl.xaml.cs">
       <DependentUpon>EditMergeRequestControl.xaml</DependentUpon>

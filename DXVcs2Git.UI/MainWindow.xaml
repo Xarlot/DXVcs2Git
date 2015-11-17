@@ -25,7 +25,7 @@
                 </local:MergeRequestsControl>
             </dxlc:LayoutGroup>
             <dxlc:LayoutGroup dxlc:DockLayoutControl.Dock="Client">
-                <local:ProcessMergeRequestControl DataContext="{Binding Path=MergeRequests.SelectedMergeRequest}"/>
+                <local:ProcessMergeRequestControl DataContext="{Binding Path=MergeRequests.SelectedBranch}"/>
             </dxlc:LayoutGroup>
         </dxlc:DockLayoutControl>
     </Grid>
