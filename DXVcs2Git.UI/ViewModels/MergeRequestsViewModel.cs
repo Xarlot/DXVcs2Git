@@ -5,13 +5,14 @@ using System.Windows.Input;
 using DevExpress.Mvvm;
 using DevExpress.Mvvm.Native;
 using DXVcs2Git.Core;
+using DXVcs2Git.Core.Git;
 using DXVcs2Git.Git;
 using NGitLab.Models;
 
 namespace DXVcs2Git.UI.ViewModels {
     public class MergeRequestsViewModel : BindableBase {
         readonly GitLabWrapper gitLabWrapper;
-        readonly string repo;
+        readonly GitReaderWrapper gitReader;
         BranchViewModel selectedBranch;
 
         public IEnumerable<BranchViewModel> Branches { get; private set; }
@@ -27,15 +28,15 @@ namespace DXVcs2Git.UI.ViewModels {
 
         public ICommand UpdateCommand { get; private set; }
 
-        public MergeRequestsViewModel(GitLabWrapper gitLabWrapper, string repo) {
-            this.repo = repo;
+        public MergeRequestsViewModel(GitLabWrapper gitLabWrapper, GitReaderWrapper gitReader) {
+            this.gitReader = gitReader;
             this.gitLabWrapper = gitLabWrapper;
             UpdateCommand = DelegateCommandFactory.Create(Update, CanUpdate);
 
             Update();
         }
         public void Update() {
-            Project project = gitLabWrapper.FindProject(repo);
+            Project project = gitLabWrapper.FindProject(this.gitReader.GetRemoteRepoPath());
             if (project == null) {
                 Log.Error("Can`t find project");
                 return;

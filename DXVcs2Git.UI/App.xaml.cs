@@ -25,9 +25,7 @@ namespace DXVcs2Git.UI {
             errors => 1);
             if (hasErrors != 0)
                 Environment.Exit(hasErrors);
-            if (string.IsNullOrEmpty(Options.Repo))
-                Options.Repo = Options.DetectRepo();
-            
+           
             RootModel = new RootViewModel(Options);
             RootModel.Initialize();
         }

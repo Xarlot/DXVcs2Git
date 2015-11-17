@@ -2,6 +2,7 @@
 using System.Linq;
 using DevExpress.Mvvm;
 using DXVcs2Git.Core;
+using DXVcs2Git.Core.Git;
 using DXVcs2Git.Git;
 using DXVcs2Git.UI.ViewModels;
 using NGitLab.Models;
@@ -15,8 +16,9 @@ namespace DXVcs2Git.UI.ViewModels {
         }
 
         public void Initialize() {
+            GitReaderWrapper gitReader = new GitReaderWrapper(Options.LocalFolder);
             GitLabWrapper wrapper = new GitLabWrapper(Options.GitServer, Options.Token);
-            MergeRequests = new MergeRequestsViewModel(wrapper, Options.Repo);
+            MergeRequests = new MergeRequestsViewModel(wrapper, gitReader);
         }
     }
 }

@@ -9,8 +9,6 @@ namespace DXVcs2Git.UI.ViewModels {
         public string SourceBranch { get; set; }
         [Option('t', "target", HelpText = "Target git branch name")]
         public string TargetBranch { get; set; }
-        [Option('r', "repo", HelpText = "Http git repo path")]
-        public string Repo { get; set; }
         [Option('d', "dir", HelpText = "Path to local git repo")]
         public string LocalFolder { get; set; }
         [Option('p', "password", Required = true, HelpText = "Token for gitlab cli")]
