@@ -15,6 +15,7 @@ namespace DXVcs2Git.UI.ViewModels {
         readonly GitReaderWrapper gitReader;
         BranchViewModel selectedBranch;
 
+        public Project Project { get; private set; }
         public IEnumerable<BranchViewModel> Branches { get; private set; }
         public IEnumerable<Branch> ProtectedBranches { get; set; }
         public bool HasEditableMergeRequest {
@@ -36,25 +37,22 @@ namespace DXVcs2Git.UI.ViewModels {
             Update();
         }
         public void Update() {
-            Project project = gitLabWrapper.FindProject(this.gitReader.GetRemoteRepoPath());
-            if (project == null) {
+            Project = gitLabWrapper.FindProject(this.gitReader.GetRemoteRepoPath());
+            if (Project == null) {
                 Log.Error("Can`t find project");
                 return;
             }
 
-            var mergeRequests = this.gitLabWrapper.GetMergeRequests(project);
-            var branches = this.gitLabWrapper.GetBranches(project).ToList();
+            var mergeRequests = this.gitLabWrapper.GetMergeRequests(Project);
+            var branches = this.gitLabWrapper.GetBranches(Project).ToList();
             ProtectedBranches = branches.Where(x => x.Protected).ToList();
             Branches = branches.Where(x => !x.Protected)
-                .Select(x => new BranchViewModel(gitLabWrapper, this, mergeRequests.FirstOrDefault(mr => mr.SourceBranch == x.Name), x)).ToList();
+                .Select(x => new BranchViewModel(gitLabWrapper, this.gitReader, this, mergeRequests.FirstOrDefault(mr => mr.SourceBranch == x.Name), x)).ToList();
             SelectedBranch = Branches.FirstOrDefault();
             HasEditableMergeRequest = SelectedBranch.If(x => x.IsInEditingMergeRequest).ReturnSuccess();
         }
         bool CanUpdate() {
             return true;
-        }
-        public void AddMergeRequest(EditMergeRequestViewModel mergeRequest) {
-            
         }
     }
 }

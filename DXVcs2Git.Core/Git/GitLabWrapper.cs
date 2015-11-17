@@ -35,9 +35,26 @@ namespace DXVcs2Git.Git {
                 AssigneeId = mergeRequest.Assignee.Id,
             });
         }
+        public MergeRequest UpdateMergeRequestTitleAndDescription(MergeRequest mergeRequest, string title, string description) {
+            var mergeRequestsClient = client.GetMergeRequest(mergeRequest.ProjectId);
+            return mergeRequestsClient.Update(mergeRequest.Id, new MergeRequestUpdate() {
+                Description = description,
+                Title = title,
+            });
+        }
         public MergeRequest CloseMergeRequest(MergeRequest mergeRequest) {
             var mergeRequestsClient = client.GetMergeRequest(mergeRequest.ProjectId);
             return mergeRequestsClient.Update(mergeRequest.Id, new MergeRequestUpdate() { NewState = "close"});
+        }
+        public MergeRequest CreateMergeRequest(Project project, string title, string description, string user, string sourceBranch, string targetBranch) {
+            var mergeRequestClient = this.client.GetMergeRequest(project.Id);
+            var mergeRequest = mergeRequestClient.Create(new MergeRequestCreate() {
+                Title = title,
+                SourceBranch = sourceBranch,
+                TargetBranch = targetBranch,
+                TargetProjectId = project.Id,
+            });
+            return UpdateMergeRequestTitleAndDescription(mergeRequest, title, description);
         }
         public MergeRequest ReopenMergeRequest(MergeRequest mergeRequest, string autoMergeFailedComment) {
             var mergeRequestsClient = client.GetMergeRequest(mergeRequest.ProjectId);

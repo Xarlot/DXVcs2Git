@@ -10,17 +10,35 @@ namespace DXVcs2Git.UI.ViewModels {
         readonly BranchViewModel model;
         
         public ICommand CloseMergeRequestCommand { get; private set; }
-
+        public ICommand ApplyMergeRequestCommand { get; private set; }
+        public ICommand CancelMergeRequestCommand { get; private set; }
+        
         public EditMergeRequestViewModel(BranchViewModel model) {
             this.model = model;
             CloseMergeRequestCommand = DelegateCommandFactory.Create(PerformCloseMergeRequest);
+            ApplyMergeRequestCommand = DelegateCommandFactory.Create(PerformApplyMergeRequest, CanApplyMergeRequest);
+            CancelMergeRequestCommand = DelegateCommandFactory.Create(PerformCancelMergeRequest, CanCancelMergeRequest);
 
             model.IsInEditingMergeRequest = true;
 
         }
+        bool CanCancelMergeRequest() {
+            return true;
+        }
+        void PerformCancelMergeRequest() {
+            this.model.CancelMergeRequest();
+        }
         void PerformCloseMergeRequest() {
             if (DXMessageBox.Show(null, "Are you sure?", "Close merge request", MessageBoxButton.OKCancel) == MessageBoxResult.OK)
                 this.model.CloseMergeRequest();
+        }
+        void PerformApplyMergeRequest() {
+            if (DXMessageBox.Show(null, "Are you sure?", "Apply merge request", MessageBoxButton.OKCancel) == MessageBoxResult.OK) {
+                this.model.ApplyMergeRequest(this);
+            }
+        }
+        bool CanApplyMergeRequest() {
+            return IsModified;
         }
 
         public bool IsModified { get; private set; }
