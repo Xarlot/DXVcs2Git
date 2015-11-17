@@ -7,8 +7,6 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace DXVcs2Git.GitTools {
@@ -209,6 +207,68 @@ namespace DXVcs2Git.GitTools {
             ((CommandBarButton)VsSource).Picture = MenuItemPictureHelper.ConvertImageToPicture(Icon);
         }
     }
+
+    public enum VSDevExpressMenuLocation {
+        MenuBar,
+        AddReferenceRoot,
+        AddReferenceItem,
+    }
+    public class VSDevExpressMenu : VsDevExpressMenuItem {
+        const string DevExpressMenuBarLocation = "MenuBar";
+        const string DevExpressMenuAddReferenceLocation = "Reference Root";
+        const string DevExpressMenuConvertToProjectReference = "Reference Item";
+        const string DevExpressMenuName = "Git Tools";
+        static readonly IDictionary<VSDevExpressMenuLocation, string> MenusCache = new Dictionary<VSDevExpressMenuLocation, string>();
+
+        static VSDevExpressMenu() {
+            MenusCache.Add(VSDevExpressMenuLocation.MenuBar, DevExpressMenuBarLocation);
+            MenusCache.Add(VSDevExpressMenuLocation.AddReferenceRoot, DevExpressMenuAddReferenceLocation);
+            MenusCache.Add(VSDevExpressMenuLocation.AddReferenceItem, DevExpressMenuConvertToProjectReference);
+        }
+
+        public VSDevExpressMenu(DTE dte, string menuName = DevExpressMenuName, VSDevExpressMenuLocation location = VSDevExpressMenuLocation.MenuBar, bool directItem = false) {
+            Header = menuName;
+            var commandBars = dte.CommandBars as CommandBars;
+            CommandBar mainMenuBar = commandBars[MenusCache[location]];
+            MsoControlType controlType = GetControlType(directItem);
+            if (controlType == MsoControlType.msoControlPopup) {
+                CommandBarPopup devExpressMenu = null;
+                foreach (CommandBarControl commandBarControl in mainMenuBar.Controls) {
+                    if (commandBarControl.Type == MsoControlType.msoControlPopup) {
+                        var commandBarPopup = (CommandBarPopup)commandBarControl;
+                        if (commandBarPopup.CommandBar.Name == menuName) {
+                            devExpressMenu = commandBarPopup;
+                            break;
+                        }
+                    }
+                }
+                if (devExpressMenu == null)
+                    devExpressMenu = mainMenuBar.Controls.Add(MsoControlType.msoControlPopup, Type.Missing, Type.Missing, Type.Missing, Type.Missing) as CommandBarPopup;
+                VsSource = devExpressMenu;
+                CreateChildrenFromSource();
+            }
+            else if (controlType == MsoControlType.msoControlButton) {
+                foreach (CommandBarControl commandBarControl in mainMenuBar.Controls) {
+                    if (commandBarControl.Type == MsoControlType.msoControlButton) {
+                        CommandBarButton button = (CommandBarButton)commandBarControl;
+                        if (button.Caption == menuName)
+                            throw new ArgumentException("button already registerer");
+                    }
+                }
+                var msoButton = mainMenuBar.Controls.Add(MsoControlType.msoControlButton, Type.Missing, Type.Missing, Type.Missing, Type.Missing) as CommandBarButton;
+                msoButton.Caption = menuName;
+                VsSource = msoButton;
+            }
+        }
+        MsoControlType GetControlType(bool isDirect) {
+            return isDirect ? MsoControlType.msoControlButton : MsoControlType.msoControlPopup;
+        }
+        public void CreateSeparator() {
+            var item = CreateItem(false);
+            ((CommandBarControl)item.VsSource).BeginGroup = true;
+        }
+    }
+
     public class MenuItemPictureHelper : AxHost {
         public MenuItemPictureHelper()
             : base("") {
@@ -222,20 +282,26 @@ namespace DXVcs2Git.GitTools {
             return (StdPicture)GetIPictureDispFromPicture(image);
         }
     }
-    public interface IMenuItem : IMenuItemBuilder {
 
-    }
-    public interface IMenuItemBuilder {
-
-    }
-    public class MenuBuilder : IMenuItemBuilder {
+    public class MenuBuilder {
         readonly DTE dte;
-        //readonly IServiceProvider owner;
-        public MenuBuilder(IServiceProvider owner) {
-            dte = (DTE)owner.GetService(typeof(DTE));
+        VSDevExpressMenu devExpressMenu;
+        readonly DXVcs2Git_GitToolsPackage package;
+        readonly Dictionary<string, VSDevExpressMenu> rootMenuHierarchy = new Dictionary<string, VSDevExpressMenu>();
+
+        public MenuBuilder(DXVcs2Git_GitToolsPackage package, DTE dte) {
+            this.package = package;
+            this.dte = dte;
         }
-        public IMenuItem CreateItem(bool isPopup) {
-            return null;
+        public void GenerateDefault() {
+            devExpressMenu = new VSDevExpressMenu(dte);
+            rootMenuHierarchy[string.Empty] = devExpressMenu;
+            string wizardMenuText = "Create merge request...";
+            VsDevExpressMenuItem mergeRequestMenu = devExpressMenu.CreateOrGetItem(wizardMenuText);
+            mergeRequestMenu.Click += MergeRequestMenuOnClick;
+        }
+        void MergeRequestMenuOnClick(object sender, EventArgs eventArgs) {
+            this.package.ShowMergeRequestUI();
         }
     }
 }

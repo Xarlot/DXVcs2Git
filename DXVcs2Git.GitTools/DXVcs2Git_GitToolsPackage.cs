@@ -10,6 +10,7 @@ using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Runtime.InteropServices;
+using System.Windows.Forms;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.OLE.Interop;
 using Microsoft.VisualStudio.Shell;
@@ -46,6 +47,7 @@ namespace DXVcs2Git.GitTools {
         /// </summary>
         public const string PackageGuidString = "5221f195-9141-42a3-bbd9-1018afc30ba3";
         readonly MenuBuilder menuBuilder;
+        DTE dte;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="DXVcs2Git_GitToolsPackage"/> class.
@@ -55,7 +57,8 @@ namespace DXVcs2Git.GitTools {
             // any Visual Studio service because at this point the package object is created but
             // not sited yet inside Visual Studio environment. The place to do all the other
             // initialization is the Initialize method.
-            this.menuBuilder = new MenuBuilder(this);
+            dte = GetGlobalService(typeof(DTE)) as DTE;
+            this.menuBuilder = new MenuBuilder(this, dte);
         }
 
         #region Package Members
@@ -66,11 +69,16 @@ namespace DXVcs2Git.GitTools {
         /// </summary>
         protected override void Initialize() {
             base.Initialize();            
+            this.menuBuilder.GenerateDefault();
         }
         protected override object GetService(Type serviceType) {
             return base.GetService(serviceType);
         }
 
         #endregion
+
+        public void ShowMergeRequestUI() {
+            MessageBox.Show("test");
+        }
     }
 }

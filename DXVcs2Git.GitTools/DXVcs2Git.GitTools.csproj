@@ -37,7 +37,7 @@
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
-    <OutputPath>bin\Debug\</OutputPath>
+    <OutputPath>..\bin\Debug\</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
@@ -45,7 +45,7 @@
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
-    <OutputPath>bin\Release\</OutputPath>
+    <OutputPath>..\bin\Release\</OutputPath>
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
@@ -59,67 +59,8 @@
   <ItemGroup>
     <None Include="Key.snk" />
     <Content Include="..\Lib\AtomFeed\AtomfeedCore.exe">
-      <Link>Lib\Atomfeed\AtomfeedCore.exe</Link>
-    </Content>
-    <Content Include="..\Lib\DXVcs\DXVCS.dll">
-      <Link>Lib\DXVcs\DXVCS.dll</Link>
-      <IncludeInVSIX>true</IncludeInVSIX>
-    </Content>
-    <Content Include="..\Lib\DXVcs\DXVCSCore.dll">
-      <Link>Lib\DXVcs\DXVCSCore.dll</Link>
-      <IncludeInVSIX>true</IncludeInVSIX>
-    </Content>
-    <Content Include="..\Lib\DX\DevExpress.Data.v15.2.dll">
-      <Link>Lib\DX\DevExpress.Data.v15.2.dll</Link>
-      <IncludeInVSIX>true</IncludeInVSIX>
-    </Content>
-    <Content Include="..\Lib\DX\DevExpress.Images.v15.2.dll">
-      <Link>Lib\DX\DevExpress.Images.v15.2.dll</Link>
-      <IncludeInVSIX>true</IncludeInVSIX>
-    </Content>
-    <Content Include="..\Lib\DX\DevExpress.Mvvm.v15.2.dll">
-      <Link>Lib\DX\DevExpress.Mvvm.v15.2.dll</Link>
-      <IncludeInVSIX>true</IncludeInVSIX>
-    </Content>
-    <Content Include="..\Lib\DX\DevExpress.Printing.v15.2.Core.dll">
-      <Link>Lib\DX\DevExpress.Printing.v15.2.Core.dll</Link>
-      <IncludeInVSIX>true</IncludeInVSIX>
-    </Content>
-    <Content Include="..\Lib\DX\DevExpress.Xpf.Core.v15.2.dll">
-      <Link>Lib\DX\DevExpress.Xpf.Core.v15.2.dll</Link>
-      <IncludeInVSIX>true</IncludeInVSIX>
-    </Content>
-    <Content Include="..\Lib\DX\DevExpress.Xpf.Docking.v15.2.dll">
-      <Link>Lib\DX\DevExpress.Xpf.Docking.v15.2.dll</Link>
-      <IncludeInVSIX>true</IncludeInVSIX>
-    </Content>
-    <Content Include="..\Lib\DX\DevExpress.Xpf.Grid.v15.2.Core.dll">
-      <Link>Lib\DX\DevExpress.Xpf.Grid.v15.2.Core.dll</Link>
-      <IncludeInVSIX>true</IncludeInVSIX>
-    </Content>
-    <Content Include="..\Lib\DX\DevExpress.Xpf.Grid.v15.2.dll">
-      <Link>Lib\DX\DevExpress.Xpf.Grid.v15.2.dll</Link>
-      <IncludeInVSIX>true</IncludeInVSIX>
-    </Content>
-    <Content Include="..\Lib\DX\DevExpress.Xpf.Layout.v15.2.Core.dll">
-      <Link>Lib\DX\DevExpress.Xpf.Layout.v15.2.Core.dll</Link>
-      <IncludeInVSIX>true</IncludeInVSIX>
-    </Content>
-    <Content Include="..\Lib\DX\DevExpress.Xpf.LayoutControl.v15.2.dll">
-      <Link>Lib\DX\DevExpress.Xpf.LayoutControl.v15.2.dll</Link>
-      <IncludeInVSIX>true</IncludeInVSIX>
-    </Content>
-    <Content Include="..\Lib\DX\DevExpress.Xpf.Ribbon.v15.2.dll">
-      <Link>Lib\DX\DevExpress.Xpf.Ribbon.v15.2.dll</Link>
-      <IncludeInVSIX>true</IncludeInVSIX>
-    </Content>
-    <Content Include="..\Lib\DX\DevExpress.Xpf.Themes.Office2013.v15.2.dll">
-      <Link>Lib\DX\DevExpress.Xpf.Themes.Office2013.v15.2.dll</Link>
-      <IncludeInVSIX>true</IncludeInVSIX>
-    </Content>
-    <Content Include="..\Lib\NGitLab\NGitLab.dll">
-      <Link>Lib\NGitLab\NGitLab.dll</Link>
-      <IncludeInVSIX>true</IncludeInVSIX>
+      <Link>AtomfeedCore.exe</Link>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="licence.rtf">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
