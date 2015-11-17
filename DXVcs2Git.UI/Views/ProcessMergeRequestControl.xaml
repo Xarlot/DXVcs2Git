@@ -14,6 +14,13 @@
     <UserControl.Resources>
         <ResourceDictionary>
             <dxmvvm:BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"></dxmvvm:BooleanToVisibilityConverter>
+            <dxmvvm:ObjectToObjectConverter x:Key="CollapsedConverter">
+                <dxmvvm:MapItem Source="{x:Null}">
+                    <dxmvvm:MapItem.Target>
+                        <Visibility>Collapsed</Visibility>
+                    </dxmvvm:MapItem.Target>
+                </dxmvvm:MapItem>
+            </dxmvvm:ObjectToObjectConverter>
         </ResourceDictionary>
     </UserControl.Resources>
     <Grid>
@@ -33,13 +40,13 @@
                             RibbonStyle="Large" 
                             GlyphSize="Large" 
                             Content="Create"
-                            Command="{Binding Path=CreateMergeRequestCommand}">
+                            Command="{Binding Path=SelectedBranch.CreateMergeRequestCommand}">
                         </dxb:BarButtonItem>
                         <dxb:BarButtonItem
                             RibbonStyle="Large" 
                             GlyphSize="Large" 
                             Content="Edit"
-                            Command="{Binding Path=EditMergeRequestCommand}">
+                            Command="{Binding Path=SelectedBranch.EditMergeRequestCommand}">
                         </dxb:BarButtonItem>
                     </dxr:RibbonPageGroup>
                 </dxr:RibbonPage>
@@ -62,9 +69,13 @@
             </dxg:GridControl.View>
         </dxg:GridControl>
         <views:EditMergeRequestControl 
-            DataContext="{Binding Path=EditableMergeRequest}"
-            Visibility="{Binding Path=HasSelectedBranch, Converter={StaticResource BooleanToVisibilityConverter}, FallbackValue=COllapsed}"
             Grid.Row="1">
+            <views:EditMergeRequestControl.Visibility>
+                <PriorityBinding>
+                    <Binding Path="SelectedBranch.IsInEditingMergeRequest" Converter="{StaticResource BooleanToVisibilityConverter}"/>
+                    <Binding Path="SelectedBranch" Mode="OneWay" Converter="{StaticResource CollapsedConverter}"/>
+                </PriorityBinding>
+            </views:EditMergeRequestControl.Visibility>
         </views:EditMergeRequestControl>
         <avalonEdit:TextEditor 
             Grid.Column="1" 

@@ -76,7 +76,6 @@
     <Compile Include="DataEncryptor.cs" />
     <Compile Include="DirectoryHelper.cs" />
     <Compile Include="CommitItem.cs" />
-    <Compile Include="Config.cs" />
     <Compile Include="Git\GitLabWrapper.cs" />
     <Compile Include="Git\GitReaderWrapper.cs" />
     <Compile Include="Git\GitWrapper.cs" />

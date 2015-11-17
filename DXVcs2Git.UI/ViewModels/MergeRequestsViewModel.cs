@@ -46,7 +46,7 @@ namespace DXVcs2Git.UI.ViewModels {
             var branches = this.gitLabWrapper.GetBranches(project).ToList();
             ProtectedBranches = branches.Where(x => x.Protected).ToList();
             Branches = branches.Where(x => !x.Protected)
-                .Select(x => new BranchViewModel(this.gitLabWrapper, this, mergeRequests.FirstOrDefault(mr => mr.SourceBranch == x.Name), x)).ToList();
+                .Select(x => new BranchViewModel(gitLabWrapper, this, mergeRequests.FirstOrDefault(mr => mr.SourceBranch == x.Name), x)).ToList();
             SelectedBranch = Branches.FirstOrDefault();
             HasEditableMergeRequest = SelectedBranch.If(x => x.IsInEditingMergeRequest).ReturnSuccess();
         }

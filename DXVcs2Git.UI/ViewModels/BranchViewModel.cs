@@ -12,7 +12,7 @@ namespace DXVcs2Git.UI.ViewModels {
         public string Name { get; }
 
         public bool HasMergeRequest { get; private set; }
-        public ICommand CreateNewMergeRequestCommand { get; private set; }
+        public ICommand CreateMergeRequestCommand { get; private set; }
         public ICommand EditMergeRequestCommand { get; private set; }
         public MergeRequestViewModel MergeRequest { get; private set; }
         public bool IsInEditingMergeRequest {
@@ -32,21 +32,19 @@ namespace DXVcs2Git.UI.ViewModels {
             MergeRequest = mergeRequest.With(x => new MergeRequestViewModel(gitLabWrapper, mergeRequest));
             HasMergeRequest = MergeRequest != null;
 
-            EditableMergeRequest = MergeRequests.With(x => new EditMergeRequestViewModel(this));
-
-            CreateNewMergeRequestCommand = DelegateCommandFactory.Create(CreateNewMergeRequest, CanCreateNewMergeRequest);
+            CreateMergeRequestCommand = DelegateCommandFactory.Create(CreateMergeRequest, CanCreateMergeRequest);
             EditMergeRequestCommand = DelegateCommandFactory.Create(EditMergeRequest, CanEditMergeRequest);
         }
         bool CanEditMergeRequest() {
-            return !IsInEditingMergeRequest;
+            return HasMergeRequest && !IsInEditingMergeRequest;
         }
         void EditMergeRequest() {
             EditableMergeRequest = new EditMergeRequestViewModel(this);
         }
-        bool CanCreateNewMergeRequest() {
-            return !HasMergeRequest && !IsInEditingMergeRequest;
+        bool CanCreateMergeRequest() {
+            return !HasMergeRequest;
         }
-        public void CreateNewMergeRequest() {
+        public void CreateMergeRequest() {
             //this.gitLabWrapper.CreateMergeRequest();
         }
         public void CloseMergeRequest() {
