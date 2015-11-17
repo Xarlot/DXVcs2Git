@@ -21,15 +21,25 @@
                                 <TextBlock Text="{Binding Path=Name}"/>
                             </dxlc:LayoutItem.Content>
                         </dxlc:LayoutItem>
+                        <dxlc:LayoutItem Label="Merge request: ">
+                            <dxlc:LayoutItem.Content>
+                                <TextBlock Text="{Binding Path=MergeRequest.Title}"/>
+                            </dxlc:LayoutItem.Content>
+                        </dxlc:LayoutItem>
                     </dxlc:LayoutGroup>
                 </dxlc:LayoutControl>
             </DataTemplate>
             <DataTemplate x:Key="noMergeRequestTemplate">
                 <dxlc:LayoutControl>
                     <dxlc:LayoutGroup Orientation="Vertical">
-                        <dxlc:LayoutItem Label="Name: ">
+                        <dxlc:LayoutItem Label="Branch: ">
                             <dxlc:LayoutItem.Content>
                                 <TextBlock Text="{Binding Path=Name}"/>
+                            </dxlc:LayoutItem.Content>
+                        </dxlc:LayoutItem>
+                        <dxlc:LayoutItem Label="Merge request: ">
+                            <dxlc:LayoutItem.Content>
+                                <TextBlock Text="No merge requests"/>
                             </dxlc:LayoutItem.Content>
                         </dxlc:LayoutItem>
                     </dxlc:LayoutGroup>

@@ -16,7 +16,7 @@ namespace DXVcs2Git.UI.Views {
             var fe = (FrameworkElement)container;
             if (branchViewModel.HasMergeRequest)
                 return (DataTemplate)fe.FindResource("editMergeRequestTemplate");
-            return (DataTemplate)fe.FindResource("noRequestTemplate");
+            return (DataTemplate)fe.FindResource("noMergeRequestTemplate");
         }
     }
 }

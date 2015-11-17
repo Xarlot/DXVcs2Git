@@ -6,7 +6,7 @@ using NGitLab.Models;
 
 namespace DXVcs2Git.UI.ViewModels {
     public class BranchViewModel : BindableBase {
-        GitLabWrapper gitLabWrapper;
+        readonly GitLabWrapper gitLabWrapper;
         public Branch Branch { get; }
         public MergeRequestsViewModel MergeRequests { get; }
         public string Name { get; }
@@ -28,9 +28,11 @@ namespace DXVcs2Git.UI.ViewModels {
             Branch = branch;
             Name = branch.Name;
             MergeRequests = mergeRequests;
+
             MergeRequest = mergeRequest.With(x => new MergeRequestViewModel(gitLabWrapper, mergeRequest));
+            HasMergeRequest = MergeRequest != null;
+
             EditableMergeRequest = MergeRequests.With(x => new EditMergeRequestViewModel(this));
-            HasMergeRequest = MergeRequests != null;
 
             CreateNewMergeRequestCommand = DelegateCommandFactory.Create(CreateNewMergeRequest, CanCreateNewMergeRequest);
             EditMergeRequestCommand = DelegateCommandFactory.Create(EditMergeRequest, CanEditMergeRequest);
@@ -49,6 +51,7 @@ namespace DXVcs2Git.UI.ViewModels {
         }
         public void CloseMergeRequest() {
             this.gitLabWrapper.CloseMergeRequest(MergeRequest.MergeRequest);
+            MergeRequests.Update();
         }
     }
 }
