@@ -23,7 +23,7 @@
                 </dxlc:LayoutItem>
                 <dxlc:LayoutGroup Orientation="Horizontal">
                     <dxlc:LayoutItem>
-                        <Button>Close</Button>
+                        <Button Content="Close" Command="{Binding Path=CloseMergeRequestCommand}"/>
                     </dxlc:LayoutItem>
                     <dxlc:LayoutItem>
                         <Button>Apply</Button>

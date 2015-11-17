@@ -62,7 +62,7 @@
             </dxg:GridControl.View>
         </dxg:GridControl>
         <views:EditMergeRequestControl 
-            DataContext="{Binding Path=EditMergeRequest}"
+            DataContext="{Binding Path=EditableMergeRequest}"
             Visibility="{Binding Path=IsInEditingMergeRequest, Converter={StaticResource BooleanToVisibilityConverter}}"
             Grid.Row="1">
         </views:EditMergeRequestControl>

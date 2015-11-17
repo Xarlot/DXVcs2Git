@@ -47,5 +47,8 @@ namespace DXVcs2Git.UI.ViewModels {
         public void CreateNewMergeRequest() {
             //this.gitLabWrapper.CreateMergeRequest();
         }
+        public void CloseMergeRequest() {
+            this.gitLabWrapper.CloseMergeRequest(MergeRequest.MergeRequest);
+        }
     }
 }
