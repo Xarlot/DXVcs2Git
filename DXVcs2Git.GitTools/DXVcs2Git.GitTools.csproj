@@ -58,6 +58,66 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Key.snk" />
+    <Content Include="..\Lib\DXVcs\DXVCS.dll">
+      <Link>Lib\DXVcs\DXVCS.dll</Link>
+      <IncludeInVSIX>true</IncludeInVSIX>
+    </Content>
+    <Content Include="..\Lib\DXVcs\DXVCSCore.dll">
+      <Link>Lib\DXVcs\DXVCSCore.dll</Link>
+      <IncludeInVSIX>true</IncludeInVSIX>
+    </Content>
+    <Content Include="..\Lib\DX\DevExpress.Data.v15.2.dll">
+      <Link>Lib\DX\DevExpress.Data.v15.2.dll</Link>
+      <IncludeInVSIX>true</IncludeInVSIX>
+    </Content>
+    <Content Include="..\Lib\DX\DevExpress.Images.v15.2.dll">
+      <Link>Lib\DX\DevExpress.Images.v15.2.dll</Link>
+      <IncludeInVSIX>true</IncludeInVSIX>
+    </Content>
+    <Content Include="..\Lib\DX\DevExpress.Mvvm.v15.2.dll">
+      <Link>Lib\DX\DevExpress.Mvvm.v15.2.dll</Link>
+      <IncludeInVSIX>true</IncludeInVSIX>
+    </Content>
+    <Content Include="..\Lib\DX\DevExpress.Printing.v15.2.Core.dll">
+      <Link>Lib\DX\DevExpress.Printing.v15.2.Core.dll</Link>
+      <IncludeInVSIX>true</IncludeInVSIX>
+    </Content>
+    <Content Include="..\Lib\DX\DevExpress.Xpf.Core.v15.2.dll">
+      <Link>Lib\DX\DevExpress.Xpf.Core.v15.2.dll</Link>
+      <IncludeInVSIX>true</IncludeInVSIX>
+    </Content>
+    <Content Include="..\Lib\DX\DevExpress.Xpf.Docking.v15.2.dll">
+      <Link>Lib\DX\DevExpress.Xpf.Docking.v15.2.dll</Link>
+      <IncludeInVSIX>true</IncludeInVSIX>
+    </Content>
+    <Content Include="..\Lib\DX\DevExpress.Xpf.Grid.v15.2.Core.dll">
+      <Link>Lib\DX\DevExpress.Xpf.Grid.v15.2.Core.dll</Link>
+      <IncludeInVSIX>true</IncludeInVSIX>
+    </Content>
+    <Content Include="..\Lib\DX\DevExpress.Xpf.Grid.v15.2.dll">
+      <Link>Lib\DX\DevExpress.Xpf.Grid.v15.2.dll</Link>
+      <IncludeInVSIX>true</IncludeInVSIX>
+    </Content>
+    <Content Include="..\Lib\DX\DevExpress.Xpf.Layout.v15.2.Core.dll">
+      <Link>Lib\DX\DevExpress.Xpf.Layout.v15.2.Core.dll</Link>
+      <IncludeInVSIX>true</IncludeInVSIX>
+    </Content>
+    <Content Include="..\Lib\DX\DevExpress.Xpf.LayoutControl.v15.2.dll">
+      <Link>Lib\DX\DevExpress.Xpf.LayoutControl.v15.2.dll</Link>
+      <IncludeInVSIX>true</IncludeInVSIX>
+    </Content>
+    <Content Include="..\Lib\DX\DevExpress.Xpf.Ribbon.v15.2.dll">
+      <Link>Lib\DX\DevExpress.Xpf.Ribbon.v15.2.dll</Link>
+      <IncludeInVSIX>true</IncludeInVSIX>
+    </Content>
+    <Content Include="..\Lib\DX\DevExpress.Xpf.Themes.Office2013.v15.2.dll">
+      <Link>Lib\DX\DevExpress.Xpf.Themes.Office2013.v15.2.dll</Link>
+      <IncludeInVSIX>true</IncludeInVSIX>
+    </Content>
+    <Content Include="..\Lib\NGitLab\NGitLab.dll">
+      <Link>Lib\NGitLab\NGitLab.dll</Link>
+      <IncludeInVSIX>true</IncludeInVSIX>
+    </Content>
     <Content Include="licence.rtf">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
@@ -123,6 +183,14 @@
     <Reference Include="DevExpress.Xpf.Themes.Office2013.v15.2">
       <HintPath>..\Lib\DX\DevExpress.Xpf.Themes.Office2013.v15.2.dll</HintPath>
       <Private>True</Private>
+    </Reference>
+    <Reference Include="DXVCS, Version=1.0.0.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\Lib\DXVcs\DXVCS.dll</HintPath>
+    </Reference>
+    <Reference Include="DXVCSCore, Version=1.0.0.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\Lib\DXVcs\DXVCSCore.dll</HintPath>
     </Reference>
     <Reference Include="EnvDTE, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
       <EmbedInteropTypes>False</EmbedInteropTypes>
@@ -216,6 +284,10 @@
       <HintPath>..\packages\Microsoft.VisualStudio.Validation.14.0.50702\lib\net45\Microsoft.VisualStudio.Validation.dll</HintPath>
       <Private>True</Private>
     </Reference>
+    <Reference Include="NGitLab, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\Lib\NGitLab\NGitLab.dll</HintPath>
+    </Reference>
     <Reference Include="stdole, Version=7.0.3300.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
       <EmbedInteropTypes>False</EmbedInteropTypes>
     </Reference>
@@ -231,6 +303,16 @@
       <MergeWithCTO>true</MergeWithCTO>
       <ManifestResourceName>VSPackage</ManifestResourceName>
     </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\DXVcs2Git.Core\DXVcs2Git.Core.csproj">
+      <Project>{7ce585b7-1f19-442d-b1a4-0c1ad855a55c}</Project>
+      <Name>DXVcs2Git.Core</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\DXVcs2Git.UI\DXVcs2Git.UI.csproj">
+      <Project>{3b9adc57-b49d-4de7-a532-dbeb0ca78c10}</Project>
+      <Name>DXVcs2Git.UI</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="$(VSToolsPath)\VSSDK\Microsoft.VsSDK.targets" Condition="'$(VSToolsPath)' != ''" />
