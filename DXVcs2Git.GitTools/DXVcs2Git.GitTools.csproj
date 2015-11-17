@@ -58,6 +58,9 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Key.snk" />
+    <Content Include="..\Lib\AtomFeed\AtomfeedCore.exe">
+      <Link>Lib\Atomfeed\AtomfeedCore.exe</Link>
+    </Content>
     <Content Include="..\Lib\DXVcs\DXVCS.dll">
       <Link>Lib\DXVcs\DXVCS.dll</Link>
       <IncludeInVSIX>true</IncludeInVSIX>
