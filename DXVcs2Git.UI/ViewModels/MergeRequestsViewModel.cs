@@ -16,6 +16,10 @@ namespace DXVcs2Git.UI.ViewModels {
 
         public IEnumerable<BranchViewModel> Branches { get; private set; }
         public IEnumerable<Branch> ProtectedBranches { get; set; }
+        public bool HasEditableMergeRequest {
+            get { return GetProperty(() => HasEditableMergeRequest); }
+            private set { SetProperty(() => HasEditableMergeRequest, value); }
+        }
         public BranchViewModel SelectedBranch {
             get { return this.selectedBranch; }
             set { SetProperty(ref this.selectedBranch, value, () => SelectedBranch); }
@@ -43,6 +47,7 @@ namespace DXVcs2Git.UI.ViewModels {
             Branches = branches.Where(x => !x.Protected)
                 .Select(x => new BranchViewModel(this.gitLabWrapper, this, mergeRequests.FirstOrDefault(mr => mr.SourceBranch == x.Name), x)).ToList();
             SelectedBranch = Branches.FirstOrDefault();
+            HasEditableMergeRequest = SelectedBranch.If(x => x.IsInEditingMergeRequest).ReturnSuccess();
         }
         bool CanUpdate() {
             return true;

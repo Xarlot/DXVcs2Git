@@ -46,7 +46,7 @@
             </dxr:RibbonDefaultPageCategory>
         </dxr:RibbonControl>
 
-        <dxg:GridControl x:Name="grid" ItemsSource="{Binding Path=MergeRequest.Changes}">
+        <dxg:GridControl x:Name="grid" ItemsSource="{Binding Path=SelectedBranch.MergeRequest.Changes}">
             <dxg:GridControl.Columns>
                 <dxg:GridColumn FieldName="ChangeMode" FixedWidth="True" Width="70">
                 </dxg:GridColumn>
@@ -63,7 +63,7 @@
         </dxg:GridControl>
         <views:EditMergeRequestControl 
             DataContext="{Binding Path=EditableMergeRequest}"
-            Visibility="{Binding Path=IsInEditingMergeRequest, Converter={StaticResource BooleanToVisibilityConverter}}"
+            Visibility="{Binding Path=HasSelectedBranch, Converter={StaticResource BooleanToVisibilityConverter}, FallbackValue=COllapsed}"
             Grid.Row="1">
         </views:EditMergeRequestControl>
         <avalonEdit:TextEditor 
