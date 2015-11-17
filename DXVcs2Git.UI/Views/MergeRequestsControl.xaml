@@ -16,7 +16,7 @@
             <DataTemplate x:Key="editMergeRequestTemplate">
                 <dxlc:LayoutControl>
                     <dxlc:LayoutGroup Orientation="Vertical">
-                        <dxlc:LayoutItem Label="Name: ">
+                        <dxlc:LayoutItem Label="Branch: ">
                             <dxlc:LayoutItem.Content>
                                 <TextBlock Text="{Binding Path=Name}"/>
                             </dxlc:LayoutItem.Content>
