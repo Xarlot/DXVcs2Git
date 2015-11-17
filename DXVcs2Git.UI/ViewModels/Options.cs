@@ -1,5 +1,7 @@
 ﻿using System;
+using System.IO;
 using CommandLine;
+using DXVcs2Git.Core.Git;
 
 namespace DXVcs2Git.UI.ViewModels {
     public class Options {
@@ -7,7 +9,7 @@ namespace DXVcs2Git.UI.ViewModels {
         public string SourceBranch { get; set; }
         [Option('t', "target", HelpText = "Target git branch name")]
         public string TargetBranch { get; set; }
-        [Option('r', "repo", Required = true, HelpText = "Http git repo path")]
+        [Option('r', "repo", HelpText = "Http git repo path")]
         public string Repo { get; set; }
         [Option('d', "dir", HelpText = "Path to local git repo")]
         public string LocalFolder { get; set; }
@@ -15,5 +17,11 @@ namespace DXVcs2Git.UI.ViewModels {
         public string Token { get; set; }
 
         public const string GitServer = @"http://litvinov-lnx";
+        public string DetectRepo() {
+            if (string.IsNullOrEmpty(LocalFolder))
+                return null;
+            GitReaderWrapper reader = new GitReaderWrapper(Path.Combine(LocalFolder, ".git"));
+            return reader.GetRemoteRepoPath();
+        }
     }
 }

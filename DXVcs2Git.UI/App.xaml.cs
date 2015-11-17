@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Windows;
 using CommandLine;
 using DevExpress.Xpf.Core;
@@ -23,6 +24,9 @@ namespace DXVcs2Git.UI {
             errors => 1);
             if (hasErrors != 0)
                 Environment.Exit(hasErrors);
+            if (string.IsNullOrEmpty(Options.Repo))
+                Options.Repo = Options.DetectRepo();
+            
             RootModel = new RootViewModel(Options);
             RootModel.Initialize();
         }

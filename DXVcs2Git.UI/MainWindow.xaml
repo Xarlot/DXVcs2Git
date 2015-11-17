@@ -17,10 +17,9 @@
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
         <dxr:RibbonControl Grid.Row="0" RibbonStyle="Office2010"/>
-        <dxlc:DockLayoutControl Grid.Row="1">
+        <dxlc:DockLayoutControl Grid.Row="1" dxb:MergingProperties.ElementMergingBehavior="InternalWithExternal">
             <dxlc:LayoutGroup Header="MergeRequests" dxlc:DockLayoutControl.Dock="Left" MinWidth="300">
                 <local:MergeRequestsControl 
-                    dxb:MergingProperties.ElementMergingBehavior="InternalWithExternal"
                     DataContext="{Binding Path=MergeRequests}">
                 </local:MergeRequestsControl>
             </dxlc:LayoutGroup>
