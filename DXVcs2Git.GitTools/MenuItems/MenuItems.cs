@@ -230,12 +230,12 @@ namespace DXVcs2Git.GitTools {
     }
     public class MenuBuilder : IMenuItemBuilder {
         readonly DTE dte;
-        readonly IServiceProvider owner;
+        //readonly IServiceProvider owner;
         public MenuBuilder(IServiceProvider owner) {
             dte = (DTE)owner.GetService(typeof(DTE));
         }
         public IMenuItem CreateItem(bool isPopup) {
-
+            return null;
         }
     }
 }
