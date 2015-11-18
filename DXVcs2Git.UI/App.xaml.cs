@@ -15,8 +15,6 @@ namespace DXVcs2Git.UI {
         public static RootViewModel RootModel { get; private set; }
         protected override void OnStartup(StartupEventArgs e) {
             base.OnStartup(e);
-            Thread.Sleep(10000);
-
             ThemeManager.ApplicationThemeName = "Office2013";
 
             var result = Parser.Default.ParseArguments<Options>(e.Args);

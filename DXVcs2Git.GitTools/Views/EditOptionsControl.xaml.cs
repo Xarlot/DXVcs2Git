@@ -12,6 +12,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using DevExpress.Xpf.Core;
 
 namespace DXVcs2Git.GitTools.Views {
     /// <summary>
@@ -20,6 +21,7 @@ namespace DXVcs2Git.GitTools.Views {
     public partial class EditOptionsControl : UserControl {
         public EditOptionsControl() {
             InitializeComponent();
+            ThemeManager.SetThemeName(this, "Office2013");
         }
     }
 }
