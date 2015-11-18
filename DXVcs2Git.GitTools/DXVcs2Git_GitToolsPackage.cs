@@ -5,19 +5,17 @@
 //------------------------------------------------------------------------------
 
 using System;
-using System.ComponentModel.Design;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
-using System.Globalization;
+using System.IO;
 using System.Runtime.InteropServices;
-using System.Windows.Forms;
+using System.Windows;
 using DevExpress.Xpf.Core;
+using DXVcs2Git.Core;
 using DXVcs2Git.GitTools.ViewModels;
-using Microsoft.VisualStudio;
-using Microsoft.VisualStudio.OLE.Interop;
+using DXVcs2Git.GitTools.Views;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
-using Microsoft.Win32;
 using EnvDTE;
 using Process = System.Diagnostics.Process;
 
@@ -72,7 +70,7 @@ namespace DXVcs2Git.GitTools {
         /// where you can put all the initialization code that rely on services provided by VisualStudio.
         /// </summary>
         protected override void Initialize() {
-            base.Initialize();            
+            base.Initialize();
             this.menuBuilder.GenerateDefault();
         }
         protected override object GetService(Type serviceType) {
@@ -86,12 +84,47 @@ namespace DXVcs2Git.GitTools {
                 DXMessageBox.Show("Gitlab authorization token is empty.");
                 return;
             }
-            ProcessStartInfo info = new ProcessStartInfo("DXVcs2Git.UI.exe", $"-p {this.options.Token}");
+            string gitRepoPath = CalcGitRepoPath();
+
+            if (gitRepoPath == null)
+                return;
+            ProcessStartInfo info = new ProcessStartInfo("DXVcs2Git.UI.exe", $@"-p {this.options.Token} -d {gitRepoPath}");
             info.WorkingDirectory = ConfigSerializer.AppPath;
             Process.Start(info);
         }
+        string CalcGitRepoPath() {
+            string gitPath = null;
+            var document = this.dte.ActiveDocument;
+            if (document != null) {
+                string dirPath = Path.GetDirectoryName(document.Path);
+                gitPath = FindGitDir(dirPath);
+            }
+            if (gitPath != null)
+                return gitPath;
+            return null;
+        }
+        string FindGitDir(string dirPath) {
+            if (!Path.IsPathRooted(dirPath))
+                return null;
+            do {
+                if (DirectoryHelper.IsGitDir(dirPath))
+                    return dirPath;
+                dirPath = Path.GetDirectoryName(dirPath);
+            }
+            while (!string.IsNullOrEmpty(dirPath));
+            return null;
+        }
         public void ShowOptionsUI() {
-            
+            AssemblyLoadingGuard.Protect();
+
+            DXDialogWindow dialogWindow = new DXDialogWindow("Options", MessageBoxButton.OKCancel);
+            dialogWindow.Content = new EditOptionsControl() { DataContext = this.options };
+            if (dialogWindow.ShowDialog() == true) {
+                ConfigSerializer.SaveOptions(this.options);
+            }
+            else {
+                this.options = ConfigSerializer.GetOptions();
+            }
         }
     }
 }

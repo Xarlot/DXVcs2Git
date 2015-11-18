@@ -301,7 +301,7 @@ namespace DXVcs2Git.GitTools {
             mergeRequestMenu.Click += MergeRequestMenuOnClick;
             string optionsMenuText = "Settings...";
             VsDevExpressMenuItem optionsMenu = devExpressMenu.CreateOrGetItem(optionsMenuText);
-            mergeRequestMenu.Click += OptionsMenuOnCLick;
+            optionsMenu.Click += OptionsMenuOnCLick;
         }
         void OptionsMenuOnCLick(object sender, EventArgs e) {
             this.package.ShowOptionsUI();

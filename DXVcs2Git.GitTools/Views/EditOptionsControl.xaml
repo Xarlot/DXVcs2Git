@@ -8,6 +8,6 @@
              mc:Ignorable="d" 
              d:DesignHeight="300" d:DesignWidth="300">
     <Grid>
-            <dxprg:PropertyGridControl/>
+        <dxprg:PropertyGridControl ShowCategories="False" SelectedObject="{Binding }"/>
     </Grid>
 </UserControl>
