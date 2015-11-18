@@ -299,6 +299,12 @@ namespace DXVcs2Git.GitTools {
             string wizardMenuText = "Create merge request...";
             VsDevExpressMenuItem mergeRequestMenu = devExpressMenu.CreateOrGetItem(wizardMenuText);
             mergeRequestMenu.Click += MergeRequestMenuOnClick;
+            string optionsMenuText = "Settings...";
+            VsDevExpressMenuItem optionsMenu = devExpressMenu.CreateOrGetItem(optionsMenuText);
+            mergeRequestMenu.Click += OptionsMenuOnCLick;
+        }
+        void OptionsMenuOnCLick(object sender, EventArgs e) {
+            this.package.ShowOptionsUI();
         }
         void MergeRequestMenuOnClick(object sender, EventArgs eventArgs) {
             this.package.ShowMergeRequestUI();

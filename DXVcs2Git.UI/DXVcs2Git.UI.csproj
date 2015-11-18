@@ -66,6 +66,9 @@
     <Reference Include="DevExpress.Printing.v15.2.Core, Version=15.2.2.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
       <HintPath>..\Lib\DX\DevExpress.Printing.v15.2.Core.dll</HintPath>
     </Reference>
+    <Reference Include="DevExpress.Xpf.Controls.v15.2, Version=15.2.2.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
+      <HintPath>..\Lib\DX\DevExpress.Xpf.Controls.v15.2.dll</HintPath>
+    </Reference>
     <Reference Include="DevExpress.Xpf.Core.v15.2, Version=15.2.2.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
       <HintPath>..\Lib\DX\DevExpress.Xpf.Core.v15.2.dll</HintPath>
     </Reference>
@@ -84,11 +87,23 @@
     <Reference Include="DevExpress.Xpf.LayoutControl.v15.2, Version=15.2.2.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
       <HintPath>..\Lib\DX\DevExpress.Xpf.LayoutControl.v15.2.dll</HintPath>
     </Reference>
+    <Reference Include="DevExpress.Xpf.PropertyGrid.v15.2, Version=15.2.2.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
+      <HintPath>..\Lib\DX\DevExpress.Xpf.PropertyGrid.v15.2.dll</HintPath>
+    </Reference>
     <Reference Include="DevExpress.Xpf.Ribbon.v15.2, Version=15.2.2.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
       <HintPath>..\Lib\DX\DevExpress.Xpf.Ribbon.v15.2.dll</HintPath>
     </Reference>
+    <Reference Include="DevExpress.Xpf.Themes.MetropolisDark.v15.2, Version=15.2.2.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
+      <HintPath>..\Lib\DX\DevExpress.Xpf.Themes.MetropolisDark.v15.2.dll</HintPath>
+    </Reference>
+    <Reference Include="DevExpress.Xpf.Themes.MetropolisLight.v15.2, Version=15.2.2.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
+      <HintPath>..\Lib\DX\DevExpress.Xpf.Themes.MetropolisLight.v15.2.dll</HintPath>
+    </Reference>
     <Reference Include="DevExpress.Xpf.Themes.Office2013.v15.2, Version=15.2.2.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
       <HintPath>..\Lib\DX\DevExpress.Xpf.Themes.Office2013.v15.2.dll</HintPath>
+    </Reference>
+    <Reference Include="DevExpress.Xpf.Themes.VS2010.v15.2, Version=15.2.2.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
+      <HintPath>..\Lib\DX\DevExpress.Xpf.Themes.VS2010.v15.2.dll</HintPath>
     </Reference>
     <Reference Include="ICSharpCode.AvalonEdit, Version=5.0.1.0, Culture=neutral, PublicKeyToken=9cc39be672370310, processorArchitecture=MSIL">
       <HintPath>..\packages\AvalonEdit.5.0.2\lib\Net40\ICSharpCode.AvalonEdit.dll</HintPath>
@@ -98,8 +113,8 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\LibGit2Sharp.0.22.0-pre20150716071016\lib\net40\LibGit2Sharp.dll</HintPath>
     </Reference>
-    <Reference Include="log4net, Version=1.2.13.0, Culture=neutral, PublicKeyToken=669e0ddf0bb1aa2a, processorArchitecture=MSIL">
-      <HintPath>..\packages\log4net.2.0.3\lib\net40-full\log4net.dll</HintPath>
+    <Reference Include="log4net, Version=1.2.14.0, Culture=neutral, PublicKeyToken=669e0ddf0bb1aa2a, processorArchitecture=MSIL">
+      <HintPath>..\packages\log4net.2.0.4\lib\net45-full\log4net.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="NGitLab, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">

@@ -17,6 +17,7 @@ using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.Win32;
 using EnvDTE;
+using Process = System.Diagnostics.Process;
 
 namespace DXVcs2Git.GitTools {
     /// <summary>
@@ -78,7 +79,10 @@ namespace DXVcs2Git.GitTools {
         #endregion
 
         public void ShowMergeRequestUI() {
-            MessageBox.Show("test");
+            Process.Start("DXVcs2Git.UI.exe");
+        }
+        public void ShowOptionsUI() {
+            
         }
     }
 }
