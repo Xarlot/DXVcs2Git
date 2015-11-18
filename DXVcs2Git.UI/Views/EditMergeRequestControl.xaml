@@ -21,6 +21,22 @@
                         AcceptsReturn="True">
                     </dxe:TextEdit>
                 </dxlc:LayoutItem>
+                <dxlc:LayoutGroup>
+                    <dxlc:LayoutItem Label="Assign to: ">
+                        <dxe:ComboBoxEdit 
+                            ShowCustomItems="True"
+                            AutoComplete="True" 
+                            IsTextEditable="False"
+                            DisplayMember="Name"
+                            ItemsSource="{Binding Path=Users}"
+                            AllowItemHighlighting="False"
+                            EditValue="{Binding Path=SelectedUser, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
+                        </dxe:ComboBoxEdit>
+                    </dxlc:LayoutItem>
+                    <dxlc:LayoutItem>
+                        <Button Content="Assign to service" Command="{Binding Path=AssignToServiceCommand}"/>
+                    </dxlc:LayoutItem>
+                </dxlc:LayoutGroup>
                 <dxlc:LayoutGroup Orientation="Horizontal">
                     <dxlc:LayoutItem>
                         <Button Content="Close" Command="{Binding Path=CloseMergeRequestCommand}"/>

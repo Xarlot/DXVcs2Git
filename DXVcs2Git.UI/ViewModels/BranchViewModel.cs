@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Windows;
@@ -30,6 +31,7 @@ namespace DXVcs2Git.UI.ViewModels {
             get { return GetProperty(() => EditableMergeRequest); }
             private set { SetProperty(() => EditableMergeRequest, value); }
         }
+        public IEnumerable<UserViewModel> Users { get { return MergeRequests.Users; } }
         public BranchViewModel(GitLabWrapper gitLabWrapper, GitReaderWrapper gitReader, MergeRequestsViewModel mergeRequests, MergeRequest mergeRequest, Branch branch) {
             this.gitLabWrapper = gitLabWrapper;
             this.gitReader = gitReader;
@@ -88,8 +90,10 @@ namespace DXVcs2Git.UI.ViewModels {
         }
         public void ApplyMergeRequest(EditMergeRequestViewModel newMergeRequest) {
             if (MergeRequest != null) {
-                this.gitLabWrapper.UpdateMergeRequestTitleAndDescription(
+                var mergeRequest = this.gitLabWrapper.UpdateMergeRequestTitleAndDescription(
                     MergeRequest.MergeRequest, CalcMergeRequestTitle(newMergeRequest.Comment), CalcMergeRequestDescription(newMergeRequest.Comment));
+                if (newMergeRequest.SelectedUser != null)
+                    this.gitLabWrapper.UpdateMergeRequestAssignee(mergeRequest, newMergeRequest.SelectedUser.User);
                 CloseEditableMergeRequest();
                 MergeRequests.Update();
             }

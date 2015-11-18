@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using NGitLab;
 using NGitLab.Models;
-using User = DXVcs2Git.Core.User;
 
 namespace DXVcs2Git.Git {
     public class GitLabWrapper {
@@ -62,17 +61,21 @@ namespace DXVcs2Git.Git {
         }
         public IEnumerable<User> GetUsers() {
             var usersClient = this.client.Users;
-            return usersClient.All.Select(x => new User(x.Username, x.Email, x.Name));
+            return usersClient.All.ToList();
         }
-        public void RegisterUser(User user) {
+        public void RegisterUser(string userName, string displayName, string email) {
             var userClient = this.client.Users;
-            var userUpsert = new UserUpsert() {Username = user.UserName, Name = user.DisplayName, Email = user.Email, Password = new Guid().ToString()};
+            var userUpsert = new UserUpsert() {Username = userName, Name = displayName, Email = email, Password = new Guid().ToString()};
             userClient.Create(userUpsert);
         }
         public IEnumerable<Branch> GetBranches(Project project) {
             var repo = this.client.GetRepository(project.Id);
             var branchesClient = repo.Branches;
             return branchesClient.All;
+        }
+        public MergeRequest UpdateMergeRequestAssignee(MergeRequest mergeRequest, User user) {
+            var mergeRequestsClient = client.GetMergeRequest(mergeRequest.ProjectId);
+            return mergeRequestsClient.Update(mergeRequest.Id, new MergeRequestUpdate() { AssigneeId = user.Id});
         }
     }
 }

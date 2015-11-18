@@ -1,4 +1,6 @@
-﻿using System.ComponentModel;
+﻿using System.Collections.Generic;
+using System.ComponentModel;
+using System.Linq;
 using System.Windows;
 using System.Windows.Input;
 using DevExpress.Mvvm;
@@ -8,10 +10,13 @@ using DevExpress.Xpf.Core;
 namespace DXVcs2Git.UI.ViewModels {
     public class EditMergeRequestViewModel : BindableBase, IDataErrorInfo {
         readonly BranchViewModel model;
+        UserViewModel user;
+        string comment;
 
         public ICommand CloseMergeRequestCommand { get; private set; }
         public ICommand ApplyMergeRequestCommand { get; private set; }
         public ICommand CancelMergeRequestCommand { get; private set; }
+        public ICommand AssignToServiceCommand { get; private set; }
 
         public EditMergeRequestViewModel(BranchViewModel model) {
             this.model = model;
@@ -19,9 +24,16 @@ namespace DXVcs2Git.UI.ViewModels {
             CloseMergeRequestCommand = DelegateCommandFactory.Create(PerformCloseMergeRequest);
             ApplyMergeRequestCommand = DelegateCommandFactory.Create(PerformApplyMergeRequest, CanApplyMergeRequest);
             CancelMergeRequestCommand = DelegateCommandFactory.Create(PerformCancelMergeRequest, CanCancelMergeRequest);
+            AssignToServiceCommand = DelegateCommandFactory.Create(PerformAssignToService);
 
             model.IsInEditingMergeRequest = true;
-            Comment = model.MergeRequest?.MergeRequest.Title ?? model.Branch.Commit.Message;
+            comment = model.MergeRequest?.MergeRequest.Title ?? model.Branch.Commit.Message;
+            var assignee = model.MergeRequest?.Assignee;
+            if (!string.IsNullOrEmpty(assignee))
+                this.user = Users.FirstOrDefault(x => x.Name == assignee);
+        }
+        void PerformAssignToService() {
+            SelectedUser = Users.FirstOrDefault(x => x.Name == "dxvcs2gitservice");
         }
         bool CanCancelMergeRequest() {
             return true;
@@ -43,10 +55,20 @@ namespace DXVcs2Git.UI.ViewModels {
         }
 
         public bool IsModified { get; private set; }
-        public string Comment {
-            get { return GetProperty(() => Comment); }
+        public IEnumerable<UserViewModel> Users { get { return this.model.Users; } }
+        public UserViewModel SelectedUser {
+            get { return user; }
             set {
-                SetProperty(() => Comment, value, () => {
+                SetProperty(ref user, value, () => SelectedUser, () => {
+                    IsModified = true;
+                    CommandManager.InvalidateRequerySuggested();
+                });
+            }
+        }
+        public string Comment {
+            get { return this.comment; }
+            set {
+                SetProperty(ref comment, value, () => Comment, () => {
                     IsModified = true;
                     CommandManager.InvalidateRequerySuggested();
                 });

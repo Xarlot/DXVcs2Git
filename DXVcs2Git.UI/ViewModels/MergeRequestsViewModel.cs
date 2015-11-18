@@ -31,11 +31,13 @@ namespace DXVcs2Git.UI.ViewModels {
         }
 
         public ICommand UpdateCommand { get; private set; }
+        public IEnumerable<UserViewModel> Users { get; private set; }
 
         public MergeRequestsViewModel(GitLabWrapper gitLabWrapper, GitReaderWrapper gitReader) {
             this.gitReader = gitReader;
             this.gitLabWrapper = gitLabWrapper;
             UpdateCommand = DelegateCommandFactory.Create(Update, CanUpdate);
+            Users = gitLabWrapper.GetUsers().Select(x => new UserViewModel(x)).ToList();
 
             Update();
         }

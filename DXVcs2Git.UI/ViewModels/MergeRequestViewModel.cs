@@ -13,6 +13,7 @@ namespace DXVcs2Git.UI.ViewModels {
         public string Author { get; }
         public string SourceBranch { get; }
         public string TargetBranch { get; }
+        public string Assignee { get; }
         public int MergeRequestId { get { return MergeRequest.Id; } }
         public MergeRequestViewModel(GitLabWrapper gitLabWrapper, MergeRequest mergeRequest) {
             this.gitLabWrapper = gitLabWrapper;
@@ -22,6 +23,7 @@ namespace DXVcs2Git.UI.ViewModels {
             SourceBranch = MergeRequest.SourceBranch;
             TargetBranch = MergeRequest.TargetBranch;
             Author = MergeRequest.Author.Name;
+            Assignee = MergeRequest.Assignee?.Name;
         }
     }
 }
