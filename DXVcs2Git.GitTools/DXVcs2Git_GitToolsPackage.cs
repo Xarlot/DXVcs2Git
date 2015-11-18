@@ -11,6 +11,8 @@ using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
+using DevExpress.Xpf.Core;
+using DXVcs2Git.GitTools.ViewModels;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.OLE.Interop;
 using Microsoft.VisualStudio.Shell;
@@ -49,7 +51,7 @@ namespace DXVcs2Git.GitTools {
         public const string PackageGuidString = "5221f195-9141-42a3-bbd9-1018afc30ba3";
         readonly MenuBuilder menuBuilder;
         DTE dte;
-
+        Options options;
         /// <summary>
         /// Initializes a new instance of the <see cref="DXVcs2Git_GitToolsPackage"/> class.
         /// </summary>        
@@ -59,6 +61,7 @@ namespace DXVcs2Git.GitTools {
             // not sited yet inside Visual Studio environment. The place to do all the other
             // initialization is the Initialize method.
             dte = GetGlobalService(typeof(DTE)) as DTE;
+            options = ConfigSerializer.GetOptions();
             this.menuBuilder = new MenuBuilder(this, dte);
         }
 
@@ -79,7 +82,13 @@ namespace DXVcs2Git.GitTools {
         #endregion
 
         public void ShowMergeRequestUI() {
-            Process.Start("DXVcs2Git.UI.exe");
+            if (string.IsNullOrEmpty(this.options.Token)) {
+                DXMessageBox.Show("Gitlab authorization token is empty.");
+                return;
+            }
+            ProcessStartInfo info = new ProcessStartInfo("DXVcs2Git.UI.exe", $"-p {this.options.Token}");
+            info.WorkingDirectory = ConfigSerializer.AppPath;
+            Process.Start(info);
         }
         public void ShowOptionsUI() {
             
