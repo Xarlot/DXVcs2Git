@@ -16,7 +16,10 @@ namespace DXVcs2Git.UI.ViewModels {
         BranchViewModel selectedBranch;
 
         public Project Project { get; private set; }
-        public IEnumerable<BranchViewModel> Branches { get; private set; }
+        public IEnumerable<BranchViewModel> Branches {
+            get { return GetProperty(() => Branches); }
+            set { SetProperty(() => Branches, value); }
+        }
         public IEnumerable<Branch> ProtectedBranches { get; set; }
         public bool HasEditableMergeRequest {
             get { return GetProperty(() => HasEditableMergeRequest); }

@@ -82,8 +82,7 @@ namespace DXVcs2Git.UI.ViewModels {
         }
         public void CloseMergeRequest() {
             this.gitLabWrapper.CloseMergeRequest(MergeRequest.MergeRequest);
-            EditableMergeRequest = null;
-            IsInEditingMergeRequest = false;
+            CloseEditableMergeRequest();
             MergeRequest = null;
             HasMergeRequest = false;
         }
@@ -91,7 +90,13 @@ namespace DXVcs2Git.UI.ViewModels {
             if (MergeRequest != null) {
                 this.gitLabWrapper.UpdateMergeRequestTitleAndDescription(
                     MergeRequest.MergeRequest, CalcMergeRequestTitle(newMergeRequest.Comment), CalcMergeRequestDescription(newMergeRequest.Comment));
+                CloseEditableMergeRequest();
+                MergeRequests.Update();
             }
+        }
+        void CloseEditableMergeRequest() {
+            EditableMergeRequest = null;
+            IsInEditingMergeRequest = false;
         }
         public void CancelMergeRequest() {
             EditableMergeRequest = null;
