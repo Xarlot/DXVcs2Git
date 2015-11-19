@@ -22,8 +22,5 @@ namespace DXVcs2Git.UI.Views {
         public EditConfigControl() {
             InitializeComponent();
         }
-        void TableView_OnInitNewRow(object sender, InitNewRowEventArgs e) {
-            e.Handled = true;
-        }
     }
 }

@@ -14,9 +14,11 @@ namespace DXVcs2Git.UI.ViewModels {
             get { return GetProperty(() => Branches); }
             private set { SetProperty(() => Branches, value); }
         }
+        public string Name { get; }
         Project Project { get; }
         MergeRequestsViewModel MergeRequests { get; }
-        public RepositoryViewModel(GitLabWrapper gitLabWrapper, GitReaderWrapper gitReader, MergeRequestsViewModel mergeRequests) {
+        public RepositoryViewModel(string name, GitLabWrapper gitLabWrapper, GitReaderWrapper gitReader, MergeRequestsViewModel mergeRequests) {
+            Name = name;
             GitLabWrapper = gitLabWrapper;
             GitReader = gitReader;
             MergeRequests = mergeRequests;

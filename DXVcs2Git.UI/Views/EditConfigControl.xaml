@@ -14,20 +14,16 @@
             <dx:DXTabItem Header="Repositories">
                 <dxg:GridControl ItemsSource="{Binding Path=Repositories}">
                     <dxg:GridControl.Columns>
-                        <dxg:GridColumn FieldName="Watch">
+                        <dxg:GridColumn FieldName="Watch" FixedWidth="true" Width="50">
                             <dxg:GridColumn.EditSettings>
                                 <dxe:CheckEditSettings/>
                             </dxg:GridColumn.EditSettings>
                             </dxg:GridColumn>
                         <dxg:GridColumn FieldName="Name"/>
-                        <dxg:GridColumn FieldName="LocalPath">
-                            <dxg:GridColumn.EditSettings>
-                                <dxe:ButtonEditSettings/>
-                            </dxg:GridColumn.EditSettings>
-                        </dxg:GridColumn>
+                        <dxg:GridColumn FieldName="LocalPath"/>
                     </dxg:GridControl.Columns>
                     <dxg:GridControl.View>
-                        <dxg:TableView NewItemRowPosition="Bottom" InitNewRow="TableView_OnInitNewRow"/>
+                        <dxg:TableView NewItemRowPosition="Top" AutoWidth="True"/>
                     </dxg:GridControl.View>
                 </dxg:GridControl>
             </dx:DXTabItem>
