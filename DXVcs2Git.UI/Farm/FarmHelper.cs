@@ -23,6 +23,8 @@ namespace DXVcs2Git.UI.Farm {
             Instance.StopIntegrator();
         }
         public static void ForceBuild(string task) {
+            if (string.IsNullOrEmpty(task))
+                return;
             Instance.ForceBuildInternal(task);
         }
         public static bool CanForceBuild(string task) {
@@ -30,11 +32,16 @@ namespace DXVcs2Git.UI.Farm {
         }
 
         void ForceBuildInternal(string task) {
+            lock (syncLocker) {
+                ForceBuildTag(task);
+            }
+        }
+        void ForceBuildTag(string task) {
             ProjectTagI tag = FindTask(task);
             if (tag == null)
                 return;
-            ProjectTagI[] selectedRows = {tag};
-            List<FarmProjectList> farmLists = GetFarmLists(new[]  { tag });
+            ProjectTagI[] selectedRows = { tag };
+            List<FarmProjectList> farmLists = GetFarmLists(new[] { tag });
             int messageProjectsCount = 0;
             StringBuilder sb = new StringBuilder();
             foreach (FarmProjectList list in farmLists) {

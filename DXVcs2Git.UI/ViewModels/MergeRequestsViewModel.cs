@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.IO;
 using System.Linq;
 using System.Windows.Input;
 using DevExpress.Mvvm;
@@ -61,7 +62,12 @@ namespace DXVcs2Git.UI.ViewModels {
             return true;
         }
         public void ForceMerge() {
-            FarmHelper.ForceBuild("XPF DXVcs2Git sync task v15.2");
+            GitRepoConfig config = Serializer.Deserialize<GitRepoConfig>(GetConfigPath());
+            if (config != null)
+                FarmHelper.ForceBuild(config.FarmTaskName);
+        }
+        string GetConfigPath() {
+            return Path.Combine(this.gitReader.GetLocalRepoPath(), GitRepoConfig.ConfigFileName);
         }
         public bool CanForceMerge() {
             return FarmHelper.CanForceBuild("XPF DXVcs2Git sync task v15.2");
