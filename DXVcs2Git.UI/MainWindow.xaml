@@ -8,6 +8,7 @@
         xmlns:dxlc="http://schemas.devexpress.com/winfx/2008/xaml/layoutcontrol"
         xmlns:dxe="http://schemas.devexpress.com/winfx/2008/xaml/editors"
         xmlns:dxb="http://schemas.devexpress.com/winfx/2008/xaml/bars"
+        xmlns:dxdo="http://schemas.devexpress.com/winfx/2008/xaml/docking"
         mc:Ignorable="d"
         Title="MainWindow" Height="800" Width="1024" 
         UseLayoutRounding="True" DataContext="{x:Static local:App.RootModel}">
@@ -17,15 +18,34 @@
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
         <dxr:RibbonControl Grid.Row="0" RibbonStyle="Office2010"/>
+        <dxdo:DockLayoutManager 
+            AutoHideMode="Inline"
+            Grid.Row="1" dxb:MergingProperties.ElementMergingBehavior="InternalWithExternal">
+            <dxdo:LayoutGroup x:Name="root">
+                <dxdo:LayoutPanel 
+                    AutoHideExpandState="Expanded"
+                    FloatOnDoubleClick="False">
+                    <local:MergeRequestsControl 
+                        DataContext="{Binding Path=MergeRequests}">
+                    </local:MergeRequestsControl>
+                </dxdo:LayoutPanel>
+                <dxdo:LayoutPanel>
+                    <local:ProcessMergeRequestControl 
+                        DataContext="{Binding Path=MergeRequests}"/>
+                </dxdo:LayoutPanel>
+            </dxdo:LayoutGroup>
+        </dxdo:DockLayoutManager>
+        <!--<Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+        <dxr:RibbonControl Grid.Row="0" RibbonStyle="Office2010"/>
         <dxlc:DockLayoutControl Grid.Row="1" dxb:MergingProperties.ElementMergingBehavior="InternalWithExternal">
             <dxlc:LayoutGroup Header="MergeRequests" dxlc:DockLayoutControl.Dock="Left" MinWidth="150" MaxWidth="200">
-                <local:MergeRequestsControl 
-                    DataContext="{Binding Path=MergeRequests}">
-                </local:MergeRequestsControl>
             </dxlc:LayoutGroup>
             <dxlc:LayoutGroup dxlc:DockLayoutControl.Dock="Client">
                 <local:ProcessMergeRequestControl DataContext="{Binding Path=MergeRequests}"/>
             </dxlc:LayoutGroup>
-        </dxlc:DockLayoutControl>
+        </dxlc:DockLayoutControl>-->
     </Grid>
 </dxr:DXRibbonWindow>

@@ -23,6 +23,8 @@ namespace DXVcs2Git.UI.ViewModels {
             GitReader = gitReader;
             MergeRequests = mergeRequests;
             Project = gitLabWrapper.FindProject(GitReader.GetRemoteRepoPath());
+
+            Update();
         }
 
         public void Update() {
