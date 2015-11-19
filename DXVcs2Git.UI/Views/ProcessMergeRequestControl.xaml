@@ -48,6 +48,13 @@
                             Content="Edit"
                             Command="{Binding Path=SelectedBranch.EditMergeRequestCommand}">
                         </dxb:BarButtonItem>
+                        <dxb:BarItemSeparator/>
+                        <dxb:BarButtonItem
+                            RibbonStyle="Large" 
+                            GlyphSize="Large" 
+                            Content="Force"
+                            Command="{Binding Path=SelectedBranch.ForceMergeCommand}">
+                        </dxb:BarButtonItem>
                     </dxr:RibbonPageGroup>
                 </dxr:RibbonPage>
             </dxr:RibbonDefaultPageCategory>

@@ -40,6 +40,7 @@
     <Compile Include="GitlabWrapperTests.cs" />
     <Compile Include="GitServiceTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="RepoConfigTests.cs" />
     <Compile Include="SyncHistoryTests.cs" />
     <Compile Include="TestHelpers\Constants.cs" />
     <Compile Include="TestHelpers\Interfaces.cs" />
@@ -68,9 +69,9 @@
       <HintPath>..\packages\LibGit2Sharp.0.22.0-pre20150716071016\lib\net40\LibGit2Sharp.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="log4net, Version=1.2.14.0, Culture=neutral, PublicKeyToken=669e0ddf0bb1aa2a, processorArchitecture=MSIL">
-      <HintPath>..\packages\log4net.2.0.4\lib\net45-full\log4net.dll</HintPath>
-      <Private>True</Private>
+    <Reference Include="log4net, Version=1.2.9.0, Culture=neutral, PublicKeyToken=b32731d11ce58905">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\Lib\log4net\log4net.dll</HintPath>
     </Reference>
     <Reference Include="NGitLab, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\NGitLab.1.0.5\lib\net45\NGitLab.dll</HintPath>

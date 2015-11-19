@@ -7,6 +7,7 @@ using DevExpress.Mvvm.Native;
 using DXVcs2Git.Core;
 using DXVcs2Git.Core.Git;
 using DXVcs2Git.Git;
+using DXVcs2Git.UI.Farm;
 using NGitLab.Models;
 
 namespace DXVcs2Git.UI.ViewModels {
@@ -58,6 +59,9 @@ namespace DXVcs2Git.UI.ViewModels {
         }
         bool CanUpdate() {
             return true;
+        }
+        public void ForceMerge() {
+            FarmHelper.Start();
         }
     }
 }

@@ -3,8 +3,10 @@ using LibGit2Sharp;
 
 namespace DXVcs2Git.Core.Git {
     public class GitReaderWrapper {
+        readonly string localRepoPath;
         readonly Repository repo;
         public GitReaderWrapper(string repoPath) {
+            this.localRepoPath = repoPath;
             this.repo = new Repository(repoPath);
         }
         public string GetRemoteRepoPath() {
@@ -13,6 +15,9 @@ namespace DXVcs2Git.Core.Git {
         }
         public Branch GetCheckoutBranch() {
             return this.repo.Head;
+        }
+        public string GetLocalRepoPath() {
+            return this.localRepoPath;
         }
     }
 }

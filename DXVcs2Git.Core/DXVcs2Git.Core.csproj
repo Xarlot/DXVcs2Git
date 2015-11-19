@@ -52,8 +52,8 @@
       <Private>True</Private>
     </Reference>
     <Reference Include="log4net, Version=1.2.14.0, Culture=neutral, PublicKeyToken=669e0ddf0bb1aa2a, processorArchitecture=MSIL">
-      <HintPath>..\packages\log4net.2.0.4\lib\net45-full\log4net.dll</HintPath>
-      <Private>True</Private>
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\Lib\log4net\log4net.dll</HintPath>
     </Reference>
     <Reference Include="NGitLab, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
@@ -84,6 +84,7 @@
     <Compile Include="CommitItem.cs" />
     <Compile Include="Git\GitLabWrapper.cs" />
     <Compile Include="Git\GitReaderWrapper.cs" />
+    <Compile Include="Git\GitRepoConfig.cs" />
     <Compile Include="Git\GitWrapper.cs" />
     <Compile Include="HistoryItem.cs" />
     <Compile Include="Log.cs" />

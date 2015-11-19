@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Windows;
@@ -7,6 +8,7 @@ using System.Windows.Input;
 using DevExpress.Mvvm;
 using DevExpress.Mvvm.Native;
 using DevExpress.Xpf.Core;
+using DXVcs2Git.Core;
 using DXVcs2Git.Core.Git;
 using DXVcs2Git.Git;
 using NGitLab.Models;
@@ -22,6 +24,7 @@ namespace DXVcs2Git.UI.ViewModels {
         public bool HasMergeRequest { get; private set; }
         public ICommand CreateMergeRequestCommand { get; private set; }
         public ICommand EditMergeRequestCommand { get; private set; }
+        public ICommand ForceMergeCommand { get; private set; }
         public MergeRequestViewModel MergeRequest { get; private set; }
         public bool IsInEditingMergeRequest {
             get { return GetProperty(() => IsInEditingMergeRequest); }
@@ -44,8 +47,14 @@ namespace DXVcs2Git.UI.ViewModels {
 
             CreateMergeRequestCommand = DelegateCommandFactory.Create(CreateMergeRequest, CanCreateMergeRequest);
             EditMergeRequestCommand = DelegateCommandFactory.Create(EditMergeRequest, CanEditMergeRequest);
+            ForceMergeCommand = DelegateCommandFactory.Create(ForceMerge, CanForceMerge);
         }
-
+        bool CanForceMerge() {
+            return true;
+        }
+        void ForceMerge() {
+            MergeRequests.ForceMerge();
+        }
         bool CanEditMergeRequest() {
             return HasMergeRequest && !IsInEditingMergeRequest;
         }
@@ -69,6 +78,10 @@ namespace DXVcs2Git.UI.ViewModels {
             EditMergeRequest();
         }
         string CalcTargetBranch(string name) {
+            string localRepoPath = this.gitReader.GetLocalRepoPath();
+            GitRepoConfig repoConfig = Serializer.Deserialize<GitRepoConfig>(Path.Combine(localRepoPath, GitRepoConfig.ConfigFileName));
+            if (repoConfig != null)
+                return repoConfig.Branch;
             return MergeRequests.ProtectedBranches.FirstOrDefault(x => name.StartsWith(x.Name)).With(x => x.Name);
         }
         string CalcMergeRequestDescription(string message) {

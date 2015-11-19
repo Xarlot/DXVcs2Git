@@ -20,8 +20,8 @@ namespace DXVcs2Git.Tests {
 
             using (var repo = new Repository(repoPath, options)) {
                 string dir = repo.Info.Path;
-                Assert.True(Path.IsPathRooted(dir));
-                Assert.True(Directory.Exists(dir));
+                Assert.IsTrue(Path.IsPathRooted(dir));
+                Assert.IsTrue(Directory.Exists(dir));
             }
         }
         string CreateConfigurationWithDummyUser(Identity identity) {

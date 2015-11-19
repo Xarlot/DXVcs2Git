@@ -26,6 +26,7 @@ namespace DXVcs2Git.UI {
             if (hasErrors != 0)
                 Environment.Exit(hasErrors);
            
+
             RootModel = new RootViewModel(Options);
             RootModel.Initialize();
         }
