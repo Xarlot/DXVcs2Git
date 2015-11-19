@@ -182,7 +182,11 @@
     <Compile Include="Farm\ProjectI.cs" />
     <Compile Include="Farm\SmartProjectActivity.cs" />
     <Compile Include="ViewModels\BranchViewModel.cs" />
+    <Compile Include="ViewModels\Config.cs" />
+    <Compile Include="ViewModels\ConfigSerializer.cs" />
     <Compile Include="ViewModels\EditMergeRequestViewModel.cs" />
+    <Compile Include="ViewModels\RepositoryViewModel.cs" />
+    <Compile Include="ViewModels\TrackRepository.cs" />
     <Compile Include="ViewModels\UserViewModel.cs" />
     <Compile Include="Views\AvalonEditTextToDocumentBehavior.cs" />
     <Compile Include="ViewModels\MergeRequestFileDataViewModel.cs" />

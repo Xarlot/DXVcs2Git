@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System.Collections.Generic;
+using System.Linq;
 using LibGit2Sharp;
 
 namespace DXVcs2Git.Core.Git {
@@ -15,6 +16,9 @@ namespace DXVcs2Git.Core.Git {
         }
         public Branch GetCheckoutBranch() {
             return this.repo.Head;
+        }
+        public IEnumerable<Branch> GetLocalBranches() {
+            return this.repo.Branches;
         }
         public string GetLocalRepoPath() {
             return this.localRepoPath;

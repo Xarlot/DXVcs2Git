@@ -40,7 +40,7 @@ namespace DXVcs2Git.UI.ViewModels {
             this.gitLabWrapper = gitLabWrapper;
             UpdateCommand = DelegateCommandFactory.Create(Update, CanUpdate);
             Users = gitLabWrapper.GetUsers().Select(x => new UserViewModel(x)).ToList();
-
+            
             Update();
         }
         public void Update() {
