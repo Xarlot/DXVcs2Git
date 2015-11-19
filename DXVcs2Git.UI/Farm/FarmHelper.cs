@@ -2,14 +2,19 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Globalization;
+using System.Linq;
+using System.Text;
+using System.Windows;
 using DevExpress.CCNetSmart.Lib;
 using DevExpress.DXCCTray;
+using DevExpress.Xpf.Core;
 using DXVcs2Git.Core;
 using ThoughtWorks.CruiseControl.Remote;
 
 namespace DXVcs2Git.UI.Farm {
     public class FarmHelper {
-        public static readonly FarmHelper Instance;
+        static readonly FarmHelper Instance;
 
         public static void Start() {
             Instance.StartIntegrator();
@@ -17,7 +22,122 @@ namespace DXVcs2Git.UI.Farm {
         public static void Stop() {
             Instance.StopIntegrator();
         }
+        public static void ForceBuild(string task) {
+            Instance.ForceBuildInternal(task);
+        }
+        void ForceBuildInternal(string task) {
+            ProjectTagI tag = FindTask(task);
+            if (tag == null)
+                return;
+            ProjectTagI[] selectedRows = {tag};
+            List<FarmProjectList> farmLists = GetFarmLists(new[]  { tag });
+            int messageProjectsCount = 0;
+            StringBuilder sb = new StringBuilder();
+            foreach (FarmProjectList list in farmLists) {
+                foreach (string project in list.Projects) {
+                    if (messageProjectsCount > 20) {
+                        sb.Append("...");
+                        break;
+                    }
+                    sb.Append($"{list.Name}\\{project}\n");
+                    messageProjectsCount++;
+                }
+                if (messageProjectsCount > 20)
+                    break;
+            }
+            if (CheckForceBuild(selectedRows, sb.ToString())) {
+                List<string> stoppedList = new List<string>();
+                foreach (FarmProjectList list in farmLists) {
+                    foreach (DXCCTrayIntegrator integrator in integratorList) {
+                        if (list.Name == integrator.Name) {
+                            if (list.Projects.Count > 0) {
+                                stoppedList.AddRange(integrator.ForceBuild(list.Projects.ToArray()));
+                            }
+                        }
+                    }
+                }
+                if (stoppedList.Count > 0) {
+                    StringBuilder sb2 = new StringBuilder();
+                    messageProjectsCount = 0;
+                    foreach (string project in stoppedList) {
+                        if (messageProjectsCount > 20) {
+                            sb2.Append("...");
+                            break;
+                        }
+                        sb2.Append(project);
+                        messageProjectsCount++;
+                    }
+                    DXMessageBox.Show($"These projects was not forced, cause they are stopped:\n\n{sb2.ToString()}", "Attention");
+                }
+            }
+        }
+        bool CheckForceBuild(ProjectTagI[] projects, string projectPaths) {
+            bool isShowMessage;
+            if (projects.Length > 20) {
+                DXMessageBox.Show("\"Force Build\" is limited to 20 projects at a time.", "DXCCTray");
+                return false;
+            }
+            bool isOk = CheckForceBuildTriggered(projects, out isShowMessage);
+            if (isShowMessage) {
+                return isOk;
+            }
+            return ShowForceBuildDialog(projectPaths);
+        }
+        bool ShowForceBuildDialog(string projects) {
+            return DXMessageBox.Show($"You are going to force build of these projects:\n\n{projects}", "Attention", MessageBoxButton.OKCancel) == MessageBoxResult.OK;
+        }
+        bool CheckForceBuildTriggered(ProjectTagI[] projects, out bool isShowMessage) {
+            StringBuilder triggeredProjects = new StringBuilder();
+            foreach (ProjectTagI proj in projects) {
+                if (proj.IsBuildIfModification) {
+                    triggeredProjects.AppendLine(proj.name);
+                }
+            }
+            isShowMessage = false;
+            if (triggeredProjects.Length > 0) {
+                isShowMessage = true;
+                return DXMessageBox.Show($"These projects:\r\n\r\n{triggeredProjects.ToString()}\r\nis automatically rebuilt when changed. Press OK if you need to force build for these projects.", "Stop!", MessageBoxButton.OKCancel) == MessageBoxResult.OK;
+            }
+            return true;
+        }
+        List<FarmProjectList> GetFarmLists(ProjectTagI[] selectedRows) {
+            Dictionary<string, bool> projectExists = new Dictionary<string, bool>();
+            List<FarmProjectList> farmLists = new List<FarmProjectList>();
+            GetFarmListsInternal(projectExists, farmLists, selectedRows);
+            return farmLists;
+        }
+        void GetFarmListsInternal(Dictionary<string, bool> projectExists, List<FarmProjectList> farmLists, ProjectTagI[] selectedRows) {
+            foreach (ProjectTagI row in selectedRows) {
+                string farm = row.farm;
+                string projectName = row.name;
+                bool farmExists = false;
+                foreach (FarmProjectList list in farmLists) {
+                    if (list.Name == farm) {
+                        farmExists = true;
+                        string fullName = GetProjectTagName(farm, projectName, string.Empty);
+                        if (!projectExists.ContainsKey(fullName)) {
+                            projectExists.Add(fullName, true);
+                            list.Projects.Add(projectName);
+                        }
+                    }
+                }
+                if (!farmExists) {
+                    projectExists.Add(GetProjectTagName(farm, projectName, string.Empty), true);
+                    FarmProjectList newList = new FarmProjectList(farm);
+                    newList.Projects.Add(projectName);
+                    farmLists.Add(newList);
+                }
+            }
+        }
+        string GetProjectTagName(string farm, string project, string tag) {
+            return string.Format(CultureInfo.InvariantCulture, "{0}|#|{1}|#|{2}", farm, project, tag);
+        }
 
+        ProjectTagI FindTask(string task) {
+            return this.projectTagTable.FirstOrDefault(x => x.name == task);
+        }
+
+        #region inner farm shit
         class ProjectKeyComparer : IEqualityComparer<ProjectKey> {
             public bool Equals(ProjectKey x, ProjectKey y) {
                 return x.Farm == y.Farm && x.Project == y.Project;
@@ -64,7 +184,7 @@ namespace DXVcs2Git.UI.Farm {
         readonly List<ProjectTagI> projectTagTable = new List<ProjectTagI>();
         readonly List<ServerI> serverTable = new List<ServerI>();
 
-
+        readonly object syncLocker = new object();
 
         static FarmHelper() {
             DXCCTrayConfiguration.LoadConfiguration();
@@ -106,7 +226,9 @@ namespace DXVcs2Git.UI.Farm {
                 //}
             };
             try {
-                update();
+                lock (this.syncLocker) {
+                    update();
+                }
             }
             catch {
             }
@@ -545,6 +667,6 @@ namespace DXVcs2Git.UI.Farm {
             //    StartTrayNotificationAnimation();
             //}
         }
-
+        #endregion
     }
 }

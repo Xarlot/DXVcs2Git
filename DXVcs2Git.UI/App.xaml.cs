@@ -4,6 +4,7 @@ using System.Threading;
 using System.Windows;
 using CommandLine;
 using DevExpress.Xpf.Core;
+using DXVcs2Git.UI.Farm;
 using DXVcs2Git.UI.ViewModels;
 
 namespace DXVcs2Git.UI {
@@ -26,7 +27,7 @@ namespace DXVcs2Git.UI {
             if (hasErrors != 0)
                 Environment.Exit(hasErrors);
            
-
+            FarmHelper.Start();
             RootModel = new RootViewModel(Options);
             RootModel.Initialize();
         }
