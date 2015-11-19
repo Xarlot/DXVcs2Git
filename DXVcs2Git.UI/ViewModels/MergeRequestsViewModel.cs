@@ -63,5 +63,8 @@ namespace DXVcs2Git.UI.ViewModels {
         public void ForceMerge() {
             FarmHelper.ForceBuild("XPF DXVcs2Git sync task v15.2");
         }
+        public bool CanForceMerge() {
+            return FarmHelper.CanForceBuild("XPF DXVcs2Git sync task v15.2");
+        }
     }
 }

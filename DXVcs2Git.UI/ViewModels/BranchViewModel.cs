@@ -11,6 +11,7 @@ using DevExpress.Xpf.Core;
 using DXVcs2Git.Core;
 using DXVcs2Git.Core.Git;
 using DXVcs2Git.Git;
+using DXVcs2Git.UI.Farm;
 using NGitLab.Models;
 
 namespace DXVcs2Git.UI.ViewModels {
@@ -50,7 +51,7 @@ namespace DXVcs2Git.UI.ViewModels {
             ForceMergeCommand = DelegateCommandFactory.Create(ForceMerge, CanForceMerge);
         }
         bool CanForceMerge() {
-            return true;
+            return MergeRequests.CanForceMerge();
         }
         void ForceMerge() {
             MergeRequests.ForceMerge();

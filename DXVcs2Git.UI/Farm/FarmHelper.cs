@@ -25,6 +25,10 @@ namespace DXVcs2Git.UI.Farm {
         public static void ForceBuild(string task) {
             Instance.ForceBuildInternal(task);
         }
+        public static bool CanForceBuild(string task) {
+            return Instance.IsRunning;
+        }
+
         void ForceBuildInternal(string task) {
             ProjectTagI tag = FindTask(task);
             if (tag == null)
@@ -71,6 +75,7 @@ namespace DXVcs2Git.UI.Farm {
                 }
             }
         }
+        public bool IsRunning { get; private set; }
         bool CheckForceBuild(ProjectTagI[] projects, string projectPaths) {
             bool isShowMessage;
             if (projects.Length > 20) {
@@ -197,10 +202,13 @@ namespace DXVcs2Git.UI.Farm {
             }
         }
         void StartIntegrator() {
+            if (IsRunning)
+                return;
             foreach (DXCCTrayIntegrator integrator in IntegratorList) {
                 integrator.Start();
                 integrator.OnChanged += Integrator_OnChanged;
             }
+            IsRunning = true;
         }
         delegate void UpdateDelegate();
 
@@ -532,10 +540,14 @@ namespace DXVcs2Git.UI.Farm {
             }
         }
         void StopIntegrator() {
+            if (!IsRunning)
+                return;
+
             foreach (DXCCTrayIntegrator integrator in IntegratorList) {
                 integrator.OnChanged -= Integrator_OnChanged;
                 integrator.Stop();
             }
+            IsRunning = false;
         }
         void integrator_OnProjectListChanged(DXCCTrayIntegrator integrator) {
             try {
