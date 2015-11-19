@@ -59,6 +59,12 @@
                             Content="Update"
                             Command="{Binding Path=UpdateCommand}">
                         </dxb:BarButtonItem>
+                        <dxb:BarButtonItem
+                            RibbonStyle="Large" 
+                            GlyphSize="Large" 
+                            Content="Settings"
+                            Command="{Binding Path=SettingsCommand}">
+                        </dxb:BarButtonItem>
                     </dxr:RibbonPageGroup>
                 </dxr:RibbonPage>
             </dxr:RibbonDefaultPageCategory>

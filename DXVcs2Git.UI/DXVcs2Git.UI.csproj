@@ -184,6 +184,7 @@
     <Compile Include="ViewModels\BranchViewModel.cs" />
     <Compile Include="ViewModels\Config.cs" />
     <Compile Include="ViewModels\ConfigSerializer.cs" />
+    <Compile Include="ViewModels\EditConfigViewModel.cs" />
     <Compile Include="ViewModels\EditMergeRequestViewModel.cs" />
     <Compile Include="ViewModels\RepositoryViewModel.cs" />
     <Compile Include="ViewModels\TrackRepository.cs" />
@@ -195,6 +196,9 @@
     <Compile Include="ViewModels\MergeRequestViewModel.cs" />
     <Compile Include="Views\BranchesTemplateSelector.cs" />
     <Compile Include="Views\DiffLineBackgroundRenderer.cs" />
+    <Compile Include="Views\EditConfigControl.xaml.cs">
+      <DependentUpon>EditConfigControl.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Views\EditMergeRequestControl.xaml.cs">
       <DependentUpon>EditMergeRequestControl.xaml</DependentUpon>
     </Compile>
@@ -214,6 +218,10 @@
       <DependentUpon>MainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
+    <Page Include="Views\EditConfigControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="Views\EditMergeRequestControl.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>

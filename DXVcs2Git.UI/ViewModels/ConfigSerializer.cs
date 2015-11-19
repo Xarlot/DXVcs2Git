@@ -12,7 +12,7 @@ namespace DXVcs2Git.UI.ViewModels {
             get { return SettingsPath + SettingsFile; }
         }
 
-        public static Config GetOptions() {
+        public static Config GetConfig() {
             if (!File.Exists(SettingsFilePath))
                 return Config.GenerateDefault();
             try {
@@ -22,7 +22,7 @@ namespace DXVcs2Git.UI.ViewModels {
                 return Config.GenerateDefault();
             }
         }
-        public static void SaveOptions(Config options) {
+        public static void SaveConfig(Config options) {
             try {
                 Serializer.Serialize(SettingsFilePath, options);
             }

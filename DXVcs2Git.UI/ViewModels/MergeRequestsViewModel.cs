@@ -2,13 +2,16 @@
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
+using System.Windows;
 using System.Windows.Input;
 using DevExpress.Mvvm;
 using DevExpress.Mvvm.Native;
+using DevExpress.Xpf.Core;
 using DXVcs2Git.Core;
 using DXVcs2Git.Core.Git;
 using DXVcs2Git.Git;
 using DXVcs2Git.UI.Farm;
+using DXVcs2Git.UI.Views;
 using NGitLab.Models;
 
 namespace DXVcs2Git.UI.ViewModels {
@@ -33,15 +36,32 @@ namespace DXVcs2Git.UI.ViewModels {
         }
 
         public ICommand UpdateCommand { get; private set; }
+        public ICommand SettingsCommand { get; private set; }
         public IEnumerable<UserViewModel> Users { get; private set; }
+        public Config Config { get; private set; }
 
         public MergeRequestsViewModel(GitLabWrapper gitLabWrapper, GitReaderWrapper gitReader) {
             this.gitReader = gitReader;
             this.gitLabWrapper = gitLabWrapper;
             UpdateCommand = DelegateCommandFactory.Create(Update, CanUpdate);
+            SettingsCommand = DelegateCommandFactory.Create(ShowSettings, CanShowSettings);
             Users = gitLabWrapper.GetUsers().Select(x => new UserViewModel(x)).ToList();
-            
+            Config = ConfigSerializer.GetConfig();
+
             Update();
+
+        }
+        void ShowSettings() {
+            DXDialogWindow dialog = new DXDialogWindow("Settings", MessageBoxButton.OKCancel);
+            EditConfigViewModel config = new EditConfigViewModel(Config);
+            dialog.Content = new EditConfigControl() { DataContext =  config};
+            if (dialog.ShowDialog() == true) {
+                Config = config.CreateConfig();
+                ConfigSerializer.SaveConfig(Config);
+            }
+        }
+        bool CanShowSettings() {
+            return true;
         }
         public void Update() {
             Project = gitLabWrapper.FindProject(this.gitReader.GetRemoteRepoPath());
