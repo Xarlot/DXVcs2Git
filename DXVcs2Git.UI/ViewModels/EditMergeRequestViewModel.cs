@@ -13,24 +13,26 @@ namespace DXVcs2Git.UI.ViewModels {
         UserViewModel user;
         string comment;
 
-        public ICommand CloseMergeRequestCommand { get; private set; }
         public ICommand ApplyMergeRequestCommand { get; private set; }
         public ICommand CancelMergeRequestCommand { get; private set; }
         public ICommand AssignToServiceCommand { get; private set; }
 
+        public bool HasChanges { get { return this.model.HasChanges; } }
         public EditMergeRequestViewModel(BranchViewModel model) {
             this.model = model;
 
-            CloseMergeRequestCommand = DelegateCommandFactory.Create(PerformCloseMergeRequest);
             ApplyMergeRequestCommand = DelegateCommandFactory.Create(PerformApplyMergeRequest, CanApplyMergeRequest);
             CancelMergeRequestCommand = DelegateCommandFactory.Create(PerformCancelMergeRequest, CanCancelMergeRequest);
-            AssignToServiceCommand = DelegateCommandFactory.Create(PerformAssignToService);
+            AssignToServiceCommand = DelegateCommandFactory.Create(PerformAssignToService, CanAssignToService);
 
             model.IsInEditingMergeRequest = true;
             comment = model.MergeRequest?.MergeRequest.Title ?? model.Branch.Commit.Message;
             var assignee = model.MergeRequest?.Assignee;
             if (!string.IsNullOrEmpty(assignee))
                 this.user = Users.FirstOrDefault(x => x.Name == assignee);
+        }
+        bool CanAssignToService() {
+            return HasChanges;
         }
         void PerformAssignToService() {
             SelectedUser = Users.FirstOrDefault(x => x.Name == "dxvcs2gitservice");
@@ -40,10 +42,6 @@ namespace DXVcs2Git.UI.ViewModels {
         }
         void PerformCancelMergeRequest() {
             this.model.CancelMergeRequest();
-        }
-        void PerformCloseMergeRequest() {
-            if (DXMessageBox.Show(null, "Are you sure?", "Close merge request", MessageBoxButton.OKCancel) == MessageBoxResult.OK)
-                this.model.CloseMergeRequest();
         }
         void PerformApplyMergeRequest() {
             if (DXMessageBox.Show(null, "Are you sure?", "Apply merge request", MessageBoxButton.OKCancel) == MessageBoxResult.OK) {

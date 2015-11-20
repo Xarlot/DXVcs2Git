@@ -13,6 +13,7 @@ using DXVcs2Git.Core.Git;
 using DXVcs2Git.Git;
 using DXVcs2Git.UI.Farm;
 using NGitLab.Models;
+using ThoughtWorks.CruiseControl.Remote;
 
 namespace DXVcs2Git.UI.ViewModels {
     public class BranchViewModel : BindableBase {
@@ -22,7 +23,7 @@ namespace DXVcs2Git.UI.ViewModels {
         public MergeRequestsViewModel MergeRequests { get; }
         public RepositoryViewModel Repository { get; }
         public string Name { get; }
-        public string FarmStatus {
+        public FarmStatus FarmStatus {
             get { return GetProperty(() => FarmStatus); }
             private set { SetProperty(() => FarmStatus, value); }
         }
@@ -30,6 +31,7 @@ namespace DXVcs2Git.UI.ViewModels {
         public bool HasMergeRequest { get; private set; }
         public ICommand CreateMergeRequestCommand { get; private set; }
         public ICommand EditMergeRequestCommand { get; private set; }
+        public ICommand CloseMergeRequestCommand { get; private set; }
         public ICommand ForceMergeCommand { get; private set; }
         public MergeRequestViewModel MergeRequest { get; private set; }
         public bool IsInEditingMergeRequest {
@@ -41,6 +43,9 @@ namespace DXVcs2Git.UI.ViewModels {
             private set { SetProperty(() => EditableMergeRequest, value); }
         }
         public IEnumerable<UserViewModel> Users { get { return MergeRequests.Users; } }
+        public bool HasChanges {
+            get { return MergeRequest.Return(x => x.Changes.Any(), () => false); }
+        }
         public BranchViewModel(GitLabWrapper gitLabWrapper, GitReaderWrapper gitReader, MergeRequestsViewModel mergeRequests, RepositoryViewModel repository, MergeRequest mergeRequest, Branch branch) {
             this.gitLabWrapper = gitLabWrapper;
             this.gitReader = gitReader;
@@ -48,16 +53,21 @@ namespace DXVcs2Git.UI.ViewModels {
             Branch = branch;
             Name = branch.Name;
             MergeRequests = mergeRequests;
+            FarmStatus = new FarmStatus();
 
             MergeRequest = mergeRequest.With(x => new MergeRequestViewModel(gitLabWrapper, mergeRequest));
             HasMergeRequest = MergeRequest != null;
 
             CreateMergeRequestCommand = DelegateCommandFactory.Create(CreateMergeRequest, CanCreateMergeRequest);
             EditMergeRequestCommand = DelegateCommandFactory.Create(EditMergeRequest, CanEditMergeRequest);
+            CloseMergeRequestCommand = DelegateCommandFactory.Create(CloseMergeRequest, CanCloseMergeRequest);
             ForceMergeCommand = DelegateCommandFactory.Create(ForceMerge, CanForceMerge);
         }
+        bool CanCloseMergeRequest() {
+            return HasMergeRequest;
+        }
         bool CanForceMerge() {
-            return MergeRequests.CanForceMerge();
+            return FarmStatus.ActivityStatus == ActivityStatus.Sleeping;
         }
         void ForceMerge() {
             MergeRequests.ForceMerge();
@@ -102,10 +112,12 @@ namespace DXVcs2Git.UI.ViewModels {
             return title;
         }
         public void CloseMergeRequest() {
-            this.gitLabWrapper.CloseMergeRequest(MergeRequest.MergeRequest);
-            CloseEditableMergeRequest();
-            MergeRequest = null;
-            HasMergeRequest = false;
+            if (DXMessageBox.Show(null, "Are you sure?", "Close merge request", MessageBoxButton.OKCancel) == MessageBoxResult.OK) {
+                this.gitLabWrapper.CloseMergeRequest(MergeRequest.MergeRequest);
+                CloseEditableMergeRequest();
+                MergeRequest = null;
+                HasMergeRequest = false;
+            }
         }
         public void ApplyMergeRequest(EditMergeRequestViewModel newMergeRequest) {
             if (MergeRequest != null) {

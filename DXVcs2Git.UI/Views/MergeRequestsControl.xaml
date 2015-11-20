@@ -77,7 +77,8 @@
             <dxg:GridControl.Columns>
                 <dxg:GridColumn FieldName="Name"></dxg:GridColumn>
                 <dxg:GridColumn FieldName="MergeRequest"/>
-                <dxg:GridColumn FieldName="FarmStatus"/>
+                <dxg:GridColumn FieldName="FarmStatus.BuildStatus" Header="Build status"/>
+                <dxg:GridColumn FieldName="FarmStatus.ActivityStatus" Header="Activity status"/>
             </dxg:GridControl.Columns>
             <dxg:GridControl.View>
                 <dxg:TreeListView 

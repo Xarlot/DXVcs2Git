@@ -45,6 +45,12 @@
                             Content="Edit"
                             Command="{Binding Path=SelectedBranch.EditMergeRequestCommand}">
                         </dxb:BarButtonItem>
+                        <dxb:BarButtonItem
+                            RibbonStyle="Large" 
+                            GlyphSize="Large" 
+                            Content="Close"
+                            Command="{Binding Path=SelectedBranch.CloseMergeRequestCommand}">
+                        </dxb:BarButtonItem>
                         <dxb:BarItemSeparator/>
                         <dxb:BarButtonItem
                             RibbonStyle="Large" 

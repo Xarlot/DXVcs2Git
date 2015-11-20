@@ -44,12 +44,29 @@ namespace DXVcs2Git.UI.Farm {
         public static bool CanForceBuild(string task) {
             return Instance.IsRunning;
         }
-        public static string GetTaskStatus(string task) {
+        public static FarmStatus GetTaskStatus(string task) {
             return Instance.GetTaskStatus(task);
         }
 
     }
 
+    public enum ActivityStatus {
+        Unknown,
+        Sleeping,
+        Preparing,
+        Pending,
+        Building,
+    }
+
+    public class FarmStatus {
+        public FarmStatus() {
+            BuildStatus = IntegrationStatus.Unknown;
+            ActivityStatus = ActivityStatus.Unknown;
+        }
+
+        public IntegrationStatus BuildStatus { get; set; }
+        public ActivityStatus ActivityStatus { get; set; }
+    }
     public class FarmHelper {
         public event EventHandler Refreshed;
 
@@ -57,22 +74,31 @@ namespace DXVcs2Git.UI.Farm {
             var refreshed = Refreshed;
             refreshed.Do(x => x(this, EventArgs.Empty));
         }
-        public string GetTaskStatus(string task) {
+        public FarmStatus GetTaskStatus(string task) {
             lock (this.syncLocker) {
                 return CalcTaskStatus(task);
             }
         }
-        string CalcTaskStatus(string task) {
+        FarmStatus CalcTaskStatus(string task) {
+            var farmStatus = new FarmStatus() { ActivityStatus = ActivityStatus.Unknown, BuildStatus = IntegrationStatus.Unknown };
             ProjectTagI tag = FindTask(task);
             if (tag == null)
-                return "not found";
-            if (tag.buildstatus == IntegrationStatus.Success)
-                return "success";
-            if (tag.buildstatus == IntegrationStatus.Failure)
-                return "failure";
-            if (tag.buildstatus == IntegrationStatus.Exception)
-                return "exception";
-            return "unknown";
+                return farmStatus;
+            farmStatus.BuildStatus = tag.buildstatus;
+            farmStatus.ActivityStatus = CalcActivityStatus(tag);
+            return farmStatus;
+        }
+        ActivityStatus CalcActivityStatus(ProjectTagI tag) {
+            string activity = tag.activity;
+            if (activity == "Sleeping")
+                return ActivityStatus.Sleeping;
+            if (activity.StartsWith("Pending"))
+                return ActivityStatus.Pending;
+            if (activity.StartsWith("Preparing"))
+                return ActivityStatus.Preparing;
+            if (activity.StartsWith("Building"))
+                return ActivityStatus.Building;
+            return ActivityStatus.Unknown;
         }
         public void ForceBuild(string task) {
             lock (syncLocker) {

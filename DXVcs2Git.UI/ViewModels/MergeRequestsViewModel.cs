@@ -77,19 +77,6 @@ namespace DXVcs2Git.UI.ViewModels {
             Repositories = Config.Repositories.With(x => x.Where(repo => repo.Watch).Select(repo => new RepositoryViewModel(repo.Name, this.gitLabWrapper, new GitReaderWrapper(repo.LocalPath), this))).With(x => x.ToList());
             SelectedRepository = Repositories.With(x => x.FirstOrDefault());
             Refresh();
-            //Project = gitLabWrapper.FindProject(this.gitReader.GetRemoteRepoPath());
-            //if (Project == null) {
-            //    Log.Error("Can`t find project");
-            //    return;
-            //}
-
-            //var mergeRequests = this.gitLabWrapper.GetMergeRequests(Project);
-            //var branches = this.gitLabWrapper.GetBranches(Project).ToList();
-            //ProtectedBranches = branches.Where(x => x.Protected).ToList();
-            //Branches = branches.Where(x => !x.Protected)
-            //    .Select(x => new BranchViewModel(gitLabWrapper, this.gitReader, this, mergeRequests.FirstOrDefault(mr => mr.SourceBranch == x.Name), x)).ToList();
-            //SelectedBranch = Branches.FirstOrDefault();
-            //HasEditableMergeRequest = SelectedBranch.If(x => x.IsInEditingMergeRequest).ReturnSuccess();
         }
         public void Refresh() {
             if (Repositories == null)

@@ -5,7 +5,6 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:dxlc="http://schemas.devexpress.com/winfx/2008/xaml/layoutcontrol"
              xmlns:dxe="http://schemas.devexpress.com/winfx/2008/xaml/editors"
-             xmlns:dx="http://schemas.devexpress.com/winfx/2008/xaml/core"
              mc:Ignorable="d" 
              d:DesignHeight="300" d:DesignWidth="300"
              KeyboardNavigation.TabNavigation="Cycle">
@@ -34,13 +33,10 @@
                         </dxe:ComboBoxEdit>
                     </dxlc:LayoutItem>
                     <dxlc:LayoutItem>
-                        <Button Content="Assign to service" Command="{Binding Path=AssignToServiceCommand}"/>
+                        <dxe:CheckEdit Content="Assigned to service" Command="{Binding Path=AssignToServiceCommand}"/>
                     </dxlc:LayoutItem>
                 </dxlc:LayoutGroup>
                 <dxlc:LayoutGroup Orientation="Horizontal">
-                    <dxlc:LayoutItem>
-                        <Button Content="Close" Command="{Binding Path=CloseMergeRequestCommand}"/>
-                    </dxlc:LayoutItem>
                     <dxlc:LayoutItem>
                         <Button Content="Apply" Command="{Binding Path=ApplyMergeRequestCommand}"/>
                     </dxlc:LayoutItem>

@@ -1,4 +1,5 @@
-﻿using DevExpress.Mvvm;
+﻿using System.Windows.Input;
+using DevExpress.Mvvm;
 using DXVcs2Git.Core.Git;
 using DXVcs2Git.Git;
 
@@ -19,6 +20,7 @@ namespace DXVcs2Git.UI.ViewModels {
         }
         public void Refresh() {
             MergeRequests.Refresh();
+            CommandManager.InvalidateRequerySuggested();
         }
     }
 }

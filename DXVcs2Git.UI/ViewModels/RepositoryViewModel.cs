@@ -18,7 +18,7 @@ namespace DXVcs2Git.UI.ViewModels {
             private set { SetProperty(() => Branches, value); }
         }
         public string Name { get; }
-        public string FarmStatus {
+        public FarmStatus FarmStatus {
             get { return GetProperty(() => FarmStatus); }
             private set { SetProperty(() => FarmStatus, value); }
         }
@@ -36,6 +36,7 @@ namespace DXVcs2Git.UI.ViewModels {
             Project = gitLabWrapper.FindProject(GitReader.GetRemoteRepoPath());
             RepoConfig = CreateRepoConfig();
             Name = name ?? RepoConfig?.Name;
+            FarmStatus = new FarmStatus();
 
             Update();
         }
@@ -61,17 +62,8 @@ namespace DXVcs2Git.UI.ViewModels {
         public void Refresh() {
             if (Branches == null)
                 return;
-
-            FarmStatus = CalcFarmStatus();
+            FarmStatus = FarmIntegrator.GetTaskStatus(RepoConfig?.FarmSyncTaskName);
             Branches.ForEach(x => x.Refresh());
-        }
-        string CalcFarmStatus() {
-            if (RepoConfig == null)
-                return null;
-            string farmSyncTask = RepoConfig.FarmSyncTaskName;
-            if (string.IsNullOrEmpty(farmSyncTask))
-                return null;
-            return FarmIntegrator.GetTaskStatus(farmSyncTask);
         }
     }
 }
