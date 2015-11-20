@@ -30,6 +30,7 @@ namespace DXVcs2Git.UI.ViewModels {
         }
 
         public bool HasMergeRequest { get; private set; }
+        public bool IsMyMergeRequest { get; private set; }
         public ICommand CreateMergeRequestCommand { get; private set; }
         public ICommand EditMergeRequestCommand { get; private set; }
         public ICommand CloseMergeRequestCommand { get; private set; }
@@ -57,6 +58,7 @@ namespace DXVcs2Git.UI.ViewModels {
 
             MergeRequest = mergeRequest.With(x => new MergeRequestViewModel(gitLabWrapper, mergeRequest));
             HasMergeRequest = MergeRequest != null;
+            IsMyMergeRequest = HasMergeRequest;
 
             CreateMergeRequestCommand = DelegateCommandFactory.Create(CreateMergeRequest, CanCreateMergeRequest);
             EditMergeRequestCommand = DelegateCommandFactory.Create(EditMergeRequest, CanEditMergeRequest);
@@ -64,7 +66,7 @@ namespace DXVcs2Git.UI.ViewModels {
             ForceBuildCommand = DelegateCommandFactory.Create(ForceBuild, CanForceBuild);
         }
         bool CanCloseMergeRequest() {
-            return HasMergeRequest;
+            return HasMergeRequest && IsMyMergeRequest;
         }
         bool CanForceBuild() {
             return FarmStatus.ActivityStatus == ActivityStatus.Sleeping;
@@ -73,7 +75,7 @@ namespace DXVcs2Git.UI.ViewModels {
             Repository.ForceBuild();
         }
         bool CanEditMergeRequest() {
-            return HasMergeRequest && !IsInEditingMergeRequest;
+            return HasMergeRequest && IsMyMergeRequest && !IsInEditingMergeRequest;
         }
         void EditMergeRequest() {
             EditableMergeRequest = new EditMergeRequestViewModel(this);
