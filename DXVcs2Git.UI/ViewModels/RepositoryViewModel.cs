@@ -22,7 +22,7 @@ namespace DXVcs2Git.UI.ViewModels {
             get { return GetProperty(() => FarmStatus); }
             private set { SetProperty(() => FarmStatus, value); }
         }
-        Project Project { get; }
+        public Project Project { get; }
         MergeRequestsViewModel MergeRequests { get; }
         public GitRepoConfig RepoConfig { get; }
         public BranchViewModel SelectedBranch { get; set; }

@@ -18,9 +18,9 @@ namespace DXVcs2Git.UI.ViewModels {
     public class BranchViewModel : BindableBase {
         readonly GitLabWrapper gitLabWrapper;
         readonly GitReaderWrapper gitReader;
-        readonly RepositoryViewModel repository;
         public Branch Branch { get; }
         public MergeRequestsViewModel MergeRequests { get; }
+        public RepositoryViewModel Repository { get; }
         public string Name { get; }
         public string FarmStatus {
             get { return GetProperty(() => FarmStatus); }
@@ -44,7 +44,7 @@ namespace DXVcs2Git.UI.ViewModels {
         public BranchViewModel(GitLabWrapper gitLabWrapper, GitReaderWrapper gitReader, MergeRequestsViewModel mergeRequests, RepositoryViewModel repository, MergeRequest mergeRequest, Branch branch) {
             this.gitLabWrapper = gitLabWrapper;
             this.gitReader = gitReader;
-            this.repository = repository;
+            Repository = repository;
             Branch = branch;
             Name = branch.Name;
             MergeRequests = mergeRequests;
@@ -78,15 +78,14 @@ namespace DXVcs2Git.UI.ViewModels {
             string targetBranch = CalcTargetBranch(Branch.Name);
             if (targetBranch == null)
                 return;
-            var mergeRequest = this.gitLabWrapper.CreateMergeRequest(MergeRequests.Project, title, description, null, Branch.Name, targetBranch);
+            var mergeRequest = this.gitLabWrapper.CreateMergeRequest(Repository.Project, title, description, null, Branch.Name, targetBranch);
             MergeRequest = new MergeRequestViewModel(this.gitLabWrapper, mergeRequest);
             HasMergeRequest = true;
 
             EditMergeRequest();
         }
         string CalcTargetBranch(string name) {
-            string localRepoPath = this.gitReader.GetLocalRepoPath();
-            GitRepoConfig repoConfig = Serializer.Deserialize<GitRepoConfig>(Path.Combine(localRepoPath, GitRepoConfig.ConfigFileName));
+            GitRepoConfig repoConfig = Repository.RepoConfig;
             if (repoConfig != null)
                 return repoConfig.Name;
             return MergeRequests.ProtectedBranches.FirstOrDefault(x => name.StartsWith(x.Name)).With(x => x.Name);
@@ -128,7 +127,7 @@ namespace DXVcs2Git.UI.ViewModels {
             MergeRequests.Update();
         }
         public void Refresh() {
-            FarmStatus = FarmIntegrator.GetTaskStatus(this.repository.RepoConfig?.FarmSyncTaskName);
+            FarmStatus = FarmIntegrator.GetTaskStatus(Repository.RepoConfig?.FarmSyncTaskName);
         }
     }
 }

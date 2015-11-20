@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Linq;
 using DevExpress.Mvvm.UI.Interactivity;
 using DevExpress.Xpf.Grid;
 using DXVcs2Git.UI.ViewModels;
@@ -11,9 +7,12 @@ namespace DXVcs2Git.UI.Views {
     public class RepositoriesBindingBehavior : Behavior<GridControl> {
         protected override void OnAttached() {
             base.OnAttached();
-            AssociatedObject.SelectionChanged += AssociatedObjectOnSelectionChanged;
+            AssociatedObject.CurrentItemChanged += AssociatedObjectOnCurrentItemChanged;
         }
-        void AssociatedObjectOnSelectionChanged(object sender, GridSelectionChangedEventArgs e) {
+        void AssociatedObjectOnCurrentItemChanged(object sender, CurrentItemChangedEventArgs e) {
+            UpdateSelection();
+        }
+        void UpdateSelection() {
             MergeRequestsViewModel model = AssociatedObject.DataContext as MergeRequestsViewModel;
             if (model == null)
                 return;
@@ -39,7 +38,7 @@ namespace DXVcs2Git.UI.Views {
             }
         }
         protected override void OnDetaching() {
-            AssociatedObject.SelectionChanged += AssociatedObjectOnSelectionChanged;
+            AssociatedObject.CurrentItemChanged -= AssociatedObjectOnCurrentItemChanged;
             base.OnDetaching();
         }
     }

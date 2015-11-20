@@ -10,6 +10,7 @@
              xmlns:views="clr-namespace:DXVcs2Git.UI.Views"
              xmlns:dxr="http://schemas.devexpress.com/winfx/2008/xaml/ribbon"
              xmlns:dxb="http://schemas.devexpress.com/winfx/2008/xaml/bars"
+             xmlns:dxlc="http://schemas.devexpress.com/winfx/2008/xaml/layoutcontrol"
              mc:Ignorable="d" >
     <UserControl.Resources>
         <ResourceDictionary>
@@ -24,13 +25,9 @@
         </ResourceDictionary>
     </UserControl.Resources>
     <Grid>
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition/>
-            <ColumnDefinition/>
-        </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
-            <RowDefinition/>
             <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
         <dxr:RibbonControl >
             <dxr:RibbonDefaultPageCategory>
@@ -60,38 +57,60 @@
             </dxr:RibbonDefaultPageCategory>
         </dxr:RibbonControl>
 
-        <dxg:GridControl x:Name="grid" ItemsSource="{Binding Path=SelectedBranch.MergeRequest.Changes}">
-            <dxg:GridControl.Columns>
-                <dxg:GridColumn FieldName="ChangeMode" FixedWidth="True" Width="70">
-                </dxg:GridColumn>
-                <dxg:GridColumn FieldName="Path">
-                </dxg:GridColumn>
-            </dxg:GridControl.Columns>
-            <dxg:GridControl.View>
-                <dxg:TableView 
-                    ShowGroupPanel="False" 
-                    NavigationStyle="Row" 
-                    AutoWidth="True">
-                </dxg:TableView>
-            </dxg:GridControl.View>
-        </dxg:GridControl>
-        <views:EditMergeRequestControl 
-            Grid.Row="1">
-            <views:EditMergeRequestControl.Visibility>
-                <PriorityBinding>
-                    <Binding Path="SelectedBranch.IsInEditingMergeRequest" Converter="{StaticResource BooleanToVisibilityConverter}"/>
-                    <Binding Path="SelectedBranch" Mode="OneWay" Converter="{StaticResource CollapsedConverter}"/>
-                </PriorityBinding>
-            </views:EditMergeRequestControl.Visibility>
-        </views:EditMergeRequestControl>
-        <avalonEdit:TextEditor 
-            Grid.Column="1" 
-            FontFamily="Consolas" 
-            Grid.Row="0" Grid.RowSpan="2"
-            IsReadOnly="True">
-            <dxmvvm:Interaction.Behaviors>
-                <viewModels:AvalonEditTextBindingBehavior Text="{Binding Path=SelectedItem.Diff, ElementName=grid}"/>
-            </dxmvvm:Interaction.Behaviors>
-        </avalonEdit:TextEditor>
+        <dxlc:DockLayoutControl Grid.Row="1">
+            <dxlc:LayoutGroup Orientation="Horizontal" dxlc:DockLayoutControl.Dock="Top">
+                <dxlc:LayoutItem Label="Selected repository: " HorizontalAlignment="Center">
+                    <TextBlock Text=""></TextBlock>
+                </dxlc:LayoutItem>
+                <dxlc:LayoutItem Label="Selected branch: " HorizontalAlignment="Center">
+                </dxlc:LayoutItem>
+            </dxlc:LayoutGroup>
+            <dxlc:LayoutGroup Orientation="Horizontal" dxlc:DockLayoutControl.Dock="Client">
+                <dxlc:LayoutControl>
+                    <dxlc:LayoutGroup Orientation="Horizontal">
+                        <dxlc:LayoutGroup Orientation="Vertical">
+                            <dxlc:LayoutItem HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+                                <dxg:GridControl x:Name="grid" ItemsSource="{Binding Path=SelectedBranch.MergeRequest.Changes}" MaxHeight="2000">
+                                    <dxg:GridControl.Columns>
+                                        <dxg:GridColumn FieldName="ChangeMode" FixedWidth="True" Width="70">
+                                        </dxg:GridColumn>
+                                        <dxg:GridColumn FieldName="Path">
+                                        </dxg:GridColumn>
+                                    </dxg:GridControl.Columns>
+                                    <dxg:GridControl.View>
+                                        <dxg:TableView 
+                                            ShowGroupPanel="False" 
+                                            NavigationStyle="Row" 
+                                            AutoWidth="True">
+                                        </dxg:TableView>
+                                    </dxg:GridControl.View>
+                                </dxg:GridControl>
+                            </dxlc:LayoutItem>
+                            <dxlc:LayoutItem VerticalAlignment="Bottom" HorizontalAlignment="Stretch">
+                                <views:EditMergeRequestControl>
+                                    <views:EditMergeRequestControl.Visibility>
+                                        <PriorityBinding>
+                                            <Binding Path="SelectedBranch.IsInEditingMergeRequest" Converter="{StaticResource BooleanToVisibilityConverter}"/>
+                                            <Binding Path="SelectedBranch" Mode="OneWay" Converter="{StaticResource CollapsedConverter}"/>
+                                        </PriorityBinding>
+                                    </views:EditMergeRequestControl.Visibility>
+                                </views:EditMergeRequestControl>
+                            </dxlc:LayoutItem>
+                        </dxlc:LayoutGroup>
+                        <dxlc:LayoutGroup>
+                            <dxlc:LayoutItem>
+                                <avalonEdit:TextEditor 
+                                    FontFamily="Consolas" 
+                                    IsReadOnly="True">
+                                    <dxmvvm:Interaction.Behaviors>
+                                        <viewModels:AvalonEditTextBindingBehavior Text="{Binding Path=SelectedItem.Diff, ElementName=grid}"/>
+                                    </dxmvvm:Interaction.Behaviors>
+                                </avalonEdit:TextEditor>
+                            </dxlc:LayoutItem>
+                        </dxlc:LayoutGroup>
+                    </dxlc:LayoutGroup>
+                </dxlc:LayoutControl>
+            </dxlc:LayoutGroup>
+        </dxlc:DockLayoutControl>
     </Grid>
 </UserControl>
