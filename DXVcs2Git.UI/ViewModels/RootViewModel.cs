@@ -17,5 +17,8 @@ namespace DXVcs2Git.UI.ViewModels {
             GitLabWrapper wrapper = new GitLabWrapper(Options.GitServer, Options.Token);
             MergeRequests = new MergeRequestsViewModel(wrapper, gitReader);
         }
+        public void Refresh() {
+            MergeRequests.Refresh();
+        }
     }
 }

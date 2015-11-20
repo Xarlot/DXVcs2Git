@@ -70,6 +70,7 @@ namespace DXVcs2Git.UI.ViewModels {
         }
         public void Update() {
             Repositories = Config.Repositories.With(x => x.Where(repo => repo.Watch).Select(repo => new RepositoryViewModel(repo.Name, this.gitLabWrapper, new GitReaderWrapper(repo.LocalPath), this))).With(x => x.ToList());
+            Refresh();
             //Project = gitLabWrapper.FindProject(this.gitReader.GetRemoteRepoPath());
             //if (Project == null) {
             //    Log.Error("Can`t find project");
@@ -84,19 +85,24 @@ namespace DXVcs2Git.UI.ViewModels {
             //SelectedBranch = Branches.FirstOrDefault();
             //HasEditableMergeRequest = SelectedBranch.If(x => x.IsInEditingMergeRequest).ReturnSuccess();
         }
+        public void Refresh() {
+            if (Repositories == null)
+                return;
+            Repositories.ForEach(x => x.Refresh());
+        }
         bool CanUpdate() {
             return true;
         }
         public void ForceMerge() {
             GitRepoConfig config = Serializer.Deserialize<GitRepoConfig>(GetConfigPath());
             if (config != null)
-                FarmHelper.ForceBuild(config.FarmTaskName);
+                FarmIntegrator.ForceBuild(config.FarmTaskName);
         }
         string GetConfigPath() {
             return Path.Combine(this.gitReader.GetLocalRepoPath(), GitRepoConfig.ConfigFileName);
         }
         public bool CanForceMerge() {
-            return FarmHelper.CanForceBuild("XPF DXVcs2Git sync task v15.2");
+            return FarmIntegrator.CanForceBuild("XPF DXVcs2Git sync task v15.2");
         }
     }
 }

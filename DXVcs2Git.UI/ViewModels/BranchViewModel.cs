@@ -18,9 +18,14 @@ namespace DXVcs2Git.UI.ViewModels {
     public class BranchViewModel : BindableBase {
         readonly GitLabWrapper gitLabWrapper;
         readonly GitReaderWrapper gitReader;
+        readonly RepositoryViewModel repository;
         public Branch Branch { get; }
         public MergeRequestsViewModel MergeRequests { get; }
         public string Name { get; }
+        public string FarmStatus {
+            get { return GetProperty(() => FarmStatus); }
+            private set { SetProperty(() => FarmStatus, value); }
+        }
 
         public bool HasMergeRequest { get; private set; }
         public ICommand CreateMergeRequestCommand { get; private set; }
@@ -36,9 +41,10 @@ namespace DXVcs2Git.UI.ViewModels {
             private set { SetProperty(() => EditableMergeRequest, value); }
         }
         public IEnumerable<UserViewModel> Users { get { return MergeRequests.Users; } }
-        public BranchViewModel(GitLabWrapper gitLabWrapper, GitReaderWrapper gitReader, MergeRequestsViewModel mergeRequests, MergeRequest mergeRequest, Branch branch) {
+        public BranchViewModel(GitLabWrapper gitLabWrapper, GitReaderWrapper gitReader, MergeRequestsViewModel mergeRequests, RepositoryViewModel repository, MergeRequest mergeRequest, Branch branch) {
             this.gitLabWrapper = gitLabWrapper;
             this.gitReader = gitReader;
+            this.repository = repository;
             Branch = branch;
             Name = branch.Name;
             MergeRequests = mergeRequests;
@@ -82,7 +88,7 @@ namespace DXVcs2Git.UI.ViewModels {
             string localRepoPath = this.gitReader.GetLocalRepoPath();
             GitRepoConfig repoConfig = Serializer.Deserialize<GitRepoConfig>(Path.Combine(localRepoPath, GitRepoConfig.ConfigFileName));
             if (repoConfig != null)
-                return repoConfig.Branch;
+                return repoConfig.Name;
             return MergeRequests.ProtectedBranches.FirstOrDefault(x => name.StartsWith(x.Name)).With(x => x.Name);
         }
         string CalcMergeRequestDescription(string message) {
@@ -120,6 +126,9 @@ namespace DXVcs2Git.UI.ViewModels {
             EditableMergeRequest = null;
             IsInEditingMergeRequest = false;
             MergeRequests.Update();
+        }
+        public void Refresh() {
+            FarmStatus = FarmIntegrator.GetTaskStatus(this.repository.RepoConfig?.FarmSyncTaskName);
         }
     }
 }

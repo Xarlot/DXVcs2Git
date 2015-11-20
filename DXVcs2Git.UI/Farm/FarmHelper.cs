@@ -6,32 +6,75 @@ using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Windows;
+using System.Windows.Threading;
 using DevExpress.CCNetSmart.Lib;
 using DevExpress.DXCCTray;
+using DevExpress.Mvvm.Native;
 using DevExpress.Xpf.Core;
 using DXVcs2Git.Core;
 using ThoughtWorks.CruiseControl.Remote;
 
 namespace DXVcs2Git.UI.Farm {
-    public class FarmHelper {
+    public class FarmIntegrator {
         static readonly FarmHelper Instance;
+        static Dispatcher Dispatcher { get; set; }
+        static Action InvalidateCallback { get; set; }
 
-        public static void Start() {
+        static FarmIntegrator() {
+            Instance = new FarmHelper();
+        }
+        public static void Start(Dispatcher dispatcher, Action invalidateCallback) {
+            Dispatcher = dispatcher;
+            InvalidateCallback = invalidateCallback;
+            Instance.Refreshed += InstanceOnRefreshed;
             Instance.StartIntegrator();
         }
+        static void InstanceOnRefreshed(object sender, EventArgs eventArgs) {
+            Dispatcher.BeginInvoke(DispatcherPriority.ContextIdle, InvalidateCallback);
+        }
         public static void Stop() {
+            Instance.Refreshed -= InstanceOnRefreshed;
             Instance.StopIntegrator();
         }
         public static void ForceBuild(string task) {
             if (string.IsNullOrEmpty(task))
                 return;
-            Instance.ForceBuildInternal(task);
+            Instance.ForceBuild(task);
         }
         public static bool CanForceBuild(string task) {
             return Instance.IsRunning;
         }
+        public static string GetTaskStatus(string task) {
+            return Instance.GetTaskStatus(task);
+        }
 
-        void ForceBuildInternal(string task) {
+    }
+
+    public class FarmHelper {
+        public event EventHandler Refreshed;
+
+        void RaiseRefreshed() {
+            var refreshed = Refreshed;
+            refreshed.Do(x => x(this, EventArgs.Empty));
+        }
+        public string GetTaskStatus(string task) {
+            lock (this.syncLocker) {
+                return CalcTaskStatus(task);
+            }
+        }
+        string CalcTaskStatus(string task) {
+            ProjectTagI tag = FindTask(task);
+            if (tag == null)
+                return "not found";
+            if (tag.buildstatus == IntegrationStatus.Success)
+                return "success";
+            if (tag.buildstatus == IntegrationStatus.Failure)
+                return "failure";
+            if (tag.buildstatus == IntegrationStatus.Exception)
+                return "exception";
+            return "unknown";
+        }
+        public void ForceBuild(string task) {
             lock (syncLocker) {
                 ForceBuildTag(task);
             }
@@ -200,15 +243,14 @@ namespace DXVcs2Git.UI.Farm {
 
         static FarmHelper() {
             DXCCTrayConfiguration.LoadConfiguration();
-            Instance = new FarmHelper();
         }
 
-        FarmHelper() {
+        public FarmHelper() {
             foreach (string url in DXCCTrayConfiguration.FarmList) {
                 integratorList.Add(url);
             }
         }
-        void StartIntegrator() {
+        public void StartIntegrator() {
             if (IsRunning)
                 return;
             foreach (DXCCTrayIntegrator integrator in IntegratorList) {
@@ -230,6 +272,9 @@ namespace DXVcs2Git.UI.Farm {
                 if (notification)
                     integrator_OnNotificationListChanged(sender);
                 integrator_OnProjectDetailsAndForcerUpdated(sender);
+
+                if (projects || notification)
+                    RaiseRefreshed();
                 //if (tip != null) {
                 //ToolTipControllerGetActiveObjectInfoEventArgs newArgs = new ToolTipControllerGetActiveObjectInfoEventArgs((Control)toolTipController.ActiveControlClient,
                 //    null, null, ((Control)toolTipController.ActiveControlClient).PointToClient(Cursor.Position));
@@ -546,7 +591,7 @@ namespace DXVcs2Git.UI.Farm {
                 throw;
             }
         }
-        void StopIntegrator() {
+        public void StopIntegrator() {
             if (!IsRunning)
                 return;
 
@@ -687,5 +732,6 @@ namespace DXVcs2Git.UI.Farm {
             //}
         }
         #endregion
+
     }
 }

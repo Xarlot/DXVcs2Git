@@ -72,7 +72,8 @@
         <dxg:GridControl ItemsSource="{Binding Path=Repositories}" ShowBorder="False">
             <dxg:GridControl.Columns>
                 <dxg:GridColumn FieldName="Name"></dxg:GridColumn>
-                <dxg:GridColumn FieldName="MergeRequest"></dxg:GridColumn>
+                <dxg:GridColumn FieldName="MergeRequest"/>
+                <dxg:GridColumn FieldName="FarmStatus"/>
             </dxg:GridControl.Columns>
             <dxg:GridControl.View>
                 <dxg:TreeListView 

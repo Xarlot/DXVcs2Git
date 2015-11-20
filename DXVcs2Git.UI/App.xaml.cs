@@ -26,10 +26,10 @@ namespace DXVcs2Git.UI {
             errors => 1);
             if (hasErrors != 0)
                 Environment.Exit(hasErrors);
-           
-            FarmHelper.Start();
+
             RootModel = new RootViewModel(Options);
             RootModel.Initialize();
+            FarmIntegrator.Start(Dispatcher, RootModel.Refresh);
         }
     }
 }
