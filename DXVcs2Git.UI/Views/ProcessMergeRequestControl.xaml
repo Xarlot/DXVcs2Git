@@ -57,16 +57,17 @@
             </dxr:RibbonDefaultPageCategory>
         </dxr:RibbonControl>
 
-        <dxlc:DockLayoutControl Grid.Row="1">
+        <dxlc:DockLayoutControl Grid.Row="1" Margin="10">
             <dxlc:LayoutGroup Orientation="Horizontal" dxlc:DockLayoutControl.Dock="Top">
-                <dxlc:LayoutItem Label="Selected repository: " HorizontalAlignment="Center">
-                    <TextBlock Text=""></TextBlock>
+                <dxlc:LayoutItem Label="Selected repository: " HorizontalAlignment="Left">
+                    <TextBlock Text="{Binding Path=Name}" FontWeight="Bold"/>
                 </dxlc:LayoutItem>
-                <dxlc:LayoutItem Label="Selected branch: " HorizontalAlignment="Center">
+                <dxlc:LayoutItem Label="Selected branch: " HorizontalAlignment="Right">
+                    <TextBlock Text="{Binding Path=SelectedBranch.Name}" FontWeight="Bold"/>
                 </dxlc:LayoutItem>
             </dxlc:LayoutGroup>
-            <dxlc:LayoutGroup Orientation="Horizontal" dxlc:DockLayoutControl.Dock="Client">
-                <dxlc:LayoutControl>
+            <dxlc:LayoutGroup Orientation="Horizontal" dxlc:DockLayoutControl.Dock="Client" Margin="0">
+                <dxlc:LayoutControl Padding="0">
                     <dxlc:LayoutGroup Orientation="Horizontal">
                         <dxlc:LayoutGroup Orientation="Vertical">
                             <dxlc:LayoutItem HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
@@ -98,14 +99,16 @@
                             </dxlc:LayoutItem>
                         </dxlc:LayoutGroup>
                         <dxlc:LayoutGroup>
-                            <dxlc:LayoutItem>
-                                <avalonEdit:TextEditor 
+                            <dxlc:LayoutItem VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
+                                <Border BorderBrush="#FFD6D6D6" BorderThickness="1">
+                                    <avalonEdit:TextEditor 
                                     FontFamily="Consolas" 
                                     IsReadOnly="True">
-                                    <dxmvvm:Interaction.Behaviors>
-                                        <viewModels:AvalonEditTextBindingBehavior Text="{Binding Path=SelectedItem.Diff, ElementName=grid}"/>
-                                    </dxmvvm:Interaction.Behaviors>
-                                </avalonEdit:TextEditor>
+                                        <dxmvvm:Interaction.Behaviors>
+                                            <viewModels:AvalonEditTextBindingBehavior Text="{Binding Path=SelectedItem.Diff, ElementName=grid}"/>
+                                        </dxmvvm:Interaction.Behaviors>
+                                    </avalonEdit:TextEditor>
+                                </Border>
                             </dxlc:LayoutItem>
                         </dxlc:LayoutGroup>
                     </dxlc:LayoutGroup>

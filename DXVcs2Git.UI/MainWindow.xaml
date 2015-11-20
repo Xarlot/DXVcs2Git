@@ -23,13 +23,15 @@
             Grid.Row="1" dxb:MergingProperties.ElementMergingBehavior="InternalWithExternal">
             <dxdo:LayoutGroup x:Name="root">
                 <dxdo:LayoutPanel 
+                    ItemWidth="*"
                     AutoHideExpandState="Expanded"
                     FloatOnDoubleClick="False">
                     <local:MergeRequestsControl 
                         DataContext="{Binding Path=MergeRequests}">
                     </local:MergeRequestsControl>
                 </dxdo:LayoutPanel>
-                <dxdo:LayoutPanel>
+                <dxdo:LayoutPanel
+                    ItemWidth="2*">
                     <local:ProcessMergeRequestControl 
                         DataContext="{Binding Path=MergeRequests.SelectedRepository}"/>
                 </dxdo:LayoutPanel>
