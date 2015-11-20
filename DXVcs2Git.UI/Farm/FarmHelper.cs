@@ -59,6 +59,23 @@ namespace DXVcs2Git.UI.Farm {
     }
 
     public class FarmStatus {
+        protected bool Equals(FarmStatus other) {
+            return BuildStatus == other.BuildStatus && ActivityStatus == other.ActivityStatus;
+        }
+        public override bool Equals(object obj) {
+            if (ReferenceEquals(null, obj))
+                return false;
+            if (ReferenceEquals(this, obj))
+                return true;
+            if (obj.GetType() != this.GetType())
+                return false;
+            return Equals((FarmStatus)obj);
+        }
+        public override int GetHashCode() {
+            unchecked {
+                return ((int)BuildStatus * 397) ^ (int)ActivityStatus;
+            }
+        }
         public FarmStatus() {
             BuildStatus = IntegrationStatus.Unknown;
             ActivityStatus = ActivityStatus.Unknown;

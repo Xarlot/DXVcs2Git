@@ -11,6 +11,7 @@
              xmlns:dxr="http://schemas.devexpress.com/winfx/2008/xaml/ribbon"
              xmlns:dxb="http://schemas.devexpress.com/winfx/2008/xaml/bars"
              xmlns:dxlc="http://schemas.devexpress.com/winfx/2008/xaml/layoutcontrol"
+             xmlns:dxe="http://schemas.devexpress.com/winfx/2008/xaml/editors"
              mc:Ignorable="d" >
     <UserControl.Resources>
         <ResourceDictionary>
@@ -22,6 +23,7 @@
                     </dxmvvm:MapItem.Target>
                 </dxmvvm:MapItem>
             </dxmvvm:ObjectToObjectConverter>
+            <views:MergeRequestTitleConverter x:Key="MergeRequestTitleConverter"/>
         </ResourceDictionary>
     </UserControl.Resources>
     <Grid>
@@ -70,6 +72,14 @@
                 </dxlc:LayoutItem>
                 <dxlc:LayoutItem Label="Selected branch: " HorizontalAlignment="Right">
                     <TextBlock Text="{Binding Path=SelectedBranch.Name}" FontWeight="Bold"/>
+                </dxlc:LayoutItem>
+            </dxlc:LayoutGroup>
+            <dxlc:LayoutGroup Orientation="Horizontal" dxlc:DockLayoutControl.Dock="Top">
+                <dxlc:LayoutItem Label="Merge request: " HorizontalAlignment="Left">
+                    <TextBlock Text="{Binding Path=SelectedBranch.MergeRequest.Title, Converter={StaticResource MergeRequestTitleConverter}}"/>
+                </dxlc:LayoutItem>
+                <dxlc:LayoutItem Label=" Merge request author: " HorizontalAlignment="Right">
+                    <TextBlock Text="{Binding Path=SelectedBranch.MergeRequest.Author}"/>
                 </dxlc:LayoutItem>
             </dxlc:LayoutGroup>
             <dxlc:LayoutGroup Orientation="Horizontal" dxlc:DockLayoutControl.Dock="Client" Margin="0">

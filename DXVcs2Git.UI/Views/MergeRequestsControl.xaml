@@ -76,7 +76,6 @@
             </dxmvvm:Interaction.Behaviors>
             <dxg:GridControl.Columns>
                 <dxg:GridColumn FieldName="Name"></dxg:GridColumn>
-                <dxg:GridColumn FieldName="MergeRequest"/>
                 <dxg:GridColumn FieldName="FarmStatus.BuildStatus" Header="Build status"/>
                 <dxg:GridColumn FieldName="FarmStatus.ActivityStatus" Header="Activity status"/>
             </dxg:GridControl.Columns>
@@ -89,10 +88,5 @@
                     AutoWidth="True"/>
             </dxg:GridControl.View>
         </dxg:GridControl>
-        <!--<dxe:ListBoxEdit 
-            ItemsSource="{Binding Path=Branches}" 
-            EditValue="{Binding Path=SelectedBranch}"
-            ItemTemplateSelector="{StaticResource branchesSelector}">
-        </dxe:ListBoxEdit>-->
     </Grid>
 </UserControl>
