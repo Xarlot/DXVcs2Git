@@ -64,7 +64,7 @@
                         <dxb:BarButtonItem
                             RibbonStyle="Large" 
                             GlyphSize="Large" 
-                            Content="Force"
+                            Content="Sync"
                             Command="{Binding Path=SelectedBranch.ForceBuildCommand}"
                             LargeGlyph="{dx:DXImageOffice2013 Image=Convert_32x32.png}"
                             >
