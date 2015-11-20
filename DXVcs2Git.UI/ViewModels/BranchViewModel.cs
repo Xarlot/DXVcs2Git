@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Text;
 using System.Windows;
@@ -8,12 +6,10 @@ using System.Windows.Input;
 using DevExpress.Mvvm;
 using DevExpress.Mvvm.Native;
 using DevExpress.Xpf.Core;
-using DXVcs2Git.Core;
 using DXVcs2Git.Core.Git;
 using DXVcs2Git.Git;
 using DXVcs2Git.UI.Farm;
 using NGitLab.Models;
-using ThoughtWorks.CruiseControl.Remote;
 using User = NGitLab.Models.User;
 
 namespace DXVcs2Git.UI.ViewModels {
