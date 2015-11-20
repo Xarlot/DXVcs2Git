@@ -12,24 +12,18 @@ namespace DXVcs2Git.UI {
     /// Interaction logic for App.xaml
     /// </summary>
     public partial class App : Application {
-        public Options Options { get; private set; }
         public static RootViewModel RootModel { get; private set; }
         protected override void OnStartup(StartupEventArgs e) {
             base.OnStartup(e);
+            AppDomain.CurrentDomain.UnhandledException += CurrentDomainOnUnhandledException;
+
             ThemeManager.ApplicationThemeName = "Office2013";
 
-            var result = Parser.Default.ParseArguments<Options>(e.Args);
-            var hasErrors = result.MapResult(clo => {
-                Options = clo;
-                return 0;
-            },
-            errors => 1);
-            if (hasErrors != 0)
-                Environment.Exit(hasErrors);
-
-            RootModel = new RootViewModel(Options);
-            RootModel.Initialize();
+            RootModel = new RootViewModel();
             FarmIntegrator.Start(Dispatcher, RootModel.Refresh);
+        }
+        void CurrentDomainOnUnhandledException(object sender, UnhandledExceptionEventArgs e) {
+            DXMessageBox.Show(e.ExceptionObject.ToString(), "Unhandled exception", MessageBoxButton.OK);
         }
     }
 }

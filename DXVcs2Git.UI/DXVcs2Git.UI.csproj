@@ -191,7 +191,6 @@
     <Compile Include="ViewModels\UserViewModel.cs" />
     <Compile Include="Views\AvalonEditTextToDocumentBehavior.cs" />
     <Compile Include="ViewModels\MergeRequestFileDataViewModel.cs" />
-    <Compile Include="ViewModels\Options.cs" />
     <Compile Include="ViewModels\MergeRequestsViewModel.cs" />
     <Compile Include="ViewModels\MergeRequestViewModel.cs" />
     <Compile Include="Views\BranchesTemplateSelector.cs" />

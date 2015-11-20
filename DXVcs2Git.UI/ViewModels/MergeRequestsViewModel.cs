@@ -16,8 +16,7 @@ using NGitLab.Models;
 
 namespace DXVcs2Git.UI.ViewModels {
     public class MergeRequestsViewModel : BindableBase {
-        readonly GitLabWrapper gitLabWrapper;
-        readonly GitReaderWrapper gitReader;
+        GitLabWrapper gitLabWrapper;
         BranchViewModel selectedBranch;
         RepositoryViewModel selectedRepository;
 
@@ -38,7 +37,6 @@ namespace DXVcs2Git.UI.ViewModels {
 
         public ICommand UpdateCommand { get; private set; }
         public ICommand SettingsCommand { get; private set; }
-        public IEnumerable<UserViewModel> Users { get; private set; }
         public Config Config { get; private set; }
         public IEnumerable<RepositoryViewModel> Repositories {
             get { return GetProperty(() => Repositories); }
@@ -49,23 +47,19 @@ namespace DXVcs2Git.UI.ViewModels {
             set { SetProperty(ref this.selectedRepository, value, () => SelectedRepository); }
         }
 
-        public MergeRequestsViewModel(GitLabWrapper gitLabWrapper, GitReaderWrapper gitReader) {
-            this.gitReader = gitReader;
-            this.gitLabWrapper = gitLabWrapper;
+        public MergeRequestsViewModel() {
             UpdateCommand = DelegateCommandFactory.Create(Update, CanUpdate);
             SettingsCommand = DelegateCommandFactory.Create(ShowSettings, CanShowSettings);
-            Users = gitLabWrapper.GetUsers().Select(x => new UserViewModel(x)).ToList();
             Config = ConfigSerializer.GetConfig();
 
             Update();
-
         }
         void ShowSettings() {
             DXDialogWindow dialog = new DXDialogWindow("Settings", MessageBoxButton.OKCancel);
-            EditConfigViewModel config = new EditConfigViewModel(Config);
-            dialog.Content = new EditConfigControl() { DataContext =  config};
+            EditConfigViewModel editConfig = new EditConfigViewModel(Config);
+            dialog.Content = new EditConfigControl() { DataContext =  editConfig};
             if (dialog.ShowDialog() == true) {
-                Config = config.CreateConfig();
+                Config = editConfig.CreateConfig();
                 ConfigSerializer.SaveConfig(Config);
                 Update();
             }
@@ -74,9 +68,19 @@ namespace DXVcs2Git.UI.ViewModels {
             return true;
         }
         public void Update() {
+            if (!IsValidConfig(Config)) 
+                return;
+            gitLabWrapper = new GitLabWrapper(Config.GitServer, Config.Token);
             Repositories = Config.Repositories.With(x => x.Where(repo => repo.Watch).Select(repo => new RepositoryViewModel(repo.Name, this.gitLabWrapper, new GitReaderWrapper(repo.LocalPath), this))).With(x => x.ToList());
             SelectedRepository = Repositories.With(x => x.FirstOrDefault());
             Refresh();
+        }
+        bool IsValidConfig(Config config) {
+            if (config == null)
+                return false;
+            if (string.IsNullOrEmpty(config.Token))
+                return false;
+            return true;
         }
         public void Refresh() {
             if (Repositories == null)
@@ -85,17 +89,6 @@ namespace DXVcs2Git.UI.ViewModels {
         }
         bool CanUpdate() {
             return true;
-        }
-        public void ForceMerge() {
-            GitRepoConfig config = Serializer.Deserialize<GitRepoConfig>(GetConfigPath());
-            if (config != null)
-                FarmIntegrator.ForceBuild(config.FarmTaskName);
-        }
-        string GetConfigPath() {
-            return Path.Combine(this.gitReader.GetLocalRepoPath(), GitRepoConfig.ConfigFileName);
-        }
-        public bool CanForceMerge() {
-            return FarmIntegrator.CanForceBuild("XPF DXVcs2Git sync task v15.2");
         }
     }
 }

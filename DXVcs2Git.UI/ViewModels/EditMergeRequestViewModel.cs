@@ -27,15 +27,12 @@ namespace DXVcs2Git.UI.ViewModels {
 
             model.IsInEditingMergeRequest = true;
             comment = model.MergeRequest?.MergeRequest.Title ?? model.Branch.Commit.Message;
-            var assignee = model.MergeRequest?.Assignee;
-            if (!string.IsNullOrEmpty(assignee))
-                this.user = Users.FirstOrDefault(x => x.Name == assignee);
         }
         bool CanAssignToService() {
             return HasChanges;
         }
         void PerformAssignToService() {
-            SelectedUser = Users.FirstOrDefault(x => x.Name == "dxvcs2gitservice");
+            SelectedUser = new UserViewModel(this.model.GetUser("dxvcs2gitservice"));
         }
         bool CanCancelMergeRequest() {
             return true;
@@ -53,7 +50,6 @@ namespace DXVcs2Git.UI.ViewModels {
         }
 
         public bool IsModified { get; private set; }
-        public IEnumerable<UserViewModel> Users { get { return this.model.Users; } }
         public UserViewModel SelectedUser {
             get { return user; }
             set {

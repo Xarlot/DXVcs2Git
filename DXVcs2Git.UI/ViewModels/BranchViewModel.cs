@@ -14,6 +14,7 @@ using DXVcs2Git.Git;
 using DXVcs2Git.UI.Farm;
 using NGitLab.Models;
 using ThoughtWorks.CruiseControl.Remote;
+using User = NGitLab.Models.User;
 
 namespace DXVcs2Git.UI.ViewModels {
     public class BranchViewModel : BindableBase {
@@ -42,7 +43,6 @@ namespace DXVcs2Git.UI.ViewModels {
             get { return GetProperty(() => EditableMergeRequest); }
             private set { SetProperty(() => EditableMergeRequest, value); }
         }
-        public IEnumerable<UserViewModel> Users { get { return MergeRequests.Users; } }
         public bool HasChanges {
             get { return MergeRequest.Return(x => x.Changes.Any(), () => false); }
         }
@@ -70,7 +70,6 @@ namespace DXVcs2Git.UI.ViewModels {
             return FarmStatus.ActivityStatus == ActivityStatus.Sleeping;
         }
         void ForceMerge() {
-            MergeRequests.ForceMerge();
         }
         bool CanEditMergeRequest() {
             return HasMergeRequest && !IsInEditingMergeRequest;
@@ -140,6 +139,9 @@ namespace DXVcs2Git.UI.ViewModels {
         }
         public void Refresh() {
             FarmStatus = FarmIntegrator.GetTaskStatus(Repository.RepoConfig?.FarmSyncTaskName);
+        }
+        public User GetUser(string name) {
+            return this.gitLabWrapper.GetUsers().FirstOrDefault(x => x.Name == name);
         }
     }
 }
