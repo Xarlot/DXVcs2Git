@@ -11,6 +11,14 @@
              KeyboardNavigation.TabNavigation="Cycle">
     <Grid DataContext="{Binding Path=SelectedBranch.EditableMergeRequest}">
         <dxlc:LayoutControl>
+            <dxlc:LayoutGroup Orientation="Horizontal">
+                <dxlc:LayoutItem Label="Selected repository: ">
+                    <TextBlock Text=""></TextBlock>
+                </dxlc:LayoutItem>
+                <dxlc:LayoutItem Label="Selected branch: ">
+
+                </dxlc:LayoutItem>
+            </dxlc:LayoutGroup>
             <dxlc:LayoutGroup Orientation="Vertical">
                 <dxlc:LayoutItem Label="Description: " Height="100">
                     <dxe:TextEdit 

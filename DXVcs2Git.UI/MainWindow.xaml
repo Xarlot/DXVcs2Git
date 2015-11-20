@@ -31,7 +31,7 @@
                 </dxdo:LayoutPanel>
                 <dxdo:LayoutPanel>
                     <local:ProcessMergeRequestControl 
-                        DataContext="{Binding Path=MergeRequests}"/>
+                        DataContext="{Binding Path=MergeRequests.SelectedRepository}"/>
                 </dxdo:LayoutPanel>
             </dxdo:LayoutGroup>
         </dxdo:DockLayoutManager>

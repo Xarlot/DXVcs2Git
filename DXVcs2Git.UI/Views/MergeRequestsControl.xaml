@@ -9,6 +9,7 @@
              xmlns:dxlc="http://schemas.devexpress.com/winfx/2008/xaml/layoutcontrol"
              xmlns:views="clr-namespace:DXVcs2Git.UI.Views"
              xmlns:dxg="http://schemas.devexpress.com/winfx/2008/xaml/grid"
+             xmlns:dxmvvm="http://schemas.devexpress.com/winfx/2008/xaml/mvvm"
              mc:Ignorable="d" 
              d:DesignHeight="300" d:DesignWidth="300">
     <UserControl.Resources>
@@ -70,6 +71,9 @@
             </dxr:RibbonDefaultPageCategory>
         </dxr:RibbonControl>
         <dxg:GridControl ItemsSource="{Binding Path=Repositories}" ShowBorder="False">
+            <dxmvvm:Interaction.Behaviors>
+                <views:RepositoriesBindingBehavior/>
+            </dxmvvm:Interaction.Behaviors>
             <dxg:GridControl.Columns>
                 <dxg:GridColumn FieldName="Name"></dxg:GridColumn>
                 <dxg:GridColumn FieldName="MergeRequest"/>

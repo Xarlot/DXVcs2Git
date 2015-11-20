@@ -206,6 +206,7 @@
       <DependentUpon>MergeRequestsControl.xaml</DependentUpon>
     </Compile>
     <Compile Include="ViewModels\RootViewModel.cs" />
+    <Compile Include="Views\RepositoriesBindingBehavior.cs" />
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>

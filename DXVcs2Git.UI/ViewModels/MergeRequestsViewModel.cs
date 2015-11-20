@@ -19,6 +19,7 @@ namespace DXVcs2Git.UI.ViewModels {
         readonly GitLabWrapper gitLabWrapper;
         readonly GitReaderWrapper gitReader;
         BranchViewModel selectedBranch;
+        RepositoryViewModel selectedRepository;
 
         public Project Project { get; private set; }
         public IEnumerable<BranchViewModel> Branches {
@@ -42,6 +43,10 @@ namespace DXVcs2Git.UI.ViewModels {
         public IEnumerable<RepositoryViewModel> Repositories {
             get { return GetProperty(() => Repositories); }
             set { SetProperty(() => Repositories, value); }
+        }
+        public RepositoryViewModel SelectedRepository {
+            get { return this.selectedRepository; }
+            set { SetProperty(ref this.selectedRepository, value, () => SelectedRepository); }
         }
 
         public MergeRequestsViewModel(GitLabWrapper gitLabWrapper, GitReaderWrapper gitReader) {
@@ -70,6 +75,7 @@ namespace DXVcs2Git.UI.ViewModels {
         }
         public void Update() {
             Repositories = Config.Repositories.With(x => x.Where(repo => repo.Watch).Select(repo => new RepositoryViewModel(repo.Name, this.gitLabWrapper, new GitReaderWrapper(repo.LocalPath), this))).With(x => x.ToList());
+            SelectedRepository = Repositories.With(x => x.FirstOrDefault());
             Refresh();
             //Project = gitLabWrapper.FindProject(this.gitReader.GetRemoteRepoPath());
             //if (Project == null) {

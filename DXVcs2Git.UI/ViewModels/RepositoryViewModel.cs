@@ -25,6 +25,7 @@ namespace DXVcs2Git.UI.ViewModels {
         Project Project { get; }
         MergeRequestsViewModel MergeRequests { get; }
         public GitRepoConfig RepoConfig { get; }
+        public BranchViewModel SelectedBranch { get; set; }
         public RepositoryViewModel(string name, GitLabWrapper gitLabWrapper, GitReaderWrapper gitReader, MergeRequestsViewModel mergeRequests) {
             GitLabWrapper = gitLabWrapper;
             GitReader = gitReader;
