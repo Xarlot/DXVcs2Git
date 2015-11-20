@@ -80,15 +80,7 @@ namespace DXVcs2Git.GitTools {
         #endregion
 
         public void ShowMergeRequestUI() {
-            if (string.IsNullOrEmpty(this.options.Token)) {
-                DXMessageBox.Show("Gitlab authorization token is empty.");
-                return;
-            }
-            string gitRepoPath = CalcGitRepoPath();
-
-            if (gitRepoPath == null)
-                return;
-            ProcessStartInfo info = new ProcessStartInfo("DXVcs2Git.UI.exe", $@"-p {this.options.Token} -d {gitRepoPath}");
+            ProcessStartInfo info = new ProcessStartInfo("DXVcs2Git.UI.exe");
             info.WorkingDirectory = ConfigSerializer.AppPath;
             Process.Start(info);
         }

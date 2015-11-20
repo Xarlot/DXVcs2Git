@@ -58,7 +58,7 @@
                             RibbonStyle="Large" 
                             GlyphSize="Large" 
                             Content="Force"
-                            Command="{Binding Path=SelectedBranch.ForceMergeCommand}">
+                            Command="{Binding Path=SelectedBranch.ForceBuildCommand}">
                         </dxb:BarButtonItem>
                     </dxr:RibbonPageGroup>
                 </dxr:RibbonPage>

@@ -33,7 +33,7 @@ namespace DXVcs2Git.UI.ViewModels {
         public ICommand CreateMergeRequestCommand { get; private set; }
         public ICommand EditMergeRequestCommand { get; private set; }
         public ICommand CloseMergeRequestCommand { get; private set; }
-        public ICommand ForceMergeCommand { get; private set; }
+        public ICommand ForceBuildCommand { get; private set; }
         public MergeRequestViewModel MergeRequest { get; private set; }
         public bool IsInEditingMergeRequest {
             get { return GetProperty(() => IsInEditingMergeRequest); }
@@ -61,15 +61,16 @@ namespace DXVcs2Git.UI.ViewModels {
             CreateMergeRequestCommand = DelegateCommandFactory.Create(CreateMergeRequest, CanCreateMergeRequest);
             EditMergeRequestCommand = DelegateCommandFactory.Create(EditMergeRequest, CanEditMergeRequest);
             CloseMergeRequestCommand = DelegateCommandFactory.Create(CloseMergeRequest, CanCloseMergeRequest);
-            ForceMergeCommand = DelegateCommandFactory.Create(ForceMerge, CanForceMerge);
+            ForceBuildCommand = DelegateCommandFactory.Create(ForceBuild, CanForceBuild);
         }
         bool CanCloseMergeRequest() {
             return HasMergeRequest;
         }
-        bool CanForceMerge() {
+        bool CanForceBuild() {
             return FarmStatus.ActivityStatus == ActivityStatus.Sleeping;
         }
-        void ForceMerge() {
+        void ForceBuild() {
+            Repository.ForceBuild();
         }
         bool CanEditMergeRequest() {
             return HasMergeRequest && !IsInEditingMergeRequest;

@@ -62,8 +62,11 @@ namespace DXVcs2Git.UI.ViewModels {
         public void Refresh() {
             if (Branches == null)
                 return;
-            FarmStatus = FarmIntegrator.GetTaskStatus(RepoConfig?.FarmSyncTaskName);
+            FarmStatus = FarmIntegrator.GetTaskStatus(RepoConfig?.FarmTaskName);
             Branches.ForEach(x => x.Refresh());
+        }
+        public void ForceBuild() {
+            FarmIntegrator.ForceBuild(RepoConfig.FarmSyncTaskName);
         }
     }
 }
