@@ -8,6 +8,7 @@
              xmlns:dxmvvm="http://schemas.devexpress.com/winfx/2008/xaml/mvvm"
              xmlns:viewModels="clr-namespace:DXVcs2Git.UI.ViewModels"
              xmlns:views="clr-namespace:DXVcs2Git.UI.Views"
+             xmlns:dx="http://schemas.devexpress.com/winfx/2008/xaml/core"
              xmlns:dxr="http://schemas.devexpress.com/winfx/2008/xaml/ribbon"
              xmlns:dxb="http://schemas.devexpress.com/winfx/2008/xaml/bars"
              xmlns:dxlc="http://schemas.devexpress.com/winfx/2008/xaml/layoutcontrol"
@@ -34,31 +35,39 @@
         <dxr:RibbonControl >
             <dxr:RibbonDefaultPageCategory>
                 <dxr:RibbonPage Caption="Main">
-                    <dxr:RibbonPageGroup>
+                    <dxr:RibbonPageGroup Caption="Merge Requests">
                         <dxb:BarButtonItem
                             RibbonStyle="Large" 
                             GlyphSize="Large" 
                             Content="Create"
-                            Command="{Binding Path=SelectedBranch.CreateMergeRequestCommand}">
+                            Command="{Binding Path=SelectedBranch.CreateMergeRequestCommand}"
+                            LargeGlyph="{dx:DXImageOffice2013 Image=NewTask_32x32.png}"
+                            >
                         </dxb:BarButtonItem>
                         <dxb:BarButtonItem
                             RibbonStyle="Large" 
                             GlyphSize="Large" 
                             Content="Edit"
-                            Command="{Binding Path=SelectedBranch.EditMergeRequestCommand}">
+                            Command="{Binding Path=SelectedBranch.EditMergeRequestCommand}"
+                            LargeGlyph="{dx:DXImageOffice2013 Image=EditTask_32x32.png}"
+                            >
                         </dxb:BarButtonItem>
                         <dxb:BarButtonItem
                             RibbonStyle="Large" 
                             GlyphSize="Large" 
                             Content="Close"
-                            Command="{Binding Path=SelectedBranch.CloseMergeRequestCommand}">
+                            Command="{Binding Path=SelectedBranch.CloseMergeRequestCommand}"
+                            LargeGlyph="{dx:DXImageOffice2013 Image=Close_32x32.png}"
+                            >
                         </dxb:BarButtonItem>
                         <dxb:BarItemSeparator/>
                         <dxb:BarButtonItem
                             RibbonStyle="Large" 
                             GlyphSize="Large" 
                             Content="Force"
-                            Command="{Binding Path=SelectedBranch.ForceBuildCommand}">
+                            Command="{Binding Path=SelectedBranch.ForceBuildCommand}"
+                            LargeGlyph="{dx:DXImageOffice2013 Image=Convert_32x32.png}"
+                            >
                         </dxb:BarButtonItem>
                     </dxr:RibbonPageGroup>
                 </dxr:RibbonPage>

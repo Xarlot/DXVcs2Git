@@ -10,14 +10,14 @@
         xmlns:dxb="http://schemas.devexpress.com/winfx/2008/xaml/bars"
         xmlns:dxdo="http://schemas.devexpress.com/winfx/2008/xaml/docking"
         mc:Ignorable="d"
-        Title="MainWindow" Height="800" Width="1024" 
+        Title="Git Tools" Height="800" Width="1024"  ShowIcon="False"
         UseLayoutRounding="True" DataContext="{x:Static local:App.RootModel}">
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
-        <dxr:RibbonControl Grid.Row="0" RibbonStyle="Office2010"/>
+        <dxr:RibbonControl Grid.Row="0" RibbonStyle="Office2010" ToolbarShowMode="Hide" AllowCustomization="False" MinimizationButtonVisibility="Collapsed" RibbonHeaderVisibility="Collapsed"/>
         <dxdo:DockLayoutManager 
             AutoHideMode="Inline"
             Grid.Row="1" dxb:MergingProperties.ElementMergingBehavior="InternalWithExternal">
