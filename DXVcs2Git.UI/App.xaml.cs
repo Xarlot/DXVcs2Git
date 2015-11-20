@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using System.Threading;
 using System.Windows;
+using System.Windows.Threading;
 using CommandLine;
 using DevExpress.Xpf.Core;
 using DXVcs2Git.UI.Farm;
@@ -21,6 +22,7 @@ namespace DXVcs2Git.UI {
 
             RootModel = new RootViewModel();
             FarmIntegrator.Start(Dispatcher, RootModel.Refresh);
+            Dispatcher.BeginInvoke(DispatcherPriority.ContextIdle, new Action(() => RootModel.Initialize()));
         }
         void CurrentDomainOnUnhandledException(object sender, UnhandledExceptionEventArgs e) {
             DXMessageBox.Show(e.ExceptionObject.ToString(), "Unhandled exception", MessageBoxButton.OK);

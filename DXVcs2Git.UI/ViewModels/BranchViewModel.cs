@@ -66,22 +66,22 @@ namespace DXVcs2Git.UI.ViewModels {
             ForceBuildCommand = DelegateCommandFactory.Create(ForceBuild, CanForceBuild);
         }
         bool CanCloseMergeRequest() {
-            return HasMergeRequest && IsMyMergeRequest;
+            return MergeRequests.IsInitialized && HasMergeRequest && IsMyMergeRequest;
         }
         bool CanForceBuild() {
-            return FarmStatus.ActivityStatus == ActivityStatus.Sleeping;
+            return MergeRequests.IsInitialized && FarmStatus.ActivityStatus == ActivityStatus.Sleeping;
         }
         void ForceBuild() {
             Repository.ForceBuild();
         }
         bool CanEditMergeRequest() {
-            return HasMergeRequest && IsMyMergeRequest && !IsInEditingMergeRequest;
+            return MergeRequests.IsInitialized && HasMergeRequest && IsMyMergeRequest && !IsInEditingMergeRequest;
         }
         void EditMergeRequest() {
             EditableMergeRequest = new EditMergeRequestViewModel(this);
         }
         bool CanCreateMergeRequest() {
-            return !HasMergeRequest;
+            return MergeRequests.IsInitialized && !HasMergeRequest;
         }
         public void CreateMergeRequest() {
             var message = Branch.Commit.Message;

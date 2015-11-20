@@ -34,6 +34,7 @@ namespace DXVcs2Git.UI.ViewModels {
             get { return this.selectedBranch; }
             set { SetProperty(ref this.selectedBranch, value, () => SelectedBranch); }
         }
+        public bool IsInitialized { get; private set; }
 
         public ICommand UpdateCommand { get; private set; }
         public ICommand SettingsCommand { get; private set; }
@@ -51,8 +52,6 @@ namespace DXVcs2Git.UI.ViewModels {
             UpdateCommand = DelegateCommandFactory.Create(Update, CanUpdate);
             SettingsCommand = DelegateCommandFactory.Create(ShowSettings, CanShowSettings);
             Config = ConfigSerializer.GetConfig();
-
-            Update();
         }
         void ShowSettings() {
             DXDialogWindow dialog = new DXDialogWindow("Settings", MessageBoxButton.OKCancel);
@@ -68,12 +67,14 @@ namespace DXVcs2Git.UI.ViewModels {
             return true;
         }
         public void Update() {
+            IsInitialized = false;
             if (!IsValidConfig(Config)) 
                 return;
             gitLabWrapper = new GitLabWrapper(Config.GitServer, Config.Token);
             Repositories = Config.Repositories.With(x => x.Where(repo => repo.Watch).Select(repo => new RepositoryViewModel(repo.Name, this.gitLabWrapper, new GitReaderWrapper(repo.LocalPath), this))).With(x => x.ToList());
             SelectedRepository = Repositories.With(x => x.FirstOrDefault());
             Refresh();
+            IsInitialized = true;
         }
         bool IsValidConfig(Config config) {
             if (config == null)
@@ -86,9 +87,10 @@ namespace DXVcs2Git.UI.ViewModels {
             if (Repositories == null)
                 return;
             Repositories.ForEach(x => x.Refresh());
+            CommandManager.InvalidateRequerySuggested();
         }
         bool CanUpdate() {
-            return true;
+            return IsInitialized;
         }
     }
 }
