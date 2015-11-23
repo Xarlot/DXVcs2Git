@@ -10,8 +10,10 @@
         xmlns:dxb="http://schemas.devexpress.com/winfx/2008/xaml/bars"
         xmlns:dxdo="http://schemas.devexpress.com/winfx/2008/xaml/docking"
         mc:Ignorable="d"
-        Title="Git Tools" Height="800" Width="1024"  ShowIcon="False"
-        UseLayoutRounding="True" DataContext="{x:Static local:App.RootModel}">
+        ShowActivated="True"
+        Title="Git Tools" Height="800" Width="1024"  ShowIcon="True"
+        UseLayoutRounding="True" DataContext="{x:Static local:App.RootModel}"
+        Icon="Icon.ico">
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
