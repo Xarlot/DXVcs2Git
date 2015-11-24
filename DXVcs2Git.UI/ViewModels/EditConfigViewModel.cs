@@ -4,7 +4,7 @@ using DevExpress.Mvvm;
 using DevExpress.Mvvm.Native;
 
 namespace DXVcs2Git.UI.ViewModels {
-    public class EditConfigViewModel : BindableBase {
+    public class EditConfigViewModel : ViewModelBase {
         public string Token {
             get { return GetProperty(() => Token); }
             set { SetProperty(() => Token, value); }

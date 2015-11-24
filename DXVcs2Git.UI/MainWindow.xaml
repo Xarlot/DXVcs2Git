@@ -9,11 +9,36 @@
         xmlns:dxe="http://schemas.devexpress.com/winfx/2008/xaml/editors"
         xmlns:dxb="http://schemas.devexpress.com/winfx/2008/xaml/bars"
         xmlns:dxdo="http://schemas.devexpress.com/winfx/2008/xaml/docking"
+        xmlns:viewModels="clr-namespace:DXVcs2Git.UI.ViewModels"
+        xmlns:dxmvvm="http://schemas.devexpress.com/winfx/2008/xaml/mvvm"
+        xmlns:dx="http://schemas.devexpress.com/winfx/2008/xaml/core"
+        xmlns:views="clr-namespace:DXVcs2Git.UI.Views"
         mc:Ignorable="d"
         ShowActivated="True"
         Title="Git Tools" Height="800" Width="1024"  ShowIcon="True"
-        UseLayoutRounding="True" DataContext="{x:Static local:App.RootModel}"
+        UseLayoutRounding="True"
         Icon="Icon.ico">
+    <dxr:DXRibbonWindow.DataContext>
+        <viewModels:RootViewModel/>
+    </dxr:DXRibbonWindow.DataContext>
+    <dxmvvm:Interaction.Behaviors>
+        <dx:DialogService x:Name="settingsDialogService">
+            <dx:DialogService.DialogStyle>
+                <Style TargetType="{x:Type dx:DXDialogWindow}">
+                    <Style.Setters>
+                        <Setter Property="UseLayoutRounding" Value="True"/>
+                        <Setter Property="Width" Value="800"/>
+                        <Setter Property="Height" Value="600"/>
+                    </Style.Setters>
+                </Style>
+            </dx:DialogService.DialogStyle>
+            <dx:DialogService.ViewTemplate>
+                <DataTemplate>
+                    <views:EditConfigControl/>
+                </DataTemplate>
+            </dx:DialogService.ViewTemplate>
+        </dx:DialogService>
+    </dxmvvm:Interaction.Behaviors>
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>

@@ -1,21 +1,16 @@
 ﻿using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.IO;
 using System.Linq;
 using System.Windows;
 using System.Windows.Input;
 using DevExpress.Mvvm;
 using DevExpress.Mvvm.Native;
 using DevExpress.Xpf.Core;
-using DXVcs2Git.Core;
 using DXVcs2Git.Core.Git;
 using DXVcs2Git.Git;
-using DXVcs2Git.UI.Farm;
-using DXVcs2Git.UI.Views;
 using NGitLab.Models;
 
 namespace DXVcs2Git.UI.ViewModels {
-    public class MergeRequestsViewModel : BindableBase {
+    public class MergeRequestsViewModel : ViewModelBase {
         GitLabWrapper gitLabWrapper;
         BranchViewModel selectedBranch;
         RepositoryViewModel selectedRepository;
@@ -47,6 +42,7 @@ namespace DXVcs2Git.UI.ViewModels {
             get { return this.selectedRepository; }
             set { SetProperty(ref this.selectedRepository, value, () => SelectedRepository); }
         }
+        public IDialogService SettingsDialogService { get { return GetService<IDialogService>("settingsDialogService", ServiceSearchMode.PreferParents); } }
 
         public MergeRequestsViewModel() {
             UpdateCommand = DelegateCommandFactory.Create(Update, CanUpdate);
@@ -54,11 +50,9 @@ namespace DXVcs2Git.UI.ViewModels {
             Config = ConfigSerializer.GetConfig();
         }
         void ShowSettings() {
-            DXDialogWindow dialog = new DXDialogWindow("Settings", MessageBoxButton.OKCancel);
-            EditConfigViewModel editConfig = new EditConfigViewModel(Config);
-            dialog.Content = new EditConfigControl() { DataContext =  editConfig};
-            if (dialog.ShowDialog() == true) {
-                Config = editConfig.CreateConfig();
+            var viewModel = new EditConfigViewModel(Config);
+            if (SettingsDialogService.ShowDialog(MessageButton.OKCancel, "Settings", viewModel) == MessageResult.OK) {
+                Config = viewModel.CreateConfig();
                 ConfigSerializer.SaveConfig(Config);
                 Update();
             }

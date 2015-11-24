@@ -17,12 +17,7 @@ namespace DXVcs2Git.UI {
         protected override void OnStartup(StartupEventArgs e) {
             base.OnStartup(e);
             AppDomain.CurrentDomain.UnhandledException += CurrentDomainOnUnhandledException;
-
             ThemeManager.ApplicationThemeName = "Office2013";
-
-            RootModel = new RootViewModel();
-            FarmIntegrator.Start(Dispatcher, RootModel.Refresh);
-            Dispatcher.BeginInvoke(DispatcherPriority.ContextIdle, new Action(() => RootModel.Initialize()));
         }
         void CurrentDomainOnUnhandledException(object sender, UnhandledExceptionEventArgs e) {
             DXMessageBox.Show(e.ExceptionObject.ToString(), "Unhandled exception", MessageBoxButton.OK);
