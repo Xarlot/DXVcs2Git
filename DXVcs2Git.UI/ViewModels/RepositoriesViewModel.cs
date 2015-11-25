@@ -1,21 +1,21 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using System.Windows;
 using System.Windows.Input;
 using DevExpress.Mvvm;
 using DevExpress.Mvvm.Native;
-using DevExpress.Xpf.Core;
+using DevExpress.Mvvm.POCO;
 using DXVcs2Git.Core.Git;
 using DXVcs2Git.Git;
 using NGitLab.Models;
 
 namespace DXVcs2Git.UI.ViewModels {
-    public class MergeRequestsViewModel : ViewModelBase {
+    public class RepositoriesViewModel : ViewModelBase {
         GitLabWrapper gitLabWrapper;
         BranchViewModel selectedBranch;
         RepositoryViewModel selectedRepository;
+        public RootViewModel RootViewModel { get { return this.GetParentViewModel<RootViewModel>(); } }
+        public Config Config { get { return RootViewModel.Config; } }
 
-        public Project Project { get; private set; }
         public IEnumerable<BranchViewModel> Branches {
             get { return GetProperty(() => Branches); }
             set { SetProperty(() => Branches, value); }
@@ -31,9 +31,6 @@ namespace DXVcs2Git.UI.ViewModels {
         }
         public bool IsInitialized { get; private set; }
 
-        public ICommand UpdateCommand { get; private set; }
-        public ICommand SettingsCommand { get; private set; }
-        public Config Config { get; private set; }
         public IEnumerable<RepositoryViewModel> Repositories {
             get { return GetProperty(() => Repositories); }
             set { SetProperty(() => Repositories, value); }
@@ -42,24 +39,10 @@ namespace DXVcs2Git.UI.ViewModels {
             get { return this.selectedRepository; }
             set { SetProperty(ref this.selectedRepository, value, () => SelectedRepository); }
         }
-        public IDialogService SettingsDialogService { get { return GetService<IDialogService>("settingsDialogService", ServiceSearchMode.PreferParents); } }
 
-        public MergeRequestsViewModel() {
-            UpdateCommand = DelegateCommandFactory.Create(Update, CanUpdate);
-            SettingsCommand = DelegateCommandFactory.Create(ShowSettings, CanShowSettings);
-            Config = ConfigSerializer.GetConfig();
+        public RepositoriesViewModel() {
         }
-        void ShowSettings() {
-            var viewModel = new EditConfigViewModel(Config);
-            if (SettingsDialogService.ShowDialog(MessageButton.OKCancel, "Settings", viewModel) == MessageResult.OK) {
-                Config = viewModel.CreateConfig();
-                ConfigSerializer.SaveConfig(Config);
-                Update();
-            }
-        }
-        bool CanShowSettings() {
-            return true;
-        }
+
         public void Update() {
             IsInitialized = false;
             if (!IsValidConfig(Config)) 
@@ -69,6 +52,8 @@ namespace DXVcs2Git.UI.ViewModels {
             SelectedRepository = Repositories.With(x => x.FirstOrDefault());
             Refresh();
             IsInitialized = true;
+
+            Messenger.Default.Send(new Message(MessageType.Update));
         }
         bool IsValidConfig(Config config) {
             if (config == null)
@@ -82,9 +67,7 @@ namespace DXVcs2Git.UI.ViewModels {
                 return;
             Repositories.ForEach(x => x.Refresh());
             CommandManager.InvalidateRequerySuggested();
-        }
-        bool CanUpdate() {
-            return IsInitialized;
+            Messenger.Default.Send(new Message(MessageType.Refresh));
         }
     }
 }

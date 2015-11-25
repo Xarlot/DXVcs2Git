@@ -12,8 +12,10 @@
              xmlns:dxr="http://schemas.devexpress.com/winfx/2008/xaml/ribbon"
              xmlns:dxb="http://schemas.devexpress.com/winfx/2008/xaml/bars"
              xmlns:dxlc="http://schemas.devexpress.com/winfx/2008/xaml/layoutcontrol"
-             xmlns:dxe="http://schemas.devexpress.com/winfx/2008/xaml/editors"
              mc:Ignorable="d" >
+    <UserControl.DataContext>
+        <viewModels:EditSelectedRepositoryViewModel/>
+    </UserControl.DataContext>
     <UserControl.Resources>
         <ResourceDictionary>
             <dxmvvm:BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"></dxmvvm:BooleanToVisibilityConverter>
@@ -24,7 +26,6 @@
                     </dxmvvm:MapItem.Target>
                 </dxmvvm:MapItem>
             </dxmvvm:ObjectToObjectConverter>
-            <views:MergeRequestTitleConverter x:Key="MergeRequestTitleConverter"/>
         </ResourceDictionary>
     </UserControl.Resources>
     <Grid>
@@ -41,24 +42,21 @@
                             GlyphSize="Large" 
                             Content="Create"
                             Command="{Binding Path=SelectedBranch.CreateMergeRequestCommand}"
-                            LargeGlyph="{dx:DXImageOffice2013 Image=NewTask_32x32.png}"
-                            >
+                            LargeGlyph="{dx:DXImageOffice2013 Image=NewTask_32x32.png}">
                         </dxb:BarButtonItem>
                         <dxb:BarButtonItem
                             RibbonStyle="Large" 
                             GlyphSize="Large" 
                             Content="Edit"
                             Command="{Binding Path=SelectedBranch.EditMergeRequestCommand}"
-                            LargeGlyph="{dx:DXImageOffice2013 Image=EditTask_32x32.png}"
-                            >
+                            LargeGlyph="{dx:DXImageOffice2013 Image=EditTask_32x32.png}">
                         </dxb:BarButtonItem>
                         <dxb:BarButtonItem
                             RibbonStyle="Large" 
                             GlyphSize="Large" 
                             Content="Close"
                             Command="{Binding Path=SelectedBranch.CloseMergeRequestCommand}"
-                            LargeGlyph="{dx:DXImageOffice2013 Image=Close_32x32.png}"
-                            >
+                            LargeGlyph="{dx:DXImageOffice2013 Image=Close_32x32.png}">
                         </dxb:BarButtonItem>
                         <dxb:BarItemSeparator/>
                         <dxb:BarButtonItem
@@ -66,8 +64,7 @@
                             GlyphSize="Large" 
                             Content="Sync"
                             Command="{Binding Path=SelectedBranch.ForceBuildCommand}"
-                            LargeGlyph="{dx:DXImageOffice2013 Image=Convert_32x32.png}"
-                            >
+                            LargeGlyph="{dx:DXImageOffice2013 Image=Convert_32x32.png}">
                         </dxb:BarButtonItem>
                     </dxr:RibbonPageGroup>
                 </dxr:RibbonPage>
@@ -75,20 +72,9 @@
         </dxr:RibbonControl>
 
         <dxlc:DockLayoutControl Grid.Row="1" Margin="10">
-            <dxlc:LayoutGroup Orientation="Horizontal" dxlc:DockLayoutControl.Dock="Top">
-                <dxlc:LayoutItem Label="Selected repository: " HorizontalAlignment="Left">
-                    <TextBlock Text="{Binding Path=Name}" FontWeight="Bold"/>
-                </dxlc:LayoutItem>
-                <dxlc:LayoutItem Label="Selected branch: " HorizontalAlignment="Right">
-                    <TextBlock Text="{Binding Path=SelectedBranch.Name}" FontWeight="Bold"/>
-                </dxlc:LayoutItem>
-            </dxlc:LayoutGroup>
-            <dxlc:LayoutGroup Orientation="Horizontal" dxlc:DockLayoutControl.Dock="Top">
-                <dxlc:LayoutItem Label="Merge request: " HorizontalAlignment="Left">
-                    <TextBlock Text="{Binding Path=SelectedBranch.MergeRequest.Title, Converter={StaticResource MergeRequestTitleConverter}}"/>
-                </dxlc:LayoutItem>
-                <dxlc:LayoutItem Label=" Merge request author: " HorizontalAlignment="Right">
-                    <TextBlock Text="{Binding Path=SelectedBranch.MergeRequest.Author}"/>
+            <dxlc:LayoutGroup dxlc:DockLayoutControl.Dock="Top">
+                <dxlc:LayoutItem>
+                    <views:BranchDescriptionControl dxmvvm:ViewModelExtensions.ParentViewModel="{Binding Path=DataContext.SelectedBranch}"/>
                 </dxlc:LayoutItem>
             </dxlc:LayoutGroup>
             <dxlc:LayoutGroup Orientation="Horizontal" dxlc:DockLayoutControl.Dock="Client" Margin="0">

@@ -188,14 +188,20 @@
     <Compile Include="ViewModels\Config.cs" />
     <Compile Include="ViewModels\ConfigSerializer.cs" />
     <Compile Include="ViewModels\EditConfigViewModel.cs" />
+    <Compile Include="ViewModels\EditRepositoriesViewModel.cs" />
     <Compile Include="ViewModels\EditMergeRequestViewModel.cs" />
+    <Compile Include="ViewModels\EditSelectedRepositoryViewModel.cs" />
+    <Compile Include="ViewModels\Messenger.cs" />
     <Compile Include="ViewModels\RepositoryViewModel.cs" />
     <Compile Include="ViewModels\TrackRepository.cs" />
     <Compile Include="ViewModels\UserViewModel.cs" />
     <Compile Include="Views\AvalonEditTextToDocumentBehavior.cs" />
     <Compile Include="ViewModels\MergeRequestFileDataViewModel.cs" />
-    <Compile Include="ViewModels\MergeRequestsViewModel.cs" />
+    <Compile Include="ViewModels\RepositoriesViewModel.cs" />
     <Compile Include="ViewModels\MergeRequestViewModel.cs" />
+    <Compile Include="Views\BranchDescriptionControl.xaml.cs">
+      <DependentUpon>BranchDescriptionControl.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Views\BranchesTemplateSelector.cs" />
     <Compile Include="Views\DiffLineBackgroundRenderer.cs" />
     <Compile Include="Views\EditConfigControl.xaml.cs">
@@ -204,8 +210,8 @@
     <Compile Include="Views\EditMergeRequestControl.xaml.cs">
       <DependentUpon>EditMergeRequestControl.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Views\MergeRequestsControl.xaml.cs">
-      <DependentUpon>MergeRequestsControl.xaml</DependentUpon>
+    <Compile Include="Views\RepositoriesControl.xaml.cs">
+      <DependentUpon>RepositoriesControl.xaml</DependentUpon>
     </Compile>
     <Compile Include="ViewModels\RootViewModel.cs" />
     <Compile Include="Views\MergeRequestTitleConverter.cs" />
@@ -222,6 +228,10 @@
       <DependentUpon>MainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
+    <Page Include="Views\BranchDescriptionControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="Views\EditConfigControl.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -230,7 +240,7 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Views\MergeRequestsControl.xaml">
+    <Page Include="Views\RepositoriesControl.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

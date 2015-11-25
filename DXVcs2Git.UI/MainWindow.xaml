@@ -37,12 +37,27 @@
             </dx:DialogService.ViewTemplate>
         </dx:DialogService>
     </dxmvvm:Interaction.Behaviors>
-    <Grid>
+    <Grid x:Name="LayoutRoot">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
-        <dxr:RibbonControl Grid.Row="0" RibbonStyle="Office2010" ToolbarShowMode="Hide" AllowCustomization="False" MinimizationButtonVisibility="Collapsed" RibbonHeaderVisibility="Collapsed"/>
+        <dxr:RibbonControl Grid.Row="0" RibbonStyle="Office2010" ToolbarShowMode="Hide" AllowCustomization="False" MinimizationButtonVisibility="Collapsed" RibbonHeaderVisibility="Collapsed">
+            <dxr:RibbonDefaultPageCategory>
+                <dxr:RibbonPage Caption="Main">
+                    <dxr:RibbonPageGroup Caption="Settings" MergeOrder="666">
+                        <dxb:BarButtonItem
+                            RibbonStyle="Large" 
+                            GlyphSize="Large" 
+                            Content="Settings"
+                            Command="{Binding Path=SettingsCommand}"
+                            LargeGlyph="{dx:DXImageOffice2013 Image=Properties_32x32.png}">
+                        </dxb:BarButtonItem>
+                    </dxr:RibbonPageGroup>
+                </dxr:RibbonPage>
+            </dxr:RibbonDefaultPageCategory>
+
+        </dxr:RibbonControl>
         <dxdo:DockLayoutManager 
             AutoHideMode="Inline"
             Grid.Row="1" dxb:MergingProperties.ElementMergingBehavior="InternalWithExternal">
@@ -51,14 +66,11 @@
                     ItemWidth="*"
                     AutoHideExpandState="Expanded"
                     FloatOnDoubleClick="False">
-                    <local:MergeRequestsControl 
-                        DataContext="{Binding Path=MergeRequests}">
-                    </local:MergeRequestsControl>
+                    <local:RepositoriesControl dxmvvm:ViewModelExtensions.ParentViewModel="{Binding DataContext.Repositories, ElementName=LayoutRoot}"/>
                 </dxdo:LayoutPanel>
                 <dxdo:LayoutPanel
                     ItemWidth="2*">
-                    <local:ProcessMergeRequestControl 
-                        DataContext="{Binding Path=MergeRequests.SelectedRepository}"/>
+                    <local:ProcessMergeRequestControl dxmvvm:ViewModelExtensions.ParentViewModel="{Binding DataContext.Repositories.SelectedRepository, ElementName=LayoutRoot}"/>
                 </dxdo:LayoutPanel>
             </dxdo:LayoutGroup>
         </dxdo:DockLayoutManager>

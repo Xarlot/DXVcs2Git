@@ -13,7 +13,7 @@ namespace DXVcs2Git.UI.Views {
             UpdateSelection();
         }
         void UpdateSelection() {
-            MergeRequestsViewModel model = AssociatedObject.DataContext as MergeRequestsViewModel;
+            var model = AssociatedObject.DataContext as EditRepositoriesViewModel;
             if (model == null)
                 return;
             var treeList = (TreeListView)AssociatedObject.View;

@@ -23,16 +23,16 @@ namespace DXVcs2Git.UI.ViewModels {
             private set { SetProperty(() => FarmStatus, value); }
         }
         public Project Project { get; }
-        MergeRequestsViewModel MergeRequests { get; }
+        RepositoriesViewModel Repositories { get; }
         public GitRepoConfig RepoConfig { get; }
         public BranchViewModel SelectedBranch {
             get { return GetProperty(() => SelectedBranch); }
             set { SetProperty(() => SelectedBranch, value); }
         }
-        public RepositoryViewModel(string name, GitLabWrapper gitLabWrapper, GitReaderWrapper gitReader, MergeRequestsViewModel mergeRequests) {
+        public RepositoryViewModel(string name, GitLabWrapper gitLabWrapper, GitReaderWrapper gitReader, RepositoriesViewModel repositories) {
             GitLabWrapper = gitLabWrapper;
             GitReader = gitReader;
-            MergeRequests = mergeRequests;
+            Repositories = repositories;
             Project = gitLabWrapper.FindProject(GitReader.GetRemoteRepoPath());
             RepoConfig = CreateRepoConfig();
             Name = name ?? RepoConfig?.Name;
@@ -57,7 +57,7 @@ namespace DXVcs2Git.UI.ViewModels {
             var localBranches = GitReader.GetLocalBranches();
 
             Branches = branches.Where(x => !x.Protected && localBranches.Any(local => local.FriendlyName == x.Name))
-                .Select(x => new BranchViewModel(GitLabWrapper, GitReader, MergeRequests, this, mergeRequests.FirstOrDefault(mr => mr.SourceBranch == x.Name), x)).ToList();
+                .Select(x => new BranchViewModel(GitLabWrapper, GitReader, Repositories, this, mergeRequests.FirstOrDefault(mr => mr.SourceBranch == x.Name), x)).ToList();
         }
         public void Refresh() {
             if (Branches == null)

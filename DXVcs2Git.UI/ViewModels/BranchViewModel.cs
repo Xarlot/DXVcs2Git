@@ -17,7 +17,7 @@ namespace DXVcs2Git.UI.ViewModels {
         readonly GitLabWrapper gitLabWrapper;
         readonly GitReaderWrapper gitReader;
         public Branch Branch { get; }
-        public MergeRequestsViewModel MergeRequests { get; }
+        public RepositoriesViewModel Repositories { get; }
         public RepositoryViewModel Repository { get; }
         public string Name { get; }
         public FarmStatus FarmStatus {
@@ -43,13 +43,13 @@ namespace DXVcs2Git.UI.ViewModels {
         public bool HasChanges {
             get { return MergeRequest.Return(x => x.Changes.Any(), () => false); }
         }
-        public BranchViewModel(GitLabWrapper gitLabWrapper, GitReaderWrapper gitReader, MergeRequestsViewModel mergeRequests, RepositoryViewModel repository, MergeRequest mergeRequest, Branch branch) {
+        public BranchViewModel(GitLabWrapper gitLabWrapper, GitReaderWrapper gitReader, RepositoriesViewModel repositories, RepositoryViewModel repository, MergeRequest mergeRequest, Branch branch) {
             this.gitLabWrapper = gitLabWrapper;
             this.gitReader = gitReader;
             Repository = repository;
             Branch = branch;
             Name = branch.Name;
-            MergeRequests = mergeRequests;
+            Repositories = repositories;
             FarmStatus = new FarmStatus();
 
             MergeRequest = mergeRequest.With(x => new MergeRequestViewModel(gitLabWrapper, mergeRequest));
@@ -62,22 +62,22 @@ namespace DXVcs2Git.UI.ViewModels {
             ForceBuildCommand = DelegateCommandFactory.Create(ForceBuild, CanForceBuild);
         }
         bool CanCloseMergeRequest() {
-            return MergeRequests.IsInitialized && HasMergeRequest && IsMyMergeRequest;
+            return Repositories.IsInitialized && HasMergeRequest && IsMyMergeRequest;
         }
         bool CanForceBuild() {
-            return MergeRequests.IsInitialized && FarmStatus.ActivityStatus == ActivityStatus.Sleeping;
+            return Repositories.IsInitialized && FarmStatus.ActivityStatus == ActivityStatus.Sleeping;
         }
         void ForceBuild() {
             Repository.ForceBuild();
         }
         bool CanEditMergeRequest() {
-            return MergeRequests.IsInitialized && HasMergeRequest && IsMyMergeRequest && !IsInEditingMergeRequest;
+            return Repositories.IsInitialized && HasMergeRequest && IsMyMergeRequest && !IsInEditingMergeRequest;
         }
         void EditMergeRequest() {
             EditableMergeRequest = new EditMergeRequestViewModel(this);
         }
         bool CanCreateMergeRequest() {
-            return MergeRequests.IsInitialized && !HasMergeRequest;
+            return Repositories.IsInitialized && !HasMergeRequest;
         }
         public void CreateMergeRequest() {
             var message = Branch.Commit.Message;
@@ -96,7 +96,7 @@ namespace DXVcs2Git.UI.ViewModels {
             GitRepoConfig repoConfig = Repository.RepoConfig;
             if (repoConfig != null)
                 return repoConfig.Name;
-            return MergeRequests.ProtectedBranches.FirstOrDefault(x => name.StartsWith(x.Name)).With(x => x.Name);
+            return Repositories.ProtectedBranches.FirstOrDefault(x => name.StartsWith(x.Name)).With(x => x.Name);
         }
         string CalcMergeRequestDescription(string message) {
             var changes = message.Split(new[] { "\r\n" }, StringSplitOptions.RemoveEmptyEntries);
@@ -124,7 +124,7 @@ namespace DXVcs2Git.UI.ViewModels {
                 if (newMergeRequest.SelectedUser != null)
                     this.gitLabWrapper.UpdateMergeRequestAssignee(mergeRequest, newMergeRequest.SelectedUser.User);
                 CloseEditableMergeRequest();
-                MergeRequests.Update();
+                Repositories.Update();
             }
         }
         void CloseEditableMergeRequest() {
@@ -134,7 +134,7 @@ namespace DXVcs2Git.UI.ViewModels {
         public void CancelMergeRequest() {
             EditableMergeRequest = null;
             IsInEditingMergeRequest = false;
-            MergeRequests.Update();
+            Repositories.Update();
         }
         public void Refresh() {
             FarmStatus = FarmIntegrator.GetTaskStatus(Repository.RepoConfig?.FarmSyncTaskName);
