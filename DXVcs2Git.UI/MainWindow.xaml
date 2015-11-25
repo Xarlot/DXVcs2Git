@@ -70,7 +70,7 @@
                 </dxdo:LayoutPanel>
                 <dxdo:LayoutPanel
                     ItemWidth="2*">
-                    <local:ProcessMergeRequestControl dxmvvm:ViewModelExtensions.ParentViewModel="{Binding DataContext.Repositories.SelectedRepository, ElementName=LayoutRoot}"/>
+                    <local:ProcessMergeRequestControl dxmvvm:ViewModelExtensions.ParentViewModel="{Binding DataContext.Repositories, ElementName=LayoutRoot}"/>
                 </dxdo:LayoutPanel>
             </dxdo:LayoutGroup>
         </dxdo:DockLayoutManager>
