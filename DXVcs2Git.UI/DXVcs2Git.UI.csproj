@@ -187,6 +187,7 @@
     <Compile Include="ViewModels\BranchViewModel.cs" />
     <Compile Include="ViewModels\Config.cs" />
     <Compile Include="ViewModels\ConfigSerializer.cs" />
+    <Compile Include="ViewModels\EditBranchChangesViewModel.cs" />
     <Compile Include="ViewModels\EditBranchDescriptionViewModel.cs" />
     <Compile Include="ViewModels\EditConfigViewModel.cs" />
     <Compile Include="ViewModels\EditRepositoriesViewModel.cs" />
@@ -200,6 +201,9 @@
     <Compile Include="ViewModels\MergeRequestFileDataViewModel.cs" />
     <Compile Include="ViewModels\RepositoriesViewModel.cs" />
     <Compile Include="ViewModels\MergeRequestViewModel.cs" />
+    <Compile Include="Views\BranchChangesControl.xaml.cs">
+      <DependentUpon>BranchChangesControl.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Views\BranchDescriptionControl.xaml.cs">
       <DependentUpon>BranchDescriptionControl.xaml</DependentUpon>
     </Compile>
@@ -228,6 +232,10 @@
       <DependentUpon>MainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
+    <Page Include="Views\BranchChangesControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="Views\BranchDescriptionControl.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>

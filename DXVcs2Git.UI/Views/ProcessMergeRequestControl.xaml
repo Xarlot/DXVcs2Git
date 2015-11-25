@@ -81,48 +81,7 @@
                 </dxlc:LayoutItem>
             </dxlc:LayoutGroup>
             <dxlc:LayoutGroup Orientation="Horizontal" dxlc:DockLayoutControl.Dock="Client" Margin="0">
-                <dxlc:LayoutControl Padding="0">
-                    <dxlc:LayoutGroup Orientation="Horizontal">
-                        <dxlc:LayoutGroup Orientation="Vertical">
-                            <dxlc:LayoutItem HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
-                                <dxg:GridControl x:Name="grid" ItemsSource="{Binding Path=SelectedBranch.MergeRequest.Changes}" MaxHeight="2000">
-                                    <dxg:GridControl.Columns>
-                                        <dxg:GridColumn FieldName="ChangeMode" FixedWidth="True" Width="70">
-                                        </dxg:GridColumn>
-                                        <dxg:GridColumn FieldName="Path">
-                                        </dxg:GridColumn>
-                                    </dxg:GridControl.Columns>
-                                    <dxg:GridControl.View>
-                                        <dxg:TableView 
-                                            ShowGroupPanel="False" 
-                                            NavigationStyle="Row" 
-                                            AutoWidth="True">
-                                        </dxg:TableView>
-                                    </dxg:GridControl.View>
-                                </dxg:GridControl>
-                            </dxlc:LayoutItem>
-                            <dxlc:LayoutItem VerticalAlignment="Bottom" HorizontalAlignment="Stretch">
-                                <views:EditMergeRequestControl 
-                                    Visibility="{Binding Path=HasEditableMergeRequest, Converter={StaticResource BooleanToVisibilityConverter}}"
-                                    dxmvvm:ViewModelExtensions.ParentViewModel="{Binding Path=EditableMergeRequest}">
-                                </views:EditMergeRequestControl>
-                            </dxlc:LayoutItem>
-                        </dxlc:LayoutGroup>
-                        <dxlc:LayoutGroup>
-                            <dxlc:LayoutItem VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
-                                <Border BorderBrush="#FFD6D6D6" BorderThickness="1">
-                                    <avalonEdit:TextEditor 
-                                    FontFamily="Consolas" 
-                                    IsReadOnly="True">
-                                        <dxmvvm:Interaction.Behaviors>
-                                            <viewModels:AvalonEditTextBindingBehavior Text="{Binding Path=SelectedItem.Diff, ElementName=grid}"/>
-                                        </dxmvvm:Interaction.Behaviors>
-                                    </avalonEdit:TextEditor>
-                                </Border>
-                            </dxlc:LayoutItem>
-                        </dxlc:LayoutGroup>
-                    </dxlc:LayoutGroup>
-                </dxlc:LayoutControl>
+                <views:BranchChangesControl dxmvvm:ViewModelExtensions.ParentViewModel="{Binding Path=DataContext.SelectedBranch, ElementName=LayoutRoot}"/>
             </dxlc:LayoutGroup>
         </dxlc:DockLayoutControl>
     </Grid>
