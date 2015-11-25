@@ -5,8 +5,12 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:DXVcs2Git.UI.Views"
              xmlns:dxlc="http://schemas.devexpress.com/winfx/2008/xaml/layoutcontrol"
+             xmlns:viewModels="clr-namespace:DXVcs2Git.UI.ViewModels"
              mc:Ignorable="d" 
              d:DesignHeight="300" d:DesignWidth="300">
+    <UserControl.DataContext>
+        <viewModels:EditBranchDescriptionViewModel/>
+    </UserControl.DataContext>
     <UserControl.Resources>
         <ResourceDictionary>
             <local:MergeRequestTitleConverter x:Key="MergeRequestTitleConverter"/>
@@ -16,18 +20,18 @@
         <dxlc:DockLayoutControl>
             <dxlc:LayoutGroup Orientation="Horizontal" dxlc:DockLayoutControl.Dock="Top">
                 <dxlc:LayoutItem Label="Selected repository: " HorizontalAlignment="Left">
-                    <TextBlock Text="{Binding Path=Name}" FontWeight="Bold"/>
+                    <TextBlock Text="{Binding Path=RepositoryName}" FontWeight="Bold"/>
                 </dxlc:LayoutItem>
                 <dxlc:LayoutItem Label="Selected branch: " HorizontalAlignment="Right">
-                    <TextBlock Text="{Binding Path=SelectedBranch.Name}" FontWeight="Bold"/>
+                    <TextBlock Text="{Binding Path=BranchName}" FontWeight="Bold"/>
                 </dxlc:LayoutItem>
             </dxlc:LayoutGroup>
             <dxlc:LayoutGroup Orientation="Horizontal" dxlc:DockLayoutControl.Dock="Top">
                 <dxlc:LayoutItem Label="Merge request: " HorizontalAlignment="Left">
-                    <TextBlock Text="{Binding Path=SelectedBranch.MergeRequest.Title, Converter={StaticResource MergeRequestTitleConverter}}"/>
+                    <TextBlock Text="{Binding Path=MergeRequestTitle, Converter={StaticResource MergeRequestTitleConverter}}"/>
                 </dxlc:LayoutItem>
                 <dxlc:LayoutItem Label=" Merge request author: " HorizontalAlignment="Right">
-                    <TextBlock Text="{Binding Path=SelectedBranch.MergeRequest.Author}"/>
+                    <TextBlock Text="{Binding Path=MergeRequestAuthor}"/>
                 </dxlc:LayoutItem>
             </dxlc:LayoutGroup>
 

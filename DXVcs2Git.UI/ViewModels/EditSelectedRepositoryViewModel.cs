@@ -7,7 +7,6 @@ using DevExpress.Mvvm;
 using DevExpress.Mvvm.Native;
 using DevExpress.Mvvm.POCO;
 using DXVcs2Git.Core.Git;
-using NGitLab.Models;
 
 namespace DXVcs2Git.UI.ViewModels {
     public class EditSelectedRepositoryViewModel : ViewModelBase {
@@ -51,7 +50,7 @@ namespace DXVcs2Git.UI.ViewModels {
             return IsInitialized && SelectedBranch != null && HasMergeRequest && IsMyMergeRequest;
         }
         void ProcessEditMergeRequest() {
-            EditableMergeRequest = new EditMergeRequestViewModel(SelectedBranch);
+            EditableMergeRequest = new EditMergeRequestViewModel();
         }
         bool CanCreateMergeRequest() {
             return IsInitialized && SelectedBranch != null && !HasMergeRequest;
@@ -68,6 +67,7 @@ namespace DXVcs2Git.UI.ViewModels {
             if (targetBranch == null)
                 return;
             SelectedBranch.CreateMergeRequest(title, description, null, SelectedBranch.Name, targetBranch);
+            ProcessEditMergeRequest();
             Refresh();
         }
         public void Update() {

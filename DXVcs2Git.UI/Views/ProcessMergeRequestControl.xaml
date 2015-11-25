@@ -31,7 +31,7 @@
             </dxmvvm:ObjectToObjectConverter>
         </ResourceDictionary>
     </UserControl.Resources>
-    <Grid>
+    <Grid x:Name="LayoutRoot">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
@@ -74,10 +74,10 @@
             </dxr:RibbonDefaultPageCategory>
         </dxr:RibbonControl>
 
-        <dxlc:DockLayoutControl Grid.Row="1" Margin="10">
+        <dxlc:DockLayoutControl Grid.Row="1" Margin="10" Visibility="{Binding Path=HasMergeRequest, Converter={StaticResource BooleanToVisibilityConverter}}">
             <dxlc:LayoutGroup dxlc:DockLayoutControl.Dock="Top">
                 <dxlc:LayoutItem>
-                    <views:BranchDescriptionControl dxmvvm:ViewModelExtensions.ParentViewModel="{Binding Path=DataContext.SelectedBranch}"/>
+                    <views:BranchDescriptionControl dxmvvm:ViewModelExtensions.ParentViewModel="{Binding Path=DataContext.SelectedBranch, ElementName=LayoutRoot}"/>
                 </dxlc:LayoutItem>
             </dxlc:LayoutGroup>
             <dxlc:LayoutGroup Orientation="Horizontal" dxlc:DockLayoutControl.Dock="Client" Margin="0">
@@ -102,13 +102,9 @@
                                 </dxg:GridControl>
                             </dxlc:LayoutItem>
                             <dxlc:LayoutItem VerticalAlignment="Bottom" HorizontalAlignment="Stretch">
-                                <views:EditMergeRequestControl>
-                                    <views:EditMergeRequestControl.Visibility>
-                                        <PriorityBinding>
-                                            <Binding Path="SelectedBranch.IsInEditingMergeRequest" Converter="{StaticResource BooleanToVisibilityConverter}"/>
-                                            <Binding Path="SelectedBranch" Mode="OneWay" Converter="{StaticResource CollapsedConverter}"/>
-                                        </PriorityBinding>
-                                    </views:EditMergeRequestControl.Visibility>
+                                <views:EditMergeRequestControl 
+                                    Visibility="{Binding Path=HasEditableMergeRequest, Converter={StaticResource BooleanToVisibilityConverter}}"
+                                    dxmvvm:ViewModelExtensions.ParentViewModel="{Binding Path=EditableMergeRequest}">
                                 </views:EditMergeRequestControl>
                             </dxlc:LayoutItem>
                         </dxlc:LayoutGroup>

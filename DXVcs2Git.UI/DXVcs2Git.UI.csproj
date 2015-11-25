@@ -187,6 +187,7 @@
     <Compile Include="ViewModels\BranchViewModel.cs" />
     <Compile Include="ViewModels\Config.cs" />
     <Compile Include="ViewModels\ConfigSerializer.cs" />
+    <Compile Include="ViewModels\EditBranchDescriptionViewModel.cs" />
     <Compile Include="ViewModels\EditConfigViewModel.cs" />
     <Compile Include="ViewModels\EditRepositoriesViewModel.cs" />
     <Compile Include="ViewModels\EditMergeRequestViewModel.cs" />

@@ -3,11 +3,13 @@ using System.Windows;
 using System.Windows.Input;
 using DevExpress.Mvvm;
 using DevExpress.Mvvm.Native;
+using DevExpress.Mvvm.POCO;
 using DevExpress.Xpf.Core;
 
 namespace DXVcs2Git.UI.ViewModels {
-    public class EditMergeRequestViewModel : BindableBase, IDataErrorInfo {
-        readonly BranchViewModel model;
+    public class EditMergeRequestViewModel : ViewModelBase {
+        public EditSelectedRepositoryViewModel Parent { get { return this.GetParentViewModel<EditSelectedRepositoryViewModel>(); } }
+
         UserViewModel user;
         string comment;
 
@@ -15,22 +17,19 @@ namespace DXVcs2Git.UI.ViewModels {
         public ICommand CancelMergeRequestCommand { get; private set; }
         public ICommand AssignToServiceCommand { get; private set; }
 
-        public bool HasChanges { get { return this.model.HasChanges; } }
-        public EditMergeRequestViewModel(BranchViewModel model) {
-            this.model = model;
+        public bool HasChanges { get { return false; } }
+        public EditMergeRequestViewModel() {
 
             ApplyMergeRequestCommand = DelegateCommandFactory.Create(PerformApplyMergeRequest, CanApplyMergeRequest);
             CancelMergeRequestCommand = DelegateCommandFactory.Create(PerformCancelMergeRequest, CanCancelMergeRequest);
             AssignToServiceCommand = DelegateCommandFactory.Create(PerformAssignToService, CanAssignToService);
-
-            model.IsInEditingMergeRequest = true;
-            comment = model.MergeRequest?.MergeRequest.Title ?? model.Branch.Commit.Message;
+//            comment = model.MergeRequest?.MergeRequest.Title ?? model.Branch.Commit.Message;
         }
         bool CanAssignToService() {
             return HasChanges;
         }
         void PerformAssignToService() {
-            SelectedUser = new UserViewModel(this.model.GetUser("dxvcs2gitservice"));
+            SelectedUser = new UserViewModel(Parent.SelectedBranch.GetUser("dxvcs2gitservice"));
         }
         bool CanCancelMergeRequest() {
             return true;
