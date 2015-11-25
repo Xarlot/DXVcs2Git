@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-using System.ComponentModel;
-using System.Linq;
+﻿using System.ComponentModel;
 using System.Windows;
 using System.Windows.Input;
 using DevExpress.Mvvm;
@@ -38,11 +36,11 @@ namespace DXVcs2Git.UI.ViewModels {
             return true;
         }
         void PerformCancelMergeRequest() {
-            this.model.CancelMergeRequest();
+//            this.model.CancelMergeRequest();
         }
         void PerformApplyMergeRequest() {
             if (DXMessageBox.Show(null, "Are you sure?", "Apply merge request", MessageBoxButton.OKCancel) == MessageBoxResult.OK) {
-                this.model.ApplyMergeRequest(this);
+//                this.model.ApplyMergeRequest(this);
             }
         }
         bool CanApplyMergeRequest() {

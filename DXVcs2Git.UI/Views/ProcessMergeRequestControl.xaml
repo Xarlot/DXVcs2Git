@@ -13,6 +13,9 @@
              xmlns:dxb="http://schemas.devexpress.com/winfx/2008/xaml/bars"
              xmlns:dxlc="http://schemas.devexpress.com/winfx/2008/xaml/layoutcontrol"
              mc:Ignorable="d" >
+    <dxmvvm:Interaction.Behaviors>
+        <dx:DXMessageBoxService x:Name="ruSure"/>
+    </dxmvvm:Interaction.Behaviors>
     <UserControl.DataContext>
         <viewModels:EditSelectedRepositoryViewModel/>
     </UserControl.DataContext>
@@ -41,21 +44,21 @@
                             RibbonStyle="Large" 
                             GlyphSize="Large" 
                             Content="Create"
-                            Command="{Binding Path=SelectedBranch.CreateMergeRequestCommand}"
+                            Command="{Binding Path=CreateMergeRequestCommand}"
                             LargeGlyph="{dx:DXImageOffice2013 Image=NewTask_32x32.png}">
                         </dxb:BarButtonItem>
                         <dxb:BarButtonItem
                             RibbonStyle="Large" 
                             GlyphSize="Large" 
                             Content="Edit"
-                            Command="{Binding Path=SelectedBranch.EditMergeRequestCommand}"
+                            Command="{Binding Path=EditMergeRequestCommand}"
                             LargeGlyph="{dx:DXImageOffice2013 Image=EditTask_32x32.png}">
                         </dxb:BarButtonItem>
                         <dxb:BarButtonItem
                             RibbonStyle="Large" 
                             GlyphSize="Large" 
                             Content="Close"
-                            Command="{Binding Path=SelectedBranch.CloseMergeRequestCommand}"
+                            Command="{Binding Path=CloseMergeRequestCommand}"
                             LargeGlyph="{dx:DXImageOffice2013 Image=Close_32x32.png}">
                         </dxb:BarButtonItem>
                         <dxb:BarItemSeparator/>

@@ -68,5 +68,8 @@ namespace DXVcs2Git.UI.ViewModels {
         public void ForceBuild() {
             FarmIntegrator.ForceBuild(RepoConfig.FarmSyncTaskName);
         }
+        public MergeRequest CreateMergeRequest(string title, string description, string user, string sourceBranch, string targetBranch) {
+            return GitLabWrapper.CreateMergeRequest(Project, title, description, user, sourceBranch, targetBranch);
+        }
     }
 }
