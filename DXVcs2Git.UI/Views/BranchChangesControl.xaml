@@ -9,6 +9,7 @@
              xmlns:dxmvvm="http://schemas.devexpress.com/winfx/2008/xaml/mvvm"
              xmlns:avalonedit="http://icsharpcode.net/sharpdevelop/avalonedit"
              xmlns:viewModels="clr-namespace:DXVcs2Git.UI.ViewModels"
+             xmlns:behaviors="clr-namespace:DXVcs2Git.UI.Behaviors"
              mc:Ignorable="d" 
              d:DesignHeight="300" d:DesignWidth="300">
     <UserControl.DataContext>
@@ -54,7 +55,7 @@
                                     FontFamily="Consolas" 
                                     IsReadOnly="True">
                                 <dxmvvm:Interaction.Behaviors>
-                                    <viewModels:AvalonEditTextBindingBehavior Text="{Binding Path=SelectedItem.Diff, ElementName=grid}"/>
+                                    <behaviors:AvalonEditTextBindingBehavior Text="{Binding Path=SelectedItem.Diff, ElementName=grid}"/>
                                 </dxmvvm:Interaction.Behaviors>
                             </avalonedit:TextEditor>
                         </Border>

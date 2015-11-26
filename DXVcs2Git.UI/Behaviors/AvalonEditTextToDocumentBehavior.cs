@@ -3,7 +3,7 @@ using DevExpress.Mvvm.UI.Interactivity;
 using DXVcs2Git.UI.Views;
 using ICSharpCode.AvalonEdit;
 
-namespace DXVcs2Git.UI.ViewModels {
+namespace DXVcs2Git.UI.Behaviors {
     public class AvalonEditTextBindingBehavior : Behavior<TextEditor> {
         public static readonly DependencyProperty TextProperty;
 

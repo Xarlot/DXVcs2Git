@@ -208,7 +208,7 @@
     <Compile Include="ViewModels\RepositoryViewModel.cs" />
     <Compile Include="ViewModels\TrackRepository.cs" />
     <Compile Include="ViewModels\UserViewModel.cs" />
-    <Compile Include="Views\AvalonEditTextToDocumentBehavior.cs" />
+    <Compile Include="Behaviors\AvalonEditTextToDocumentBehavior.cs" />
     <Compile Include="ViewModels\MergeRequestFileDataViewModel.cs" />
     <Compile Include="ViewModels\RepositoriesViewModel.cs" />
     <Compile Include="ViewModels\MergeRequestViewModel.cs" />
@@ -230,7 +230,7 @@
     </Compile>
     <Compile Include="ViewModels\RootViewModel.cs" />
     <Compile Include="Views\MergeRequestTitleConverter.cs" />
-    <Compile Include="Views\RepositoriesBindingBehavior.cs" />
+    <Compile Include="Behaviors\RepositoriesBindingBehavior.cs" />
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
