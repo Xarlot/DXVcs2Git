@@ -11,10 +11,11 @@
         xmlns:dxmvvm="http://schemas.devexpress.com/winfx/2008/xaml/mvvm"
         xmlns:dx="http://schemas.devexpress.com/winfx/2008/xaml/core"
         xmlns:views="clr-namespace:DXVcs2Git.UI.Views"
+        xmlns:behaviors="clr-namespace:DXVcs2Git.UI.Behaviors"
         mc:Ignorable="d"
         ShowActivated="True"
         Title="{Binding Version}" Height="800" Width="1024"  ShowIcon="True"
-        UseLayoutRounding="True"
+        UseLayoutRounding="True"                    
         Icon="Icon.ico">
     <dxr:DXRibbonWindow.DataContext>
         <viewModels:RootViewModel/>
@@ -37,6 +38,7 @@
             </dx:DialogService.ViewTemplate>
         </dx:DialogService>
         <dx:DXMessageBoxService x:Name="MessageBoxService"/>
+        <behaviors:TaskBarIconBehavior/>
     </dxmvvm:Interaction.Behaviors>
     <Grid x:Name="LayoutRoot">
         <Grid.RowDefinitions>

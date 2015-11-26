@@ -14,7 +14,7 @@ namespace DXVcs2Git.UI {
     /// </summary>
     public partial class App : Application {
         public static RootViewModel RootModel { get; private set; }
-        protected override void OnStartup(StartupEventArgs e) {
+        protected override void OnStartup(StartupEventArgs e) {            
             base.OnStartup(e);
             AppDomain.CurrentDomain.UnhandledException += CurrentDomainOnUnhandledException;
             ThemeManager.ApplicationThemeName = "Office2013";
