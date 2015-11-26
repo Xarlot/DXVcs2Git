@@ -13,6 +13,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using DevExpress.Xpf.Ribbon;
+using DXVcs2Git.UI.AtomFeed;
 
 namespace DXVcs2Git.UI {
     /// <summary>
@@ -21,6 +22,8 @@ namespace DXVcs2Git.UI {
     public partial class MainWindow : DXRibbonWindow {
         public MainWindow() {
             InitializeComponent();
+            var worker = new FeedWorker();
+            worker.Initialize();
         }
     }
 }
