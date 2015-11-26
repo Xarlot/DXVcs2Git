@@ -37,10 +37,14 @@ namespace DXVcs2Git.UI.ViewModels {
         }
         public RepositoryViewModel SelectedRepository {
             get { return this.selectedRepository; }
-            set { SetProperty(ref this.selectedRepository, value, () => SelectedRepository); }
+            set { SetProperty(ref this.selectedRepository, value, () => SelectedRepository, SelectedRepositoryChanged); }
+        }
+        void SelectedRepositoryChanged() {
+            Refresh();
         }
 
         public RepositoriesViewModel() {
+            Refresh();
         }
 
         public void Update() {
