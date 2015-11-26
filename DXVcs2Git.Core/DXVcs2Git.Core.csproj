@@ -111,6 +111,7 @@
     <Compile Include="Vcs\StringsDiff.cs" />
     <Compile Include="Serialization\SyncHistoryWrapper.cs" />
     <Compile Include="Vcs\WCFServiceHelper.cs" />
+    <Compile Include="Properties\Version.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Key.snk" />

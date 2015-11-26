@@ -3,6 +3,7 @@ using System.Windows.Input;
 using System.Windows.Threading;
 using DevExpress.Mvvm;
 using DevExpress.Mvvm.Native;
+using DXVcs2Git.Core;
 using DXVcs2Git.UI.Farm;
 
 namespace DXVcs2Git.UI.ViewModels {
@@ -11,6 +12,7 @@ namespace DXVcs2Git.UI.ViewModels {
         public ICommand SettingsCommand { get; private set; }
         public IDialogService SettingsDialogService { get { return GetService<IDialogService>("settingsDialogService"); } }
         public Config Config { get; private set; }
+        public string Version { get; private set; }
 
         public RootViewModel() {
             Repositories = new RepositoriesViewModel();
@@ -21,6 +23,7 @@ namespace DXVcs2Git.UI.ViewModels {
 
             SettingsCommand = DelegateCommandFactory.Create(ShowSettings, CanShowSettings);
             Config = ConfigSerializer.GetConfig();
+            Version = $"Git tools {VersionInfo.Version}";
         }
         public void Initialize() {
             Repositories.Update();

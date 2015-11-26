@@ -13,7 +13,7 @@
         xmlns:views="clr-namespace:DXVcs2Git.UI.Views"
         mc:Ignorable="d"
         ShowActivated="True"
-        Title="Git Tools" Height="800" Width="1024"  ShowIcon="True"
+        Title="{Binding Version}" Height="800" Width="1024"  ShowIcon="True"
         UseLayoutRounding="True"
         Icon="Icon.ico">
     <dxr:DXRibbonWindow.DataContext>
