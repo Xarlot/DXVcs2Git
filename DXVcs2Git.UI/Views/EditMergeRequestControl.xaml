@@ -5,10 +5,18 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:dxlc="http://schemas.devexpress.com/winfx/2008/xaml/layoutcontrol"
              xmlns:dxe="http://schemas.devexpress.com/winfx/2008/xaml/editors"
+             xmlns:viewModels="clr-namespace:DXVcs2Git.UI.ViewModels"
+             xmlns:dxmvvm="http://schemas.devexpress.com/winfx/2008/xaml/mvvm"
              mc:Ignorable="d" 
              d:DesignHeight="300" d:DesignWidth="300"
              KeyboardNavigation.TabNavigation="Cycle">
-    <Grid DataContext="{Binding Path=SelectedBranch.EditableMergeRequest}">
+    <UserControl.DataContext>
+        <viewModels:EditMergeRequestViewModel/>
+    </UserControl.DataContext>
+    <dxmvvm:Interaction.Behaviors>
+        <dxmvvm:EventToCommand Event="Loaded" Command="{Binding ResetCommand}"/>
+    </dxmvvm:Interaction.Behaviors>
+    <Grid>
         <dxlc:LayoutControl>
             <dxlc:LayoutGroup Orientation="Vertical">
                 <dxlc:LayoutItem Label="Description: " Height="100">
@@ -16,7 +24,7 @@
                         VerticalContentAlignment="Top"
                         VerticalScrollBarVisibility="Auto"
                         ValidateOnTextInput="False" 
-                        EditValue="{Binding Path=Comment, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay, ValidatesOnDataErrors=True}"
+                        EditValue="{Binding Path=Comment, UpdateSourceTrigger=PropertyChanged}"
                         AcceptsReturn="True">
                     </dxe:TextEdit>
                 </dxlc:LayoutItem>
@@ -31,7 +39,7 @@
                         </dxe:ComboBoxEdit>
                     </dxlc:LayoutItem>
                     <dxlc:LayoutItem>
-                        <dxe:CheckEdit Content="Assigned to service" Command="{Binding Path=AssignToServiceCommand}"/>
+                        <dxe:CheckEdit Content="Assigned to service" Command="{Binding Path=AssignToServiceCommand}" EditValue="{Binding Path=AssignedToService}"/>
                     </dxlc:LayoutItem>
                 </dxlc:LayoutGroup>
                 <dxlc:LayoutGroup Orientation="Horizontal">

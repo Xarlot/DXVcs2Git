@@ -22,13 +22,6 @@
     <UserControl.Resources>
         <ResourceDictionary>
             <dxmvvm:BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"></dxmvvm:BooleanToVisibilityConverter>
-            <dxmvvm:ObjectToObjectConverter x:Key="CollapsedConverter">
-                <dxmvvm:MapItem Source="{x:Null}">
-                    <dxmvvm:MapItem.Target>
-                        <Visibility>Collapsed</Visibility>
-                    </dxmvvm:MapItem.Target>
-                </dxmvvm:MapItem>
-            </dxmvvm:ObjectToObjectConverter>
         </ResourceDictionary>
     </UserControl.Resources>
     <Grid x:Name="LayoutRoot">
@@ -81,7 +74,9 @@
                 </dxlc:LayoutItem>
             </dxlc:LayoutGroup>
             <dxlc:LayoutGroup Orientation="Horizontal" dxlc:DockLayoutControl.Dock="Client" Margin="0">
-                <views:BranchChangesControl dxmvvm:ViewModelExtensions.ParentViewModel="{Binding Path=DataContext.SelectedBranch, ElementName=LayoutRoot}"/>
+                <views:BranchChangesControl 
+                    dxmvvm:ViewModelExtensions.ParentViewModel="{Binding Path=DataContext.SelectedBranch, ElementName=LayoutRoot}"
+                    dxmvvm:ViewModelExtensions.Parameter="{Binding Path=DataContext.EditableMergeRequest, ElementName=LayoutRoot}"/>
             </dxlc:LayoutGroup>
         </dxlc:DockLayoutControl>
     </Grid>

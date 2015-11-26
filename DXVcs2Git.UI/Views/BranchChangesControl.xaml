@@ -14,6 +14,11 @@
     <UserControl.DataContext>
         <viewModels:EditBranchChangesViewModel/>
     </UserControl.DataContext>
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
+        </ResourceDictionary>
+    </UserControl.Resources>
     <Grid x:Name="LayoutRoot">
         <dxlc:LayoutControl Padding="0">
             <dxlc:LayoutGroup Orientation="Horizontal">
@@ -28,18 +33,15 @@
                             </dxg:GridControl.Columns>
                             <dxg:GridControl.View>
                                 <dxg:TableView 
-                                            ShowGroupPanel="False" 
-                                            NavigationStyle="Row" 
-                                            AutoWidth="True">
+                                    ShowGroupPanel="False" 
+                                    NavigationStyle="Row" 
+                                    AutoWidth="True">
                                 </dxg:TableView>
                             </dxg:GridControl.View>
                         </dxg:GridControl>
                     </dxlc:LayoutItem>
-                    <dxlc:LayoutItem VerticalAlignment="Bottom" HorizontalAlignment="Stretch">
-                        <local:EditMergeRequestControl 
-                                    Visibility="{Binding Path=HasEditableMergeRequest, Converter={StaticResource BooleanToVisibilityConverter}}"
-                                    dxmvvm:ViewModelExtensions.ParentViewModel="{Binding Path=EditableMergeRequest}">
-                        </local:EditMergeRequestControl>
+                    <dxlc:LayoutItem VerticalAlignment="Bottom" HorizontalAlignment="Stretch" Visibility="{Binding Path=HasEditableMergeRequest, Converter={StaticResource BooleanToVisibilityConverter}}"> 
+                        <local:EditMergeRequestControl dxmvvm:ViewModelExtensions.ParentViewModel="{Binding Path=MergeRequest, ElementName=LayoutRoot}"/>
                     </dxlc:LayoutItem>
                 </dxlc:LayoutGroup>
                 <dxlc:LayoutGroup>

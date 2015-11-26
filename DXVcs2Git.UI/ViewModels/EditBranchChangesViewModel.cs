@@ -9,13 +9,17 @@ namespace DXVcs2Git.UI.ViewModels {
             get { return GetProperty(() => MergeRequest); }
             private set { SetProperty(() => MergeRequest, value); }
         }
-
+        public bool HasEditableMergeRequest {
+            get { return GetProperty(() => HasEditableMergeRequest); }
+            private set { SetProperty(() => HasEditableMergeRequest, value); }
+        }
         protected override void OnParentViewModelChanged(object parentViewModel) {
             base.OnParentViewModelChanged(parentViewModel);
             Refresh();
         }
         public void Refresh() {
             MergeRequest = Parent?.MergeRequest;
+            HasEditableMergeRequest = Parent?.IsInEditingMergeRequest ?? false;
         }
     }
 }

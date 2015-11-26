@@ -29,11 +29,11 @@ namespace DXVcs2Git.UI.ViewModels {
         public bool IsMyMergeRequest { get; private set; }
         public bool HasEditableMergeRequest {
             get { return GetProperty(() => HasEditableMergeRequest); }
-            private set { SetProperty(() => HasEditableMergeRequest, value); }
+            private set { SetProperty(() => HasEditableMergeRequest, value, HasEditableMergeRequestChanged); }
         }
-        public EditMergeRequestViewModel EditableMergeRequest {
-            get { return GetProperty(() => EditableMergeRequest); }
-            set { SetProperty(() => EditableMergeRequest, value); }
+        void HasEditableMergeRequestChanged() {
+            SelectedBranch.IsInEditingMergeRequest = HasEditableMergeRequest;
+            Repositories.Refresh();
         }
 
         IMessageBoxService MessageBoxService { get { return this.GetService<IMessageBoxService>("ruSure"); } }
@@ -50,7 +50,8 @@ namespace DXVcs2Git.UI.ViewModels {
             return IsInitialized && SelectedBranch != null && HasMergeRequest && IsMyMergeRequest;
         }
         void ProcessEditMergeRequest() {
-            EditableMergeRequest = new EditMergeRequestViewModel();
+            HasEditableMergeRequest = true;
+            Repositories.Refresh();
         }
         bool CanCreateMergeRequest() {
             return IsInitialized && SelectedBranch != null && !HasMergeRequest;
@@ -93,7 +94,6 @@ namespace DXVcs2Git.UI.ViewModels {
             }
         }
         void CloseEditableMergeRequest() {
-            EditableMergeRequest = null;
             HasEditableMergeRequest = false;
         }
         string CalcMergeRequestDescription(string message) {
