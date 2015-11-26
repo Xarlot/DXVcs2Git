@@ -69,5 +69,10 @@ namespace DXVcs2Git.UI.ViewModels {
             CommandManager.InvalidateRequerySuggested();
             Messenger.Default.Send(new Message(MessageType.Refresh));
         }
+        public void RefreshFarm() {
+            if (Repositories == null)
+                return;
+            Repositories.ForEach(x => x.RefreshFarm());
+        }
     }
 }

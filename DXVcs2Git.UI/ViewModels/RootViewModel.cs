@@ -19,11 +19,14 @@ namespace DXVcs2Git.UI.ViewModels {
             ISupportParentViewModel supportParent = Repositories;
             supportParent.ParentViewModel = this;
             Dispatcher.CurrentDispatcher.BeginInvoke(DispatcherPriority.ContextIdle, new Action(Initialize));
-            FarmIntegrator.Start(Dispatcher.CurrentDispatcher, Refresh);
+            FarmIntegrator.Start(Dispatcher.CurrentDispatcher, FarmRefreshed);
 
             SettingsCommand = DelegateCommandFactory.Create(ShowSettings, CanShowSettings);
             Config = ConfigSerializer.GetConfig();
             Version = $"Git tools {VersionInfo.Version}";
+        }
+        void FarmRefreshed() {
+            Repositories.RefreshFarm();
         }
         public void Initialize() {
             Repositories.Update();
