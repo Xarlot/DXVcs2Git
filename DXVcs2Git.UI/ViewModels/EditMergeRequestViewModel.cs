@@ -2,11 +2,14 @@
 using System.Windows.Input;
 using DevExpress.Mvvm;
 using DevExpress.Mvvm.Native;
+using DevExpress.Mvvm.POCO;
 
 namespace DXVcs2Git.UI.ViewModels {
     public class EditMergeRequestViewModel : ViewModelBase {
         string serviceUser = "dxvcs2gitservice";
-        public BranchViewModel Branch { get { return (BranchViewModel)Parameter; } }
+        new BranchViewModel Parameter { get { return (BranchViewModel)base.Parameter; } }
+        EditBranchChangesViewModel Parent { get { return this.GetParentViewModel<EditBranchChangesViewModel>(); } }
+
         UserViewModel user;
         string comment;
         bool assignedToService;
@@ -16,7 +19,7 @@ namespace DXVcs2Git.UI.ViewModels {
         public ICommand AssignToServiceCommand { get; private set; }
         public ICommand ResetCommand { get; private set; }
 
-        public IMessageBoxService MessageBoxService { get { return GetService<IMessageBoxService>("ruSure", ServiceSearchMode.PreferLocal); } }
+        public IMessageBoxService MessageBoxService { get { return GetService<IMessageBoxService>("MessageBoxService", ServiceSearchMode.PreferLocal); } }
 
         public string Comment {
             get { return this.comment; }
@@ -47,23 +50,19 @@ namespace DXVcs2Git.UI.ViewModels {
             CommandManager.InvalidateRequerySuggested();
         }
         bool CanAssignToService() {
-            return IsModified;
+            return true;
         }
         void PerformAssignToService() {
-            SelectedUser = new UserViewModel(Branch.GetUser(this.serviceUser));
+            SelectedUser = new UserViewModel(Parameter.GetUser(this.serviceUser));
         }
         bool CanCancelMergeRequest() {
             return true;
         }
         void PerformCancelMergeRequest() {
-            if (MessageBoxService.Show("Are you sure?", "Apply merge request", MessageBoxButton.OKCancel) == MessageBoxResult.OK) {
-                Branch.CancelMergeRequestChanges();
-            }
+            Parent.CancelMergeRequestChanges();
         }
         void PerformApplyMergeRequest() {
-            if (MessageBoxService.Show("Are you sure?", "Apply merge request", MessageBoxButton.OKCancel) == MessageBoxResult.OK) {
-                Branch.ApplyMergeRequestChanges(this);
-            }
+            Parent.ApplyMergeRequestChanges(new EditMergeRequestData() { Comment = Comment, Assignee = SelectedUser });
         }
         bool CanApplyMergeRequest() {
             return IsModified;
@@ -82,18 +81,19 @@ namespace DXVcs2Git.UI.ViewModels {
             IsModified = false;
         }
         public void Refresh() {
-            this.comment = Branch?.MergeRequest?.Title ?? Branch?.Branch?.Commit?.Message;
-            string assignee = Branch?.MergeRequest?.Assignee;
+            this.comment = Parameter?.MergeRequest?.Title ?? Parameter?.Branch?.Commit?.Message;
+            string assignee = Parameter?.MergeRequest?.Assignee;
             if (string.IsNullOrEmpty(assignee)) {
                 this.assignedToService = false;
                 this.user = null;
             }
             else {
                 this.assignedToService = assignee == this.serviceUser;
-                var registeredUser = Branch?.GetUser(assignee);
+                var registeredUser = Parameter?.GetUser(assignee);
                 if (registeredUser != null)
                     this.user = new UserViewModel(registeredUser);
             }
+            RaisePropertyChanged(null);
         }
     }
 }

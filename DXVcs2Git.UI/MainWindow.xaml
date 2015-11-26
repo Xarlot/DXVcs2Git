@@ -36,6 +36,7 @@
                 </DataTemplate>
             </dx:DialogService.ViewTemplate>
         </dx:DialogService>
+        <dx:DXMessageBoxService x:Name="MessageBoxService"/>
     </dxmvvm:Interaction.Behaviors>
     <Grid x:Name="LayoutRoot">
         <Grid.RowDefinitions>
@@ -66,11 +67,17 @@
                     ItemWidth="*"
                     AutoHideExpandState="Expanded"
                     FloatOnDoubleClick="False">
-                    <local:RepositoriesControl dxmvvm:ViewModelExtensions.Parameter="{Binding DataContext.Repositories, ElementName=LayoutRoot}"/>
+                    <local:RepositoriesControl 
+                        dxmvvm:ViewModelExtensions.Parameter="{Binding DataContext.Repositories, ElementName=LayoutRoot}"
+                        dxmvvm:ViewModelExtensions.ParentViewModel="{Binding DataContext, ElementName=LayoutRoot}">
+                    </local:RepositoriesControl>
                 </dxdo:LayoutPanel>
                 <dxdo:LayoutPanel
                     ItemWidth="2*">
-                    <local:ProcessMergeRequestControl dxmvvm:ViewModelExtensions.Parameter="{Binding DataContext.Repositories, ElementName=LayoutRoot}"/>
+                    <local:ProcessMergeRequestControl 
+                        dxmvvm:ViewModelExtensions.Parameter="{Binding DataContext.Repositories, ElementName=LayoutRoot}"
+                        dxmvvm:ViewModelExtensions.ParentViewModel="{Binding DataContext, ElementName=LayoutRoot}">
+                    </local:ProcessMergeRequestControl>
                 </dxdo:LayoutPanel>
             </dxdo:LayoutGroup>
         </dxdo:DockLayoutManager>

@@ -1,9 +1,8 @@
 ﻿using DevExpress.Mvvm;
-using DevExpress.Mvvm.POCO;
 
 namespace DXVcs2Git.UI.ViewModels {
     public class EditBranchDescriptionViewModel : ViewModelBase {
-        BranchViewModel Parent { get { return this.GetParentViewModel<BranchViewModel>(); } }
+        new BranchViewModel Parameter { get { return (BranchViewModel)base.Parameter; } }
         public EditBranchDescriptionViewModel() {
         }
 
@@ -23,22 +22,22 @@ namespace DXVcs2Git.UI.ViewModels {
             get { return GetProperty(() => MergeRequestAuthor); }
             private set { SetProperty(() => MergeRequestAuthor, value); }
         }
-        protected override void OnParentViewModelChanged(object parentViewModel) {
-            base.OnParentViewModelChanged(parentViewModel);
+        protected override void OnParameterChanged(object parameter) {
+            base.OnParameterChanged(parameter);
             Refresh();
         }
         public void Refresh() {
-            if (Parent == null) {
+            if (Parameter == null) {
                 RepositoryName = string.Empty;
                 BranchName = string.Empty;
                 MergeRequestAuthor = string.Empty;
                 MergeRequestTitle = string.Empty;
             }
             else {
-                RepositoryName = Parent.Repository.Name;
-                BranchName = Parent.Name;
-                MergeRequestAuthor = Parent.MergeRequest?.Author;
-                MergeRequestTitle = Parent.MergeRequest?.Title;
+                RepositoryName = Parameter.Repository.Name;
+                BranchName = Parameter.Name;
+                MergeRequestAuthor = Parameter.MergeRequest?.Author;
+                MergeRequestTitle = Parameter.MergeRequest?.Title;
             }
         }
     }

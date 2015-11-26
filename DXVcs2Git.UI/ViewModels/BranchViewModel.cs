@@ -46,6 +46,7 @@ namespace DXVcs2Git.UI.ViewModels {
             MergeRequest = mergeRequest.With(x => new MergeRequestViewModel(gitLabWrapper, mergeRequest));
             ForceBuildCommand = DelegateCommandFactory.Create(ForceBuild, CanForceBuild);
         }
+
         bool CanForceBuild() {
             return Repositories.IsInitialized && FarmStatus.ActivityStatus == ActivityStatus.Sleeping;
         }
@@ -66,10 +67,10 @@ namespace DXVcs2Git.UI.ViewModels {
             this.gitLabWrapper.CloseMergeRequest(MergeRequest.MergeRequest);
             MergeRequest = null;
         }
-        public void ApplyMergeRequestChanges(EditMergeRequestViewModel model) {
-        }
-        public void CancelMergeRequestChanges() {
-            throw new NotImplementedException();
+        public void UpdateMergeRequest(string title, string description, string assignee) {
+            var mergeRequest = this.gitLabWrapper.UpdateMergeRequestTitleAndDescription(MergeRequest.MergeRequest, title, description);
+            mergeRequest = this.gitLabWrapper.UpdateMergeRequestAssignee(mergeRequest, GetUser(assignee));
+            MergeRequest = new MergeRequestViewModel(this.gitLabWrapper, mergeRequest);
         }
     }
 }

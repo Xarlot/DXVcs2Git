@@ -3,7 +3,8 @@ using DevExpress.Mvvm.POCO;
 
 namespace DXVcs2Git.UI.ViewModels {
     public class EditBranchChangesViewModel : ViewModelBase {
-        BranchViewModel Parent { get { return this.GetParentViewModel<BranchViewModel>(); } }
+        new BranchViewModel Parameter { get { return (BranchViewModel)base.Parameter; } }
+        EditSelectedRepositoryViewModel Parent { get { return (EditSelectedRepositoryViewModel)this.GetParentViewModel<EditSelectedRepositoryViewModel>(); } }
 
         public BranchViewModel Branch {
             get { return GetProperty(() => Branch); }
@@ -22,9 +23,15 @@ namespace DXVcs2Git.UI.ViewModels {
             Refresh();
         }
         public void Refresh() {
-            MergeRequest = Parent?.MergeRequest;
-            HasEditableMergeRequest = Parent?.IsInEditingMergeRequest ?? false;
-            Branch = Parent;
+            MergeRequest = Parameter?.MergeRequest;
+            HasEditableMergeRequest = Parameter?.IsInEditingMergeRequest ?? false;
+            Branch = Parameter;
+        }
+        public void CancelMergeRequestChanges() {
+            Parent.CancelEditMergeRequest();
+        }
+        public void ApplyMergeRequestChanges(EditMergeRequestData data) {
+            Parent.UpdateMergeRequest(data);
         }
     }
 }

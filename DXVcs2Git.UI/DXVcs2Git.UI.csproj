@@ -190,6 +190,7 @@
     <Compile Include="ViewModels\EditBranchChangesViewModel.cs" />
     <Compile Include="ViewModels\EditBranchDescriptionViewModel.cs" />
     <Compile Include="ViewModels\EditConfigViewModel.cs" />
+    <Compile Include="ViewModels\EditMergeRequestData.cs" />
     <Compile Include="ViewModels\EditRepositoriesViewModel.cs" />
     <Compile Include="ViewModels\EditMergeRequestViewModel.cs" />
     <Compile Include="ViewModels\EditSelectedRepositoryViewModel.cs" />

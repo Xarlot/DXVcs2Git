@@ -13,9 +13,6 @@
              xmlns:dxb="http://schemas.devexpress.com/winfx/2008/xaml/bars"
              xmlns:dxlc="http://schemas.devexpress.com/winfx/2008/xaml/layoutcontrol"
              mc:Ignorable="d" >
-    <dxmvvm:Interaction.Behaviors>
-        <dx:DXMessageBoxService x:Name="ruSure"/>
-    </dxmvvm:Interaction.Behaviors>
     <UserControl.DataContext>
         <viewModels:EditSelectedRepositoryViewModel/>
     </UserControl.DataContext>
@@ -70,12 +67,17 @@
         <dxlc:DockLayoutControl Grid.Row="1" Margin="10" Visibility="{Binding Path=HasMergeRequest, Converter={StaticResource BooleanToVisibilityConverter}}">
             <dxlc:LayoutGroup dxlc:DockLayoutControl.Dock="Top">
                 <dxlc:LayoutItem>
-                    <views:BranchDescriptionControl dxmvvm:ViewModelExtensions.Parameter="{Binding Path=DataContext.SelectedBranch, ElementName=LayoutRoot}"/>
+                    <views:BranchDescriptionControl 
+                        dxmvvm:ViewModelExtensions.Parameter="{Binding Path=DataContext.SelectedBranch, ElementName=LayoutRoot}"
+                        dxmvvm:ViewModelExtensions.ParentViewModel="{Binding DataContext, ElementName=LayoutRoot}">
+                    </views:BranchDescriptionControl>
                 </dxlc:LayoutItem>
             </dxlc:LayoutGroup>
             <dxlc:LayoutGroup Orientation="Horizontal" dxlc:DockLayoutControl.Dock="Client" Margin="0">
                 <views:BranchChangesControl 
-                    dxmvvm:ViewModelExtensions.Parameter="{Binding Path=DataContext.SelectedBranch, ElementName=LayoutRoot}"/>
+                    dxmvvm:ViewModelExtensions.Parameter="{Binding Path=DataContext.SelectedBranch, ElementName=LayoutRoot}"
+                    dxmvvm:ViewModelExtensions.ParentViewModel="{Binding DataContext, ElementName=LayoutRoot}">
+                </views:BranchChangesControl>
             </dxlc:LayoutGroup>
         </dxlc:DockLayoutControl>
     </Grid>

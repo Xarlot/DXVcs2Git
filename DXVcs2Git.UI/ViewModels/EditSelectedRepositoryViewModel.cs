@@ -26,6 +26,7 @@ namespace DXVcs2Git.UI.ViewModels {
             private set { SetProperty(() => HasMergeRequest, value); }
         }
         public bool IsMyMergeRequest { get; private set; }
+        public bool HasChanged { get; private set; }
         public bool HasEditableMergeRequest {
             get { return GetProperty(() => HasEditableMergeRequest); }
             private set { SetProperty(() => HasEditableMergeRequest, value, HasEditableMergeRequestChanged); }
@@ -35,7 +36,7 @@ namespace DXVcs2Git.UI.ViewModels {
             Parameter.Refresh();
         }
 
-        IMessageBoxService MessageBoxService { get { return this.GetService<IMessageBoxService>("ruSure"); } }
+        IMessageBoxService MessageBoxService { get { return this.GetService<IMessageBoxService>("MessageBoxService"); } }
 
         public EditSelectedRepositoryViewModel() {
             CreateMergeRequestCommand = DelegateCommandFactory.Create(CreateMergeRequest, CanCreateMergeRequest);
@@ -46,7 +47,7 @@ namespace DXVcs2Git.UI.ViewModels {
             return IsInitialized && SelectedBranch != null && HasMergeRequest && IsMyMergeRequest;
         }
         bool CanEditMergeRequest() {
-            return IsInitialized && SelectedBranch != null && HasMergeRequest && IsMyMergeRequest;
+            return IsInitialized && SelectedBranch != null && HasMergeRequest && IsMyMergeRequest && HasChanged;
         }
         void ProcessEditMergeRequest() {
             HasEditableMergeRequest = true;
@@ -77,6 +78,12 @@ namespace DXVcs2Git.UI.ViewModels {
             IsInitialized = Parameter.Return(x => x.IsInitialized, () => false);
             SelectedBranch = Parameter.With(x => x.SelectedRepository).With(x => x.SelectedBranch);
             HasMergeRequest = SelectedBranch.Return(x => x.MergeRequest != null, () => false);
+            if (HasMergeRequest) {
+                HasChanged = SelectedBranch.Return(x => x.MergeRequest.Changes.Any(), () => false);
+            }
+            else {
+                HasChanged = false;
+            }
             IsMyMergeRequest = HasMergeRequest;
         }
         string CalcTargetBranch(string name) {
@@ -85,11 +92,18 @@ namespace DXVcs2Git.UI.ViewModels {
                 return repoConfig.Name;
             return Parameter.ProtectedBranches.FirstOrDefault(x => name.StartsWith(x.Name)).With(x => x.Name);
         }
+        public void UpdateMergeRequest(EditMergeRequestData data) {
+            if (MessageBoxService.Show("Are you sure?", "Update merge request", MessageBoxButton.OKCancel) == MessageBoxResult.OK) {
+                SelectedBranch.UpdateMergeRequest(CalcMergeRequestTitle(data.Comment), CalcMergeRequestDescription(data.Comment), data.Assignee?.Name);
+                CloseEditableMergeRequest();
+                Parameter.Refresh();
+            }
+        }
         public void CloseMergeRequest() {
             if (MessageBoxService.Show("Are you sure?", "Close merge request", MessageBoxButton.OKCancel) == MessageBoxResult.OK) {
                 SelectedBranch.CloseMergeRequest();
                 CloseEditableMergeRequest();
-                Refresh();
+                Parameter.Refresh();
             }
         }
         void CloseEditableMergeRequest() {
@@ -109,6 +123,10 @@ namespace DXVcs2Git.UI.ViewModels {
         protected override void OnParentViewModelChanged(object parentViewModel) {
             base.OnParentViewModelChanged(parentViewModel);
             Refresh();
+        }
+        public void CancelEditMergeRequest() {
+            HasEditableMergeRequest = false;
+            Parameter.Refresh();
         }
     }
 }
