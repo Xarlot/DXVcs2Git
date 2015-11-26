@@ -39,7 +39,7 @@
             <dxg:GridControl.Columns>
                 <dxg:GridColumn FieldName="Name"></dxg:GridColumn>
                 <dxg:GridColumn FieldName="FarmStatus.BuildStatus" Header="Build status"/>
-                <dxg:GridColumn FieldName="FarmStatus.ActivityStatus" Header="Activity status"/>
+                <dxg:GridColumn FieldName="FarmStatus.ActivityMessage" Header="Activity"/>
             </dxg:GridControl.Columns>
             <dxg:GridControl.View>
                 <dxg:TreeListView 

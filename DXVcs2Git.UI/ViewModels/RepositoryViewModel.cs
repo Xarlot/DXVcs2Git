@@ -72,7 +72,12 @@ namespace DXVcs2Git.UI.ViewModels {
             return GitLabWrapper.CreateMergeRequest(Project, title, description, user, sourceBranch, targetBranch);
         }
         public void RefreshFarm() {
+            if (Branches == null) {
+                FarmStatus = null;
+                return;
+            }
             FarmStatus = FarmIntegrator.GetTaskStatus(RepoConfig?.FarmTaskName);
+            Branches.ForEach(x => x.RefreshFarm());
         }
     }
 }
