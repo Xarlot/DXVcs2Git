@@ -3,6 +3,7 @@ using DevExpress.Xpf.Core;
 using Hardcodet.Wpf.TaskbarNotification;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -18,7 +19,7 @@ namespace DXVcs2Git.UI.Behaviors {
         TaskbarIcon icon;
         HwndSource hwndSource;
         readonly Locker preventClosingLocker = new Locker();
-        bool CanCloseWindow { get { return Keyboard.IsKeyDown(Key.LeftCtrl) || preventClosingLocker.IsLocked; } }
+        bool CanCloseWindow { get { return Keyboard.IsKeyDown(Key.LeftCtrl) || preventClosingLocker.IsLocked || Debugger.IsAttached; } }
         protected override void OnAttached() {
             base.OnAttached();
             icon = new TaskbarIcon();
