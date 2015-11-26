@@ -19,18 +19,18 @@
     <Grid>
         <dxlc:DockLayoutControl>
             <dxlc:LayoutGroup Orientation="Horizontal" dxlc:DockLayoutControl.Dock="Top">
-                <dxlc:LayoutItem Label="Selected repository: " HorizontalAlignment="Left">
+                <dxlc:LayoutItem Label="Selected repository: ">
                     <TextBlock Text="{Binding Path=RepositoryName}" FontWeight="Bold"/>
                 </dxlc:LayoutItem>
-                <dxlc:LayoutItem Label="Selected branch: " HorizontalAlignment="Right">
+                <dxlc:LayoutItem Label="Selected branch: ">
                     <TextBlock Text="{Binding Path=BranchName}" FontWeight="Bold"/>
                 </dxlc:LayoutItem>
             </dxlc:LayoutGroup>
             <dxlc:LayoutGroup Orientation="Horizontal" dxlc:DockLayoutControl.Dock="Top">
-                <dxlc:LayoutItem Label="Merge request: " HorizontalAlignment="Left">
+                <dxlc:LayoutItem Label="Merge request: ">
                     <TextBlock Text="{Binding Path=MergeRequestTitle, Converter={StaticResource MergeRequestTitleConverter}}"/>
                 </dxlc:LayoutItem>
-                <dxlc:LayoutItem Label=" Merge request author: " HorizontalAlignment="Right">
+                <dxlc:LayoutItem Label=" Merge request author: ">
                     <TextBlock Text="{Binding Path=MergeRequestAuthor}"/>
                 </dxlc:LayoutItem>
             </dxlc:LayoutGroup>
