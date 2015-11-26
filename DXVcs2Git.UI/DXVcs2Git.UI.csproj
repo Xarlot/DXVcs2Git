@@ -55,6 +55,9 @@
   <PropertyGroup>
     <ApplicationIcon>Icon.ico</ApplicationIcon>
   </PropertyGroup>
+  <PropertyGroup>
+    <StartupObject>DXVcs2Git.UI.NativeMethods.EntryPoint</StartupObject>
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="ccnet.smart.plugin">
       <HintPath>..\Lib\DXFarm\ccnet.smart.plugin.dll</HintPath>
@@ -117,6 +120,10 @@
     <Reference Include="DXBuild.Core">
       <HintPath>..\Lib\DXFarm\DXBuild.Core.dll</HintPath>
     </Reference>
+    <Reference Include="Hardcodet.Wpf.TaskbarNotification, Version=1.0.5.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Hardcodet.NotifyIcon.Wpf.1.0.5\lib\net451\Hardcodet.Wpf.TaskbarNotification.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="ICSharpCode.AvalonEdit, Version=5.0.1.0, Culture=neutral, PublicKeyToken=9cc39be672370310, processorArchitecture=MSIL">
       <HintPath>..\packages\AvalonEdit.5.0.2\lib\Net40\ICSharpCode.AvalonEdit.dll</HintPath>
       <Private>True</Private>
@@ -178,12 +185,15 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="Behaviors\TaskBarIconBehavior.cs" />
+    <Compile Include="NativeMethods\EntryPoint.cs" />
     <Compile Include="Farm\BuildNotificationViewInfo.cs" />
     <Compile Include="Farm\DXCCTrayHelpers.cs" />
     <Compile Include="Farm\DXCCTrayCore.cs" />
     <Compile Include="Farm\FarmHelper.cs" />
     <Compile Include="Farm\ProjectI.cs" />
     <Compile Include="Farm\SmartProjectActivity.cs" />
+    <Compile Include="NativeMethods\NativeMethods.cs" />
     <Compile Include="ViewModels\BranchViewModel.cs" />
     <Compile Include="ViewModels\Config.cs" />
     <Compile Include="ViewModels\ConfigSerializer.cs" />
