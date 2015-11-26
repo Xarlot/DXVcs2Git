@@ -30,7 +30,7 @@ namespace DXVcs2Git.UI.ViewModels {
             set { SetProperty(() => SelectedBranch, value, SelectedBranchChanged); }
         }
         void SelectedBranchChanged() {
-            Repositories.Refresh();
+            Refresh();
         }
         public RepositoryViewModel(string name, GitLabWrapper gitLabWrapper, GitReaderWrapper gitReader, RepositoriesViewModel repositories) {
             GitLabWrapper = gitLabWrapper;
