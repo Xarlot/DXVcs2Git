@@ -94,7 +94,7 @@ namespace DXVcs2Git.UI.ViewModels {
         }
         public void UpdateMergeRequest(EditMergeRequestData data) {
             if (MessageBoxService.Show("Are you sure?", "Update merge request", MessageBoxButton.OKCancel) == MessageBoxResult.OK) {
-                SelectedBranch.UpdateMergeRequest(CalcMergeRequestTitle(data.Comment), CalcMergeRequestDescription(data.Comment), data.Assignee?.Name);
+                SelectedBranch.UpdateMergeRequest(CalcMergeRequestTitle(data.Comment), CalcMergeRequestDescription(data.Comment), data.Assignee);
                 CloseEditableMergeRequest();
                 Parameter.Refresh();
             }

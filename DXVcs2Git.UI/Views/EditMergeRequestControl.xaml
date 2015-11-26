@@ -39,7 +39,7 @@
                         </dxe:ComboBoxEdit>
                     </dxlc:LayoutItem>
                     <dxlc:LayoutItem>
-                        <dxe:CheckEdit Content="Assigned to service" Command="{Binding Path=AssignToServiceCommand}" EditValue="{Binding Path=AssignedToService}"/>
+                        <dxe:CheckEdit Content="Assigned to service" EditValue="{Binding Path=AssignedToService, Mode=TwoWay}"/>
                     </dxlc:LayoutItem>
                 </dxlc:LayoutGroup>
                 <dxlc:LayoutGroup Orientation="Horizontal">

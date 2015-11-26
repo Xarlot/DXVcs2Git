@@ -16,7 +16,6 @@ namespace DXVcs2Git.UI.ViewModels {
 
         public ICommand ApplyMergeRequestCommand { get; private set; }
         public ICommand CancelMergeRequestCommand { get; private set; }
-        public ICommand AssignToServiceCommand { get; private set; }
         public ICommand ResetCommand { get; private set; }
 
         public IMessageBoxService MessageBoxService { get { return GetService<IMessageBoxService>("MessageBoxService", ServiceSearchMode.PreferLocal); } }
@@ -29,20 +28,10 @@ namespace DXVcs2Git.UI.ViewModels {
             get { return this.assignedToService; }
             set { SetProperty(ref this.assignedToService, value, () => AssignedToService, Invalidate); }
         }
-        public UserViewModel SelectedUser {
-            get { return user; }
-            set {
-                SetProperty(ref user, value, () => SelectedUser, () => {
-                    Invalidate();
-                    AssignedToService = value?.Name == this.serviceUser;
-                });
-            }
-        }
 
         public EditMergeRequestViewModel() {
             ApplyMergeRequestCommand = DelegateCommandFactory.Create(PerformApplyMergeRequest, CanApplyMergeRequest);
             CancelMergeRequestCommand = DelegateCommandFactory.Create(PerformCancelMergeRequest, CanCancelMergeRequest);
-            AssignToServiceCommand = DelegateCommandFactory.Create(PerformAssignToService, CanAssignToService);
             ResetCommand = DelegateCommandFactory.Create(Reset);
         }
         void Invalidate() {
@@ -52,9 +41,6 @@ namespace DXVcs2Git.UI.ViewModels {
         bool CanAssignToService() {
             return true;
         }
-        void PerformAssignToService() {
-            SelectedUser = new UserViewModel(Parameter.GetUser(this.serviceUser));
-        }
         bool CanCancelMergeRequest() {
             return true;
         }
@@ -62,7 +48,7 @@ namespace DXVcs2Git.UI.ViewModels {
             Parent.CancelMergeRequestChanges();
         }
         void PerformApplyMergeRequest() {
-            Parent.ApplyMergeRequestChanges(new EditMergeRequestData() { Comment = Comment, Assignee = SelectedUser });
+            Parent.ApplyMergeRequestChanges(new EditMergeRequestData() { Comment = Comment, Assignee = AssignedToService ? this.serviceUser : null });
         }
         bool CanApplyMergeRequest() {
             return IsModified;
