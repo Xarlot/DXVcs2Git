@@ -22,6 +22,7 @@ namespace DXVcs2Git.UI.Behaviors {
                 var repository = (RepositoryViewModel)node.Content;
                 model.SelectedRepository = repository;
                 repository.SelectedBranch = repository.Branches.FirstOrDefault();
+                repository.Refresh();
             }
             else {
                 var branch = node.Content as BranchViewModel;
@@ -29,13 +30,16 @@ namespace DXVcs2Git.UI.Behaviors {
                     var repository = (RepositoryViewModel)node.ParentNode.Content;
                     model.SelectedRepository = repository;
                     repository.SelectedBranch = repository.Branches.FirstOrDefault();
+                    repository.Refresh();
                 }
                 else {
                     var repository = (RepositoryViewModel)node.Content;
                     model.SelectedRepository = repository;
                     repository.SelectedBranch = null;
+                    repository.Refresh();
                 }
             }
+            model.ForceParentRefresh();
         }
         protected override void OnDetaching() {
             AssociatedObject.CurrentItemChanged -= AssociatedObjectOnCurrentItemChanged;

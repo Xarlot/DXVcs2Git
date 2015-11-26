@@ -15,7 +15,7 @@ namespace DXVcs2Git.UI {
         }
 
         void OnMessage(Message msg) {
-            EditRepositories.Update();
+            EditRepositories.Refresh();
         }
     }
 }

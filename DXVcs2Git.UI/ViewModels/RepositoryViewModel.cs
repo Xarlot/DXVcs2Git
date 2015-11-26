@@ -27,10 +27,7 @@ namespace DXVcs2Git.UI.ViewModels {
         public GitRepoConfig RepoConfig { get; }
         public BranchViewModel SelectedBranch {
             get { return GetProperty(() => SelectedBranch); }
-            set { SetProperty(() => SelectedBranch, value, SelectedBranchChanged); }
-        }
-        void SelectedBranchChanged() {
-            Refresh();
+            set { SetProperty(() => SelectedBranch, value); }
         }
         public RepositoryViewModel(string name, GitLabWrapper gitLabWrapper, GitReaderWrapper gitReader, RepositoriesViewModel repositories) {
             GitLabWrapper = gitLabWrapper;
