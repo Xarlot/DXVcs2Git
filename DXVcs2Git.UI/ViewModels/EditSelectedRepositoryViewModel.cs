@@ -5,12 +5,11 @@ using System.Windows;
 using System.Windows.Input;
 using DevExpress.Mvvm;
 using DevExpress.Mvvm.Native;
-using DevExpress.Mvvm.POCO;
 using DXVcs2Git.Core.Git;
 
 namespace DXVcs2Git.UI.ViewModels {
     public class EditSelectedRepositoryViewModel : ViewModelBase {
-        public RepositoriesViewModel Repositories { get { return this.GetParentViewModel<RepositoriesViewModel>(); } }
+        new RepositoriesViewModel Parameter { get { return (RepositoriesViewModel)base.Parameter; } }
         public bool IsInitialized {
             get { return GetProperty(() => IsInitialized); }
             private set { SetProperty(() => IsInitialized, value); }
@@ -33,7 +32,7 @@ namespace DXVcs2Git.UI.ViewModels {
         }
         void HasEditableMergeRequestChanged() {
             SelectedBranch.IsInEditingMergeRequest = HasEditableMergeRequest;
-            Repositories.Refresh();
+            Parameter.Refresh();
         }
 
         IMessageBoxService MessageBoxService { get { return this.GetService<IMessageBoxService>("ruSure"); } }
@@ -51,13 +50,13 @@ namespace DXVcs2Git.UI.ViewModels {
         }
         void ProcessEditMergeRequest() {
             HasEditableMergeRequest = true;
-            Repositories.Refresh();
+            Parameter.Refresh();
         }
         bool CanCreateMergeRequest() {
             return IsInitialized && SelectedBranch != null && !HasMergeRequest;
         }
         public void CreateMergeRequest() {
-            Repositories.Refresh();
+            Parameter.Refresh();
             if (!CanCreateMergeRequest())
                 return;
 
@@ -75,8 +74,8 @@ namespace DXVcs2Git.UI.ViewModels {
             Refresh();
         }
         public void Refresh() {
-            IsInitialized = Repositories.Return(x => x.IsInitialized, () => false);
-            SelectedBranch = Repositories.With(x => x.SelectedRepository).With(x => x.SelectedBranch);
+            IsInitialized = Parameter.Return(x => x.IsInitialized, () => false);
+            SelectedBranch = Parameter.With(x => x.SelectedRepository).With(x => x.SelectedBranch);
             HasMergeRequest = SelectedBranch.Return(x => x.MergeRequest != null, () => false);
             IsMyMergeRequest = HasMergeRequest;
         }
@@ -84,7 +83,7 @@ namespace DXVcs2Git.UI.ViewModels {
             GitRepoConfig repoConfig = SelectedBranch.Repository.RepoConfig;
             if (repoConfig != null)
                 return repoConfig.Name;
-            return Repositories.ProtectedBranches.FirstOrDefault(x => name.StartsWith(x.Name)).With(x => x.Name);
+            return Parameter.ProtectedBranches.FirstOrDefault(x => name.StartsWith(x.Name)).With(x => x.Name);
         }
         public void CloseMergeRequest() {
             if (MessageBoxService.Show("Are you sure?", "Close merge request", MessageBoxButton.OKCancel) == MessageBoxResult.OK) {

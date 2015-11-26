@@ -2,12 +2,11 @@
 using System.Windows.Input;
 using DevExpress.Mvvm;
 using DevExpress.Mvvm.Native;
-using DevExpress.Mvvm.POCO;
 
 namespace DXVcs2Git.UI.ViewModels {
     public class EditRepositoriesViewModel : ViewModelBase {
         public ICommand UpdateCommand { get; private set; }
-        public RepositoriesViewModel Parent { get { return this.GetParentViewModel<RepositoriesViewModel>(); } }
+        new RepositoriesViewModel Parameter { get { return (RepositoriesViewModel)base.Parameter; } }
         public RepositoryViewModel SelectedRepository {
             get { return GetProperty(() => SelectedRepository); }
             set { SetProperty(() => SelectedRepository, value, SelectedRepositoryChanged); }
@@ -24,16 +23,26 @@ namespace DXVcs2Git.UI.ViewModels {
         public EditRepositoriesViewModel() {
             UpdateCommand = DelegateCommandFactory.Create(Update, CanUpdate);
         }
+        protected override void OnParameterChanged(object parameter) {
+            base.OnParameterChanged(parameter);
+            Update();
+        }
         bool CanUpdate() {
             return IsInitialized;
         }
         public void Update() {
-            Repositories = Parent.Repositories;
-            SelectedRepository = Parent.SelectedRepository;
-            IsInitialized = Parent.IsInitialized;
+            if (Parameter == null) {
+                Repositories = null;
+                SelectedRepository = null;
+                IsInitialized = false;
+                return;
+            }
+            Repositories = Parameter.Repositories;
+            SelectedRepository = Parameter.SelectedRepository;
+            IsInitialized = Parameter.IsInitialized;
         }
         void SelectedRepositoryChanged() {
-            Parent.SelectedRepository = SelectedRepository;
+            Parameter.SelectedRepository = SelectedRepository;
         }
     }
 }

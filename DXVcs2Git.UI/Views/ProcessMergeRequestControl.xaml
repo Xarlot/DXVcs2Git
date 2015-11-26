@@ -70,13 +70,12 @@
         <dxlc:DockLayoutControl Grid.Row="1" Margin="10" Visibility="{Binding Path=HasMergeRequest, Converter={StaticResource BooleanToVisibilityConverter}}">
             <dxlc:LayoutGroup dxlc:DockLayoutControl.Dock="Top">
                 <dxlc:LayoutItem>
-                    <views:BranchDescriptionControl dxmvvm:ViewModelExtensions.ParentViewModel="{Binding Path=DataContext.SelectedBranch, ElementName=LayoutRoot}"/>
+                    <views:BranchDescriptionControl dxmvvm:ViewModelExtensions.Parameter="{Binding Path=DataContext.SelectedBranch, ElementName=LayoutRoot}"/>
                 </dxlc:LayoutItem>
             </dxlc:LayoutGroup>
             <dxlc:LayoutGroup Orientation="Horizontal" dxlc:DockLayoutControl.Dock="Client" Margin="0">
                 <views:BranchChangesControl 
-                    dxmvvm:ViewModelExtensions.ParentViewModel="{Binding Path=DataContext.SelectedBranch, ElementName=LayoutRoot}"
-                    dxmvvm:ViewModelExtensions.Parameter="{Binding Path=DataContext.EditableMergeRequest, ElementName=LayoutRoot}"/>
+                    dxmvvm:ViewModelExtensions.Parameter="{Binding Path=DataContext.SelectedBranch, ElementName=LayoutRoot}"/>
             </dxlc:LayoutGroup>
         </dxlc:DockLayoutControl>
     </Grid>

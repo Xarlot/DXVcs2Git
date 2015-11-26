@@ -42,7 +42,6 @@
                     </dxlc:LayoutItem>
                     <dxlc:LayoutItem VerticalAlignment="Bottom" HorizontalAlignment="Stretch" Visibility="{Binding Path=HasEditableMergeRequest, Converter={StaticResource BooleanToVisibilityConverter}}">
                         <local:EditMergeRequestControl 
-                            dxmvvm:ViewModelExtensions.ParentViewModel="{Binding Path=DataContext, ElementName=LayoutRoot}"
                             dxmvvm:ViewModelExtensions.Parameter="{Binding Path=DataContext.Branch, ElementName=LayoutRoot}">
                         </local:EditMergeRequestControl>
                     </dxlc:LayoutItem>
