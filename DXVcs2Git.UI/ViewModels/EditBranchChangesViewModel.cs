@@ -5,6 +5,10 @@ namespace DXVcs2Git.UI.ViewModels {
     public class EditBranchChangesViewModel : ViewModelBase {
         BranchViewModel Parent { get { return this.GetParentViewModel<BranchViewModel>(); } }
 
+        public BranchViewModel Branch {
+            get { return GetProperty(() => Branch); }
+            private set { SetProperty(() => Branch, value); }
+        }
         public MergeRequestViewModel MergeRequest {
             get { return GetProperty(() => MergeRequest); }
             private set { SetProperty(() => MergeRequest, value); }
@@ -20,6 +24,7 @@ namespace DXVcs2Git.UI.ViewModels {
         public void Refresh() {
             MergeRequest = Parent?.MergeRequest;
             HasEditableMergeRequest = Parent?.IsInEditingMergeRequest ?? false;
+            Branch = Parent;
         }
     }
 }

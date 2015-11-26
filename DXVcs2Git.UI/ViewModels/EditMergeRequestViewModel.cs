@@ -2,14 +2,11 @@
 using System.Windows.Input;
 using DevExpress.Mvvm;
 using DevExpress.Mvvm.Native;
-using DevExpress.Mvvm.POCO;
-using DevExpress.Xpf.Core;
 
 namespace DXVcs2Git.UI.ViewModels {
     public class EditMergeRequestViewModel : ViewModelBase {
         string serviceUser = "dxvcs2gitservice";
-        public BranchViewModel Parent { get { return this.GetParentViewModel<BranchViewModel>(); } }
-
+        public BranchViewModel Branch { get { return (BranchViewModel)Parameter; } }
         UserViewModel user;
         string comment;
         bool assignedToService;
@@ -53,19 +50,19 @@ namespace DXVcs2Git.UI.ViewModels {
             return IsModified;
         }
         void PerformAssignToService() {
-            SelectedUser = new UserViewModel(Parent.GetUser(this.serviceUser));
+            SelectedUser = new UserViewModel(Branch.GetUser(this.serviceUser));
         }
         bool CanCancelMergeRequest() {
             return true;
         }
         void PerformCancelMergeRequest() {
             if (MessageBoxService.Show("Are you sure?", "Apply merge request", MessageBoxButton.OKCancel) == MessageBoxResult.OK) {
-                Parent.CancelMergeRequestChanges();
+                Branch.CancelMergeRequestChanges();
             }
         }
         void PerformApplyMergeRequest() {
             if (MessageBoxService.Show("Are you sure?", "Apply merge request", MessageBoxButton.OKCancel) == MessageBoxResult.OK) {
-                Parent.ApplyMergeRequestChanges(this);
+                Branch.ApplyMergeRequestChanges(this);
             }
         }
         bool CanApplyMergeRequest() {
@@ -73,17 +70,30 @@ namespace DXVcs2Git.UI.ViewModels {
         }
         public bool IsModified { get; private set; }
 
-        protected override void OnParentViewModelChanged(object parentViewModel) {
-            base.OnParentViewModelChanged(parentViewModel);
+        protected override void OnParameterChanged(object parameter) {
+            base.OnParameterChanged(parameter);
             Refresh();
         }
         public void Reset() {
             this.assignedToService = false;
             this.comment = string.Empty;
+            user = null;
+            assignedToService = false;
             IsModified = false;
         }
         public void Refresh() {
-            this.comment = Parent?.MergeRequest?.Title ?? Parent?.Branch?.Commit?.Message;
+            this.comment = Branch?.MergeRequest?.Title ?? Branch?.Branch?.Commit?.Message;
+            string assignee = Branch?.MergeRequest?.Assignee;
+            if (string.IsNullOrEmpty(assignee)) {
+                this.assignedToService = false;
+                this.user = null;
+            }
+            else {
+                this.assignedToService = assignee == this.serviceUser;
+                var registeredUser = Branch?.GetUser(assignee);
+                if (registeredUser != null)
+                    this.user = new UserViewModel(registeredUser);
+            }
         }
     }
 }
