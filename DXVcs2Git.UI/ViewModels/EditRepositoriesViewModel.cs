@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Windows.Input;
 using DevExpress.Mvvm;
 using DevExpress.Mvvm.Native;
@@ -9,7 +10,7 @@ namespace DXVcs2Git.UI.ViewModels {
         new RepositoriesViewModel Parameter { get { return (RepositoriesViewModel)base.Parameter; } }
         public RepositoryViewModel SelectedRepository {
             get { return GetProperty(() => SelectedRepository); }
-            set { SetProperty(() => SelectedRepository, value); }
+            set { SetProperty(() => SelectedRepository, value, SelectedRepositoryChanged); }
         }
         public IEnumerable<RepositoryViewModel> Repositories {
             get { return GetProperty(() => Repositories); }
@@ -23,6 +24,10 @@ namespace DXVcs2Git.UI.ViewModels {
         public EditRepositoriesViewModel() {
             UpdateCommand = DelegateCommandFactory.Create(PerformUpdate, CanUpdate);
         }
+        void SelectedRepositoryChanged() {
+            Parameter.SelectedRepository = SelectedRepository;
+        }
+
         void PerformUpdate() {
             Parameter.Update();
         }

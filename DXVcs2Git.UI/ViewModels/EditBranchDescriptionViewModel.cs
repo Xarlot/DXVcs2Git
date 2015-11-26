@@ -22,6 +22,10 @@ namespace DXVcs2Git.UI.ViewModels {
             get { return GetProperty(() => MergeRequestAuthor); }
             private set { SetProperty(() => MergeRequestAuthor, value); }
         }
+        public string MergeRequestAssignee {
+            get { return GetProperty(() => MergeRequestAssignee); }
+            private set { SetProperty(() => MergeRequestAssignee, value); }
+        }
         protected override void OnParameterChanged(object parameter) {
             base.OnParameterChanged(parameter);
             Refresh();
@@ -32,12 +36,14 @@ namespace DXVcs2Git.UI.ViewModels {
                 BranchName = string.Empty;
                 MergeRequestAuthor = string.Empty;
                 MergeRequestTitle = string.Empty;
+                MergeRequestAssignee = string.Empty;
             }
             else {
                 RepositoryName = Parameter.Repository.Name;
                 BranchName = Parameter.Name;
                 MergeRequestAuthor = Parameter.MergeRequest?.Author;
                 MergeRequestTitle = Parameter.MergeRequest?.Title;
+                MergeRequestAssignee = Parameter.MergeRequest?.Assignee;
             }
         }
     }

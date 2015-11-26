@@ -6,6 +6,7 @@
              xmlns:local="clr-namespace:DXVcs2Git.UI.Views"
              xmlns:dxlc="http://schemas.devexpress.com/winfx/2008/xaml/layoutcontrol"
              xmlns:viewModels="clr-namespace:DXVcs2Git.UI.ViewModels"
+             xmlns:dxe="http://schemas.devexpress.com/winfx/2008/xaml/editors"
              mc:Ignorable="d" 
              d:DesignHeight="300" d:DesignWidth="300">
     <UserControl.DataContext>
@@ -27,12 +28,19 @@
                 </dxlc:LayoutItem>
             </dxlc:LayoutGroup>
             <dxlc:LayoutGroup Orientation="Horizontal" dxlc:DockLayoutControl.Dock="Top">
-                <dxlc:LayoutItem Label="Merge request: ">
-                    <TextBlock Text="{Binding Path=MergeRequestTitle, Converter={StaticResource MergeRequestTitleConverter}}"/>
-                </dxlc:LayoutItem>
-                <dxlc:LayoutItem Label=" Merge request author: ">
-                    <TextBlock Text="{Binding Path=MergeRequestAuthor}"/>
-                </dxlc:LayoutItem>
+                <dxlc:LayoutGroup Orientation="Vertical">
+                    <dxlc:LayoutItem Label="Merge request: " LabelVerticalAlignment="Top">
+                        <dxe:TextEdit ShowBorder="False" TextWrapping="WrapWithOverflow" AcceptsReturn="True" IsReadOnly="True" Text="{Binding Path=MergeRequestTitle, Mode=OneWay, Converter={StaticResource MergeRequestTitleConverter}}"/>
+                    </dxlc:LayoutItem>
+                </dxlc:LayoutGroup>
+                <dxlc:LayoutGroup Orientation="Vertical">
+                    <dxlc:LayoutItem Label="Merge request author: ">
+                        <TextBlock Text="{Binding Path=MergeRequestAuthor}"/>
+                    </dxlc:LayoutItem>
+                    <dxlc:LayoutItem Label="Merge request assignee: ">
+                        <TextBlock Text="{Binding Path=MergeRequestAssignee}" FontWeight="Bold"/>
+                    </dxlc:LayoutItem>
+                </dxlc:LayoutGroup>
             </dxlc:LayoutGroup>
 
         </dxlc:DockLayoutControl>

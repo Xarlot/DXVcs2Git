@@ -14,8 +14,10 @@
         xmlns:behaviors="clr-namespace:DXVcs2Git.UI.Behaviors"
         mc:Ignorable="d"
         ShowActivated="True"
-        Title="{Binding Version}" Height="800" Width="1024"  ShowIcon="True"
-        UseLayoutRounding="True"                    
+        Title="{Binding Version}" 
+        Height="800" Width="1024"  ShowIcon="True"
+        UseLayoutRounding="True"                  
+        MinHeight="600" MinWidth="800"
         Icon="Icon.ico">
     <dxr:DXRibbonWindow.DataContext>
         <viewModels:RootViewModel/>
