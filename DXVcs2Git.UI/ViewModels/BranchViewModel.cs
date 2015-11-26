@@ -54,7 +54,7 @@ namespace DXVcs2Git.UI.ViewModels {
             Repository.ForceBuild();
         }
         public void Refresh() {
-            FarmStatus = FarmIntegrator.GetTaskStatus(Repository.RepoConfig?.FarmSyncTaskName);
+            RefreshFarm();
         }
         public User GetUser(string name) {
             return this.gitLabWrapper.GetUsers().FirstOrDefault(x => x.Name == name);
@@ -71,6 +71,9 @@ namespace DXVcs2Git.UI.ViewModels {
             var mergeRequest = this.gitLabWrapper.UpdateMergeRequestTitleAndDescription(MergeRequest.MergeRequest, title, description);
             mergeRequest = this.gitLabWrapper.UpdateMergeRequestAssignee(mergeRequest, GetUser(assignee));
             MergeRequest = new MergeRequestViewModel(this.gitLabWrapper, mergeRequest);
+        }
+        public void RefreshFarm() {
+            FarmStatus = FarmIntegrator.GetTaskStatus(Repository.RepoConfig?.FarmSyncTaskName);
         }
     }
 }

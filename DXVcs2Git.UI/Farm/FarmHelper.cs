@@ -56,6 +56,7 @@ namespace DXVcs2Git.UI.Farm {
         Preparing,
         Pending,
         Building,
+        Checking
     }
 
     public class FarmStatus {
@@ -83,6 +84,7 @@ namespace DXVcs2Git.UI.Farm {
 
         public IntegrationStatus BuildStatus { get; set; }
         public ActivityStatus ActivityStatus { get; set; }
+        public string ActivityMessage { get; set; }
     }
     public class FarmHelper {
         public event EventHandler Refreshed;
@@ -97,12 +99,16 @@ namespace DXVcs2Git.UI.Farm {
             }
         }
         FarmStatus CalcTaskStatus(string task) {
-            var farmStatus = new FarmStatus() { ActivityStatus = ActivityStatus.Unknown, BuildStatus = IntegrationStatus.Unknown };
+            var farmStatus = new FarmStatus() {
+                ActivityStatus = ActivityStatus.Unknown,
+                BuildStatus = IntegrationStatus.Unknown,
+            };
             ProjectTagI tag = FindTask(task);
             if (tag == null)
                 return farmStatus;
             farmStatus.BuildStatus = tag.buildstatus;
             farmStatus.ActivityStatus = CalcActivityStatus(tag);
+            farmStatus.ActivityMessage = tag.activity;
             return farmStatus;
         }
         ActivityStatus CalcActivityStatus(ProjectTagI tag) {
@@ -115,6 +121,8 @@ namespace DXVcs2Git.UI.Farm {
                 return ActivityStatus.Preparing;
             if (activity.StartsWith("Building"))
                 return ActivityStatus.Building;
+            if (activity.StartsWith("Checking"))
+                return ActivityStatus.Checking;
             return ActivityStatus.Unknown;
         }
         public void ForceBuild(string task) {

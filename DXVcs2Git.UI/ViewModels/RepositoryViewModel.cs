@@ -62,7 +62,7 @@ namespace DXVcs2Git.UI.ViewModels {
         public void Refresh() {
             if (Branches == null)
                 return;
-            FarmStatus = FarmIntegrator.GetTaskStatus(RepoConfig?.FarmTaskName);
+            RefreshFarm();
             Branches.ForEach(x => x.Refresh());
         }
         public void ForceBuild() {
@@ -70,6 +70,14 @@ namespace DXVcs2Git.UI.ViewModels {
         }
         public MergeRequest CreateMergeRequest(string title, string description, string user, string sourceBranch, string targetBranch) {
             return GitLabWrapper.CreateMergeRequest(Project, title, description, user, sourceBranch, targetBranch);
+        }
+        public void RefreshFarm() {
+            if (Branches == null) {
+                FarmStatus = null;
+                return;
+            }
+            FarmStatus = FarmIntegrator.GetTaskStatus(RepoConfig?.FarmTaskName);
+            Branches.ForEach(x => x.RefreshFarm());
         }
     }
 }
