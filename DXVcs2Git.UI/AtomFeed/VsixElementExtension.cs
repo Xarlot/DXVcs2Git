@@ -11,9 +11,19 @@ namespace DXVcs2Git.UI.AtomFeed {
         public const string ExtensionNamespace = "http://schemas.microsoft.com/developer/vsx-syndication-schema/2010";
         public const string ExtensionName = "Vsix";
 
+        string versionString;
+
         [DataMember( IsRequired = true, Name = "Id")]
         public string Id { get; set; }
         [DataMember(IsRequired = true, Name = "Version")]
-        public string Version { get; set; }
+        public string VersionString {
+            get { return versionString; }
+            set {
+                versionString = value;
+                Version = Version.Parse(versionString);
+            }
+        }
+        public Version Version { get; set; }
+
     }
 }

@@ -12,6 +12,8 @@ namespace DXVcs2Git.UI.AtomFeed {
         public FeedWorker() {
 
         }
+        public Uri NewVersionUri { get; set; }
+
         public void Initialize() {
             Uri galleryUri = new Uri("http://idetester-sv.corp.devexpress.com/atomfeed.html");
             var downloader = new WebClient();
@@ -33,6 +35,13 @@ namespace DXVcs2Git.UI.AtomFeed {
 
         void ProcessItem(SyndicationItem item) {
             var vsixExtension = item.ElementExtensions.ReadElementExtensions<Vsix>(Vsix.ExtensionName, Vsix.ExtensionNamespace).First();
+            if (vsixExtension.Version > DXVcs2Git.Core.VersionInfo.Version) {
+                OnNewVersion((item.Content as UrlSyndicationContent).Url);
+            }
+        }
+
+        void OnNewVersion(Uri url) {
+            NewVersionUri = url;
         }
 
         public void Dispose() {
