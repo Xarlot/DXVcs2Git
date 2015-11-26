@@ -21,7 +21,10 @@ namespace DXVcs2Git.UI.ViewModels {
         }
 
         public EditRepositoriesViewModel() {
-            UpdateCommand = DelegateCommandFactory.Create(Update, CanUpdate);
+            UpdateCommand = DelegateCommandFactory.Create(PerformUpdate, CanUpdate);
+        }
+        void PerformUpdate() {
+            Parameter.Update();
         }
         protected override void OnParameterChanged(object parameter) {
             base.OnParameterChanged(parameter);
