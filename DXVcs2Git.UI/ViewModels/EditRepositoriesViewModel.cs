@@ -9,7 +9,7 @@ namespace DXVcs2Git.UI.ViewModels {
         new RepositoriesViewModel Parameter { get { return (RepositoriesViewModel)base.Parameter; } }
         public RepositoryViewModel SelectedRepository {
             get { return GetProperty(() => SelectedRepository); }
-            set { SetProperty(() => SelectedRepository, value, SelectedRepositoryChanged); }
+            set { SetProperty(() => SelectedRepository, value); }
         }
         public IEnumerable<RepositoryViewModel> Repositories {
             get { return GetProperty(() => Repositories); }
@@ -21,16 +21,19 @@ namespace DXVcs2Git.UI.ViewModels {
         }
 
         public EditRepositoriesViewModel() {
-            UpdateCommand = DelegateCommandFactory.Create(Update, CanUpdate);
+            UpdateCommand = DelegateCommandFactory.Create(PerformUpdate, CanUpdate);
+        }
+        void PerformUpdate() {
+            Parameter.Update();
         }
         protected override void OnParameterChanged(object parameter) {
             base.OnParameterChanged(parameter);
-            Update();
+            Refresh();
         }
         bool CanUpdate() {
             return IsInitialized;
         }
-        public void Update() {
+        public void Refresh() {
             if (Parameter == null) {
                 Repositories = null;
                 SelectedRepository = null;
@@ -41,8 +44,8 @@ namespace DXVcs2Git.UI.ViewModels {
             SelectedRepository = Parameter.SelectedRepository;
             IsInitialized = Parameter.IsInitialized;
         }
-        void SelectedRepositoryChanged() {
-            Parameter.SelectedRepository = SelectedRepository;
+        public void ForceParentRefresh() {
+            Parameter.Refresh();
         }
     }
 }
