@@ -199,6 +199,7 @@
     <Compile Include="Farm\ProjectI.cs" />
     <Compile Include="Farm\SmartProjectActivity.cs" />
     <Compile Include="NativeMethods\NativeMethods.cs" />
+    <Compile Include="Services\FolderBrowserCustomDialogService.cs" />
     <Compile Include="ViewModels\UriDownloaderViewModel.cs" />
     <Compile Include="ViewModels\BranchViewModel.cs" />
     <Compile Include="ViewModels\EditBranchChangesViewModel.cs" />

@@ -7,6 +7,8 @@
              xmlns:dxg="http://schemas.devexpress.com/winfx/2008/xaml/grid"
              xmlns:dxlc="http://schemas.devexpress.com/winfx/2008/xaml/layoutcontrol"
              xmlns:dxe="http://schemas.devexpress.com/winfx/2008/xaml/editors"
+             xmlns:dxmvvm="http://schemas.devexpress.com/winfx/2008/xaml/mvvm"
+             xmlns:services="clr-namespace:DXVcs2Git.UI.Services"
              mc:Ignorable="d" 
              d:DesignHeight="300" d:DesignWidth="300">
     <Grid>
@@ -20,10 +22,28 @@
                             </dxg:GridColumn.EditSettings>
                             </dxg:GridColumn>
                         <dxg:GridColumn FieldName="Name"/>
-                        <dxg:GridColumn FieldName="LocalPath"/>
+                        <dxg:GridColumn FieldName="LocalPath">
+                            <dxg:GridColumn.CellTemplate>
+                                <DataTemplate>
+                                    <dxe:ButtonEdit IsTextEditable="True" x:Name="PART_Editor" >
+                                        <dxmvvm:Interaction.Behaviors>
+                                            <dxe:CustomDialogServiceEditorBehavior>
+                                                <dxe:CustomDialogServiceEditorBehavior.DialogServiceTemplate>
+                                                    <DataTemplate>
+                                                        <ContentControl>
+                                                            <services:FolderBrowserCustomDialogService/>
+                                                        </ContentControl>
+                                                    </DataTemplate>
+                                                </dxe:CustomDialogServiceEditorBehavior.DialogServiceTemplate>
+                                            </dxe:CustomDialogServiceEditorBehavior>
+                                        </dxmvvm:Interaction.Behaviors>
+                                    </dxe:ButtonEdit>
+                                </DataTemplate>
+                            </dxg:GridColumn.CellTemplate>
+                        </dxg:GridColumn>
                     </dxg:GridControl.Columns>
                     <dxg:GridControl.View>
-                        <dxg:TableView NewItemRowPosition="Top" AutoWidth="True"/>
+                        <dxg:TableView NewItemRowPosition="Top" AutoWidth="True" EditorButtonShowMode="ShowAlways"/>
                     </dxg:GridControl.View>
                 </dxg:GridControl>
             </dx:DXTabItem>
