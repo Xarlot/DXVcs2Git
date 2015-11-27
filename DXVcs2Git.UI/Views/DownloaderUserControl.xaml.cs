@@ -12,15 +12,13 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
-using DevExpress.Xpf.Ribbon;
-using DXVcs2Git.UI.AtomFeed;
 
-namespace DXVcs2Git.UI {
+namespace DXVcs2Git.UI.Views {
     /// <summary>
-    /// Interaction logic for MainWindow.xaml
+    /// Interaction logic for DownloaderUserControl.xaml
     /// </summary>
-    public partial class MainWindow : DXRibbonWindow {
-        public MainWindow() {
+    public partial class DownloaderUserControl : UserControl {
+        public DownloaderUserControl() {
             InitializeComponent();
         }
     }
