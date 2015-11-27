@@ -19,10 +19,32 @@
         UseLayoutRounding="True"                  
         MinHeight="600" MinWidth="800"
         Icon="Icon.ico">
+    <dxr:DXRibbonWindow.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="Resources\Resources.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </dxr:DXRibbonWindow.Resources>
     <dxr:DXRibbonWindow.DataContext>
         <viewModels:RootViewModel/>
     </dxr:DXRibbonWindow.DataContext>
     <dxmvvm:Interaction.Behaviors>
+        <dx:DialogService x:Name="downloaderDialogService">
+            <dx:DialogService.DialogStyle>
+                <Style TargetType="{x:Type dx:DXDialogWindow}">
+                    <Style.Setters>
+                        <Setter Property="UseLayoutRounding" Value="True"/>
+                        <Setter Property="SizeToContent" Value="WidthAndHeight"/>
+                    </Style.Setters>
+                </Style>
+            </dx:DialogService.DialogStyle>
+            <dx:DialogService.ViewTemplate>
+                <DataTemplate>
+                    <views:DownloaderUserControl/>
+                </DataTemplate>
+            </dx:DialogService.ViewTemplate>
+        </dx:DialogService>
         <dx:DialogService x:Name="settingsDialogService">
             <dx:DialogService.DialogStyle>
                 <Style TargetType="{x:Type dx:DXDialogWindow}">
@@ -41,6 +63,11 @@
         </dx:DialogService>
         <dx:DXMessageBoxService x:Name="MessageBoxService"/>
         <behaviors:TaskBarIconBehavior/>
+        <behaviors:RibbonWindowButtonsInjectionBehavior Content="{Binding}">
+            <DataTemplate>
+                <Button Command="{Binding DownloadNewVersionCommand}" Style="{StaticResource windowButtonStyle}"/>
+            </DataTemplate>
+        </behaviors:RibbonWindowButtonsInjectionBehavior>
     </dxmvvm:Interaction.Behaviors>
     <Grid x:Name="LayoutRoot">
         <Grid.RowDefinitions>

@@ -153,6 +153,8 @@
     <Reference Include="System.Data" />
     <Reference Include="System.Drawing" />
     <Reference Include="System.Dynamic" />
+    <Reference Include="System.Runtime.Serialization" />
+    <Reference Include="System.ServiceModel" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Windows.Presentation" />
     <Reference Include="System.Xml" />
@@ -185,6 +187,9 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="AtomFeed\FeedWorker.cs" />
+    <Compile Include="AtomFeed\VsixElementExtension.cs" />
+    <Compile Include="Behaviors\RibbonWindowButtonsInjectionBehavior.cs" />
     <Compile Include="Behaviors\TaskBarIconBehavior.cs" />
     <Compile Include="NativeMethods\EntryPoint.cs" />
     <Compile Include="Farm\BuildNotificationViewInfo.cs" />
@@ -194,6 +199,7 @@
     <Compile Include="Farm\ProjectI.cs" />
     <Compile Include="Farm\SmartProjectActivity.cs" />
     <Compile Include="NativeMethods\NativeMethods.cs" />
+    <Compile Include="ViewModels\UriDownloaderViewModel.cs" />
     <Compile Include="ViewModels\BranchViewModel.cs" />
     <Compile Include="ViewModels\Config.cs" />
     <Compile Include="ViewModels\ConfigSerializer.cs" />
@@ -219,6 +225,9 @@
       <DependentUpon>BranchDescriptionControl.xaml</DependentUpon>
     </Compile>
     <Compile Include="Views\DiffLineBackgroundRenderer.cs" />
+    <Compile Include="Views\DownloaderUserControl.xaml.cs">
+      <DependentUpon>DownloaderUserControl.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Views\EditConfigControl.xaml.cs">
       <DependentUpon>EditConfigControl.xaml</DependentUpon>
     </Compile>
@@ -243,11 +252,19 @@
       <DependentUpon>MainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
+    <Page Include="Resources\Resources.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="Views\BranchChangesControl.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Views\BranchDescriptionControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\DownloaderUserControl.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

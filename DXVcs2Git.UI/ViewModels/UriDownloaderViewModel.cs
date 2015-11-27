@@ -1,0 +1,150 @@
+﻿using DevExpress.Mvvm;
+using DevExpress.Mvvm.Native;
+using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO;
+using System.Linq;
+using System.Net;
+using System.Reflection;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows.Input;
+using System.Xml;
+using System.Xml.Linq;
+
+namespace DXVcs2Git.UI.ViewModels {
+    public enum UpdaterStatus {
+        Initializing = 0,
+        Downloading = 1,
+        Installing = 2,
+        Restarting = 3,
+        Error = 4,
+    }
+    public class UriDownloaderViewModel : ViewModelBase {
+        readonly Uri uri;
+        readonly Version version;
+        readonly WebClient client;
+        Process vsixInstallerProcess;
+        UpdaterStatus status;
+        int progress;
+        int overallProgress;
+        public int OverallProgress {
+            get { return overallProgress; }
+            private set { SetProperty(ref overallProgress, value, () => OverallProgress); }
+        }
+        public int Progress {
+            get { return progress; }
+            private set { SetProperty(ref progress, value, () => Progress); }
+        }
+        public UpdaterStatus Status {
+            get { return status; }
+            private set { SetProperty(ref status, value, () => Status, OnStatusChanged); }
+        }
+        public UICommand OKCommand { get; private set; }
+        public UICommand CancelCommand { get; private set; }
+
+        void OnStatusChanged() {
+            OverallProgress = (int)Status;
+            if (Status == UpdaterStatus.Installing)
+                BeginInstall();
+        }        
+        public ICommand StartDownloadCommand { get; private set; }
+
+        public UriDownloaderViewModel(Uri uri, Version version) {
+            this.uri = uri;
+            this.version = version;
+            Status = UpdaterStatus.Initializing;
+            StartDownloadCommand = DelegateCommandFactory.Create(StartDownload);
+            OKCommand = new UICommand(new object(), "OK", DelegateCommandFactory.Create(new Action(ExecuteOk), new Func<bool>(CanExecuteOk)), true, false);
+            CancelCommand = new UICommand(new object(), "Cancel", DelegateCommandFactory.Create(new Action(Cancel), new Func<bool>(CanCancel)), false, true);
+            client = new WebClient();
+            client.DownloadProgressChanged += OnDownloadProgressChanged;
+            client.DownloadFileCompleted += OnDownloadFileCompleted;
+        }
+
+        bool CanCancel() { return Status == UpdaterStatus.Downloading; }
+        void Cancel() { client.CancelAsync(); }
+        bool CanExecuteOk() { return Status == UpdaterStatus.Restarting || Status == UpdaterStatus.Error; }
+        void ExecuteOk() { }        
+
+        void StartDownload() {            
+            try {
+                client.DownloadFileAsync(uri, "installer_DXVcs2Git.GitTools.vsix");
+            } catch {
+                Status = UpdaterStatus.Error;
+            }
+        }
+
+        void OnDownloadFileCompleted(object sender, System.ComponentModel.AsyncCompletedEventArgs e) {
+            if (e.Error!=null)
+                Status = UpdaterStatus.Error;
+            else
+                Status = UpdaterStatus.Installing;
+        }
+        void OnDownloadProgressChanged(object sender, DownloadProgressChangedEventArgs e) {
+            Status = UpdaterStatus.Downloading;
+            Progress = e.ProgressPercentage;
+        }
+        void BeginInstall() {
+            var vsToolspath = Environment.ExpandEnvironmentVariables("%VS140COMNTOOLS%");
+            var binpath = Path.GetFullPath(Path.Combine(vsToolspath, @"..\IDE\VSIXInstaller.exe"));
+            var vsixpath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "installer_DXVcs2Git.GitTools.vsix");
+            vsixInstallerProcess = new Process();
+            vsixInstallerProcess.StartInfo = new ProcessStartInfo(binpath, String.Format("{0} \"{1}\"", "/q", vsixpath));
+            vsixInstallerProcess.Exited += VsixInstalCompleted;
+            vsixInstallerProcess.EnableRaisingEvents = true;
+            vsixInstallerProcess.Start();            
+        }
+
+        void VsixInstalCompleted(object sender, EventArgs e) {
+            InstallCompleted();
+        }
+
+        void InstallCompleted() {
+            vsixInstallerProcess.Exited -= VsixInstalCompleted;
+            var hasError = vsixInstallerProcess.ExitCode != 0;
+            vsixInstallerProcess.Dispose();
+            if (hasError) {
+                Status = UpdaterStatus.Error;
+                return;
+            }
+            FindAndInstallExtension();
+        }
+
+        void FindAndInstallExtension() {
+            var vsExtensionspath = Path.GetFullPath(Path.Combine(Environment.ExpandEnvironmentVariables("%VS140COMNTOOLS%"), @"..\IDE\Extensions\"));
+            var userExtensionspath = Path.GetFullPath(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), @"Microsoft\VisualStudio\14.0\Extensions\"));
+            string path;
+            if(!FindExtensionFolder(userExtensionspath, out path) && !FindExtensionFolder(vsExtensionspath, out path)) {
+                Status = UpdaterStatus.Error;
+                return;
+            }
+            var resultfilename = Path.Combine(path, "DXVcs2Git.UI.exe");
+            if (!File.Exists(resultfilename)) {
+                Status = UpdaterStatus.Error;
+                return;
+            }
+            var rKey = Microsoft.Win32.Registry.CurrentUser.CreateSubKey(@"Software\Xarlot\DXVcs2Git");
+            rKey.SetValue("InstallPath", path);
+            rKey.Close();
+        }
+
+        bool FindExtensionFolder(string rootpath, out string path) {
+            path = null;
+            foreach(var file in Directory.EnumerateFiles(rootpath, "extension.vsixmanifest", SearchOption.AllDirectories)) {
+                var reader = XDocument.Load(file);
+                var identity = reader.Descendants(XName.Get("Identity", "http://schemas.microsoft.com/developer/vsx-schema/2011")).First();
+                var id = identity.Attribute(XName.Get("Id")).Value;
+                if (id != AtomFeed.FeedWorker.VSIXId)
+                    continue;
+                var version = Version.Parse(identity.Attribute(XName.Get("Version")).Value);
+                if (version == this.version) {
+                    path = Path.GetDirectoryName(file);
+                    return true;
+                }
+            }
+            return false;
+        }
+    }
+}
