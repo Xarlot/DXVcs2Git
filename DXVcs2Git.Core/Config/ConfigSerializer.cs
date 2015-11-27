@@ -1,9 +1,8 @@
 ﻿using System;
 using System.IO;
 using System.Reflection;
-using DXVcs2Git.Core;
 
-namespace DXVcs2Git.UI.ViewModels {
+namespace DXVcs2Git.Core.Configuration {
     public static class ConfigSerializer {
         public static readonly string AppPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
         static readonly string SettingsPath = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData) + "\\GitTools\\";

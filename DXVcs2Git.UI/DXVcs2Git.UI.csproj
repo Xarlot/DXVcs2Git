@@ -201,8 +201,6 @@
     <Compile Include="NativeMethods\NativeMethods.cs" />
     <Compile Include="ViewModels\UriDownloaderViewModel.cs" />
     <Compile Include="ViewModels\BranchViewModel.cs" />
-    <Compile Include="ViewModels\Config.cs" />
-    <Compile Include="ViewModels\ConfigSerializer.cs" />
     <Compile Include="ViewModels\EditBranchChangesViewModel.cs" />
     <Compile Include="ViewModels\EditBranchDescriptionViewModel.cs" />
     <Compile Include="ViewModels\EditConfigViewModel.cs" />
@@ -212,7 +210,6 @@
     <Compile Include="ViewModels\EditSelectedRepositoryViewModel.cs" />
     <Compile Include="ViewModels\Messenger.cs" />
     <Compile Include="ViewModels\RepositoryViewModel.cs" />
-    <Compile Include="ViewModels\TrackRepository.cs" />
     <Compile Include="ViewModels\UserViewModel.cs" />
     <Compile Include="Behaviors\AvalonEditTextToDocumentBehavior.cs" />
     <Compile Include="ViewModels\MergeRequestFileDataViewModel.cs" />

@@ -7,6 +7,7 @@ using DevExpress.Mvvm.POCO;
 using DXVcs2Git.Core.Git;
 using DXVcs2Git.Git;
 using NGitLab.Models;
+using DXVcs2Git.Core.Configuration;
 
 namespace DXVcs2Git.UI.ViewModels {
     public class RepositoriesViewModel : ViewModelBase {
