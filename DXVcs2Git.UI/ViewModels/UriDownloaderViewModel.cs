@@ -1,5 +1,6 @@
 ﻿using DevExpress.Mvvm;
 using DevExpress.Mvvm.Native;
+using DXVcs2Git.Core.Configuration;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -125,9 +126,9 @@ namespace DXVcs2Git.UI.ViewModels {
                 Status = UpdaterStatus.Error;
                 return;
             }
-            var rKey = Microsoft.Win32.Registry.CurrentUser.CreateSubKey(@"Software\Xarlot\DXVcs2Git");
-            rKey.SetValue("InstallPath", path);
-            rKey.Close();
+            var config = ConfigSerializer.GetConfig();
+            config.InstallPath = resultfilename;
+            ConfigSerializer.SaveConfig(config);            
         }
 
         bool FindExtensionFolder(string rootpath, out string path) {

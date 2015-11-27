@@ -1,10 +1,15 @@
-﻿using System;
+﻿using DXVcs2Git.Core;
+using DXVcs2Git.Core.Configuration;
+using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net;
+using System.Reflection;
 using System.ServiceModel.Syndication;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows;
 using System.Xml;
 
 namespace DXVcs2Git.UI.AtomFeed {
@@ -34,8 +39,12 @@ namespace DXVcs2Git.UI.AtomFeed {
 
         static void ProcessItem(SyndicationItem item) {
             var vsixExtension = item.ElementExtensions.ReadElementExtensions<Vsix>(Vsix.ExtensionName, Vsix.ExtensionNamespace).First();
-            if (vsixExtension.Version > DXVcs2Git.Core.VersionInfo.Version) {
+            if (vsixExtension.Version > VersionInfo.Version) {
                 OnNewVersion((item.Content as UrlSyndicationContent).Url, vsixExtension.Version);
+            } else if(vsixExtension.Version == VersionInfo.Version) {
+                var config = ConfigSerializer.GetConfig();
+                config.InstallPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+                ConfigSerializer.SaveConfig(config);
             }
         }
 
