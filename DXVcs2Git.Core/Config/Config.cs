@@ -1,4 +1,4 @@
-﻿namespace DXVcs2Git.UI.ViewModels {
+﻿namespace DXVcs2Git.Core.Configuration {
     public class Config {
         public const string GitServer = @"http:\\litvinov-lnx";
         public const string ConfigFileName = "ui.config";

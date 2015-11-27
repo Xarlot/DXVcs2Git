@@ -2,6 +2,7 @@
 using System.Linq;
 using DevExpress.Mvvm;
 using DevExpress.Mvvm.Native;
+using DXVcs2Git.Core.Configuration;
 
 namespace DXVcs2Git.UI.ViewModels {
     public class EditConfigViewModel : ViewModelBase {
