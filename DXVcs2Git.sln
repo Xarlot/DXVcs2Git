@@ -26,6 +26,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DXVcs2Git.GitTools", "DXVcs
 		{7CE585B7-1F19-442D-B1A4-0C1AD855A55C} = {7CE585B7-1F19-442D-B1A4-0C1AD855A55C}
 	EndProjectSection
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DXVcs2Git.Launcher", "DXVcs2Git.Launcher\DXVcs2Git.Launcher.csproj", "{C6E2B9F8-3FBF-4135-BE87-D83D782FE418}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -56,6 +58,10 @@ Global
 		{7D33BFB2-2CCF-4922-BF02-CC48D3873BA9}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7D33BFB2-2CCF-4922-BF02-CC48D3873BA9}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{7D33BFB2-2CCF-4922-BF02-CC48D3873BA9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C6E2B9F8-3FBF-4135-BE87-D83D782FE418}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C6E2B9F8-3FBF-4135-BE87-D83D782FE418}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C6E2B9F8-3FBF-4135-BE87-D83D782FE418}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C6E2B9F8-3FBF-4135-BE87-D83D782FE418}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
