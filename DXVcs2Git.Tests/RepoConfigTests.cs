@@ -13,12 +13,13 @@ namespace DXVcs2Git.Tests {
     public class RepoConfigTests {
         [Test, Explicit]
         public void GenerateRepo152Config() {
-            GenerateRepoConfig("2015.2", "XPF DXVcs2Git sync task v15.2");
+            GenerateRepoConfig("2015.2", "TestBuild.v15.2", "XPF DXVcs2Git sync task v15.2");
         }
-        void GenerateRepoConfig(string branch, string taskName) {
+        void GenerateRepoConfig(string branch, string taskName, string watchTaskName) {
             GitRepoConfig config = new GitRepoConfig() {
-                Branch = branch,
-                FarmTaskName = taskName,
+                Name = branch,
+                FarmTaskName = watchTaskName,
+                FarmSyncTaskName = taskName,
             };
             SharpSerializerXmlSettings settings = new SharpSerializerXmlSettings();
             settings.IncludeAssemblyVersionInTypeName = false;
