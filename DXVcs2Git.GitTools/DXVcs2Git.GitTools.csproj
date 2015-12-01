@@ -323,6 +323,10 @@
       <Project>{7ce585b7-1f19-442d-b1a4-0c1ad855a55c}</Project>
       <Name>DXVcs2Git.Core</Name>
     </ProjectReference>
+    <ProjectReference Include="..\DXVcs2Git.Launcher\DXVcs2Git.Launcher.csproj">
+      <Project>{c6e2b9f8-3fbf-4135-be87-d83d782fe418}</Project>
+      <Name>DXVcs2Git.Launcher</Name>
+    </ProjectReference>
     <ProjectReference Include="..\DXVcs2Git.UI\DXVcs2Git.UI.csproj">
       <Project>{3b9adc57-b49d-4de7-a532-dbeb0ca78c10}</Project>
       <Name>DXVcs2Git.UI</Name>

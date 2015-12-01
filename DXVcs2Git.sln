@@ -28,6 +28,11 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DXVcs2Git.GitTools", "DXVcs
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DXVcs2Git.Launcher", "DXVcs2Git.Launcher\DXVcs2Git.Launcher.csproj", "{C6E2B9F8-3FBF-4135-BE87-D83D782FE418}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{93765C40-3D82-4332-89CE-53DC5AC6E78A}"
+	ProjectSection(SolutionItems) = preProject
+		PostUpdate.bat = PostUpdate.bat
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU

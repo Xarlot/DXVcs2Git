@@ -81,6 +81,7 @@
     <Compile Include="CommentWrapper.cs" />
     <Compile Include="Config\Config.cs" />
     <Compile Include="Config\ConfigSerializer.cs" />
+    <Compile Include="Config\LauncherUpdater.cs" />
     <Compile Include="Config\TrackRepository.cs" />
     <Compile Include="DataEncryptor.cs" />
     <Compile Include="DirectoryHelper.cs" />

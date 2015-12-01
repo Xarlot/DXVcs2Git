@@ -5,7 +5,7 @@ using System.Reflection;
 namespace DXVcs2Git.Core.Configuration {
     public static class ConfigSerializer {
         public static readonly string AppPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-        static readonly string SettingsPath = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData) + "\\GitTools\\";
+        public static readonly string SettingsPath = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData) + "\\GitTools\\";
         static readonly string SettingsFile = "ui_settings.config";
         static string SettingsFilePath {
             get { return SettingsPath + SettingsFile; }

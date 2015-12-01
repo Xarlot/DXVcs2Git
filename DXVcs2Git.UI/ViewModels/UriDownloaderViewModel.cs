@@ -42,7 +42,7 @@ namespace DXVcs2Git.UI.ViewModels {
             get { return status; }
             private set { SetProperty(ref status, value, () => Status, OnStatusChanged); }
         }
-        public UICommand OKCommand { get; private set; }
+        public UICommand RestartCommand { get; private set; }
         public UICommand CancelCommand { get; private set; }
 
         void OnStatusChanged() {
@@ -57,17 +57,17 @@ namespace DXVcs2Git.UI.ViewModels {
             this.version = version;
             Status = UpdaterStatus.Initializing;
             StartDownloadCommand = DelegateCommandFactory.Create(StartDownload);
-            OKCommand = new UICommand(new object(), "OK", DelegateCommandFactory.Create(new Action(ExecuteOk), new Func<bool>(CanExecuteOk)), true, false);
+            RestartCommand = new UICommand(new object(), "Restart", DelegateCommandFactory.Create(new Action(Restart), new Func<bool>(CanRestart)), true, false);
             CancelCommand = new UICommand(new object(), "Cancel", DelegateCommandFactory.Create(new Action(Cancel), new Func<bool>(CanCancel)), false, true);
             client = new WebClient();
             client.DownloadProgressChanged += OnDownloadProgressChanged;
             client.DownloadFileCompleted += OnDownloadFileCompleted;
         }
 
-        bool CanCancel() { return Status == UpdaterStatus.Downloading; }
-        void Cancel() { client.CancelAsync(); }
-        bool CanExecuteOk() { return Status == UpdaterStatus.Restarting || Status == UpdaterStatus.Error; }
-        void ExecuteOk() { }        
+        bool CanCancel() { return Status == UpdaterStatus.Downloading || Status == UpdaterStatus.Error; }
+        void Cancel() { if (Status == UpdaterStatus.Downloading) client.CancelAsync(); }
+        bool CanRestart() { return Status == UpdaterStatus.Restarting; }
+        void Restart() { LauncherHelper.StartLauncher(-1); }  
 
         void StartDownload() {            
             try {
@@ -128,7 +128,11 @@ namespace DXVcs2Git.UI.ViewModels {
             }
             var config = ConfigSerializer.GetConfig();
             config.InstallPath = resultfilename;
-            ConfigSerializer.SaveConfig(config);            
+            ConfigSerializer.SaveConfig(config);
+            if (LauncherHelper.UpdateLauncher(version: version))
+                Status = UpdaterStatus.Restarting;
+            else
+                Status = UpdaterStatus.Error;
         }
 
         bool FindExtensionFolder(string rootpath, out string path) {

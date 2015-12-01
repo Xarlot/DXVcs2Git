@@ -71,6 +71,7 @@ namespace DXVcs2Git.GitTools {
         /// </summary>
         protected override void Initialize() {
             base.Initialize();
+            Core.Configuration.LauncherHelper.UpdateLauncher(ConfigSerializer.AppPath);
             this.menuBuilder.GenerateDefault();
         }
         protected override object GetService(Type serviceType) {
@@ -80,6 +81,12 @@ namespace DXVcs2Git.GitTools {
         #endregion
 
         public void ShowMergeRequestUI() {
+            var config = DXVcs2Git.Core.Configuration.ConfigSerializer.GetConfig();
+            var launcher = Path.Combine(config.InstallPath, "DXVcs2Git.Launcher.exe");
+            if (File.Exists(launcher)) {
+                Process.Start(launcher);
+                return;
+            }  
             ProcessStartInfo info = new ProcessStartInfo("DXVcs2Git.UI.exe");
             info.WorkingDirectory = ConfigSerializer.AppPath;
             Process.Start(info);
