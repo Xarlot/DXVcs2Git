@@ -12,6 +12,9 @@
                         <Trigger Property="IsMouseOver" Value="True">
                             <Setter TargetName="image" Property="dxb:ImageColorizer.Color" Value="#FF007ACC"/>
                         </Trigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter Property="Visibility" Value="Collapsed"/>
+                        </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
             </Setter.Value>
