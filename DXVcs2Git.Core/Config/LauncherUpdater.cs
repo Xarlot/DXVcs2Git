@@ -31,12 +31,13 @@ namespace DXVcs2Git.Core.Configuration {
             } else {
                 config.InstallPath = path;
             }
-            if(!files.Select(x=> Path.Combine(path, x)).All(File.Exists))
+            if (!files.Select(x => Path.Combine(path, x)).All(File.Exists))
+                return false;
 
             foreach(var file in files) {
                 File.Copy(Path.Combine(path, file), Path.Combine(ConfigSerializer.SettingsPath, file), true);
             }
-            config.LastVersion = VersionInfo.Version.ToString();
+            config.LastVersion = version.ToString();
             ConfigSerializer.SaveConfig(config);
             return true;
         }
@@ -44,7 +45,7 @@ namespace DXVcs2Git.Core.Configuration {
             if (Process.GetProcessesByName(LauncherProcessName).Any())
                 return false;
             var launcherFullName = Path.Combine(ConfigSerializer.SettingsPath, LauncherFileName);
-            if (File.Exists(launcherFullName))
+            if (!File.Exists(launcherFullName))
                 return false;
             Process.Start(new ProcessStartInfo(launcherFullName, String.Format("-w {0}", waitInMilliseconds)));
             return true;
