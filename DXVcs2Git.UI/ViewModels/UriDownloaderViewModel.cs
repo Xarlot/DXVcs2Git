@@ -62,7 +62,7 @@ namespace DXVcs2Git.UI.ViewModels {
             CancelCommand = new UICommand(new object(), "Cancel", DelegateCommandFactory.Create(new Action(Cancel), new Func<bool>(CanCancel)), false, true);
             client = new WebClient();
             client.DownloadProgressChanged += OnDownloadProgressChanged;
-            client.DownloadFileCompleted += OnDownloadFileCompleted;
+            client.DownloadDataCompleted += DownloadDataCompleted;
         }
 
         bool CanCancel() { return Status == UpdaterStatus.Downloading || Status == UpdaterStatus.Error; }
@@ -71,21 +71,21 @@ namespace DXVcs2Git.UI.ViewModels {
         void Restart() { if(LauncherHelper.StartLauncher(-1)) Application.Current.Shutdown(); }  
 
         void StartDownload() {            
-            try {                
-                client.DownloadFileAsync(uri, "installer_DXVcs2Git.GitTools.vsix");
+            try {
+                client.DownloadDataAsync(uri);
             } catch {
                 Status = UpdaterStatus.Error;
             }
         }
 
-        void OnDownloadFileCompleted(object sender, System.ComponentModel.AsyncCompletedEventArgs e) {            
+        void DownloadDataCompleted(object sender, DownloadDataCompletedEventArgs e) {            
             if (e.Error!=null)
                 Status = UpdaterStatus.Error;
             else {
                 var targetPath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "installer_DXVcs2Git.GitTools.vsix");
                 if (File.Exists(targetPath))
                     File.Delete(targetPath);
-                File.Move("installer_DXVcs2Git.GitTools.vsix", targetPath);
+                File.WriteAllBytes(targetPath, e.Result);
                 Status = UpdaterStatus.Installing;
             }                
         }
@@ -144,7 +144,9 @@ namespace DXVcs2Git.UI.ViewModels {
             path = null;
             foreach(var file in Directory.EnumerateFiles(rootpath, "extension.vsixmanifest", SearchOption.AllDirectories)) {
                 var reader = XDocument.Load(file);
-                var identity = reader.Descendants(XName.Get("Identity", "http://schemas.microsoft.com/developer/vsx-schema/2011")).First();
+                var identity = reader.Descendants(XName.Get("Identity", "http://schemas.microsoft.com/developer/vsx-schema/2011")).FirstOrDefault();
+                if (identity == null)
+                    continue;
                 var id = identity.Attribute(XName.Get("Id")).Value;
                 if (id != AtomFeed.FeedWorker.VSIXId)
                     continue;
