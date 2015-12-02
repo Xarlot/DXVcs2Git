@@ -57,8 +57,11 @@ namespace DXVcs2Git.UI.Behaviors {
         }
 
         IntPtr OnHwndSourceHook(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled) {
-            if (msg == NativeMethods.NativeMethods.WM_SHOWGITTOOLS)
+            if (msg == NativeMethods.NativeMethods.WM_SHOWGITTOOLS) {
                 AssociatedObject.Show();
+                AssociatedObject.WindowState = WindowState.Normal;
+                AssociatedObject.Activate();                
+            }                
             return IntPtr.Zero;
         }
 
