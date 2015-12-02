@@ -121,13 +121,12 @@ namespace DXVcs2Git.UI.ViewModels {
                 Status = UpdaterStatus.Error;
                 return;
             }
-            var resultfilename = Path.Combine(path, "DXVcs2Git.UI.exe");
-            if (!File.Exists(resultfilename)) {
+            if (!Directory.Exists(path)) {
                 Status = UpdaterStatus.Error;
                 return;
             }
             var config = ConfigSerializer.GetConfig();
-            config.InstallPath = resultfilename;
+            config.InstallPath = path;
             ConfigSerializer.SaveConfig(config);
             if (LauncherHelper.UpdateLauncher(version: version))
                 Status = UpdaterStatus.Restarting;

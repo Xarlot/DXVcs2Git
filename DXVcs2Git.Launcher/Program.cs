@@ -15,7 +15,7 @@ namespace DXVcs2Git.Launcher {
         UIFileNotExist = 2
     }
     class Program {
-        static int Main(string[] args) {
+        static int Main(string[] args) {            
             const string UIProcessName = "DXVcs2Git.UI";
             const string UIExecutableName = UIProcessName + ".exe";
             var options = Parser.Default.ParseArguments<CommandLineOptions>(args);
