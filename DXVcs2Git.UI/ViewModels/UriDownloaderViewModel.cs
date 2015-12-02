@@ -17,11 +17,11 @@ using System.Xml.Linq;
 
 namespace DXVcs2Git.UI.ViewModels {
     public enum UpdaterStatus {
-        Initializing = 0,
+        Error = -1,
+        Initializing = 0,        
         Downloading = 1,
         Installing = 2,
-        Restarting = 3,
-        Error = 4,
+        Restarting = 3,        
     }
     public class UriDownloaderViewModel : ViewModelBase {
         readonly Uri uri;
