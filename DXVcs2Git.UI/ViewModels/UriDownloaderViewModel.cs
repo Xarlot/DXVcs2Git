@@ -10,6 +10,7 @@ using System.Net;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows;
 using System.Windows.Input;
 using System.Xml;
 using System.Xml.Linq;
@@ -67,21 +68,26 @@ namespace DXVcs2Git.UI.ViewModels {
         bool CanCancel() { return Status == UpdaterStatus.Downloading || Status == UpdaterStatus.Error; }
         void Cancel() { if (Status == UpdaterStatus.Downloading) client.CancelAsync(); }
         bool CanRestart() { return Status == UpdaterStatus.Restarting; }
-        void Restart() { LauncherHelper.StartLauncher(-1); }  
+        void Restart() { if(LauncherHelper.StartLauncher(-1)) Application.Current.Shutdown(); }  
 
         void StartDownload() {            
-            try {
+            try {                
                 client.DownloadFileAsync(uri, "installer_DXVcs2Git.GitTools.vsix");
             } catch {
                 Status = UpdaterStatus.Error;
             }
         }
 
-        void OnDownloadFileCompleted(object sender, System.ComponentModel.AsyncCompletedEventArgs e) {
+        void OnDownloadFileCompleted(object sender, System.ComponentModel.AsyncCompletedEventArgs e) {            
             if (e.Error!=null)
                 Status = UpdaterStatus.Error;
-            else
+            else {
+                var targetPath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "installer_DXVcs2Git.GitTools.vsix");
+                if (File.Exists(targetPath))
+                    File.Delete(targetPath);
+                File.Move("installer_DXVcs2Git.GitTools.vsix", targetPath);
                 Status = UpdaterStatus.Installing;
+            }                
         }
         void OnDownloadProgressChanged(object sender, DownloadProgressChangedEventArgs e) {
             Status = UpdaterStatus.Downloading;

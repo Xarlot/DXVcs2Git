@@ -33,7 +33,7 @@ namespace DXVcs2Git.Launcher {
             var uiFileFullName = Path.Combine(installPath, UIExecutableName);
             if (!File.Exists(uiFileFullName))
                 return (int)ExitCodes.UIFileNotExist;
-            Process.Start(uiFileFullName);
+            Process.Start(new ProcessStartInfo(uiFileFullName) { UseShellExecute = true });
             return (int)ExitCodes.Success;
         }
     }

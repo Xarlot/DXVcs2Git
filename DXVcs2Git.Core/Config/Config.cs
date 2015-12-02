@@ -6,6 +6,8 @@
         public string Token { get; set; }
         public string InstallPath { get; set; }
         public string LastVersion { get; set; }
+        public int UpdateDelay { get; set; }
+
         public static Config GenerateDefault() {
             return new Config();
         }

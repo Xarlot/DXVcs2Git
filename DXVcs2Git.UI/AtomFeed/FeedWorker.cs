@@ -16,21 +16,52 @@ using System.Xml;
 namespace DXVcs2Git.UI.AtomFeed {
     public static class FeedWorker {
         public const string VSIXId = "DXVcs2Git.GitTools.Xarlot.e4313842-75d7-4bf3-9516-fccdb00bec7d";
+        static DispatcherTimer timer;
+        static Uri galleryUri;
+        static WebClient downloader;
         public static Uri NewVersionUri { get; private set; }
         public static Version NewVersion { get; private set; }
         public static bool HasNewVersion { get { return NewVersionUri != null; } }
         static Dispatcher Dispatcher { get; set; }
+        static int updateDelay;
+
+        public static int UpdateDelay {
+            get { return updateDelay; }
+            set {
+                if (updateDelay == value)
+                    return;
+                updateDelay = value;
+                OnUpdateDelayChanged();
+            }
+        }
+
+        static void OnUpdateDelayChanged() {
+            if (timer == null)
+                return;
+            timer.Stop();
+            timer.Interval = TimeSpan.FromSeconds(UpdateDelay);
+            timer.Start();
+        }
+
         public static void Initialize() {
-            Uri galleryUri = new Uri("http://idetester-sv.corp.devexpress.com/atomfeed.html");
-            var downloader = new WebClient();
+            UpdateDelay = ConfigSerializer.GetConfig().UpdateDelay;
+            if (UpdateDelay == 0)
+                UpdateDelay = 30;
+            galleryUri = new Uri("http://idetester-sv.corp.devexpress.com/atomfeed.html");
+            downloader = new WebClient();
             downloader.OpenReadCompleted += OnOpenReadCompleted;
             Dispatcher = Dispatcher.CurrentDispatcher;
-            DispatcherTimer timer = new DispatcherTimer(DispatcherPriority.ApplicationIdle, Dispatcher);
-            timer.Interval = TimeSpan.FromMinutes(5);
-            timer.Tick += (o, e) => downloader.OpenReadAsync(galleryUri);            
+            timer = new DispatcherTimer(DispatcherPriority.ApplicationIdle, Dispatcher);
+            timer.Interval = TimeSpan.FromSeconds(UpdateDelay);
+            timer.Tick += (o, e) => Update();
             timer.Start();
+            Update();
+        }
+
+        public static void Update() {
             downloader.OpenReadAsync(galleryUri);
         }
+
         static void OnOpenReadCompleted(object sender, OpenReadCompletedEventArgs e) {
             if (e.Error != null)
                 return;

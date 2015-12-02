@@ -50,7 +50,7 @@ namespace DXVcs2Git.UI.ViewModels {
         void ShowSettings() {
             var viewModel = new EditConfigViewModel(Config);
             if (SettingsDialogService.ShowDialog(MessageButton.OKCancel, "Settings", viewModel) == MessageResult.OK) {
-                Config = viewModel.CreateConfig();
+                viewModel.UpdateConfig();
                 ConfigSerializer.SaveConfig(Config);
                 Initialize();
             }

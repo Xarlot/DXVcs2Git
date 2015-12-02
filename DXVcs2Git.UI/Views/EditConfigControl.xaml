@@ -9,10 +9,11 @@
              xmlns:dxe="http://schemas.devexpress.com/winfx/2008/xaml/editors"
              xmlns:dxmvvm="http://schemas.devexpress.com/winfx/2008/xaml/mvvm"
              xmlns:services="clr-namespace:DXVcs2Git.UI.Services"
+             xmlns:atom="clr-namespace:DXVcs2Git.UI.AtomFeed"
              mc:Ignorable="d" 
              d:DesignHeight="300" d:DesignWidth="300">
     <Grid>
-        <dx:DXTabControl  >
+        <dx:DXTabControl>
             <dx:DXTabItem Header="Repositories">
                 <dxg:GridControl ItemsSource="{Binding Path=Repositories}">
                     <dxg:GridControl.Columns>
@@ -20,7 +21,7 @@
                             <dxg:GridColumn.EditSettings>
                                 <dxe:CheckEditSettings/>
                             </dxg:GridColumn.EditSettings>
-                            </dxg:GridColumn>
+                        </dxg:GridColumn>
                         <dxg:GridColumn FieldName="Name"/>
                         <dxg:GridColumn FieldName="LocalPath">
                             <dxg:GridColumn.CellTemplate>
@@ -47,10 +48,17 @@
                     </dxg:GridControl.View>
                 </dxg:GridControl>
             </dx:DXTabItem>
-            <dx:DXTabItem Header="Token">
-                <dxlc:LayoutControl>
+            <dx:DXTabItem Header="Application">
+                <dxlc:LayoutControl Orientation="Vertical" VerticalAlignment="Top">
                     <dxlc:LayoutItem Label="Token: ">
                         <dxe:TextEdit EditValue="{Binding Path=Token, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                    </dxlc:LayoutItem>
+                    <dxlc:LayoutItem Label="Update delay: " VerticalAlignment="Center">
+                        <dxe:ButtonEdit EditValue="{Binding Path=UpdateDelay, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" AllowDefaultButton="False">
+                            <dxe:ButtonEdit.Buttons>
+                                <dxe:ButtonInfo GlyphKind="Refresh" IsDefaultButton="True" Command="{Binding RefreshUpdateCommand}" Content="Check for updates" />
+                            </dxe:ButtonEdit.Buttons>
+                        </dxe:ButtonEdit>
                     </dxlc:LayoutItem>
                 </dxlc:LayoutControl>
             </dx:DXTabItem>
