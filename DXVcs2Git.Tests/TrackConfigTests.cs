@@ -19,6 +19,10 @@ namespace DXVcs2Git.Tests {
             serializer.Serialize(new List<TrackBranch>() { branch }, @"c:\1\trackconfig_testxpf.config");
         }
         [Test, Explicit]
+        public void GenerateXpfCommon141Config() {
+            GenerateXpfCommonCongfig("2014.1");
+        }
+        [Test, Explicit]
         public void GenerateXpfCommon152Config() {
             GenerateXpfCommonCongfig("2015.2");
         }
@@ -32,15 +36,15 @@ namespace DXVcs2Git.Tests {
         }
         void GenerateXpfCommonCongfig(string branchName) {
             List<TrackItem> items = new List<TrackItem>();
-            items.Add(new TrackItem() { Path = $@"$/{branchName}/XPF/DevExpress.Mvvm", ProjectPath = "DevExpress.Mvvm" });
+            //items.Add(new TrackItem() { Path = $@"$/{branchName}/XPF/DevExpress.Mvvm", ProjectPath = "DevExpress.Mvvm" });
             items.Add(new TrackItem() { Path = $@"$/{branchName}/XPF/DevExpress.Xpf.Core", ProjectPath = "DevExpress.Xpf.Core" });
-            items.Add(new TrackItem() { Path = $@"$/{branchName}/XPF/DevExpress.Xpf.Controls", ProjectPath = "DevExpress.Xpf.Controls" });
-            items.Add(new TrackItem() { Path = $@"$/{branchName}/XPF/DevExpress.Xpf.Grid", ProjectPath = "DevExpress.Xpf.Grid" });
-            items.Add(new TrackItem() { Path = $@"$/{branchName}/XPF/DevExpress.Xpf.NavBar", ProjectPath = "DevExpress.Xpf.NavBar" });
-            items.Add(new TrackItem() { Path = $@"$/{branchName}/XPF/DevExpress.Xpf.PropertyGrid", ProjectPath = "DevExpress.Xpf.PropertyGrid" });
-            items.Add(new TrackItem() { Path = $@"$/{branchName}/XPF/DevExpress.Xpf.Ribbon", ProjectPath = "DevExpress.Xpf.Ribbon" });
-            items.Add(new TrackItem() { Path = $@"$/{branchName}/XPF/DevExpress.Xpf.Layout", ProjectPath = "DevExpress.Xpf.Layout" });
-            items.Add(new TrackItem() { Path = $@"$/{branchName}/XPF/DevExpress.Xpf.LayoutControl", ProjectPath = "DevExpress.Xpf.LayoutControl" });
+            //items.Add(new TrackItem() { Path = $@"$/{branchName}/XPF/DevExpress.Xpf.Controls", ProjectPath = "DevExpress.Xpf.Controls" });
+            //items.Add(new TrackItem() { Path = $@"$/{branchName}/XPF/DevExpress.Xpf.Grid", ProjectPath = "DevExpress.Xpf.Grid" });
+            //items.Add(new TrackItem() { Path = $@"$/{branchName}/XPF/DevExpress.Xpf.NavBar", ProjectPath = "DevExpress.Xpf.NavBar" });
+            //items.Add(new TrackItem() { Path = $@"$/{branchName}/XPF/DevExpress.Xpf.PropertyGrid", ProjectPath = "DevExpress.Xpf.PropertyGrid" });
+            //items.Add(new TrackItem() { Path = $@"$/{branchName}/XPF/DevExpress.Xpf.Ribbon", ProjectPath = "DevExpress.Xpf.Ribbon" });
+            //items.Add(new TrackItem() { Path = $@"$/{branchName}/XPF/DevExpress.Xpf.Layout", ProjectPath = "DevExpress.Xpf.Layout" });
+            //items.Add(new TrackItem() { Path = $@"$/{branchName}/XPF/DevExpress.Xpf.LayoutControl", ProjectPath = "DevExpress.Xpf.LayoutControl" });
             TrackBranch branch = new TrackBranch($"{branchName}", $@"$/{branchName}/Common/xpf_common_sync.config", $@"$/{branchName}/XPF", items);
 
             SharpSerializerXmlSettings settings = new SharpSerializerXmlSettings();

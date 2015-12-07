@@ -1,11 +1,14 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Weavers>
-  <Costura CreateTemporaryAssemblies="true">
+  <Costura CreateTemporaryAssemblies="true" IncludeDebugSymbols="false">
     <Unmanaged32Assemblies>
-      /NativeBinaries/x86/git2-4d6362b.dll
+      git2-4d6362b.dll
     </Unmanaged32Assemblies>
     <Unmanaged64Assemblies>
-      /NativeBinaries/amd64/git2-4d6362b.dll
+      git2-4d6362b.dll
     </Unmanaged64Assemblies>
+    <PreloadOrder>
+      git2-4d6362b.dll
+    </PreloadOrder>
   </Costura>
 </Weavers>

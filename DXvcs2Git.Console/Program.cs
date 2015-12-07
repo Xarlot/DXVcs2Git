@@ -394,7 +394,7 @@ namespace DXVcs2Git.Console {
             comment.Author = item.Author;
             comment.Branch = item.Track.Branch;
             comment.Token = token;
-            if (item.Items.Any(x => CommentWrapper.IsAutoSyncComment(x.Comment)))
+            if (item.Items.Any(x => !string.IsNullOrEmpty(x.Comment) && CommentWrapper.IsAutoSyncComment(x.Comment)))
                 comment.Comment = item.Items.Select(x => CommentWrapper.Parse(x.Message).Comment).FirstOrDefault(x => !string.IsNullOrEmpty(x));
             else
                 comment.Comment = item.Items.FirstOrDefault(x => !string.IsNullOrEmpty(x.Comment))?.Comment;
