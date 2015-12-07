@@ -2,10 +2,10 @@
 <Weavers>
   <Costura CreateTemporaryAssemblies="true">
     <Unmanaged32Assemblies>
-      NativeBinaries/x86/git2-4d6362b.dll
+      /NativeBinaries/x86/git2-4d6362b.dll
     </Unmanaged32Assemblies>
     <Unmanaged64Assemblies>
-      NativeBinaries/amd64/git2-4d6362b.dll
+      /NativeBinaries/amd64/git2-4d6362b.dll
     </Unmanaged64Assemblies>
   </Costura>
 </Weavers>
