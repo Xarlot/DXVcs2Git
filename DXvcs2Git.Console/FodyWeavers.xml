@@ -1,4 +1,11 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Weavers>
-  <Costura CreateTemporaryAssemblies="true" IncludeDebugSymbols="false"/>
+  <Costura CreateTemporaryAssemblies="true">
+    <Unmanaged32Assemblies>
+      NativeBinaries/x86/git2-4d6362b.dll
+    </Unmanaged32Assemblies>
+    <Unmanaged64Assemblies>
+      NativeBinaries/amd64/git2-4d6362b.dll
+    </Unmanaged64Assemblies>
+  </Costura>
 </Weavers>
