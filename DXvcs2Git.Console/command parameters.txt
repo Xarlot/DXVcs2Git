@@ -1,3 +1,3 @@
--l dxvcs2gitservice -b 2015.2 -r http://litvinov-lnx/tester/XPF.git -m all -c 15 -d z:\repo -t trackconfig_testxpf.config -f 9/22/2015 -p abc123
+-l dxvcs2git.xpf -b 2015.2 -r http://litvinov-lnx/tester/XPF.git -m all -c 15 -d z:\repo -t trackconfig_testxpf.config -f 9/22/2015 -p DKG%@S1sp -a X6XV2G_ycz_U4pi4m93K
 
 -l dxvcs2gitservice -b 2015.2 -r http://litvinov-lnx/XPF/Common.git -m all -c 15 -d z:\repo -t trackconfig_common_2015.2.config -f 9/22/2015 -p abc123

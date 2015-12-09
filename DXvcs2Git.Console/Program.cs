@@ -39,9 +39,8 @@ namespace DXVcs2Git.Console {
 
             string gitRepoPath = clo.Repo;
             string username = clo.Login;
-            string cipherKey = clo.Password;
-            string password = EncryptionHelper.Decrypt(Program.password, cipherKey);
-            string gitlabauthtoken = EncryptionHelper.Decrypt(Program.gitlabauthtoken, cipherKey);
+            string password = clo.Password;
+            string gitlabauthtoken = clo.AuthToken;
             WorkMode workMode = clo.WorkMode;
             string branchName = clo.Branch;
             string trackerPath = clo.Tracker;

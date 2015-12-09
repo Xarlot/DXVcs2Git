@@ -17,7 +17,7 @@ namespace DXVcs2Git.Core {
             this.gitLabWrapper = gitLabWrapper;
             this.vcsWrapper = vcsWrapper;
             ADUsers = ADWrapper.GetUsers().ToDictionary(x => x.UserName.ToLowerInvariant());
-            Users = gitLabWrapper.GetUsers().Select(x => new User(x.Username, x.Email, x.Name)).ToDictionary(x => x.UserName);
+            Users = gitLabWrapper.GetUsers().Select(x => new User(x.Username, x.Email, x.Name, true)).ToDictionary(x => x.UserName);
             this.VcsUsers = vcsWrapper.GetUsers().ToList();
         }
 
@@ -41,7 +41,7 @@ namespace DXVcs2Git.Core {
                 return null;
             string login = CalcLogin(loginCandidate);
             User adUser = ADUsers[login];
-            User gitLabUser = new User(userInfo.Name, adUser.Email, adUser.DisplayName);
+            User gitLabUser = new User(userInfo.Name, adUser.Email, adUser.DisplayName, true);
             this.gitLabWrapper.RegisterUser(gitLabUser.UserName, gitLabUser.DisplayName, gitLabUser.Email);
             Users.Add(gitLabUser.UserName, gitLabUser);
             return gitLabUser;
