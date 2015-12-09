@@ -3,7 +3,7 @@
         public bool IsRegistered { get; private set; }
         public User(string userName, string email, string displayName, bool registered = false) {
             UserName = userName;
-            Email = email;
+            Email = email ?? "testmail.com";
             DisplayName = displayName;
             IsRegistered = registered;
         }

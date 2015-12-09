@@ -161,18 +161,12 @@ namespace DXVcs2Git.Console {
                     return 1;
                 if (mergeRequestResult == MergeRequestResult.Conflicts)
                     result = 1;
-                if (mergeRequestResult == MergeRequestResult.Success) {
-                    if (!ValidateMergeRequest(vcsWrapper, users, branch, head, userName)) {
-                        result = 0;
-                        break;
-                    }
-                }
             }
             return result;
         }
-        static bool ValidateMergeRequest(DXVcsWrapper vcsWrapper, RegisteredUsers users, TrackBranch branch, SyncHistoryItem previous, string userName) {
+        static bool ValidateMergeRequest(DXVcsWrapper vcsWrapper, RegisteredUsers users, TrackBranch branch, SyncHistoryItem previous, User defaultUser) {
             var history = vcsWrapper.GenerateHistory(branch, new DateTime(previous.VcsCommitTimeStamp)).Where(x => x.ActionDate.Ticks > previous.VcsCommitTimeStamp);
-            if (history.Any(x => x.User != users.GetUser(userName).UserName))
+            if (history.Any(x => x.User != defaultUser.UserName))
                 return false;
             return true;
         }
@@ -220,20 +214,26 @@ namespace DXVcs2Git.Console {
                     var gitCommit = gitWrapper.FindCommit(branch.Name, x => CommentWrapper.Parse(x.Message).Token == autoSyncToken);
                     Log.Message("Merge request merged successfully.");
 
+                    long timeStamp = lastHistoryItem.VcsCommitTimeStamp;
                     if (vcsWrapper.ProcessCheckIn(genericChange, comment.ToString())) {
-                        long timeStamp = lastHistoryItem.VcsCommitTimeStamp;
                         var checkinHistory = vcsWrapper.GenerateHistory(branch, new DateTime(timeStamp)).Where(x => x.ActionDate.Ticks > timeStamp);
                         var lastCommit = checkinHistory.OrderBy(x => x.ActionDate).LastOrDefault();
                         long newTimeStamp = lastCommit?.ActionDate.Ticks ?? timeStamp;
-                        syncHistory.Add(gitCommit.Sha, newTimeStamp, autoSyncToken);
+                        var mergeRequestResult = MergeRequestResult.Success;
+                        if (!ValidateMergeRequest(vcsWrapper, users, branch, lastHistoryItem, defaultUser)) 
+                            mergeRequestResult = MergeRequestResult.Mixed;
+                        
+                        syncHistory.Add(gitCommit.Sha, newTimeStamp, autoSyncToken, mergeRequestResult == MergeRequestResult.Success ? SyncHistoryStatus.Success : SyncHistoryStatus.Mixed);
                         syncHistory.Save();
                         Log.Message("Merge request checkin successfully.");
-                        return MergeRequestResult.Success;
+                        return MergeRequestResult.Mixed;
                     }
                     Log.Error("Merge request checkin failed.");
-                    var vcsRevertCommit = SetSyncLabel(vcsWrapper, gitCommit, branch, CreateFailedTagName(branch.Name), autoSyncToken);
-                    syncHistory.Add(gitCommit.Sha, vcsRevertCommit.TimeStamp.Ticks, autoSyncToken, SyncHistoryStatus.Failed);
+                    var failedHistory = vcsWrapper.GenerateHistory(branch, new DateTime(timeStamp));
+                    var lastFailedCommit = failedHistory.OrderBy(x => x.ActionDate).LastOrDefault();
+                    syncHistory.Add(gitCommit.Sha, lastFailedCommit?.ActionDate.Ticks ?? timeStamp, autoSyncToken, SyncHistoryStatus.Failed);
                     syncHistory.Save();
+                    
                     Log.Error("Revert merging completed.");
 
                     return MergeRequestResult.Failed;
@@ -251,24 +251,24 @@ namespace DXVcs2Git.Console {
             if (fileData.IsNew) {
                 syncItem.SyncAction = SyncAction.New;
                 syncItem.LocalPath = CalcLocalPath(localGitDir, branch, fileData.OldPath);
-                syncItem.VcsPath = CalcVcsPath(vcsRoot, fileData.OldPath);
+                syncItem.VcsPath = CalcVcsPath(vcsRoot, branch, fileData.OldPath);
             }
             else if (fileData.IsDeleted) {
                 syncItem.SyncAction = SyncAction.Delete;
                 syncItem.LocalPath = CalcLocalPath(localGitDir, branch, fileData.OldPath);
-                syncItem.VcsPath = CalcVcsPath(vcsRoot, fileData.OldPath);
+                syncItem.VcsPath = CalcVcsPath(vcsRoot, branch, fileData.OldPath);
             }
             else if (fileData.IsRenamed) {
                 syncItem.SyncAction = SyncAction.Move;
                 syncItem.LocalPath = CalcLocalPath(localGitDir, branch, fileData.OldPath);
                 syncItem.NewLocalPath = CalcLocalPath(localGitDir, branch, fileData.NewPath);
-                syncItem.VcsPath = CalcVcsPath(vcsRoot, fileData.OldPath);
-                syncItem.NewVcsPath = CalcVcsPath(vcsRoot, fileData.NewPath);
+                syncItem.VcsPath = CalcVcsPath(vcsRoot, branch, fileData.OldPath);
+                syncItem.NewVcsPath = CalcVcsPath(vcsRoot, branch, fileData.NewPath);
             }
             else {
                 syncItem.SyncAction = SyncAction.Modify;
                 syncItem.LocalPath = CalcLocalPath(localGitDir, branch, fileData.OldPath);
-                syncItem.VcsPath = CalcVcsPath(vcsRoot, fileData.OldPath);
+                syncItem.VcsPath = CalcVcsPath(vcsRoot, branch, fileData.OldPath);
             }
             syncItem.Comment = CalcComment(mergeRequest, branch, token);
             return syncItem;
@@ -276,8 +276,9 @@ namespace DXVcs2Git.Console {
         static string CalcLocalPath(string localGitDir, TrackBranch branch, string path) {
             return Path.Combine(localGitDir, path);
         }
-        static string CalcVcsPath(string vcsRoot, string path) {
-            string result = Path.Combine(vcsRoot, path);
+        static string CalcVcsPath(string vcsRoot, TrackBranch branch, string path) {
+            var trackItem = branch.TrackItems.First(x => path.StartsWith(x.ProjectPath));
+            string result = string.IsNullOrEmpty(trackItem.AdditionalOffset) ? Path.Combine(vcsRoot, path) : Path.Combine(vcsRoot, trackItem.AdditionalOffset, path);
             return result.Replace("\\", "/");
         }
         static ProcessHistoryResult ProcessHistory(DXVcsWrapper vcsWrapper, GitWrapper gitWrapper, RegisteredUsers users, User defaultUser, string gitRepoPath, string localGitDir, TrackBranch branch, int commitsCount, SyncHistoryWrapper syncHistory) {
@@ -424,6 +425,7 @@ namespace DXVcs2Git.Console {
         Success,
         Failed,
         Conflicts,
+        Mixed,
     }
     public enum ProcessHistoryResult {
         Success,

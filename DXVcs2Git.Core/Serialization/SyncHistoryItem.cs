@@ -2,6 +2,7 @@
     public enum SyncHistoryStatus {
         Success,
         Failed,
+        Mixed,
     }
     public class SyncHistoryItem {
         public string GitCommitSha { get; set; }

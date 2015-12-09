@@ -20,21 +20,21 @@ namespace DXVcs2Git.Tests {
         }
         [Test, Explicit]
         public void GenerateXpfCommon141Config() {
-            GenerateXpfCommonCongfig("2014.1");
+            GenerateXpfCommonConfig("2014.1");
         }
         [Test, Explicit]
         public void GenerateXpfCommon152Config() {
-            GenerateXpfCommonCongfig("2015.2");
+            GenerateXpfCommonConfig("2015.2");
         }
         [Test, Explicit]
         public void GenerateXpfCommon151Config() {
-            GenerateXpfCommonCongfig("2015.1");
+            GenerateXpfCommonConfig("2015.1");
         }
         [Test, Explicit]
         public void GenerateXpfCommon142Config() {
-            GenerateXpfCommonCongfig("2014.2");
+            GenerateXpfCommonConfig("2014.2");
         }
-        void GenerateXpfCommonCongfig(string branchName) {
+        void GenerateXpfCommonConfig(string branchName) {
             List<TrackItem> items = new List<TrackItem>();
             items.Add(new TrackItem() { Path = $@"$/{branchName}/XPF/DevExpress.Mvvm", ProjectPath = "DevExpress.Mvvm" });
             items.Add(new TrackItem() { Path = $@"$/{branchName}/XPF/DevExpress.Xpf.Core", ProjectPath = "DevExpress.Xpf.Core" });
@@ -54,5 +54,24 @@ namespace DXVcs2Git.Tests {
             serializer.Serialize(new List<TrackBranch>() { branch }, $@"z:\trackconfig_common_{branchName}.config");
 
         }
+        [Test, Explicit]
+        public void GenerateXpfDiagram152Config() {
+            GenerateXpfDiagramConfig("2015.2");
+        }
+        void GenerateXpfDiagramConfig(string branchName) {
+            List<TrackItem> items = new List<TrackItem>();
+            items.Add(new TrackItem() { Path = $@"$/{branchName}/Win/DevExpress.XtraDiagram", ProjectPath = "DevExpress.XtraDiagram", AdditionalOffset = "Win"});
+            items.Add(new TrackItem() { Path = $@"$/{branchName}/XPF/DevExpress.Xpf.Diagram", ProjectPath = "DevExpress.Xpf.Diagram", AdditionalOffset = "XPF"});
+            items.Add(new TrackItem() { Path = $@"$/{branchName}/XPF/DevExpress.Xpf.ReportDesigner", ProjectPath = "DevExpress.Xpf.ReportDesigner", AdditionalOffset = "XPF"});
+            TrackBranch branch = new TrackBranch($"{branchName}", $@"$/{branchName}/Diagram/xpf_common_sync.config", $@"$/{branchName}", items);
+
+            SharpSerializerXmlSettings settings = new SharpSerializerXmlSettings();
+            settings.IncludeAssemblyVersionInTypeName = false;
+            settings.IncludePublicKeyTokenInTypeName = false;
+            SharpSerializer serializer = new SharpSerializer(settings);
+            serializer.Serialize(new List<TrackBranch>() { branch }, $@"z:\trackconfig_diagram_{branchName}.config");
+
+        }
+
     }
 }

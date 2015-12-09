@@ -26,6 +26,10 @@ namespace DXVcs2Git.Core.Serialization {
         public SyncHistoryItem GetHead() {
             return history.Items.LastOrDefault();
         }
+        public SyncHistoryItem GetPrevious(SyncHistoryItem item) {
+            int index = this.history.Items?.FindIndex(x => x == item) ?? -1;
+            return index < 1 ? item : this.history.Items[index - 1];
+        }
         public string CreateNewToken() {
             int token = this.history.Items.Max(x => {
                 int result;
