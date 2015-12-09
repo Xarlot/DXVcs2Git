@@ -170,6 +170,7 @@ namespace DXVcs2Git.Console {
         }
         static MergeRequestResult ProcessOpenedMergeRequest(DXVcsWrapper vcsWrapper, GitWrapper gitWrapper, GitLabWrapper gitLabWrapper, RegisteredUsers users, string localGitDir, TrackBranch branch, MergeRequest mergeRequest, SyncHistoryWrapper syncHistory) {
             string autoSyncToken = syncHistory.CreateNewToken();
+            var lastHistoryItem = syncHistory.GetHead();
 
             Log.Message($"Start merging mergerequest {mergeRequest.Title}");
 
@@ -196,7 +197,6 @@ namespace DXVcs2Git.Console {
                 }
                 gitWrapper.Reset(branch.Name);
                 gitWrapper.Pull(defaultUser, branch.Name);
-                Commit beforeMerge = gitWrapper.FindCommit(branch.Name);
 
                 mergeRequest = gitLabWrapper.ProcessMergeRequest(mergeRequest, comment.ToString());
                 if (mergeRequest.State == "merged") {
@@ -206,8 +206,11 @@ namespace DXVcs2Git.Console {
                     Log.Message("Merge request merged successfully.");
 
                     if (vcsWrapper.ProcessCheckIn(genericChange, comment.ToString())) {
-                        var vcsCommit = SetSyncLabel(vcsWrapper, gitCommit, branch, CreateTagName(branch.Name), autoSyncToken);
-                        syncHistory.Add(gitCommit.Sha, vcsCommit.TimeStamp.Ticks, autoSyncToken);
+                        long timeStamp = lastHistoryItem.VcsCommitTimeStamp;
+                        var checkinHistory = vcsWrapper.GenerateHistory(branch, new DateTime(timeStamp));
+                        var lastCommit = checkinHistory.OrderBy(x => x.ActionDate).LastOrDefault();
+                        long newTimeStamp = lastCommit?.ActionDate.Ticks ?? timeStamp;
+                        syncHistory.Add(gitCommit.Sha, newTimeStamp, autoSyncToken);
                         syncHistory.Save();
                         Log.Message("Merge request checkin successfully.");
                         return MergeRequestResult.Success;
