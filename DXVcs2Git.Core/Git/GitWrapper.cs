@@ -29,7 +29,9 @@ namespace DXVcs2Git {
             this.path = path;
             this.credentials = credentials;
             this.gitPath = gitPath;
+            Log.Message("Start initializing git repo");
             this.repoPath = DirectoryHelper.IsGitDir(path) ? GitInit() : GitClone();
+            Log.Message("End initializing git repo");
             repo = new Repository(repoPath);
         }
         public string GitInit() {
