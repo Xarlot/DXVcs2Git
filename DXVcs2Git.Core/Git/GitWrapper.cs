@@ -73,12 +73,12 @@ namespace DXVcs2Git {
             repo.Stage(path);
             Log.Message($"Git stage performed.");
         }
-        public Commit Commit(string comment, User user, string committerName, DateTime timeStamp, bool allowEmpty = true) {
+        public Commit Commit(string comment, User user, User committerUser, DateTime timeStamp, bool allowEmpty = true) {
             CommitOptions commitOptions = new CommitOptions();
             commitOptions.AllowEmptyCommit = allowEmpty;
             DateTime localTime = timeStamp.ToLocalTime();
             var author = ToSignature(user, localTime);
-            var comitter = ToSignature(user, localTime);
+            var comitter = ToSignature(committerUser, localTime);
             var commit = repo.Commit(comment, author, comitter, commitOptions);
             Log.Message($"Git commit performed for {user} {localTime}");
             return commit;

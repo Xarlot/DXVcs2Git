@@ -16,7 +16,7 @@ namespace DXVcs2Git.Core.AD {
                         string displayName = (string)de.Properties["displayname"].Value;
                         string userName = (string)de.Properties["samaccountname"].Value;
                         displayName = string.IsNullOrEmpty(displayName) ? displayName : displayName.Replace(" (DevExpress)", string.Empty);
-                        users.Add(new User(userName, email, displayName));
+                        users.Add(new User(userName, email, displayName, true));
                     }
                 }
             }

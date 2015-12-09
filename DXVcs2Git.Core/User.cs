@@ -1,9 +1,11 @@
 ﻿namespace DXVcs2Git.Core {
     public class User {
-        public User(string userName, string email, string displayName) {
+        public bool IsRegistered { get; private set; }
+        public User(string userName, string email, string displayName, bool registered = false) {
             UserName = userName;
             Email = email;
             DisplayName = displayName;
+            IsRegistered = registered;
         }
         protected bool Equals(User other) {
             return string.Equals(UserName, other.UserName);

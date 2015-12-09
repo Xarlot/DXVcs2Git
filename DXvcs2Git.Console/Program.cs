@@ -19,11 +19,9 @@ namespace DXVcs2Git.Console {
     internal class Program {
         const string password = @"5O5+NitKdsK8+XapL28jIsw7GxrElr3asn5S0S1G8JA=";
         const string gitlabauthtoken = @"DidEcvpG/IxWQqDmZOFmez8pI94kuEoHSFzkxbzywxygrtiC3/2mf6VLu3hcZMX8";
-        const string AutoSyncBranch = "autosync branch: {0}";
         const string repoPath = "repo";
         const string gitServer = @"http://litvinov-lnx";
         const string vcsServer = @"net.tcp://vcsservice.devexpress.devx:9091/DXVCSService";
-        const string defaultUserName = "dxvcs2gitservice";
         const string tagName = "dxvcs2gitservice_sync_{0}";
         const string failedTagName = "dxvcs2gitservice_sync_failed_{0}";
         static void Main(string[] args) {
@@ -53,7 +51,7 @@ namespace DXVcs2Git.Console {
             TrackBranch branch = FindBranch(branchName, trackerPath);
             if (branch == null)
                 return 1;
-            DXVcsWrapper vcsWrapper = new DXVcsWrapper(vcsServer, defaultUserName, password);
+            DXVcsWrapper vcsWrapper = new DXVcsWrapper(vcsServer, username, password);
 
             string historyPath = GetVcsSyncHistory(vcsWrapper, branch.HistoryPath);
             if (historyPath == null)
@@ -75,15 +73,21 @@ namespace DXVcs2Git.Console {
 
             GitLabWrapper gitLabWrapper = new GitLabWrapper(gitServer, gitlabauthtoken);
             RegisteredUsers registeredUsers = new RegisteredUsers(gitLabWrapper, vcsWrapper);
+            User defaultUser = registeredUsers.GetUser(username);
+            if (!defaultUser.IsRegistered) {
+                Log.Error($"default user {username} is not registered in the active directory.");
+                return 1;
+            }
+
             if (workMode.HasFlag(WorkMode.history)) {
-                ProcessHistoryResult result = ProcessHistory(vcsWrapper, gitWrapper, registeredUsers, gitRepoPath, localGitDir, branch, clo.CommitsCount, syncHistory);
+                ProcessHistoryResult result = ProcessHistory(vcsWrapper, gitWrapper, registeredUsers, defaultUser, gitRepoPath, localGitDir, branch, clo.CommitsCount, syncHistory);
                 if (result == ProcessHistoryResult.NotEnough)
                     return 0;
                 if (result == ProcessHistoryResult.Failed)
                     return 1;
             }
             if (workMode.HasFlag(WorkMode.mergerequests)) {
-                int result = ProcessMergeRequests(vcsWrapper, gitWrapper, gitLabWrapper, registeredUsers, gitRepoPath, localGitDir, clo.Branch, clo.Tracker, syncHistory);
+                int result = ProcessMergeRequests(vcsWrapper, gitWrapper, gitLabWrapper, registeredUsers, defaultUser, gitRepoPath, localGitDir, clo.Branch, clo.Tracker, syncHistory, username);
                 if (result != 0)
                     return result;
             }
@@ -138,37 +142,50 @@ namespace DXVcs2Git.Console {
             var syncLabel = vcsWrapper.GenerateCommits(new[] { syncLabelItem });
             return syncLabel.First();
         }
-        static int ProcessMergeRequests(DXVcsWrapper vcsWrapper, GitWrapper gitWrapper, GitLabWrapper gitLabWrapper, RegisteredUsers users, string gitRepoPath, string localGitDir, string branchName, string tracker, SyncHistoryWrapper syncHistory) {
+        static int ProcessMergeRequests(DXVcsWrapper vcsWrapper, GitWrapper gitWrapper, GitLabWrapper gitLabWrapper, RegisteredUsers users, User defaultUser, string gitRepoPath, string localGitDir, string branchName, string tracker, SyncHistoryWrapper syncHistory, string userName) {
             var project = gitLabWrapper.FindProject(gitRepoPath);
             TrackBranch branch = GetBranch(branchName, tracker);
             if (branch == null) {
                 Log.Error($"Specified branch {branchName} not found in track file.");
                 return 1;
             }
-            var mergeRequests = gitLabWrapper.GetMergeRequests(project, x => x.TargetBranch == branchName).Where(x => x.Assignee?.Name == defaultUserName).ToList();
+            var mergeRequests = gitLabWrapper.GetMergeRequests(project, x => x.TargetBranch == branchName).Where(x => x.Assignee?.Name == userName).ToList();
             if (!mergeRequests.Any()) {
                 Log.Message("Zero registered merge requests.");
                 return 0;
             }
             int result = 0;
             foreach (var mergeRequest in mergeRequests) {
-                var mergeRequestResult = ProcessMergeRequest(vcsWrapper, gitWrapper, gitLabWrapper, users, localGitDir, branch, mergeRequest, syncHistory);
+                var head = syncHistory.GetHead();
+                var mergeRequestResult = ProcessMergeRequest(vcsWrapper, gitWrapper, gitLabWrapper, users, defaultUser, localGitDir, branch, mergeRequest, syncHistory);
                 if (mergeRequestResult == MergeRequestResult.Failed)
                     return 1;
                 if (mergeRequestResult == MergeRequestResult.Conflicts)
                     result = 1;
+                if (mergeRequestResult == MergeRequestResult.Success) {
+                    if (!ValidateMergeRequest(vcsWrapper, users, branch, head, userName)) {
+                        result = 0;
+                        break;
+                    }
+                }
             }
             return result;
         }
-        static MergeRequestResult ProcessMergeRequest(DXVcsWrapper vcsWrapper, GitWrapper gitWrapper, GitLabWrapper gitLabWrapper, RegisteredUsers users, string localGitDir, TrackBranch branch, MergeRequest mergeRequest, SyncHistoryWrapper syncHistory) {
+        static bool ValidateMergeRequest(DXVcsWrapper vcsWrapper, RegisteredUsers users, TrackBranch branch, SyncHistoryItem previous, string userName) {
+            var history = vcsWrapper.GenerateHistory(branch, new DateTime(previous.VcsCommitTimeStamp)).Where(x => x.ActionDate.Ticks > previous.VcsCommitTimeStamp);
+            if (history.Any(x => x.User != users.GetUser(userName).UserName))
+                return false;
+            return true;
+        }
+        static MergeRequestResult ProcessMergeRequest(DXVcsWrapper vcsWrapper, GitWrapper gitWrapper, GitLabWrapper gitLabWrapper, RegisteredUsers users, User defaultUser, string localGitDir, TrackBranch branch, MergeRequest mergeRequest, SyncHistoryWrapper syncHistory) {
             switch (mergeRequest.State) {
                 case "reopened":
                 case "opened":
-                    return ProcessOpenedMergeRequest(vcsWrapper, gitWrapper, gitLabWrapper, users, localGitDir, branch, mergeRequest, syncHistory);
+                    return ProcessOpenedMergeRequest(vcsWrapper, gitWrapper, gitLabWrapper, users, defaultUser, localGitDir, branch, mergeRequest, syncHistory);
             }
             return MergeRequestResult.Conflicts;
         }
-        static MergeRequestResult ProcessOpenedMergeRequest(DXVcsWrapper vcsWrapper, GitWrapper gitWrapper, GitLabWrapper gitLabWrapper, RegisteredUsers users, string localGitDir, TrackBranch branch, MergeRequest mergeRequest, SyncHistoryWrapper syncHistory) {
+        static MergeRequestResult ProcessOpenedMergeRequest(DXVcsWrapper vcsWrapper, GitWrapper gitWrapper, GitLabWrapper gitLabWrapper, RegisteredUsers users, User defaultUser, string localGitDir, TrackBranch branch, MergeRequest mergeRequest, SyncHistoryWrapper syncHistory) {
             string autoSyncToken = syncHistory.CreateNewToken();
             var lastHistoryItem = syncHistory.GetHead();
 
@@ -186,7 +203,6 @@ namespace DXVcs2Git.Console {
             gitWrapper.EnsureBranch(targetBranch, null);
             gitWrapper.Reset(targetBranch);
             Log.Message($"Reset branch {targetBranch} completed.");
-            User defaultUser = users.GetUser(defaultUserName);
             var result = gitWrapper.Merge(sourceBranch, defaultUser);
             if (result != MergeStatus.Conflicts) {
                 Log.Message($"Merge attempt from {targetBranch} to {sourceBranch} completed without conflicts");
@@ -207,7 +223,7 @@ namespace DXVcs2Git.Console {
 
                     if (vcsWrapper.ProcessCheckIn(genericChange, comment.ToString())) {
                         long timeStamp = lastHistoryItem.VcsCommitTimeStamp;
-                        var checkinHistory = vcsWrapper.GenerateHistory(branch, new DateTime(timeStamp));
+                        var checkinHistory = vcsWrapper.GenerateHistory(branch, new DateTime(timeStamp)).Where(x => x.ActionDate.Ticks > timeStamp);
                         var lastCommit = checkinHistory.OrderBy(x => x.ActionDate).LastOrDefault();
                         long newTimeStamp = lastCommit?.ActionDate.Ticks ?? timeStamp;
                         syncHistory.Add(gitCommit.Sha, newTimeStamp, autoSyncToken);
@@ -265,8 +281,8 @@ namespace DXVcs2Git.Console {
             string result = Path.Combine(vcsRoot, path);
             return result.Replace("\\", "/");
         }
-        static ProcessHistoryResult ProcessHistory(DXVcsWrapper vcsWrapper, GitWrapper gitWrapper, RegisteredUsers users, string gitRepoPath, string localGitDir, TrackBranch branch, int commitsCount, SyncHistoryWrapper syncHistory) {
-            DateTime lastCommit = CalcLastCommitDate(gitWrapper, users, branch, syncHistory);
+        static ProcessHistoryResult ProcessHistory(DXVcsWrapper vcsWrapper, GitWrapper gitWrapper, RegisteredUsers users, User defaultUser, string gitRepoPath, string localGitDir, TrackBranch branch, int commitsCount, SyncHistoryWrapper syncHistory) {
+            DateTime lastCommit = CalcLastCommitDate(gitWrapper, users, defaultUser, branch, syncHistory);
             Log.Message($"Last commit has been performed at {lastCommit.ToLocalTime()}.");
 
             var history = vcsWrapper.GenerateHistory(branch, lastCommit).OrderBy(x => x.ActionDate).ToList();
@@ -281,18 +297,18 @@ namespace DXVcs2Git.Console {
                 Log.Message($"Commits generated. {commits.Count} commits taken.");
             }
             if (commits.Count > 0)
-                ProcessHistoryInternal(vcsWrapper, gitWrapper, users, localGitDir, branch, commits, syncHistory);
+                ProcessHistoryInternal(vcsWrapper, gitWrapper, users, defaultUser, localGitDir, branch, commits, syncHistory);
             Log.Message($"Importing history from vcs completed.");
 
             return commits.Count > commitsCount ? ProcessHistoryResult.NotEnough : ProcessHistoryResult.Success;
         }
-        static DateTime CalcLastCommitDate(GitWrapper gitWrapper, RegisteredUsers users, TrackBranch branch, SyncHistoryWrapper syncHistory) {
+        static DateTime CalcLastCommitDate(GitWrapper gitWrapper, RegisteredUsers users, User defaultUser, TrackBranch branch, SyncHistoryWrapper syncHistory) {
             var head = syncHistory.GetHead();
             if (head != null)
                 return new DateTime(head.VcsCommitTimeStamp);
-            return gitWrapper.GetLastCommitTimeStamp(branch.Name, users.GetUser(defaultUserName));
+            return gitWrapper.GetLastCommitTimeStamp(branch.Name, defaultUser);
         }
-        static void ProcessHistoryInternal(DXVcsWrapper vcsWrapper, GitWrapper gitWrapper, RegisteredUsers users, string localGitDir, TrackBranch branch, IList<CommitItem> commits, SyncHistoryWrapper syncHistory) {
+        static void ProcessHistoryInternal(DXVcsWrapper vcsWrapper, GitWrapper gitWrapper, RegisteredUsers users, User defaultUser, string localGitDir, TrackBranch branch, IList<CommitItem> commits, SyncHistoryWrapper syncHistory) {
             ProjectExtractor extractor = new ProjectExtractor(commits, (item) => {
                 var localCommits = vcsWrapper.GetCommits(item.Items).Where(x => !IsLabel(x)).ToList();
                 bool hasModifications = false;
@@ -310,8 +326,9 @@ namespace DXVcs2Git.Console {
                         gitWrapper.Stage("*");
                         try {
                             var comment = CalcComment(localCommit, token);
-                            string author = CalcAuthor(localCommit);
-                            last = gitWrapper.Commit(comment.ToString(), users.GetUser(author), defaultUserName, localCommit.TimeStamp, isLabel);
+                            string author = CalcAuthor(localCommit, defaultUser);
+                            User user = users.GetUser(author);
+                            last = gitWrapper.Commit(comment.ToString(), user, user, localCommit.TimeStamp, isLabel);
                             hasModifications = true;
                         }
                         catch (Exception) {
@@ -326,7 +343,7 @@ namespace DXVcs2Git.Console {
                 else {
                     var head = syncHistory.GetHead();
                     syncHistory.Add(head.GitCommitSha, item.TimeStamp.Ticks, token);
-                    string author = CalcAuthor(item);
+                    string author = CalcAuthor(item, defaultUser);
                     Log.Message($"Push empty commits rejected for {author} {item.TimeStamp}.");
                 }
                 syncHistory.Save();
@@ -335,11 +352,11 @@ namespace DXVcs2Git.Console {
             while (extractor.PerformExtraction())
                 Log.Message($"{++i} from {commits.Count} push to branch {branch.Name} completed.");
         }
-        static string CalcAuthor(CommitItem localCommit) {
+        static string CalcAuthor(CommitItem localCommit, User defaultUser) {
             string author = localCommit.Author;
             if (string.IsNullOrEmpty(author))
                 author = localCommit.Items.FirstOrDefault(x => !string.IsNullOrEmpty(x.User))?.User;
-            if (author != defaultUserName)
+            if (author != defaultUser.UserName)
                 return author;
             var comment = localCommit.Items.FirstOrDefault(x => CommentWrapper.IsAutoSyncComment(x.Comment));
             if (comment == null)
