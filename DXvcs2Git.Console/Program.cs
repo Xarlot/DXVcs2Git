@@ -61,10 +61,20 @@ namespace DXVcs2Git.Console {
 
             SyncHistoryWrapper syncHistory = new SyncHistoryWrapper(history, vcsWrapper, branch.HistoryPath, historyPath);
             var head = syncHistory.GetHead();
-            if (head != null && head.Status == SyncHistoryStatus.Failed) {
-                Log.Error("Failed sync detected. Repair repo.");
-                return 1;
+            do {
+                if (head == null) {
+                    Log.Error("Failed sync. Cant find history item with success status.");
+                    return 1;
+                }
+                if (head.Status == SyncHistoryStatus.Failed) {
+                    Log.Error("Failed sync detected. Repair repo.");
+                    return 1;
+                }
+                if (head.Status == SyncHistoryStatus.Success)
+                    break;
+                head = syncHistory.GetPrevious(head);
             }
+            while (true);
 
             GitWrapper gitWrapper = CreateGitWrapper(gitRepoPath, localGitDir, branch, username, password);
             if (gitWrapper == null)
@@ -282,7 +292,7 @@ namespace DXVcs2Git.Console {
             return result.Replace("\\", "/");
         }
         static ProcessHistoryResult ProcessHistory(DXVcsWrapper vcsWrapper, GitWrapper gitWrapper, RegisteredUsers users, User defaultUser, string gitRepoPath, string localGitDir, TrackBranch branch, int commitsCount, SyncHistoryWrapper syncHistory) {
-            DateTime lastCommit = CalcLastCommitDate(gitWrapper, users, defaultUser, branch, syncHistory);
+            DateTime lastCommit = CalcLastCommitDate(gitWrapper, defaultUser, branch, syncHistory);
             Log.Message($"Last commit has been performed at {lastCommit.ToLocalTime()}.");
 
             var history = vcsWrapper.GenerateHistory(branch, lastCommit).OrderBy(x => x.ActionDate).ToList();
@@ -302,8 +312,14 @@ namespace DXVcs2Git.Console {
 
             return commits.Count > commitsCount ? ProcessHistoryResult.NotEnough : ProcessHistoryResult.Success;
         }
-        static DateTime CalcLastCommitDate(GitWrapper gitWrapper, RegisteredUsers users, User defaultUser, TrackBranch branch, SyncHistoryWrapper syncHistory) {
+        static DateTime CalcLastCommitDate(GitWrapper gitWrapper, User defaultUser, TrackBranch branch, SyncHistoryWrapper syncHistory) {
             var head = syncHistory.GetHead();
+            do {
+                if (head == null || head.Status == SyncHistoryStatus.Success) 
+                    break;
+                head = syncHistory.GetPrevious(head);
+            }
+            while (true);
             if (head != null)
                 return new DateTime(head.VcsCommitTimeStamp);
             return gitWrapper.GetLastCommitTimeStamp(branch.Name, defaultUser);
@@ -415,7 +431,7 @@ namespace DXVcs2Git.Console {
             comment.Branch = item.Track.Branch;
             comment.Token = token;
             if (item.Items.Any(x => !string.IsNullOrEmpty(x.Comment) && CommentWrapper.IsAutoSyncComment(x.Comment)))
-                comment.Comment = item.Items.Select(x => CommentWrapper.Parse(x.Message).Comment).FirstOrDefault(x => !string.IsNullOrEmpty(x));
+                comment.Comment = item.Items.Select(x => CommentWrapper.Parse(x.Comment ?? x.Message).Comment).FirstOrDefault(x => !string.IsNullOrEmpty(x));
             else
                 comment.Comment = item.Items.FirstOrDefault(x => !string.IsNullOrEmpty(x.Comment))?.Comment;
             return comment;

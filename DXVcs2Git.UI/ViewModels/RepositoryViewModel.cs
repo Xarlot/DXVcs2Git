@@ -25,6 +25,7 @@ namespace DXVcs2Git.UI.ViewModels {
         public Project Project { get; }
         RepositoriesViewModel Repositories { get; }
         public GitRepoConfig RepoConfig { get; }
+        public string DefaultServiceName { get { return RepoConfig?.DefaultServiceName; } }
         public BranchViewModel SelectedBranch {
             get { return GetProperty(() => SelectedBranch); }
             set { SetProperty(() => SelectedBranch, value); }

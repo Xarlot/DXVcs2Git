@@ -4,5 +4,6 @@
         public string Name { get; set; }
         public string FarmTaskName { get; set; }
         public string FarmSyncTaskName { get; set; }
+        public string DefaultServiceName { get; set; }
     }
 }

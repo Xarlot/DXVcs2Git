@@ -29,6 +29,8 @@ namespace DXVcs2Git.Core.Configuration {
             var launcherFullPath = Path.Combine(path, LauncherFileName);
             if (!File.Exists(launcherFullPath))
                 return false;
+            if (!Directory.Exists(ConfigSerializer.SettingsPath))
+                Directory.CreateDirectory(ConfigSerializer.SettingsPath);
             File.Copy(launcherFullPath, Path.Combine(ConfigSerializer.SettingsPath, LauncherFileName), true);
             config.LastVersion = version.ToString();
             ConfigSerializer.SaveConfig(config);

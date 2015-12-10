@@ -1,12 +1,10 @@
-﻿using System.Windows;
-using System.Windows.Input;
+﻿using System.Windows.Input;
 using DevExpress.Mvvm;
 using DevExpress.Mvvm.Native;
 using DevExpress.Mvvm.POCO;
 
 namespace DXVcs2Git.UI.ViewModels {
     public class EditMergeRequestViewModel : ViewModelBase {
-        string serviceUser = "dxvcs2gitservice";
         new BranchViewModel Parameter { get { return (BranchViewModel)base.Parameter; } }
         EditBranchChangesViewModel Parent { get { return this.GetParentViewModel<EditBranchChangesViewModel>(); } }
 
@@ -48,7 +46,7 @@ namespace DXVcs2Git.UI.ViewModels {
             Parent.CancelMergeRequestChanges();
         }
         void PerformApplyMergeRequest() {
-            Parent.ApplyMergeRequestChanges(new EditMergeRequestData() { Comment = Comment, Assignee = AssignedToService ? this.serviceUser : null });
+            Parent.ApplyMergeRequestChanges(new EditMergeRequestData() { Comment = Comment, AssignToService = AssignedToService });
         }
         bool CanApplyMergeRequest() {
             return IsModified;
@@ -74,7 +72,7 @@ namespace DXVcs2Git.UI.ViewModels {
                 this.user = null;
             }
             else {
-                this.assignedToService = assignee == this.serviceUser;
+                this.assignedToService = AssignedToService;
                 var registeredUser = Parameter?.GetUser(assignee);
                 if (registeredUser != null)
                     this.user = new UserViewModel(registeredUser);

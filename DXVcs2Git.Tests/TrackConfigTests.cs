@@ -63,6 +63,8 @@ namespace DXVcs2Git.Tests {
             items.Add(new TrackItem() { Path = $@"$/{branchName}/Win/DevExpress.XtraDiagram", ProjectPath = "DevExpress.XtraDiagram", AdditionalOffset = "Win"});
             items.Add(new TrackItem() { Path = $@"$/{branchName}/XPF/DevExpress.Xpf.Diagram", ProjectPath = "DevExpress.Xpf.Diagram", AdditionalOffset = "XPF"});
             items.Add(new TrackItem() { Path = $@"$/{branchName}/XPF/DevExpress.Xpf.ReportDesigner", ProjectPath = "DevExpress.Xpf.ReportDesigner", AdditionalOffset = "XPF"});
+            items.Add(new TrackItem() { Path = $@"$/{branchName}/XPF/DevExpress.Xpf.PdfViewer", ProjectPath = "DevExpress.Xpf.PdfViewer", AdditionalOffset = "XPF" });
+            items.Add(new TrackItem() { Path = $@"$/{branchName}/XPF/DevExpress.Xpf.Printing", ProjectPath = "DevExpress.Xpf.Printing", AdditionalOffset = "XPF" });
             TrackBranch branch = new TrackBranch($"{branchName}", $@"$/{branchName}/Diagram/xpf_common_sync.config", $@"$/{branchName}", items);
 
             SharpSerializerXmlSettings settings = new SharpSerializerXmlSettings();

@@ -92,9 +92,15 @@ namespace DXVcs2Git.UI.ViewModels {
                 return repoConfig.Name;
             return Parameter.ProtectedBranches.FirstOrDefault(x => name.StartsWith(x.Name)).With(x => x.Name);
         }
+        string CalcServiceName() {
+            GitRepoConfig repoConfig = SelectedBranch.Repository.RepoConfig;
+            if (repoConfig != null)
+                return repoConfig.DefaultServiceName;
+            return null;
+        }
         public void UpdateMergeRequest(EditMergeRequestData data) {
             if (MessageBoxService.Show("Are you sure?", "Update merge request", MessageBoxButton.OKCancel) == MessageBoxResult.OK) {
-                SelectedBranch.UpdateMergeRequest(CalcMergeRequestTitle(data.Comment), CalcMergeRequestDescription(data.Comment), data.Assignee);
+                SelectedBranch.UpdateMergeRequest(CalcMergeRequestTitle(data.Comment), CalcMergeRequestDescription(data.Comment), data.AssignToService ? CalcServiceName() : null);
                 CloseEditableMergeRequest();
                 Parameter.Refresh();
             }
