@@ -13,6 +13,8 @@ namespace DXVcs2Git.Console {
     }
 
     public class CommandLineOptions {
+        [Option('s', "server", Required = true, HelpText = "GitLab server url")]
+        public string Server { get; set; }
         [Option('b', "branch", Required = true, HelpText = "Local git branch name")]
         public string Branch { get; set; }
         [Option('r', "repo", Required = true, HelpText = "Http git repo path")]

@@ -17,10 +17,7 @@ using User = DXVcs2Git.Core.User;
 
 namespace DXVcs2Git.Console {
     internal class Program {
-        const string password = @"5O5+NitKdsK8+XapL28jIsw7GxrElr3asn5S0S1G8JA=";
-        const string gitlabauthtoken = @"DidEcvpG/IxWQqDmZOFmez8pI94kuEoHSFzkxbzywxygrtiC3/2mf6VLu3hcZMX8";
         const string repoPath = "repo";
-        const string gitServer = @"http://litvinov-lnx";
         const string vcsServer = @"net.tcp://vcsservice.devexpress.devx:9091/DXVCSService";
         const string tagName = "dxvcs2gitservice_sync_{0}";
         const string failedTagName = "dxvcs2gitservice_sync_failed_{0}";
@@ -44,8 +41,7 @@ namespace DXVcs2Git.Console {
             WorkMode workMode = clo.WorkMode;
             string branchName = clo.Branch;
             string trackerPath = clo.Tracker;
-            DateTime from = clo.From;
-
+            string gitServer = clo.Server;
 
             TrackBranch branch = FindBranch(branchName, trackerPath);
             if (branch == null)
