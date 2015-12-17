@@ -8,7 +8,6 @@ namespace DXVcs2Git.UI.ViewModels {
         new BranchViewModel Parameter { get { return (BranchViewModel)base.Parameter; } }
         EditBranchChangesViewModel Parent { get { return this.GetParentViewModel<EditBranchChangesViewModel>(); } }
 
-        UserViewModel user;
         string comment;
         bool assignedToService;
 
@@ -36,9 +35,6 @@ namespace DXVcs2Git.UI.ViewModels {
             IsModified = true;
             CommandManager.InvalidateRequerySuggested();
         }
-        bool CanAssignToService() {
-            return true;
-        }
         bool CanCancelMergeRequest() {
             return true;
         }
@@ -60,7 +56,6 @@ namespace DXVcs2Git.UI.ViewModels {
         public void Reset() {
             this.assignedToService = false;
             this.comment = string.Empty;
-            user = null;
             assignedToService = false;
             IsModified = false;
         }
@@ -69,13 +64,9 @@ namespace DXVcs2Git.UI.ViewModels {
             string assignee = Parameter?.MergeRequest?.Assignee;
             if (string.IsNullOrEmpty(assignee)) {
                 this.assignedToService = false;
-                this.user = null;
             }
             else {
                 this.assignedToService = AssignedToService;
-                var registeredUser = Parameter?.GetUser(assignee);
-                if (registeredUser != null)
-                    this.user = new UserViewModel(registeredUser);
             }
             RaisePropertyChanged(null);
         }

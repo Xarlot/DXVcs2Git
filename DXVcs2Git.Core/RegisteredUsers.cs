@@ -12,12 +12,10 @@ namespace DXVcs2Git.Core {
         IDictionary<string, User> ADUsers { get; set; }
         IList<UserInfo> VcsUsers { get; set; }
         readonly GitLabWrapper gitLabWrapper;
-        readonly DXVcsWrapper vcsWrapper;
         public RegisteredUsers(GitLabWrapper gitLabWrapper, DXVcsWrapper vcsWrapper) {
             this.gitLabWrapper = gitLabWrapper;
-            this.vcsWrapper = vcsWrapper;
             ADUsers = ADWrapper.GetUsers().ToDictionary(x => x.UserName.ToLowerInvariant());
-            Users = gitLabWrapper.GetUsers().Select(x => new User(x.Username, x.Email, x.Name, true)).ToDictionary(x => x.UserName);
+            Users = gitLabWrapper.GetUsers().Select(x => new User(x.Username, GetEmail(x.Username), x.Name, true)).ToDictionary(x => x.UserName);
             this.VcsUsers = vcsWrapper.GetUsers().ToList();
         }
 
@@ -27,6 +25,12 @@ namespace DXVcs2Git.Core {
                 return user;
             user = FindAndRegisterUser(name);
             return user ?? new User(name, DefaultMail, name);
+        }
+        string GetEmail(string userName) {
+            User user;
+            if (ADUsers.TryGetValue(userName, out user))
+                return user.Email;
+            return DefaultMail;
         }
         private User FindAndRegisterUser(string name) {
             var userInfo = VcsUsers.FirstOrDefault(x => x.Name == name);
@@ -47,7 +51,8 @@ namespace DXVcs2Git.Core {
             return gitLabUser;
         }
         private static string CalcLogin(string x) {
-            return x.Replace(@"corp\", "");
+            string removeCorp = x.Replace(@"corp\", "");
+            return removeCorp.ToLower();
         }
     }
 }

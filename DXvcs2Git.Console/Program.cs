@@ -19,8 +19,6 @@ namespace DXVcs2Git.Console {
     internal class Program {
         const string repoPath = "repo";
         const string vcsServer = @"net.tcp://vcsservice.devexpress.devx:9091/DXVCSService";
-        const string tagName = "dxvcs2gitservice_sync_{0}";
-        const string failedTagName = "dxvcs2gitservice_sync_failed_{0}";
         static void Main(string[] args) {
             var result = Parser.Default.ParseArguments<CommandLineOptions>(args);
             var exitCode = result.MapResult(clo => {
@@ -140,13 +138,6 @@ namespace DXVcs2Git.Console {
             }
             return branch;
         }
-        static CommitItem SetSyncLabel(DXVcsWrapper vcsWrapper, Commit commit, TrackBranch branch, string tag, string token) {
-            var comment = CalcComment(commit, branch, token);
-            vcsWrapper.CreateLabel(branch.RepoRoot, tag, comment.ToString());
-            var syncLabelItem = vcsWrapper.FindCommit(branch, x => CommentWrapper.Parse(x.Comment).Token == token);
-            var syncLabel = vcsWrapper.GenerateCommits(new[] { syncLabelItem });
-            return syncLabel.First();
-        }
         static int ProcessMergeRequests(DXVcsWrapper vcsWrapper, GitWrapper gitWrapper, GitLabWrapper gitLabWrapper, RegisteredUsers users, User defaultUser, string gitRepoPath, string localGitDir, string branchName, string tracker, SyncHistoryWrapper syncHistory, string userName) {
             var project = gitLabWrapper.FindProject(gitRepoPath);
             TrackBranch branch = GetBranch(branchName, tracker);
@@ -161,14 +152,19 @@ namespace DXVcs2Git.Console {
             }
             int result = 0;
             foreach (var mergeRequest in mergeRequests) {
-                var head = syncHistory.GetHead();
                 var mergeRequestResult = ProcessMergeRequest(vcsWrapper, gitWrapper, gitLabWrapper, users, defaultUser, localGitDir, branch, mergeRequest, syncHistory);
                 if (mergeRequestResult == MergeRequestResult.Failed)
                     return 1;
-                if (mergeRequestResult == MergeRequestResult.Conflicts)
+                if (mergeRequestResult == MergeRequestResult.Conflicts) {
+                    AssignBackConflictedMergeRequest(gitLabWrapper, users, mergeRequest);
                     result = 1;
+                }
             }
             return result;
+        }
+        static void AssignBackConflictedMergeRequest(GitLabWrapper gitLabWrapper, RegisteredUsers users, MergeRequest mergeRequest) {
+            User author = users.GetUser(mergeRequest.Author.Username);
+            gitLabWrapper.UpdateMergeRequestAssignee(mergeRequest, author.UserName);
         }
         static bool ValidateMergeRequest(DXVcsWrapper vcsWrapper, RegisteredUsers users, TrackBranch branch, SyncHistoryItem previous, User defaultUser) {
             var history = vcsWrapper.GenerateHistory(branch, new DateTime(previous.VcsCommitTimeStamp)).Where(x => x.ActionDate.Ticks > previous.VcsCommitTimeStamp);
@@ -248,7 +244,7 @@ namespace DXVcs2Git.Console {
                 Log.Message("Merge request merging failed");
                 return MergeRequestResult.Conflicts;
             }
-            Log.Message($"Merge request merging from {targetBranch} to {sourceBranch} failed due conflicts. Resolve conflicts manually.");
+            Log.Message($"Merge request merging from {sourceBranch} to {targetBranch} failed due conflicts. Resolve conflicts manually.");
             return MergeRequestResult.Conflicts;
         }
         static SyncItem ProcessMergeRequestChanges(MergeRequest mergeRequest, MergeRequestFileData fileData, string localGitDir, TrackBranch branch, string token) {
@@ -388,12 +384,6 @@ namespace DXVcs2Git.Console {
         }
         static bool IsLabel(CommitItem item) {
             return item.Items.Any(x => !string.IsNullOrEmpty(x.Label));
-        }
-        static string CreateTagName(string branchName) {
-            return string.Format(tagName, branchName);
-        }
-        static string CreateFailedTagName(string branchName) {
-            return string.Format(failedTagName, branchName);
         }
         static CommentWrapper CalcComment(MergeRequest mergeRequest, TrackBranch branch, string autoSyncToken) {
             CommentWrapper comment = new CommentWrapper();

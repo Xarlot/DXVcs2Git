@@ -605,7 +605,7 @@ namespace DXVcs2Git.DXVcs {
                 throw new InvalidOperationException("Can't undo check out: the file is not checked out: " + vcsFile);
             Service.UndoCheckOut(new[] { vcsFile }, new[] { false });
 
-            Log.Message("Unfo checkout file {vcsFile}.");
+            Log.Message($"Undo checkout file {vcsFile}.");
 
         }
         public void AddFile(string vcsFile, byte[] fileBytes, string comment) {

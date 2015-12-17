@@ -25,14 +25,7 @@ namespace DXVcs2Git.Git {
         }
         public MergeRequest ProcessMergeRequest(MergeRequest mergeRequest, string comment) {
             var mergeRequestsClient = client.GetMergeRequest(mergeRequest.ProjectId);
-            return mergeRequestsClient.Accept(mergeRequest.Id, new MergeCommitMessage() { Message = comment});
-        }
-        public MergeRequest UpdateMergeRequest(MergeRequest mergeRequest, string autoMergeFailedComment) {
-            var mergeRequestsClient = client.GetMergeRequest(mergeRequest.ProjectId);
-            return mergeRequestsClient.Update(mergeRequest.Id, new MergeRequestUpdate() {
-                Description = autoMergeFailedComment,
-                AssigneeId = mergeRequest.Assignee.Id,
-            });
+            return mergeRequestsClient.Accept(mergeRequest.Id, new MergeCommitMessage() { Message = comment });
         }
         public MergeRequest UpdateMergeRequestTitleAndDescription(MergeRequest mergeRequest, string title, string description) {
             var mergeRequestsClient = client.GetMergeRequest(mergeRequest.ProjectId);
@@ -43,7 +36,7 @@ namespace DXVcs2Git.Git {
         }
         public MergeRequest CloseMergeRequest(MergeRequest mergeRequest) {
             var mergeRequestsClient = client.GetMergeRequest(mergeRequest.ProjectId);
-            return mergeRequestsClient.Update(mergeRequest.Id, new MergeRequestUpdate() { NewState = "close"});
+            return mergeRequestsClient.Update(mergeRequest.Id, new MergeRequestUpdate() { NewState = "close" });
         }
         public MergeRequest CreateMergeRequest(Project project, string title, string description, string user, string sourceBranch, string targetBranch) {
             var mergeRequestClient = this.client.GetMergeRequest(project.Id);
@@ -65,7 +58,7 @@ namespace DXVcs2Git.Git {
         }
         public void RegisterUser(string userName, string displayName, string email) {
             var userClient = this.client.Users;
-            var userUpsert = new UserUpsert() {Username = userName, Name = displayName, Email = email, Password = new Guid().ToString()};
+            var userUpsert = new UserUpsert() { Username = userName, Name = displayName, Email = email, Password = new Guid().ToString() };
             userClient.Create(userUpsert);
         }
         public IEnumerable<Branch> GetBranches(Project project) {
@@ -73,9 +66,10 @@ namespace DXVcs2Git.Git {
             var branchesClient = repo.Branches;
             return branchesClient.All;
         }
-        public MergeRequest UpdateMergeRequestAssignee(MergeRequest mergeRequest, User user) {
+        public MergeRequest UpdateMergeRequestAssignee(MergeRequest mergeRequest, string user) {
+            var userInfo = GetUsers().First(x => x.Username == user);
             var mergeRequestsClient = client.GetMergeRequest(mergeRequest.ProjectId);
-            return mergeRequestsClient.Update(mergeRequest.Id, new MergeRequestUpdate() { AssigneeId = user.Id});
+            return mergeRequestsClient.Update(mergeRequest.Id, new MergeRequestUpdate() { AssigneeId = userInfo.Id });
         }
     }
 }

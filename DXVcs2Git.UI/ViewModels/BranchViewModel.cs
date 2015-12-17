@@ -56,9 +56,6 @@ namespace DXVcs2Git.UI.ViewModels {
         public void Refresh() {
             RefreshFarm();
         }
-        public User GetUser(string name) {
-            return this.gitLabWrapper.GetUsers().FirstOrDefault(x => x.Name == name);
-        }
         public void CreateMergeRequest(string title, string description, string user, string sourceBranch, string targetBranch) {
             var mergeRequest = this.gitLabWrapper.CreateMergeRequest(Repository.Project, title, description, user, sourceBranch, targetBranch);
             MergeRequest = new MergeRequestViewModel(this.gitLabWrapper, mergeRequest);
@@ -69,7 +66,7 @@ namespace DXVcs2Git.UI.ViewModels {
         }
         public void UpdateMergeRequest(string title, string description, string assignee) {
             var mergeRequest = this.gitLabWrapper.UpdateMergeRequestTitleAndDescription(MergeRequest.MergeRequest, title, description);
-            mergeRequest = this.gitLabWrapper.UpdateMergeRequestAssignee(mergeRequest, GetUser(assignee));
+            mergeRequest = this.gitLabWrapper.UpdateMergeRequestAssignee(mergeRequest, assignee);
             MergeRequest = new MergeRequestViewModel(this.gitLabWrapper, mergeRequest);
         }
         public void RefreshFarm() {
