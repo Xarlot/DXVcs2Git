@@ -636,15 +636,15 @@ namespace DXVcs2Git.DXVcs {
             }
 
         }
-        public void DeleteFile(string vcsPath) {
+        public void DeleteFile(string vcsPath, string comment) {
             if (string.IsNullOrEmpty(vcsPath))
                 throw new ArgumentException("vcsFile");
-            Service.SetDeletedFile(vcsPath, false);
+            Service.SetDeletedFile(vcsPath, false, comment);
         }
-        public void DeleteProject(string vcsPath) {
+        public void DeleteProject(string vcsPath, string comment) {
             if (string.IsNullOrEmpty(vcsPath))
                 throw new ArgumentException("vcsPath");
-            Service.SetDeletedProject(vcsPath);
+            Service.SetDeletedProject(vcsPath, comment);
         }
         public void MoveFile(string vcsPath, string newVcsPath, string comment) {
             if (string.IsNullOrEmpty(vcsPath))
@@ -656,7 +656,7 @@ namespace DXVcs2Git.DXVcs {
             if (oldProjectPath != newProjectPath) {
                 AddProject(newProjectPath, comment);
                 MoveFileInternal(vcsPath, newProjectPath, comment);
-                RemoveProjectIfNeeded(oldProjectPath);
+                RemoveProjectIfNeeded(oldProjectPath, comment);
                 return;
             }
             string oldFileName = GetFileName(vcsPath);
@@ -667,28 +667,28 @@ namespace DXVcs2Git.DXVcs {
         }
         void RenameFile(string vcsPath, string newFileName, string projectPath, string comment) {
             try {
-                Service.RenameFile(vcsPath, newFileName);
+                Service.RenameFile(vcsPath, newFileName, comment);
             }
             catch (DXVCSFileAlreadyExistsException) {
-                if (!SafeDeleteFile(projectPath, newFileName))
+                if (!SafeDeleteFile(projectPath, newFileName, comment))
                     throw;
-                Service.RenameFile(vcsPath, newFileName);
+                Service.RenameFile(vcsPath, newFileName, comment);
             }
         }
-        void RemoveProjectIfNeeded(string oldProjectPath) {
+        void RemoveProjectIfNeeded(string oldProjectPath, string comment) {
             var projectFiles = Service.GetFiles(oldProjectPath);
             if (projectFiles.Length == 0)
-                DeleteProject(oldProjectPath);
+                DeleteProject(oldProjectPath, comment);
         }
         void MoveFileInternal(string vcsPath, string newProjectPath, string comment) {
             string[] exist;
             var oldHistory = GetFileHistory(vcsPath);
 
-            Service.MoveFiles(new[] {vcsPath}, newProjectPath, out exist);
+            Service.MoveFiles(new[] {vcsPath}, newProjectPath, out exist, comment);
             if (exist.Length > 0) {
-                if (!exist.All(x => SafeDeleteFile(GetProjectPath(x), GetFileName(x))))
+                if (!exist.All(x => SafeDeleteFile(GetProjectPath(x), GetFileName(x), comment)))
                     throw new ArgumentException("move file failed");
-                Service.MoveFiles(new[] {vcsPath}, newProjectPath, out exist);
+                Service.MoveFiles(new[] {vcsPath}, newProjectPath, out exist, comment);
             }
 
             string newFilePath = $@"{newProjectPath}/{GetFileName(vcsPath)}";
@@ -723,7 +723,7 @@ namespace DXVcs2Git.DXVcs {
                 }
             }
             catch (DXVCSFileAlreadyExistsException) {
-                if (SafeDeleteFile(vcsPath, fileName)) {
+                if (SafeDeleteFile(vcsPath, fileName, comment)) {
                     Service.CreateFile(vcsPath, fileName, fileBytes, DateTime.Now, comment);
 
                     Log.Message($"Add file {vcsFile}.");
@@ -732,7 +732,7 @@ namespace DXVcs2Git.DXVcs {
                     throw;
             }
         }
-        bool SafeDeleteFile(string vcsPath, string fileName) {
+        bool SafeDeleteFile(string vcsPath, string fileName, string comment) {
             var fileStateInfo = Service.GetDeletedFiles(vcsPath);
             var fileInfo = fileStateInfo.Where(x => x.Name == fileName).FirstOrDefault();
             if (fileInfo.IsNull)
@@ -741,17 +741,17 @@ namespace DXVcs2Git.DXVcs {
             string newFileName = fileName + "_deleted_" + Guid.NewGuid();
             string newVcsFile = $@"{vcsPath}/{newFileName}";
 
-            Service.RecoverDeletedFile(vcsFile);
+            Service.RecoverDeletedFile(vcsFile, comment);
             Log.Message($"Recover file {vcsFile}");
 
-            Service.RenameFile(vcsFile, newFileName);
+            Service.RenameFile(vcsFile, newFileName, comment);
             Log.Message($"Rename file {vcsFile} to {newVcsFile}");
 
-            Service.SetDeletedFile(newVcsFile, false);
+            Service.SetDeletedFile(newVcsFile, false, comment);
             Log.Message($"Delete file {newVcsFile}");
             return true;
         }
-        bool SafeDeleteProject(string vcsPath, string name) {
+        bool SafeDeleteProject(string vcsPath, string name, string comment) {
             var projectStateInfo = Service.GetDeletedProjects(vcsPath);
             var fileInfo = projectStateInfo.Where(x => x.Name == name).FirstOrDefault();
             if (fileInfo.IsNull || string.IsNullOrEmpty(fileInfo.Name))
@@ -760,13 +760,13 @@ namespace DXVcs2Git.DXVcs {
             string newProjectName = name + "_deleted_" + Guid.NewGuid();
             string newVcsProjectPath = $@"{vcsPath}/{newProjectName}";
 
-            Service.RecoverDeletedProject(vcsProjectPath);
+            Service.RecoverDeletedProject(vcsProjectPath, comment);
             Log.Message($"Recover project {vcsProjectPath}");
 
-            Service.RenameProject(vcsProjectPath, newProjectName);
+            Service.RenameProject(vcsProjectPath, newProjectName, comment);
             Log.Message($"Rename project {vcsProjectPath} to {newVcsProjectPath}");
 
-            Service.SetDeletedProject(newVcsProjectPath);
+            Service.SetDeletedProject(newVcsProjectPath, comment);
             Log.Message($"Delete project {newVcsProjectPath}");
             return true;
         }
@@ -781,7 +781,7 @@ namespace DXVcs2Git.DXVcs {
                 }
             }
             catch (DXVCSProjectAlreadyExistsException) {
-                if (!SafeDeleteProject(vcsPath, name))
+                if (!SafeDeleteProject(vcsPath, name, comment))
                     throw;
                 Service.CreateProject(vcsPath, name, comment, true);
                 Log.Message($"Add project {vcsProjectPath}");

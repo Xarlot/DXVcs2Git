@@ -142,7 +142,7 @@ namespace DXVcs2Git.DXVcs {
                     return false;
                 }
                 UndoCheckoutFile(vcsPath, localPath);
-                repo.DeleteFile(vcsPath);
+                repo.DeleteFile(vcsPath, comment);
                 File.Delete(localPath);
                 return true;
             }

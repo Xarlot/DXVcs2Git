@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
+using System.Text;
 using DXVCS;
 
 namespace DXVcs2Git.DXVcs {
@@ -42,10 +44,12 @@ namespace DXVcs2Git.DXVcs {
                 if (!previousIsBranch) {
                     byte[] revisionData = DXVCSHelpers.TryToDecompressData(data[i]);
                     int version;
-                    bool binDiff;
-                    if (Diff.IsDiffs(revisionData, out version, out binDiff)) {
-                        byte[] curSplitter;
-                        DiffByteItem[] diffs = Diff.BytesToDiffs(revisionData, binDiff, out curSplitter);
+                    if (Diff.IsDiffs(revisionData, out version)) {
+                        Encoding encoding;
+                        string fileText = DXVCSHelpers.ReadTextFromByte(revisionData, out encoding);
+                        var splitterStr = DXVCSHelpers.DetectTextSplitter(fileText);
+                        byte[] curSplitter = encoding.GetBytes(splitterStr);
+                        DiffByteItem[] diffs = Diff.BytesToDiffs(revisionData);
                         revisionData = Diff.GetDataFromDiff(previousData, diffs, curSplitter);
                     }
                     previousData = revisionData;

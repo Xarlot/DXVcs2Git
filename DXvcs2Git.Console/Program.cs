@@ -57,7 +57,7 @@ namespace DXVcs2Git.Console {
             var head = syncHistory.GetHead();
             do {
                 if (head == null) {
-                    Log.Error("Failed sync. Cant find history item with success status.");
+                    Log.Error("Failed sync. Can`t find history item with success status.");
                     return 1;
                 }
                 if (head.Status == SyncHistoryStatus.Failed) {
