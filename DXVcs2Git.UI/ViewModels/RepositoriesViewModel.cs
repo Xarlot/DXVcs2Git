@@ -11,12 +11,11 @@ using DXVcs2Git.Core.Configuration;
 
 namespace DXVcs2Git.UI.ViewModels {
     public class RepositoriesViewModel : ViewModelBase {
-        GitLabWrapper gitLabWrapper;
         BranchViewModel selectedBranch;
         RepositoryViewModel selectedRepository;
         public RootViewModel RootViewModel { get { return this.GetParentViewModel<RootViewModel>(); } }
         public Config Config { get { return RootViewModel.Config; } }
-
+        public RepoConfigsReader RepoConfigs { get; private set; }
         public IEnumerable<BranchViewModel> Branches {
             get { return GetProperty(() => Branches); }
             set { SetProperty(() => Branches, value); }
@@ -50,20 +49,24 @@ namespace DXVcs2Git.UI.ViewModels {
 
         public void Update() {
             IsInitialized = false;
-            if (!IsValidConfig(Config)) 
-                return;
-            gitLabWrapper = new GitLabWrapper(Config.GitServer, Config.Token);
-            Repositories = Config.Repositories.With(x => x.Where(repo => repo.Watch).Select(repo => new RepositoryViewModel(repo.Name, this.gitLabWrapper, new GitReaderWrapper(repo.LocalPath), this))).With(x => x.ToList());
+            RepoConfigs = new RepoConfigsReader();
+            Repositories = Config.Repositories.With(x => x.Where(IsValidConfig).Select(repo => new RepositoryViewModel(repo.Name, repo, this))).With(x => x.ToList());
             SelectedRepository = Repositories.With(x => x.FirstOrDefault());
             Refresh();
             IsInitialized = true;
 
             Messenger.Default.Send(new Message(MessageType.Update));
         }
-        bool IsValidConfig(Config config) {
-            if (config == null)
+        bool IsValidConfig(TrackRepository repo) {
+            if (string.IsNullOrEmpty(repo.Name))
                 return false;
-            if (string.IsNullOrEmpty(config.Token))
+            if (!RepoConfigs.HasConfig(repo.Name))
+                return false;
+            if (string.IsNullOrEmpty(repo.LocalPath))
+                return false;
+            if (string.IsNullOrEmpty(repo.Server))
+                return false;
+            if (string.IsNullOrEmpty(repo.Token))
                 return false;
             return true;
         }

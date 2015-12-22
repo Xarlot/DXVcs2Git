@@ -4,6 +4,7 @@ using System.Linq;
 using DevExpress.Mvvm;
 using DevExpress.Mvvm.Native;
 using DXVcs2Git.Core;
+using DXVcs2Git.Core.Configuration;
 using DXVcs2Git.Core.Git;
 using DXVcs2Git.Git;
 using DXVcs2Git.UI.Farm;
@@ -25,28 +26,23 @@ namespace DXVcs2Git.UI.ViewModels {
         public Project Project { get; }
         RepositoriesViewModel Repositories { get; }
         public GitRepoConfig RepoConfig { get; }
+        public TrackRepository TrackRepository { get; }
         public string DefaultServiceName { get { return RepoConfig?.DefaultServiceName; } }
         public BranchViewModel SelectedBranch {
             get { return GetProperty(() => SelectedBranch); }
             set { SetProperty(() => SelectedBranch, value); }
         }
-        public RepositoryViewModel(string name, GitLabWrapper gitLabWrapper, GitReaderWrapper gitReader, RepositoriesViewModel repositories) {
-            GitLabWrapper = gitLabWrapper;
-            GitReader = gitReader;
+        public RepositoryViewModel(string name, TrackRepository trackRepository, RepositoriesViewModel repositories) {
+            TrackRepository = trackRepository;
+            GitLabWrapper = new GitLabWrapper(TrackRepository.Server, TrackRepository.Token);
+            GitReader = new GitReaderWrapper(trackRepository.LocalPath);
             Repositories = repositories;
-            Project = gitLabWrapper.FindProject(GitReader.GetRemoteRepoPath());
-            RepoConfig = CreateRepoConfig();
-            Name = name ?? RepoConfig?.Name;
+            Project = GitLabWrapper.FindProject(GitReader.GetRemoteRepoPath());
+            Name = name;
             FarmStatus = new FarmStatus();
 
             Update();
         }
-        GitRepoConfig CreateRepoConfig() {
-            string localRepoPath = GitReader.GetLocalRepoPath();
-            GitRepoConfig repoConfig = Serializer.Deserialize<GitRepoConfig>(Path.Combine(localRepoPath, GitRepoConfig.ConfigFileName));
-            return repoConfig;
-        }
-
         public void Update() {
             if (Project == null) {
                 Log.Error("Can`t find project");

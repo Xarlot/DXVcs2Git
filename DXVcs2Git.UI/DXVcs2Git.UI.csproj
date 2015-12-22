@@ -201,6 +201,7 @@
     <Compile Include="Farm\SmartProjectActivity.cs" />
     <Compile Include="NativeMethods\NativeMethods.cs" />
     <Compile Include="Services\FolderBrowserCustomDialogService.cs" />
+    <Compile Include="ViewModels\ConfigsReader.cs" />
     <Compile Include="ViewModels\UriDownloaderViewModel.cs" />
     <Compile Include="ViewModels\BranchViewModel.cs" />
     <Compile Include="ViewModels\EditBranchChangesViewModel.cs" />
@@ -304,6 +305,12 @@
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
+    <None Include="Configs\Common_2015.1.config">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="Configs\Common_2015.2.config">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Include="packages.config" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
