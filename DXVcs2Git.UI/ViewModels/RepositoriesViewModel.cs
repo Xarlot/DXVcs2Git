@@ -60,7 +60,7 @@ namespace DXVcs2Git.UI.ViewModels {
         bool IsValidConfig(TrackRepository repo) {
             if (string.IsNullOrEmpty(repo.Name))
                 return false;
-            if (!RepoConfigs.HasConfig(repo.Name))
+            if (!RepoConfigs.HasConfig(repo.ConfigName))
                 return false;
             if (string.IsNullOrEmpty(repo.LocalPath))
                 return false;
