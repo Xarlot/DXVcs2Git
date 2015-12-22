@@ -9,20 +9,31 @@
              xmlns:dxe="http://schemas.devexpress.com/winfx/2008/xaml/editors"
              xmlns:dxmvvm="http://schemas.devexpress.com/winfx/2008/xaml/mvvm"
              xmlns:services="clr-namespace:DXVcs2Git.UI.Services"
+             xmlns:behaviors="clr-namespace:DXVcs2Git.UI.Behaviors"
              mc:Ignorable="d" 
              d:DesignHeight="300" d:DesignWidth="300">
     <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
         <dx:DXTabControl>
             <dx:DXTabItem Header="Repositories">
                 <dxg:GridControl ItemsSource="{Binding Path=Repositories}" SelectionMode="Row">
                     <dxmvvm:Interaction.Behaviors>
-                        <dxg:GridDragDropManager AllowDrag="True"/>
+                        <dxg:GridDragDropManager>
+                            <dxg:GridDragDropManager.DragElementTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding Path=Name}"/>
+                                </DataTemplate>
+                            </dxg:GridDragDropManager.DragElementTemplate>
+                            </dxg:GridDragDropManager>
                     </dxmvvm:Interaction.Behaviors>
                     <dxg:GridControl.Columns>
                         <dxg:GridColumn FieldName="Name"/>
                         <dxg:GridColumn FieldName="ConfigName">
                             <dxg:GridColumn.EditSettings>
-                                <dxe:ComboBoxEditSettings IsTextEditable="False" ItemsSource="{Binding Path=Configs}" ValueMember="Name" DisplayMember="Name"/>
+                                <dxe:ComboBoxEditSettings IsTextEditable="False" ItemsSource="{Binding Path=AvailableConfigs}"/>
                             </dxg:GridColumn.EditSettings>
                         </dxg:GridColumn>
                         <dxg:GridColumn FieldName="LocalPath">
@@ -44,11 +55,23 @@
                                 </DataTemplate>
                             </dxg:GridColumn.CellTemplate>
                         </dxg:GridColumn>
-                        <dxg:GridColumn Header="Server"  FieldName="RepoConfig.Server" ReadOnly="True"/>
-                        <dxg:GridColumn FieldName="Token"/>
+                        <dxg:GridColumn FieldName="Token">
+                            <dxg:GridColumn.EditSettings>
+                                <dxe:ComboBoxEditSettings ItemsSource="{Binding Path=AvailableTokens}"/>
+                            </dxg:GridColumn.EditSettings>
+                            </dxg:GridColumn>
+                            <dxg:GridColumn Header="Server"  FieldName="RepoConfig.Server" ReadOnly="True"/>
                     </dxg:GridControl.Columns>
                     <dxg:GridControl.View>
-                        <dxg:TableView NewItemRowPosition="Top" AutoWidth="True" EditorButtonShowMode="ShowAlways" ShowDataNavigator="True" EditorShowMode="MouseUp">
+                        <dxg:TableView 
+                            NewItemRowPosition="Bottom" 
+                            AutoWidth="True" 
+                            EditorButtonShowMode="ShowAlways" 
+                            ShowDataNavigator="True" 
+                            EditorShowMode="MouseUp">
+                            <dxmvvm:Interaction.Behaviors>
+                                <behaviors:ValidateEditConfigBehavior/>
+                            </dxmvvm:Interaction.Behaviors>
                         </dxg:TableView>
                     </dxg:GridControl.View>
                 </dxg:GridControl>

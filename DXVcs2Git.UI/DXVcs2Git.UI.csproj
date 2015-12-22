@@ -196,6 +196,7 @@
     <Compile Include="AtomFeed\VsixElementExtension.cs" />
     <Compile Include="Behaviors\RibbonWindowButtonsInjectionBehavior.cs" />
     <Compile Include="Behaviors\TaskBarIconBehavior.cs" />
+    <Compile Include="Behaviors\ValidateEditConfigBehavior.cs" />
     <Compile Include="NativeMethods\EntryPoint.cs" />
     <Compile Include="Farm\BuildNotificationViewInfo.cs" />
     <Compile Include="Farm\DXCCTrayHelpers.cs" />
