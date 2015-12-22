@@ -7,8 +7,8 @@ using DXVcs2Git.Core.Git;
 namespace DXVcs2Git.UI.ViewModels {
     public class RepoConfigsReader {
         const string ConfigFolder = "Configs";
-        static Dictionary<string, GitRepoConfig> configs;
-        public static IEnumerable<GitRepoConfig> RegisteredConfigs { get { return configs.Values; } }
+        readonly Dictionary<string, GitRepoConfig> configs;
+        public IEnumerable<GitRepoConfig> RegisteredConfigs { get { return configs.Values; } }
         public GitRepoConfig this[string name] { get { return configs[name]; } }
 
         public RepoConfigsReader() {

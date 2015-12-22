@@ -94,6 +94,10 @@
     <Reference Include="DevExpress.Xpf.Grid.v15.2.Core, Version=15.2.2.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
       <HintPath>..\Lib\DX\DevExpress.Xpf.Grid.v15.2.Core.dll</HintPath>
     </Reference>
+    <Reference Include="DevExpress.Xpf.Grid.v15.2.Extensions, Version=15.2.0.0, Culture=neutral, PublicKeyToken=79868b8147b5eae4, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\Lib\DX\DevExpress.Xpf.Grid.v15.2.Extensions.dll</HintPath>
+    </Reference>
     <Reference Include="DevExpress.Xpf.Layout.v15.2.Core, Version=15.2.2.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
       <HintPath>..\Lib\DX\DevExpress.Xpf.Layout.v15.2.Core.dll</HintPath>
     </Reference>
@@ -202,6 +206,7 @@
     <Compile Include="NativeMethods\NativeMethods.cs" />
     <Compile Include="Services\FolderBrowserCustomDialogService.cs" />
     <Compile Include="ViewModels\ConfigsReader.cs" />
+    <Compile Include="ViewModels\EditTrackRepository.cs" />
     <Compile Include="ViewModels\UriDownloaderViewModel.cs" />
     <Compile Include="ViewModels\BranchViewModel.cs" />
     <Compile Include="ViewModels\EditBranchChangesViewModel.cs" />
@@ -305,6 +310,9 @@
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
+    <None Include="Configs\Diagram_2015.2.config">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Include="Configs\Common_2015.1.config">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>

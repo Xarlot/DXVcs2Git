@@ -14,10 +14,17 @@
     <Grid>
         <dx:DXTabControl>
             <dx:DXTabItem Header="Repositories">
-                <dxg:GridControl ItemsSource="{Binding Path=Repositories}">
+                <dxg:GridControl ItemsSource="{Binding Path=Repositories}" SelectionMode="Row">
+                    <dxmvvm:Interaction.Behaviors>
+                        <dxg:GridDragDropManager AllowDrag="True"/>
+                    </dxmvvm:Interaction.Behaviors>
                     <dxg:GridControl.Columns>
                         <dxg:GridColumn FieldName="Name"/>
-                        <dxg:GridColumn FieldName="ConfigName"/>
+                        <dxg:GridColumn FieldName="ConfigName">
+                            <dxg:GridColumn.EditSettings>
+                                <dxe:ComboBoxEditSettings IsTextEditable="False" ItemsSource="{Binding Path=Configs}" ValueMember="Name" DisplayMember="Name"/>
+                            </dxg:GridColumn.EditSettings>
+                        </dxg:GridColumn>
                         <dxg:GridColumn FieldName="LocalPath">
                             <dxg:GridColumn.CellTemplate>
                                 <DataTemplate>
@@ -37,17 +44,17 @@
                                 </DataTemplate>
                             </dxg:GridColumn.CellTemplate>
                         </dxg:GridColumn>
+                        <dxg:GridColumn Header="Server"  FieldName="RepoConfig.Server" ReadOnly="True"/>
+                        <dxg:GridColumn FieldName="Token"/>
                     </dxg:GridControl.Columns>
                     <dxg:GridControl.View>
-                        <dxg:TableView NewItemRowPosition="Top" AutoWidth="True" EditorButtonShowMode="ShowAlways"/>
+                        <dxg:TableView NewItemRowPosition="Top" AutoWidth="True" EditorButtonShowMode="ShowAlways" ShowDataNavigator="True" EditorShowMode="MouseUp">
+                        </dxg:TableView>
                     </dxg:GridControl.View>
                 </dxg:GridControl>
             </dx:DXTabItem>
             <dx:DXTabItem Header="Application">
                 <dxlc:LayoutControl Orientation="Vertical" VerticalAlignment="Top">
-                    <dxlc:LayoutItem Label="Token: ">
-                        <dxe:TextEdit EditValue="{Binding Path=Token, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
-                    </dxlc:LayoutItem>
                     <dxlc:LayoutItem Label="Update delay: " VerticalAlignment="Center">
                         <dxe:ButtonEdit EditValue="{Binding Path=UpdateDelay, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" AllowDefaultButton="False">
                             <dxe:ButtonEdit.Buttons>

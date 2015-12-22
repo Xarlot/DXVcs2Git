@@ -11,6 +11,7 @@ namespace DXVcs2Git.UI.ViewModels {
     public class RootViewModel : ViewModelBase {
         public RepositoriesViewModel Repositories { get; private set; }
         public ICommand SettingsCommand { get; private set; }
+        public ICommand ShowLogCommand { get; private set; }
         public ICommand DownloadNewVersionCommand { get; private set; }
         public IDialogService SettingsDialogService { get { return GetService<IDialogService>("settingsDialogService"); } }
         public IDialogService DownloaderDialogService { get { return GetService<IDialogService>("downloaderDialogService"); } }
@@ -25,11 +26,13 @@ namespace DXVcs2Git.UI.ViewModels {
             FarmIntegrator.Start(Dispatcher.CurrentDispatcher, FarmRefreshed);
             AtomFeed.FeedWorker.Initialize();
             SettingsCommand = DelegateCommandFactory.Create(ShowSettings, CanShowSettings);
+            ShowLogCommand = DelegateCommandFactory.Create(ShowLog);
             DownloadNewVersionCommand = DelegateCommandFactory.Create(DownloadNewVersion, CanDownloadNewVersion);
             Config = ConfigSerializer.GetConfig();
             Version = $"Git tools {VersionInfo.Version}";
         }
-
+        void ShowLog() {
+        }
         void DownloadNewVersion() {
             var model = new UriDownloaderViewModel(AtomFeed.FeedWorker.NewVersionUri, AtomFeed.FeedWorker.NewVersion);
             DownloaderDialogService.ShowDialog(new UICommand[] { model.RestartCommand, model.CancelCommand }, "Downloading new version...", model);
