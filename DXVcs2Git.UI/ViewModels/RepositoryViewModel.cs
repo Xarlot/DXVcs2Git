@@ -36,6 +36,7 @@ namespace DXVcs2Git.UI.ViewModels {
             TrackRepository = trackRepository;
             GitLabWrapper = new GitLabWrapper(TrackRepository.Server, TrackRepository.Token);
             GitReader = new GitReaderWrapper(trackRepository.LocalPath);
+            RepoConfig = repositories.RepoConfigs[trackRepository.ConfigName];
             Repositories = repositories;
             Project = GitLabWrapper.FindProject(GitReader.GetRemoteRepoPath());
             Name = name;

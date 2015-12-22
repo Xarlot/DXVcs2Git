@@ -58,7 +58,7 @@ namespace DXVcs2Git.UI.ViewModels {
             return new EditTrackRepository() {
                 Name = repo.Name,
                 ConfigName = repo.ConfigName,
-                RepoConfig = this.configsReader[repo.ConfigName],
+                RepoConfig = repo.ConfigName != null ? this.configsReader[repo.ConfigName] : null,
                 Token = repo.Token,
                 LocalPath = repo.LocalPath,
             };
