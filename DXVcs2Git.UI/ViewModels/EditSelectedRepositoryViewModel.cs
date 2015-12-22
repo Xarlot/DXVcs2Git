@@ -89,7 +89,7 @@ namespace DXVcs2Git.UI.ViewModels {
         string CalcTargetBranch(string name) {
             GitRepoConfig repoConfig = SelectedBranch.Repository.RepoConfig;
             if (repoConfig != null)
-                return repoConfig.Name;
+                return repoConfig.TargetBranch;
             return Parameter.ProtectedBranches.FirstOrDefault(x => name.StartsWith(x.Name)).With(x => x.Name);
         }
         string CalcServiceName() {

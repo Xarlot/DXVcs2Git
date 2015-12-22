@@ -310,6 +310,9 @@
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
+    <None Include="Configs\Asp_2015.1.config">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Include="Configs\Diagram_2015.2.config">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
