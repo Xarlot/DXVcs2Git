@@ -2,6 +2,6 @@
 
 namespace DXVcs2Git.Core {
     public static class VersionInfo {
-        public static readonly Version Version = new Version(1, 0, 40); // do not specify revision if 0
+        public static readonly Version Version = new Version(1, 0, 41); // do not specify revision if 0
     }
 }
