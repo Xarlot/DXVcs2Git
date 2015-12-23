@@ -222,9 +222,9 @@ namespace DXVcs2Git.Console {
                         var lastCommit = checkinHistory.OrderBy(x => x.ActionDate).LastOrDefault();
                         long newTimeStamp = lastCommit?.ActionDate.Ticks ?? timeStamp;
                         var mergeRequestResult = MergeRequestResult.Success;
-                        if (!ValidateMergeRequest(vcsWrapper, users, branch, lastHistoryItem, defaultUser)) 
+                        if (!ValidateMergeRequest(vcsWrapper, users, branch, lastHistoryItem, defaultUser))
                             mergeRequestResult = MergeRequestResult.Mixed;
-                        
+
                         syncHistory.Add(gitCommit.Sha, newTimeStamp, autoSyncToken, mergeRequestResult == MergeRequestResult.Success ? SyncHistoryStatus.Success : SyncHistoryStatus.Mixed);
                         syncHistory.Save();
                         Log.Message("Merge request checkin successfully.");
@@ -235,7 +235,7 @@ namespace DXVcs2Git.Console {
                     var lastFailedCommit = failedHistory.OrderBy(x => x.ActionDate).LastOrDefault();
                     syncHistory.Add(gitCommit.Sha, lastFailedCommit?.ActionDate.Ticks ?? timeStamp, autoSyncToken, SyncHistoryStatus.Failed);
                     syncHistory.Save();
-                    
+
                     Log.Error("Revert merging completed.");
 
                     return MergeRequestResult.Failed;
@@ -307,7 +307,7 @@ namespace DXVcs2Git.Console {
         static DateTime CalcLastCommitDate(GitWrapper gitWrapper, User defaultUser, TrackBranch branch, SyncHistoryWrapper syncHistory) {
             var head = syncHistory.GetHead();
             do {
-                if (head == null || head.Status == SyncHistoryStatus.Success) 
+                if (head == null || head.Status == SyncHistoryStatus.Success)
                     break;
                 head = syncHistory.GetPrevious(head);
             }
@@ -328,20 +328,16 @@ namespace DXVcs2Git.Console {
                     vcsWrapper.GetProject(vcsServer, localCommit.Track.Path, localProjectPath, item.TimeStamp);
 
                     gitWrapper.Fetch();
-                    bool isLabel = IsLabel(item);
-                    bool hasLocalModifications = gitWrapper.CalcHasModification() || isLabel;
-                    if (hasLocalModifications) {
-                        gitWrapper.Stage("*");
-                        try {
-                            var comment = CalcComment(localCommit, token);
-                            string author = CalcAuthor(localCommit, defaultUser);
-                            User user = users.GetUser(author);
-                            last = gitWrapper.Commit(comment.ToString(), user, user, localCommit.TimeStamp, isLabel);
-                            hasModifications = true;
-                        }
-                        catch (Exception) {
-                            Log.Message($"Empty commit detected for {localCommit.Author} {localCommit.TimeStamp}.");
-                        }
+                    gitWrapper.Stage(localCommit.Track.ProjectPath);
+                    try {
+                        var comment = CalcComment(localCommit, token);
+                        string author = CalcAuthor(localCommit, defaultUser);
+                        User user = users.GetUser(author);
+                        last = gitWrapper.Commit(comment.ToString(), user, user, localCommit.TimeStamp, false);
+                        hasModifications = true;
+                    }
+                    catch (Exception) {
+                        Log.Message($"Empty commit detected for {localCommit.Author} {localCommit.TimeStamp}.");
                     }
                 }
                 if (hasModifications) {
