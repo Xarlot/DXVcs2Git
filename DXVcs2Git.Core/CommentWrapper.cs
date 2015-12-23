@@ -31,6 +31,8 @@ namespace DXVcs2Git.Core {
             return parseCommentRegex.Match(comment).Value;
         }
         static bool CheckStructure(string comment) {
+            if (string.IsNullOrEmpty(comment))
+                return false;
             return parseStructureRegex.IsMatch(comment);
         }
         static string ParseAuthor(string comment) {
