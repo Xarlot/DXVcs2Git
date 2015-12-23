@@ -50,9 +50,8 @@ namespace DXVcs2Git.Core {
             Users.Add(gitLabUser.UserName, gitLabUser);
             return gitLabUser;
         }
-        private static string CalcLogin(string x) {
-            string lowerX = x.ToLower();
-            string removeCorp = lowerX.Replace(@"corp\", "");
+        static string CalcLogin(string x) {
+            string removeCorp = x.Replace(@"corp\", "");
             return removeCorp;
         }
     }
