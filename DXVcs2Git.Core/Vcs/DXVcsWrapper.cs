@@ -64,10 +64,6 @@ namespace DXVcs2Git.DXVcs {
                         repo.UndoCheckout(vcsPath, localPath);
                     }
                 }
-                else {
-                    Log.Error($"File {vcsPath} is not under vss.");
-                    return false;
-                }
                 return true;
             }
             catch (Exception ex) {
