@@ -328,6 +328,7 @@ namespace DXVcs2Git.Console {
                     vcsWrapper.GetProject(vcsServer, localCommit.Track.Path, localProjectPath, item.TimeStamp);
 
                     gitWrapper.Fetch();
+                    Log.Message($"git stage {localCommit.Track.ProjectPath}");
                     gitWrapper.Stage(localCommit.Track.ProjectPath);
                     try {
                         var comment = CalcComment(localCommit, token);
