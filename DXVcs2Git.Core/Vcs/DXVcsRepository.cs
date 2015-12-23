@@ -682,7 +682,6 @@ namespace DXVcs2Git.DXVcs {
         }
         void MoveFileInternal(string vcsPath, string newProjectPath, string comment) {
             string[] exist;
-            var oldHistory = GetFileHistory(vcsPath);
 
             Service.MoveFiles(new[] {vcsPath}, newProjectPath, out exist, comment);
             if (exist.Length > 0) {
@@ -690,12 +689,6 @@ namespace DXVcs2Git.DXVcs {
                     throw new ArgumentException("move file failed");
                 Service.MoveFiles(new[] {vcsPath}, newProjectPath, out exist, comment);
             }
-
-            string newFilePath = $@"{newProjectPath}/{GetFileName(vcsPath)}";
-            var newHistory = GetFileHistory(newFilePath);
-            var changeSet = newHistory.Where(x => x.Version > oldHistory.Last().Version);
-            foreach (var item in changeSet)
-                Service.SetComment(vcsPath, item.Version, comment);
         }
         string GetProjectPath(string vcsPath) {
             return Path.GetDirectoryName(vcsPath).Replace("\\", "/");

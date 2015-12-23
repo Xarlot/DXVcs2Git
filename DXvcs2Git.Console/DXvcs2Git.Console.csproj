@@ -44,6 +44,9 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\Lib\DXVcs\DXVCS.dll</HintPath>
     </Reference>
+    <Reference Include="DXVCSCore">
+      <HintPath>..\Lib\DXVcs\DXVCSCore.dll</HintPath>
+    </Reference>
     <Reference Include="LibGit2Sharp, Version=0.22.0.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\LibGit2Sharp.0.22.0-pre20150716071016\lib\net40\LibGit2Sharp.dll</HintPath>
       <Private>True</Private>
