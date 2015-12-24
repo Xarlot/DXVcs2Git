@@ -266,6 +266,7 @@ namespace DXVcs2Git.DXVcs {
                 throw;
             }
         }
+
         public IList<CommitItem> GenerateCommits(IEnumerable<HistoryItem> historyItems, bool mergeCommits) {
             var grouped = historyItems.AsParallel().GroupBy(x => x.ActionDate);
             var commits = grouped.Select(x => new CommitItem() { Items = x.ToList(), TimeStamp = x.First().ActionDate }).OrderBy(x => x.TimeStamp);
@@ -275,26 +276,21 @@ namespace DXVcs2Git.DXVcs {
             if(!mergeCommits)
                 return totalCommits;
             var result = new List<CommitItem>();
-            CommitItem prevItem = null;
-            bool canMergeToPrevItem = false;
-            foreach(var item in totalCommits) {
-                if(canMergeToPrevItem) {
-                    var canMerge = 
-                        item.Items.Count == 1 &&
-                        item.Items[0].Track.ProjectPath == prevItem.Items[0].Track.ProjectPath &&
-                        item.Items[0].User == prevItem.Items[0].User &&
-                        item.Items[0].Comment == prevItem.Items[0].Comment &&
-                        (item.Items[0].ActionDate - prevItem.Items[0].ActionDate).TotalSeconds < 2 &&
-                        item.Items[0].Message == prevItem.Items[0].Message;
-                    if(canMerge) {
-                        prevItem.Items.Add(item.Items[0]);
-                        prevItem.TimeStamp = item.Items[0].ActionDate;
-                        continue;
-                    }
+            CommitItem prevCommit = null;
+            foreach(var commit in totalCommits) {
+                var canMerge = 
+                    prevCommit != null &&
+                    commit.Items[0].User == prevCommit.Items[0].User &&
+                    commit.Items[0].Comment == prevCommit.Items[0].Comment &&
+                    (commit.Items[0].ActionDate - prevCommit.Items[0].ActionDate).TotalSeconds < 2;
+                if(canMerge) {
+                    foreach(var item in commit.Items)
+                        prevCommit.Items.Add(item);
+                    prevCommit.TimeStamp = commit.Items[0].ActionDate;
+                    continue;
                 }
-                result.Add(item);
-                prevItem = item;
-                canMergeToPrevItem = prevItem.Items.Count == 1 && (prevItem.Items[0].Message == "Created" || prevItem.Items[0].Message == "Set deleted");
+                result.Add(commit);
+                prevCommit = commit;
             }
             return result;
         }
