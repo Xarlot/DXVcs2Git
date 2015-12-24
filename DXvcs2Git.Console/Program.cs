@@ -318,24 +318,19 @@ namespace DXVcs2Git.Console {
             return gitWrapper.GetLastCommitTimeStamp(branch.Name, defaultUser);
         }
         static void ProcessHistoryInternal(DXVcsWrapper vcsWrapper, GitWrapper gitWrapper, RegisteredUsers users, User defaultUser, string localGitDir, TrackBranch branch, IList<CommitItem> commits, SyncHistoryWrapper syncHistory) {
-            var sw = new Stopwatch();
             ProjectExtractor extractor = new ProjectExtractor(commits, (item) => {
                 var localCommits = vcsWrapper.GetCommits(item.TimeStamp, item.Items).Where(x => !IsLabel(x)).ToList();
                 bool hasModifications = false;
                 Commit last = null;
                 string token = syncHistory.CreateNewToken();
                 foreach(var localCommit in localCommits) {
-                    Log.Message($"Processing {localCommit.Track.ProjectPath}: {localCommit.Items.Count} items");
                     string localProjectPath = Path.Combine(localGitDir, localCommit.Track.ProjectPath);
                     DirectoryHelper.DeleteDirectory(localProjectPath);
-                    sw.Restart();
                     vcsWrapper.GetProject(vcsServer, localCommit.Track.Path, localProjectPath, item.TimeStamp);
-                    Log.Message($"vcsWrapper.GetProject: {sw.ElapsedMilliseconds}ms.");
 
                     gitWrapper.Fetch();
-                    sw.Restart();
+                    Log.Message($"git stage {localCommit.Track.ProjectPath}");
                     gitWrapper.Stage(localCommit.Track.ProjectPath);
-                    Log.Message($"gitWrapper.Stage: {sw.ElapsedMilliseconds}ms.");
                     try {
                         var comment = CalcComment(localCommit, token);
                         string author = CalcAuthor(localCommit, defaultUser);
@@ -362,7 +357,6 @@ namespace DXVcs2Git.Console {
             int i = 0;
             while (extractor.PerformExtraction())
                 Log.Message($"{++i} from {commits.Count} push to branch {branch.Name} completed.");
-            sw.Stop();
         }
         static string CalcAuthor(CommitItem localCommit, User defaultUser) {
             string author = localCommit.Author;

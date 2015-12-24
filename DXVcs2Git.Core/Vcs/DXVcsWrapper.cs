@@ -277,7 +277,7 @@ namespace DXVcs2Git.DXVcs {
             var result = new List<CommitItem>();
             CommitItem prevItem = null;
             bool canMergeToPrevItem = false;
-            foreach(var item in totalCommits.Skip(index)) {
+            foreach(var item in totalCommits) {
                 if(canMergeToPrevItem) {
                     var canMerge = 
                         item.Items.Count == 1 &&
