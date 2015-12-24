@@ -83,7 +83,7 @@ namespace DXVcs2Git.Console {
             }
 
             if (workMode.HasFlag(WorkMode.history)) {
-                ProcessHistoryResult result = ProcessHistory(vcsWrapper, gitWrapper, registeredUsers, defaultUser, gitRepoPath, localGitDir, branch, clo.CommitsCount, syncHistory);
+                ProcessHistoryResult result = ProcessHistory(vcsWrapper, gitWrapper, registeredUsers, defaultUser, gitRepoPath, localGitDir, branch, clo.CommitsCount, syncHistory, workMode == WorkMode.history);
                 if (result == ProcessHistoryResult.NotEnough)
                     return 0;
                 if (result == ProcessHistoryResult.Failed)
@@ -283,14 +283,15 @@ namespace DXVcs2Git.Console {
             string result = string.IsNullOrEmpty(trackItem.AdditionalOffset) ? Path.Combine(vcsRoot, path) : Path.Combine(vcsRoot, trackItem.AdditionalOffset, path);
             return result.Replace("\\", "/");
         }
-        static ProcessHistoryResult ProcessHistory(DXVcsWrapper vcsWrapper, GitWrapper gitWrapper, RegisteredUsers users, User defaultUser, string gitRepoPath, string localGitDir, TrackBranch branch, int commitsCount, SyncHistoryWrapper syncHistory) {
+        static ProcessHistoryResult ProcessHistory(DXVcsWrapper vcsWrapper, GitWrapper gitWrapper, RegisteredUsers users, User defaultUser, string gitRepoPath, string localGitDir, TrackBranch branch, int commitsCount, SyncHistoryWrapper syncHistory, bool mergeCommits) {
             DateTime lastCommit = CalcLastCommitDate(gitWrapper, defaultUser, branch, syncHistory);
             Log.Message($"Last commit has been performed at {lastCommit.ToLocalTime()}.");
 
             var history = vcsWrapper.GenerateHistory(branch, lastCommit).OrderBy(x => x.ActionDate).ToList();
             Log.Message($"History generated. {history.Count} history items obtained.");
 
-            var commits = vcsWrapper.GenerateCommits(history).Where(x => x.TimeStamp > lastCommit && !IsLabel(x)).ToList();
+            var commits = vcsWrapper.GenerateCommits(history, mergeCommits).Where(x => x.TimeStamp > lastCommit && !IsLabel(x)).ToList();
+            
             if (commits.Count > commitsCount) {
                 Log.Message($"Commits generated. First {commitsCount} of {commits.Count} commits taken.");
                 commits = commits.Take(commitsCount).ToList();
@@ -318,11 +319,11 @@ namespace DXVcs2Git.Console {
         }
         static void ProcessHistoryInternal(DXVcsWrapper vcsWrapper, GitWrapper gitWrapper, RegisteredUsers users, User defaultUser, string localGitDir, TrackBranch branch, IList<CommitItem> commits, SyncHistoryWrapper syncHistory) {
             ProjectExtractor extractor = new ProjectExtractor(commits, (item) => {
-                var localCommits = vcsWrapper.GetCommits(item.Items).Where(x => !IsLabel(x)).ToList();
+                var localCommits = vcsWrapper.GetCommits(item.TimeStamp, item.Items).Where(x => !IsLabel(x)).ToList();
                 bool hasModifications = false;
                 Commit last = null;
                 string token = syncHistory.CreateNewToken();
-                foreach (var localCommit in localCommits) {
+                foreach(var localCommit in localCommits) {
                     string localProjectPath = Path.Combine(localGitDir, localCommit.Track.ProjectPath);
                     DirectoryHelper.DeleteDirectory(localProjectPath);
                     vcsWrapper.GetProject(vcsServer, localCommit.Track.Path, localProjectPath, item.TimeStamp);
