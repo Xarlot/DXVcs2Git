@@ -266,12 +266,37 @@ namespace DXVcs2Git.DXVcs {
                 throw;
             }
         }
-        public IList<CommitItem> GenerateCommits(IEnumerable<HistoryItem> historyItems) {
+        public IList<CommitItem> GenerateCommits(IEnumerable<HistoryItem> historyItems, bool mergeCommits) {
             var grouped = historyItems.AsParallel().GroupBy(x => x.ActionDate);
             var commits = grouped.Select(x => new CommitItem() { Items = x.ToList(), TimeStamp = x.First().ActionDate }).OrderBy(x => x.TimeStamp);
             var totalCommits = commits.ToList();
             int index = totalCommits.FindIndex(x => x.Items.Any(y => y.Message.ToLowerInvariant() == "create"));
-            return totalCommits.Skip(index).ToList();
+            totalCommits = totalCommits.Skip(index).ToList();
+            if(!mergeCommits)
+                return totalCommits;
+            var result = new List<CommitItem>();
+            CommitItem prevItem = null;
+            bool canMergeToPrevItem = false;
+            foreach(var item in totalCommits.Skip(index)) {
+                if(canMergeToPrevItem) {
+                    var canMerge = 
+                        item.Items.Count == 1 &&
+                        item.Items[0].Track.ProjectPath == prevItem.Items[0].Track.ProjectPath &&
+                        item.Items[0].User == prevItem.Items[0].User &&
+                        item.Items[0].Comment == prevItem.Items[0].Comment &&
+                        (item.Items[0].ActionDate - prevItem.Items[0].ActionDate).TotalSeconds < 2 &&
+                        item.Items[0].Message == prevItem.Items[0].Message;
+                    if(canMerge) {
+                        prevItem.Items.Add(item.Items[0]);
+                        prevItem.TimeStamp = item.Items[0].ActionDate;
+                        continue;
+                    }
+                }
+                result.Add(item);
+                prevItem = item;
+                canMergeToPrevItem = prevItem.Items.Count == 1 && (prevItem.Items[0].Message == "Created" || prevItem.Items[0].Message == "Set deleted");
+            }
+            return result;
         }
         public void GetProject(string server, string vcsPath, string localPath, DateTime timeStamp) {
             try {
@@ -284,17 +309,17 @@ namespace DXVcs2Git.DXVcs {
                 throw;
             }
         }
-        public IEnumerable<CommitItem> GetCommits(IList<HistoryItem> items) {
+        public IEnumerable<CommitItem> GetCommits(DateTime timeStamp, IList<HistoryItem> items) {
             var changedProjects = items.GroupBy(x => x.Track.Path);
             foreach (var project in changedProjects) {
                 var changeSet = project.GroupBy(x => x.User);
                 foreach (var changeItem in changeSet) {
                     CommitItem item = new CommitItem();
-                    var first = changeItem.First();
-                    item.Author = first.User;
+                    var last = changeItem.Last();
+                    item.Author = last.User;
                     item.Items = changeItem.ToList();
-                    item.Track = first.Track;
-                    item.TimeStamp = first.ActionDate;
+                    item.Track = last.Track;
+                    item.TimeStamp = timeStamp;
                     yield return item;
                 }
             }

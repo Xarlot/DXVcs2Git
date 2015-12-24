@@ -69,6 +69,10 @@ namespace DXVcs2Git {
         Signature ToSignature(User user, DateTimeOffset? dateTime = null) {
             return new Signature(user.UserName, user.Email, dateTime ?? DateTimeOffset.Now);
         }
+        public void Stage(IEnumerable<string> paths) {
+            repo.Stage(paths);
+            Log.Message($"Git stage performed.");
+        }
         public void Stage(string path) {
             repo.Stage(path);
             Log.Message($"Git stage performed.");
