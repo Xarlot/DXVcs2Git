@@ -657,7 +657,6 @@ namespace DXVcs2Git.DXVcs {
             if (oldProjectPath != newProjectPath) {
                 AddProject(newProjectPath, comment);
                 MoveFileInternal(vcsPath, newProjectPath, comment);
-                RemoveProjectIfNeeded(oldProjectPath, comment);
                 return;
             }
             string oldFileName = GetFileName(vcsPath);
@@ -682,13 +681,15 @@ namespace DXVcs2Git.DXVcs {
                 DeleteProject(oldProjectPath, comment);
         }
         void MoveFileInternal(string vcsPath, string newProjectPath, string comment) {
-            string[] exist;
-
-            Service.MoveFiles(new[] {vcsPath}, newProjectPath, out exist, comment);
-            if (exist.Length > 0) {
-                if (!exist.All(x => SafeDeleteFile(GetProjectPath(x), GetFileName(x), comment)))
+            int maxState;
+            try {
+                Service.ShareAndBranch(vcsPath, newProjectPath, GetFileName(vcsPath), comment, false, out maxState);
+                DeleteFile(vcsPath, comment);
+            }
+            catch (DXVCSFileAlreadyExistsException) {
+                if (!SafeDeleteFile(GetProjectPath(vcsPath), GetFileName(vcsPath), comment))
                     throw new ArgumentException("move file failed");
-                Service.MoveFiles(new[] {vcsPath}, newProjectPath, out exist, comment);
+                Service.ShareAndBranch(vcsPath, newProjectPath, GetFileName(vcsPath), comment, false, out maxState);
             }
         }
         string GetProjectPath(string vcsPath) {

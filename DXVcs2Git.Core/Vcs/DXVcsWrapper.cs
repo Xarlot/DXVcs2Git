@@ -180,13 +180,7 @@ namespace DXVcs2Git.DXVcs {
                 }
                 repo.UndoCheckout(vcsPath, comment);
                 repo.MoveFile(vcsPath, newVcsPath, comment);
-                if (File.Exists(localPath)) {
-                    File.Move(localPath, newLocalPath);
-                    CheckOutFile(newVcsPath, newLocalPath, true, comment);
-                }
-                else {
-                    CheckOutFile(newVcsPath, newLocalPath, false, comment);
-                }
+                CheckOutFile(newVcsPath, newLocalPath, true, comment);
                 CheckInFile(newVcsPath, newLocalPath, comment);
                 return true;
             }
