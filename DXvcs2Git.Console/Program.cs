@@ -83,7 +83,7 @@ namespace DXVcs2Git.Console {
             }
 
             if (workMode.HasFlag(WorkMode.history)) {
-                ProcessHistoryResult result = ProcessHistory(vcsWrapper, gitWrapper, registeredUsers, defaultUser, gitRepoPath, localGitDir, branch, clo.CommitsCount, syncHistory, workMode == WorkMode.history);
+                ProcessHistoryResult result = ProcessHistory(vcsWrapper, gitWrapper, registeredUsers, defaultUser, gitRepoPath, localGitDir, branch, clo.CommitsCount, syncHistory, true);
                 if (result == ProcessHistoryResult.NotEnough)
                     return 0;
                 if (result == ProcessHistoryResult.Failed)
@@ -290,7 +290,9 @@ namespace DXVcs2Git.Console {
             var history = vcsWrapper.GenerateHistory(branch, lastCommit).OrderBy(x => x.ActionDate).ToList();
             Log.Message($"History generated. {history.Count} history items obtained.");
 
-            var commits = vcsWrapper.GenerateCommits(history, mergeCommits).Where(x => x.TimeStamp > lastCommit && !IsLabel(x)).ToList();
+            IList<CommitItem> commits = vcsWrapper.GenerateCommits(history).Where(x => x.TimeStamp > lastCommit && !IsLabel(x)).ToList();
+            if (mergeCommits)
+                commits = vcsWrapper.MergeCommits(commits);
             
             if (commits.Count > commitsCount) {
                 Log.Message($"Commits generated. First {commitsCount} of {commits.Count} commits taken.");
@@ -401,21 +403,16 @@ namespace DXVcs2Git.Console {
             }
             return sb.ToString();
         }
-        static CommentWrapper CalcComment(Commit commit, TrackBranch branch, string syncToken) {
-            CommentWrapper comment = new CommentWrapper();
-            comment.Author = commit.Author.Name;
-            comment.Branch = branch.Name;
-            comment.Token = syncToken;
-            return comment;
-        }
         static CommentWrapper CalcComment(CommitItem item, string token) {
             CommentWrapper comment = new CommentWrapper();
             comment.TimeStamp = item.TimeStamp.Ticks.ToString();
             comment.Author = item.Author;
             comment.Branch = item.Track.Branch;
             comment.Token = token;
-            if (item.Items.Any(x => !string.IsNullOrEmpty(x.Comment) && CommentWrapper.IsAutoSyncComment(x.Comment)))
+            if (item.Items.Any(x => !string.IsNullOrEmpty(x.Comment) && CommentWrapper.IsAutoSyncComment(x.Comment))) {
                 comment.Comment = item.Items.Select(x => CommentWrapper.Parse(x.Comment ?? x.Message).Comment).FirstOrDefault(x => !string.IsNullOrEmpty(x));
+                comment.Author = comment.Comment != null ? CommentWrapper.Parse(comment.Comment).Author : comment.Author;
+            }
             else
                 comment.Comment = item.Items.FirstOrDefault(x => !string.IsNullOrEmpty(x.Comment))?.Comment;
             return comment;

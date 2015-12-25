@@ -640,6 +640,7 @@ namespace DXVcs2Git.DXVcs {
             if (string.IsNullOrEmpty(vcsPath))
                 throw new ArgumentException("vcsFile");
             Service.SetDeletedFile(vcsPath, false, comment);
+            RemoveProjectIfNeeded(GetProjectPath(vcsPath), comment);
         }
         public void DeleteProject(string vcsPath, string comment) {
             if (string.IsNullOrEmpty(vcsPath))

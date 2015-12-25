@@ -96,6 +96,8 @@ namespace DXVcs2Git.DXVcs {
             return CheckOutFile(vcsFile, localFile, true, comment);
         }
         public bool RollbackItem(SyncItem item) {
+            if (item.State == ProcessState.Default)
+                return true;
             return UndoCheckoutFile(item.VcsPath, item.LocalPath);
         }
         bool CheckOutCreateFile(string vcsPath, string localPath, string comment) {
@@ -139,11 +141,10 @@ namespace DXVcs2Git.DXVcs {
                 }
                 UndoCheckoutFile(vcsPath, localPath);
                 repo.DeleteFile(vcsPath, comment);
-                File.Delete(localPath);
                 return true;
             }
             catch (Exception ex) {
-                Log.Error($"Add new file {vcsPath} failed.", ex);
+                Log.Error($"Remove file {vcsPath} failed.", ex);
                 return false;
             }
         }
@@ -190,7 +191,7 @@ namespace DXVcs2Git.DXVcs {
                 return true;
             }
             catch (Exception ex) {
-                Log.Error($"Add new file {vcsPath} failed.", ex);
+                Log.Error($"Move file {vcsPath} failed.", ex);
                 return false;
             }
         }
@@ -204,17 +205,22 @@ namespace DXVcs2Git.DXVcs {
             return true;
         }
         bool ProcessCheckoutItem(SyncItem item, string comment) {
-            switch (item.SyncAction) {
-                case SyncAction.New:
-                    return CheckOutCreateFile(item.VcsPath, item.LocalPath, comment);
-                case SyncAction.Modify:
-                    return CheckOutModifyFile(item.VcsPath, item.LocalPath, comment);
-                case SyncAction.Delete:
-                    return CheckOutDeleteFile(item.VcsPath, item.LocalPath, comment);
-                case SyncAction.Move:
-                    return CheckOutMoveFile(item.VcsPath, item.NewVcsPath, item.LocalPath, item.NewLocalPath, comment);
-                default:
-                    throw new ArgumentException("SyncAction");
+            try {
+                switch (item.SyncAction) {
+                    case SyncAction.New:
+                        return CheckOutCreateFile(item.VcsPath, item.LocalPath, comment);
+                    case SyncAction.Modify:
+                        return CheckOutModifyFile(item.VcsPath, item.LocalPath, comment);
+                    case SyncAction.Delete:
+                        return CheckOutDeleteFile(item.VcsPath, item.LocalPath, comment);
+                    case SyncAction.Move:
+                        return CheckOutMoveFile(item.VcsPath, item.NewVcsPath, item.LocalPath, item.NewLocalPath, comment);
+                    default:
+                        throw new ArgumentException("SyncAction");
+                }
+            }
+            finally {
+                item.State = ProcessState.Modified;
             }
         }
         public void CreateLabel(string vcsPath, string labelName, string comment = "") {
@@ -258,29 +264,30 @@ namespace DXVcs2Git.DXVcs {
                 return history.ToList();
             }
             catch (Exception ex) {
-                Log.Error("HistoryGenerator.GenerateHistory failed.", ex);
+                Log.Error("History generation failed.", ex);
                 throw;
             }
         }
 
-        public IList<CommitItem> GenerateCommits(IEnumerable<HistoryItem> historyItems, bool mergeCommits) {
+        public IList<CommitItem> GenerateCommits(IEnumerable<HistoryItem> historyItems) {
             var grouped = historyItems.AsParallel().GroupBy(x => x.ActionDate);
             var commits = grouped.Select(x => new CommitItem() { Items = x.ToList(), TimeStamp = x.First().ActionDate }).OrderBy(x => x.TimeStamp);
             var totalCommits = commits.ToList();
             int index = totalCommits.FindIndex(x => x.Items.Any(y => y.Message.ToLowerInvariant() == "create"));
             totalCommits = totalCommits.Skip(index).ToList();
-            if(!mergeCommits)
-                return totalCommits;
+            return totalCommits;
+        }
+        public IList<CommitItem> MergeCommits(IList<CommitItem> commits) {
             var result = new List<CommitItem>();
             CommitItem prevCommit = null;
-            foreach(var commit in totalCommits) {
-                var canMerge = 
+            foreach (var commit in commits) {
+                var canMerge =
                     prevCommit != null &&
                     commit.Items[0].User == prevCommit.Items[0].User &&
                     commit.Items[0].Comment == prevCommit.Items[0].Comment &&
-                    (commit.Items[0].ActionDate - prevCommit.Items[0].ActionDate).TotalSeconds < 2;
-                if(canMerge) {
-                    foreach(var item in commit.Items)
+                    (commit.Items[0].ActionDate - prevCommit.Items[0].ActionDate).TotalSeconds < 20;
+                if (canMerge) {
+                    foreach (var item in commit.Items)
                         prevCommit.Items.Add(item);
                     prevCommit.TimeStamp = commit.Items[0].ActionDate;
                     continue;
@@ -294,10 +301,10 @@ namespace DXVcs2Git.DXVcs {
             try {
                 var repo = DXVcsConnectionHelper.Connect(server, this.user, this.password);
                 repo.GetProject(vcsPath, localPath, timeStamp);
-                Log.Message($"HistoryGenerator.GetProject performed for {vcsPath}");
+                Log.Message($"Get project from vcs performed for {vcsPath}");
             }
             catch (Exception ex) {
-                Log.Error("HistoryGenerator.GetProject failed.", ex);
+                Log.Error("Get prroject from vcs failed.", ex);
                 throw;
             }
         }
