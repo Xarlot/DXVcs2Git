@@ -75,5 +75,43 @@ namespace DXVcs2Git.Tests {
 
         }
 
+        [Test, Explicit]
+        public void GenerateAsp142Config() {
+            GenerateAspConfig("2014.2");
+        }
+        [Test, Explicit]
+        public void GenerateAsp151Config() {
+            GenerateAspConfig("2015.1");
+        }
+        [Test, Explicit]
+        public void GenerateAsp152Config() {
+            GenerateAspConfig("2015.2");
+        }
+
+        void GenerateAspConfig(string branchName) {
+            List<TrackItem> items = new List<TrackItem>();
+            items.Add(new TrackItem() { Path = $@"$/{branchName}/ASP/ASPxThemeBuilder", ProjectPath = "ASPxThemeBuilder" });
+            items.Add(new TrackItem() { Path = $@"$/{branchName}/ASP/ASPxThemeDeployer", ProjectPath = "ASPxThemeDeployer" });
+            items.Add(new TrackItem() { Path = $@"$/{branchName}/ASP/DevExpress.Web", ProjectPath = "DevExpress.Web" });
+            items.Add(new TrackItem() { Path = $@"$/{branchName}/ASP/DevExpress.Web.ASPxHtmlEditor", ProjectPath = "DevExpress.Web.ASPxHtmlEditor" });
+            items.Add(new TrackItem() { Path = $@"$/{branchName}/ASP/DevExpress.Web.ASPxRichEdit", ProjectPath = "DevExpress.Web.ASPxRichEdit" });
+            items.Add(new TrackItem() { Path = $@"$/{branchName}/ASP/DevExpress.Web.ASPxRichEdit.Tests", ProjectPath = "DevExpress.Web.ASPxRichEdit.Tests" });
+            items.Add(new TrackItem() { Path = $@"$/{branchName}/ASP/DevExpress.Web.ASPxScheduler", ProjectPath = "DevExpress.Web.ASPxScheduler" });
+            items.Add(new TrackItem() { Path = $@"$/{branchName}/ASP/DevExpress.Web.ASPxSpellChecker", ProjectPath = "DevExpress.Web.ASPxSpellChecker" });
+            items.Add(new TrackItem() { Path = $@"$/{branchName}/ASP/DevExpress.Web.ASPxSpreadsheet", ProjectPath = "DevExpress.Web.ASPxSpreadsheet" });
+            items.Add(new TrackItem() { Path = $@"$/{branchName}/ASP/DevExpress.Web.ASPxThemes", ProjectPath = "DevExpress.Web.ASPxThemes" });
+            items.Add(new TrackItem() { Path = $@"$/{branchName}/ASP/DevExpress.Web.ASPxTreeList", ProjectPath = "DevExpress.Web.ASPxTreeList" });
+            items.Add(new TrackItem() { Path = $@"$/{branchName}/ASP/DevExpress.Web.Design", ProjectPath = "DevExpress.Web.Design" });
+            items.Add(new TrackItem() { Path = $@"$/{branchName}/ASP/DevExpress.Web.Mvc", ProjectPath = "DevExpress.Web.Mvc" });
+            items.Add(new TrackItem() { Path = $@"$/{branchName}/ASP/DevExpress.Web.Projects", ProjectPath = "DevExpress.Web.Projects" });
+
+            TrackBranch branch = new TrackBranch($"{branchName}", $@"$/{branchName}/Diagram/xpf_common_sync.config", $@"$/{branchName}", items);
+
+            SharpSerializerXmlSettings settings = new SharpSerializerXmlSettings();
+            settings.IncludeAssemblyVersionInTypeName = false;
+            settings.IncludePublicKeyTokenInTypeName = false;
+            SharpSerializer serializer = new SharpSerializer(settings);
+            serializer.Serialize(new List<TrackBranch>() { branch }, $@"z:\trackconfig_asp_{branchName}.config");
+        }
     }
 }
