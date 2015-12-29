@@ -40,7 +40,7 @@
                             <dxg:GridColumn.CellTemplate>
                                 <DataTemplate>
                                     <dxe:ButtonEdit IsTextEditable="true" x:Name="PART_Editor" >
-                                        <!--<dxmvvm:Interaction.Behaviors>
+                                        <dxmvvm:Interaction.Behaviors>
                                             <dxe:CustomDialogServiceEditorBehavior>
                                                 <dxe:CustomDialogServiceEditorBehavior.DialogServiceTemplate>
                                                     <DataTemplate>
@@ -50,7 +50,7 @@
                                                     </DataTemplate>
                                                 </dxe:CustomDialogServiceEditorBehavior.DialogServiceTemplate>
                                             </dxe:CustomDialogServiceEditorBehavior>
-                                        </dxmvvm:Interaction.Behaviors>-->
+                                        </dxmvvm:Interaction.Behaviors>
                                     </dxe:ButtonEdit>
                                 </DataTemplate>
                             </dxg:GridColumn.CellTemplate>
