@@ -94,6 +94,9 @@
       <SubType>Designer</SubType>
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+    <None Include="trackconfig_dataaccess_2015.1.config">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Include="trackconfig_dataaccess_2015.2.config">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>

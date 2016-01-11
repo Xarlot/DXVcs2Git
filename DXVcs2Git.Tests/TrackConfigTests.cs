@@ -130,6 +130,10 @@ namespace DXVcs2Git.Tests {
         public void GenerateDataAccess152Config() {
             GenerateDataAccessConfig("2015.2");
         }
+        [Test, Explicit]
+        public void GenerateDataAccess151Config() {
+            GenerateDataAccessConfig("2015.1");
+        }
         void GenerateDataAccessConfig(string branchName) {
             List<TrackItem> items = new List<TrackItem>();
             items.Add(new TrackItem() { Path = $@"$/{branchName}/Win/DevExpress.DataAccess", ProjectPath = "DevExpress.DataAccess", AdditionalOffset = "Win" });
