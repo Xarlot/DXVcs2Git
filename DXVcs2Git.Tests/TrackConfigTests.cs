@@ -19,8 +19,8 @@ namespace DXVcs2Git.Tests {
             serializer.Serialize(new List<TrackBranch>() { branch }, @"c:\1\trackconfig_testxpf.config");
         }
         [Test, Explicit]
-        public void GenerateXpfCommon141Config() {
-            GenerateXpfCommonConfig("2014.1");
+        public void GenerateXpfCommon161Config() {
+            GenerateXpfCommonConfig("2016.1");
         }
         [Test, Explicit]
         public void GenerateXpfCommon152Config() {
@@ -33,6 +33,10 @@ namespace DXVcs2Git.Tests {
         [Test, Explicit]
         public void GenerateXpfCommon142Config() {
             GenerateXpfCommonConfig("2014.2");
+        }
+        [Test, Explicit]
+        public void GenerateXpfCommon141Config() {
+            GenerateXpfCommonConfig("2014.1");
         }
         void GenerateXpfCommonConfig(string branchName) {
             List<TrackItem> items = new List<TrackItem>();
@@ -53,6 +57,10 @@ namespace DXVcs2Git.Tests {
             SharpSerializer serializer = new SharpSerializer(settings);
             serializer.Serialize(new List<TrackBranch>() { branch }, $@"z:\trackconfig_common_{branchName}.config");
 
+        }
+        [Test, Explicit]
+        public void GenerateXpfDiagram161Config() {
+            GenerateXpfDiagramConfig("2016.1");
         }
         [Test, Explicit]
         public void GenerateXpfDiagram152Config() {
@@ -113,5 +121,29 @@ namespace DXVcs2Git.Tests {
             SharpSerializer serializer = new SharpSerializer(settings);
             serializer.Serialize(new List<TrackBranch>() { branch }, $@"z:\trackconfig_asp_{branchName}.config");
         }
+
+        [Test, Explicit]
+        public void GenerateDataAccess161Config() {
+            GenerateDataAccessConfig("2016.1");
+        }
+        [Test, Explicit]
+        public void GenerateDataAccess152Config() {
+            GenerateDataAccessConfig("2015.2");
+        }
+        void GenerateDataAccessConfig(string branchName) {
+            List<TrackItem> items = new List<TrackItem>();
+            items.Add(new TrackItem() { Path = $@"$/{branchName}/Win/DevExpress.DataAccess", ProjectPath = "DevExpress.DataAccess", AdditionalOffset = "Win" });
+            items.Add(new TrackItem() { Path = $@"$/{branchName}/Tests.DataAccess", ProjectPath = "Tests.DataAccess" });
+            TrackBranch branch = new TrackBranch($"{branchName}", $@"$/{branchName}/DataAccess/sync.config", $@"$/{branchName}", items);
+
+            SharpSerializerXmlSettings settings = new SharpSerializerXmlSettings();
+            settings.IncludeAssemblyVersionInTypeName = false;
+            settings.IncludePublicKeyTokenInTypeName = false;
+            SharpSerializer serializer = new SharpSerializer(settings);
+            serializer.Serialize(new List<TrackBranch>() { branch }, $@"z:\trackconfig_dataaccess_{branchName}.config");
+
+        }
+
+
     }
 }
