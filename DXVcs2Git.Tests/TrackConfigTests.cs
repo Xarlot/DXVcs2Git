@@ -68,9 +68,9 @@ namespace DXVcs2Git.Tests {
         }
         void GenerateXpfDiagramConfig(string branchName) {
             List<TrackItem> items = new List<TrackItem>();
-            items.Add(new TrackItem() { Path = $@"$/{branchName}/Win/DevExpress.XtraDiagram", ProjectPath = "DevExpress.XtraDiagram", AdditionalOffset = "Win"});
-            items.Add(new TrackItem() { Path = $@"$/{branchName}/XPF/DevExpress.Xpf.Diagram", ProjectPath = "DevExpress.Xpf.Diagram", AdditionalOffset = "XPF"});
-            items.Add(new TrackItem() { Path = $@"$/{branchName}/XPF/DevExpress.Xpf.ReportDesigner", ProjectPath = "DevExpress.Xpf.ReportDesigner", AdditionalOffset = "XPF"});
+            items.Add(new TrackItem() { Path = $@"$/{branchName}/Win/DevExpress.XtraDiagram", ProjectPath = "DevExpress.XtraDiagram", AdditionalOffset = "Win" });
+            items.Add(new TrackItem() { Path = $@"$/{branchName}/XPF/DevExpress.Xpf.Diagram", ProjectPath = "DevExpress.Xpf.Diagram", AdditionalOffset = "XPF" });
+            items.Add(new TrackItem() { Path = $@"$/{branchName}/XPF/DevExpress.Xpf.ReportDesigner", ProjectPath = "DevExpress.Xpf.ReportDesigner", AdditionalOffset = "XPF" });
             items.Add(new TrackItem() { Path = $@"$/{branchName}/XPF/DevExpress.Xpf.PdfViewer", ProjectPath = "DevExpress.Xpf.PdfViewer", AdditionalOffset = "XPF" });
             items.Add(new TrackItem() { Path = $@"$/{branchName}/XPF/DevExpress.Xpf.Printing", ProjectPath = "DevExpress.Xpf.Printing", AdditionalOffset = "XPF" });
             TrackBranch branch = new TrackBranch($"{branchName}", $@"$/{branchName}/Diagram/xpf_common_sync.config", $@"$/{branchName}", items);
@@ -137,7 +137,18 @@ namespace DXVcs2Git.Tests {
         void GenerateDataAccessConfig(string branchName) {
             List<TrackItem> items = new List<TrackItem>();
             items.Add(new TrackItem() { Path = $@"$/{branchName}/Win/DevExpress.DataAccess", ProjectPath = "DevExpress.DataAccess", AdditionalOffset = "Win" });
-            items.Add(new TrackItem() { Path = $@"$/{branchName}/Tests.DataAccess", ProjectPath = "Tests.DataAccess" });
+            items.Add(new TrackItem() { Path = $@"$/{branchName}/Tests.DataAccess/BigQueryTests", ProjectPath = "BigQueryTests", AdditionalOffset = "Tests.DataAccess" });
+            items.Add(new TrackItem() { Path = $@"$/{branchName}/Tests.DataAccess/DataAccessTests", ProjectPath = "DataAccessTests", AdditionalOffset = "Tests.DataAccess" });
+            items.Add(new TrackItem() { Path = $@"$/{branchName}/Tests.DataAccess/EntityFramework7Tests", ProjectPath = "EntityFramework7Tests", AdditionalOffset = "Tests.DataAccess" });
+            items.Add(new TrackItem() { Path = $@"$/{branchName}/Tests.DataAccess/MsSqlCEEF7Tests", ProjectPath = "MsSqlCEEF7Tests", AdditionalOffset = "Tests.DataAccess" });
+            items.Add(new TrackItem() { Path = $@"$/{branchName}/Tests.DataAccess/MsSqlEF5Tests", ProjectPath = "MsSqlEF5Tests", AdditionalOffset = "Tests.DataAccess" });
+            items.Add(new TrackItem() { Path = $@"$/{branchName}/Tests.DataAccess/MsSqlEF6Tests", ProjectPath = "MsSqlEF6Tests", AdditionalOffset = "Tests.DataAccess" });
+            items.Add(new TrackItem() { Path = $@"$/{branchName}/Tests.DataAccess/MsSqlEF7Tests", ProjectPath = "MsSqlEF7Tests", AdditionalOffset = "Tests.DataAccess" });
+            items.Add(new TrackItem() { Path = $@"$/{branchName}/Tests.DataAccess/MySqlEF6Tests", ProjectPath = "MySqlEF6Tests", AdditionalOffset = "Tests.DataAccess" });
+            items.Add(new TrackItem() { Path = $@"$/{branchName}/Tests.DataAccess/PostgreSqlEF7Tests", ProjectPath = "PostgreSqlEF7Tests", AdditionalOffset = "Tests.DataAccess" });
+            items.Add(new TrackItem() { Path = $@"$/{branchName}/Tests.DataAccess/PostgreSqlEF7Tests", ProjectPath = "PostgreSqlEF7Tests", AdditionalOffset = "Tests.DataAccess" });
+            items.Add(new TrackItem() { Path = $@"$/{branchName}/Tests.DataAccess/SqliteEF7Tests", ProjectPath = "SqliteEF7Tests", AdditionalOffset = "Tests.DataAccess" });
+            items.Add(new TrackItem() { Path = $@"$/{branchName}/Tests.DataAccess/WizardTests", ProjectPath = "WizardTests", AdditionalOffset = "Tests.DataAccess" });
             TrackBranch branch = new TrackBranch($"{branchName}", $@"$/{branchName}/DataAccess/sync.config", $@"$/{branchName}", items);
 
             SharpSerializerXmlSettings settings = new SharpSerializerXmlSettings();
