@@ -46,7 +46,7 @@
     <Compile Include="TestHelpers\Interfaces.cs" />
     <Compile Include="TestHelpers\SelfCleaningDirectory.cs" />
     <Compile Include="TrackConfigTests.cs" />
-    <Compile Include="UsersConfigGenerator.cs" />
+    <Compile Include="Users.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\DXVcs2Git.Core\DXVcs2Git.Core.csproj">
