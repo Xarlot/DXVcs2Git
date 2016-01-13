@@ -14,6 +14,7 @@ namespace DXVcs2Git.Tests {
             Assert.AreEqual("test", VcsUserParser.ParseUser(@"Corp\test"));
             Assert.AreEqual(null, VcsUserParser.ParseUser(@"Corp\ test"));
             Assert.AreEqual("barakhov", VcsUserParser.ParseUser(@"Corp\barakhov"));
+            Assert.AreEqual("zaikin.vyacheslav", VcsUserParser.ParseUser(@"corp\zaikin.vyacheslav"));
         }
         [Test]
         public void SearchADUsers() {
