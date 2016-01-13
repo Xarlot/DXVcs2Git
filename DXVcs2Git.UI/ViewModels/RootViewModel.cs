@@ -20,7 +20,7 @@ namespace DXVcs2Git.UI.ViewModels {
         public LoggingViewModel LogViewModel { get; private set; }
         public bool ShowLog {
             get { return GetProperty(() => ShowLog); }
-            private set { SetProperty(() => ShowLog, value, ShowLogChanged); }
+            set { SetProperty(() => ShowLog, value, ShowLogChanged); }
         }
         public RootViewModel() {
             Repositories = new RepositoriesViewModel();
@@ -37,7 +37,6 @@ namespace DXVcs2Git.UI.ViewModels {
             Version = $"Git tools {VersionInfo.Version}";
         }
         void PerformShowLog() {
-            ShowLog = !ShowLog;
         }
         void DownloadNewVersion() {
             var model = new UriDownloaderViewModel(AtomFeed.FeedWorker.NewVersionUri, AtomFeed.FeedWorker.NewVersion);
