@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 using DXVcs2Git.Core.AD;
 using DXVcs2Git.DXVcs;
 using DXVcs2Git.Git;
@@ -14,8 +15,8 @@ namespace DXVcs2Git.Core {
         readonly GitLabWrapper gitLabWrapper;
         public RegisteredUsers(GitLabWrapper gitLabWrapper, DXVcsWrapper vcsWrapper) {
             this.gitLabWrapper = gitLabWrapper;
-            ADUsers = ADWrapper.GetUsers().ToDictionary(x => x.UserName.ToLowerInvariant());
-            Users = gitLabWrapper.GetUsers().Select(x => new User(x.Username, GetEmail(x.Username), x.Name, true)).ToDictionary(x => x.UserName);
+            ADUsers = ADWrapper.GetUsers().ToDictionary(x => x.UserName);
+            Users = gitLabWrapper.GetUsers().Select(x => new User(x.Username, GetEmail(x.Username), x.Name, true)).ToDictionary(x => x.UserName, new UserNameEqualityComparer());
             this.VcsUsers = vcsWrapper.GetUsers().ToList();
         }
 
@@ -51,8 +52,25 @@ namespace DXVcs2Git.Core {
             return gitLabUser;
         }
         static string CalcLogin(string x) {
-            string removeCorp = x.Replace(@"corp\", "");
-            return removeCorp;
+            return VcsUserParser.ParseUser(x);
+        }
+    }
+    class UserNameEqualityComparer : IEqualityComparer<string> {
+        public bool Equals(string x, string y) {
+            return x.ToUpperInvariant() == y.ToUpperInvariant();
+        }
+        public int GetHashCode(string obj) {
+            return obj.ToUpperInvariant().GetHashCode();
+        }
+    }
+    public static class VcsUserParser {
+        static readonly Regex CheckStructure = new Regex(@"^[a-zA-Z]{4}\\[a-zA-Z]{1,}$", RegexOptions.Compiled);
+        static readonly Regex ParseUserRegex = new Regex(@"(?<=^[a-zA-Z]{4}\\)\S+", RegexOptions.Compiled);
+
+        public static string ParseUser(string x) {
+            if (string.IsNullOrEmpty(x) || !CheckStructure.IsMatch(x))
+                return null;
+            return ParseUserRegex.Match(x).Value;
         }
     }
 }

@@ -32,7 +32,8 @@ namespace DXVcs2Git.UI.ViewModels {
             private set { SetProperty(() => HasEditableMergeRequest, value, HasEditableMergeRequestChanged); }
         }
         void HasEditableMergeRequestChanged() {
-            SelectedBranch.IsInEditingMergeRequest = HasEditableMergeRequest;
+            if (SelectedBranch != null)
+                SelectedBranch.IsInEditingMergeRequest = HasEditableMergeRequest;
             Parameter.Refresh();
         }
 
@@ -78,6 +79,7 @@ namespace DXVcs2Git.UI.ViewModels {
             IsInitialized = Parameter.Return(x => x.IsInitialized, () => false);
             SelectedBranch = Parameter.With(x => x.SelectedRepository).With(x => x.SelectedBranch);
             HasMergeRequest = SelectedBranch.Return(x => x.MergeRequest != null, () => false);
+            HasEditableMergeRequest = SelectedBranch?.IsInEditingMergeRequest ?? false;
             if (HasMergeRequest) {
                 HasChanged = SelectedBranch.Return(x => x.MergeRequest.Changes.Any(), () => false);
             }
