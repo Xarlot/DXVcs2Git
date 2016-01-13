@@ -91,6 +91,13 @@ namespace DXVcs2Git {
             Push($@"refs/heads/{branch}", false);
         }
         public void Push(string refspec, bool force) {
+            Push(refspec, (remote, options) => repo.Network.Push(remote, force ? $@"+{refspec}" : refspec, refspec, options));
+        }
+        public void RemoveRemoteBranch(string branch) {
+            string refspec = $@":refs/heads/{branch}";
+            Push(refspec, (remote, options) => repo.Network.Push(remote, refspec, options));
+        }
+        void Push(string refspec, Action<Remote, PushOptions> pushAction) {
             PushOptions options = new PushOptions();
             options.CredentialsProvider += (url, fromUrl, types) => credentials;
             options.OnPushStatusError += errors => {
@@ -99,10 +106,10 @@ namespace DXVcs2Git {
                 throw new ArgumentException("error while push");
             };
             Remote remote = this.repo.Network.Remotes["origin"];
-            repo.Network.Push(remote, force ? $@"+{refspec}" : refspec, refspec, options);
+            pushAction(remote, options);
             Log.Message($"Push to refspec {refspec} completed.");
         }
-        public void EnsureBranch(string name, Commit whereCreateBranch) {
+        public bool EnsureBranch(string name, Commit whereCreateBranch) {
             Branch localBranch = this.repo.Branches[name];
             string remoteName = GetOriginName(name);
             Branch remoteBranch = this.repo.Branches[remoteName];
@@ -120,6 +127,7 @@ namespace DXVcs2Git {
             }
             if (remoteBranch != null)
                 repo.Branches.Update(localBranch, b => b.TrackedBranch = remoteBranch.CanonicalName);
+            return remoteBranch == null;
         }
         Branch InitLocalBranch(string name, Branch remoteBranch) {
             return this.repo.CreateBranch(name, remoteBranch.CanonicalName);
@@ -197,6 +205,17 @@ namespace DXVcs2Git {
         }
         public RevertStatus Revert(string branchName, Commit revertCommit, User user) {
             return this.repo.Revert(revertCommit, ToSignature(user)).Status;
+        }
+
+        public void RemoveBranch(string branchName) {
+            Branch localBranch = this.repo.Branches[branchName];
+            string remoteName = GetOriginName(branchName);
+            Branch remoteBranch = this.repo.Branches[remoteName];
+            if(localBranch != null)
+                repo.Branches.Remove(localBranch);
+            RemoveRemoteBranch(branchName);
+            if(remoteBranch != null)
+                RemoveRemoteBranch(branchName);
         }
     }
 }
