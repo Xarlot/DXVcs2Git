@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using DXVcs2Git.Core;
 using NGitLab;
 using NGitLab.Models;
+using User = NGitLab.Models.User;
 
 namespace DXVcs2Git.Git {
     public class GitLabWrapper {
@@ -57,9 +59,15 @@ namespace DXVcs2Git.Git {
             return usersClient.All.ToList();
         }
         public void RegisterUser(string userName, string displayName, string email) {
-            var userClient = this.client.Users;
-            var userUpsert = new UserUpsert() { Username = userName, Name = displayName, Email = email, Password = new Guid().ToString() };
-            userClient.Create(userUpsert);
+            try {
+                var userClient = this.client.Users;
+                var userUpsert = new UserUpsert() {Username = userName, Name = displayName, Email = email, Password = new Guid().ToString()};
+                userClient.Create(userUpsert);
+            }
+            catch (Exception ex) {
+                Log.Error($"Can`t create user {userName} email {email}", ex);
+                throw;
+            }
         }
         public IEnumerable<Branch> GetBranches(Project project) {
             var repo = this.client.GetRepository(project.Id);

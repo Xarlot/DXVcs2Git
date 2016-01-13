@@ -333,10 +333,10 @@ namespace DXVcs2Git.Console {
                     gitWrapper.Fetch();
                     Log.Message($"git stage {localCommit.Track.ProjectPath}");
                     gitWrapper.Stage(localCommit.Track.ProjectPath);
+                    var comment = CalcComment(localCommit, token);
+                    string author = CalcAuthor(localCommit, defaultUser);
+                    User user = users.GetUser(author);
                     try {
-                        var comment = CalcComment(localCommit, token);
-                        string author = CalcAuthor(localCommit, defaultUser);
-                        User user = users.GetUser(author);
                         last = gitWrapper.Commit(comment.ToString(), user, user, localCommit.TimeStamp, false);
                         hasModifications = true;
                     }
