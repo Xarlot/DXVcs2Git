@@ -207,6 +207,7 @@
     <Compile Include="Services\FolderBrowserCustomDialogService.cs" />
     <Compile Include="ViewModels\ConfigsReader.cs" />
     <Compile Include="ViewModels\EditTrackRepository.cs" />
+    <Compile Include="ViewModels\LoggingViewModel.cs" />
     <Compile Include="ViewModels\UriDownloaderViewModel.cs" />
     <Compile Include="ViewModels\BranchViewModel.cs" />
     <Compile Include="ViewModels\EditBranchChangesViewModel.cs" />
@@ -237,6 +238,9 @@
     </Compile>
     <Compile Include="Views\EditMergeRequestControl.xaml.cs">
       <DependentUpon>EditMergeRequestControl.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\LoggingUserControl.xaml.cs">
+      <DependentUpon>LoggingUserControl.xaml</DependentUpon>
     </Compile>
     <Compile Include="Views\RepositoriesControl.xaml.cs">
       <DependentUpon>RepositoriesControl.xaml</DependentUpon>
@@ -277,6 +281,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Views\EditMergeRequestControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\LoggingUserControl.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

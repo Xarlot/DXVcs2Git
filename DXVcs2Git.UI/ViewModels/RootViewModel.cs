@@ -16,8 +16,12 @@ namespace DXVcs2Git.UI.ViewModels {
         public IDialogService SettingsDialogService { get { return GetService<IDialogService>("settingsDialogService"); } }
         public IDialogService DownloaderDialogService { get { return GetService<IDialogService>("downloaderDialogService"); } }
         public Config Config { get; private set; }
-        public string Version { get; private set; }        
-
+        public string Version { get; private set; }
+        public LoggingViewModel LogViewModel { get; private set; }
+        public bool ShowLog {
+            get { return GetProperty(() => ShowLog); }
+            private set { SetProperty(() => ShowLog, value, ShowLogChanged); }
+        }
         public RootViewModel() {
             Repositories = new RepositoriesViewModel();
             ISupportParentViewModel supportParent = Repositories;
@@ -26,12 +30,14 @@ namespace DXVcs2Git.UI.ViewModels {
             FarmIntegrator.Start(Dispatcher.CurrentDispatcher, FarmRefreshed);
             AtomFeed.FeedWorker.Initialize();
             SettingsCommand = DelegateCommandFactory.Create(ShowSettings, CanShowSettings);
-            ShowLogCommand = DelegateCommandFactory.Create(ShowLog);
+            ShowLogCommand = DelegateCommandFactory.Create(PerformShowLog);
             DownloadNewVersionCommand = DelegateCommandFactory.Create(DownloadNewVersion, CanDownloadNewVersion);
             Config = ConfigSerializer.GetConfig();
+            LogViewModel = new LoggingViewModel();
             Version = $"Git tools {VersionInfo.Version}";
         }
-        void ShowLog() {
+        void PerformShowLog() {
+            ShowLog = !ShowLog;
         }
         void DownloadNewVersion() {
             var model = new UriDownloaderViewModel(AtomFeed.FeedWorker.NewVersionUri, AtomFeed.FeedWorker.NewVersion);
@@ -40,7 +46,18 @@ namespace DXVcs2Git.UI.ViewModels {
         bool CanDownloadNewVersion() {
             return AtomFeed.FeedWorker.HasNewVersion;
         }
-
+        void ShowLogChanged() {
+            if (ShowLog) {
+                LogIntegrator.Start(Dispatcher.CurrentDispatcher, RefreshLog);
+                RefreshLog();
+            }
+            else {
+                LogIntegrator.Stop();
+            }
+        }
+        void RefreshLog() {
+            LogViewModel.Text = Log.GetLog();
+        }
         void FarmRefreshed() {
             Repositories.RefreshFarm();
         }

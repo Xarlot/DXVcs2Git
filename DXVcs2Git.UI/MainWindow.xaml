@@ -24,6 +24,7 @@
             <ResourceDictionary.MergedDictionaries>
                 <ResourceDictionary Source="Resources\Resources.xaml"/>
             </ResourceDictionary.MergedDictionaries>
+            <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"></BooleanToVisibilityConverter>
         </ResourceDictionary>
     </dxr:DXRibbonWindow.Resources>
     <dxr:DXRibbonWindow.DataContext>
@@ -86,6 +87,13 @@
                             Command="{Binding Path=SettingsCommand}"
                             LargeGlyph="{dx:DXImageOffice2013 Image=Properties_32x32.png}">
                         </dxb:BarButtonItem>
+                        <dxb:BarButtonItem
+                            RibbonStyle="Large" 
+                            GlyphSize="Large" 
+                            Content="Log"
+                            Command="{Binding Path=ShowLogCommand}"
+                            LargeGlyph="{dx:DXImageOffice2013 Image=Properties_32x32.png}">
+                        </dxb:BarButtonItem>
                     </dxr:RibbonPageGroup>
                 </dxr:RibbonPage>
             </dxr:RibbonDefaultPageCategory>
@@ -94,23 +102,30 @@
         <dxdo:DockLayoutManager 
             AutoHideMode="Inline"
             Grid.Row="1" dxb:MergingProperties.ElementMergingBehavior="InternalWithExternal">
-            <dxdo:LayoutGroup x:Name="root">
-                <dxdo:LayoutPanel 
+            <dxdo:LayoutGroup x:Name="root" Orientation="Vertical">
+                <dxdo:LayoutGroup ItemHeight="4*">
+                    <dxdo:LayoutPanel 
                     ItemWidth="*"
                     AutoHideExpandState="Expanded"
                     FloatOnDoubleClick="False">
-                    <local:RepositoriesControl 
+                        <local:RepositoriesControl 
                         dxmvvm:ViewModelExtensions.Parameter="{Binding DataContext.Repositories, ElementName=LayoutRoot}"
                         dxmvvm:ViewModelExtensions.ParentViewModel="{Binding DataContext, ElementName=LayoutRoot}">
-                    </local:RepositoriesControl>
-                </dxdo:LayoutPanel>
-                <dxdo:LayoutPanel
+                        </local:RepositoriesControl>
+                    </dxdo:LayoutPanel>
+                    <dxdo:LayoutPanel
                     ItemWidth="2*">
-                    <local:ProcessMergeRequestControl 
+                        <local:ProcessMergeRequestControl 
                         dxmvvm:ViewModelExtensions.Parameter="{Binding DataContext.Repositories, ElementName=LayoutRoot}"
                         dxmvvm:ViewModelExtensions.ParentViewModel="{Binding DataContext, ElementName=LayoutRoot}">
-                    </local:ProcessMergeRequestControl>
-                </dxdo:LayoutPanel>
+                        </local:ProcessMergeRequestControl>
+                    </dxdo:LayoutPanel>
+                </dxdo:LayoutGroup>
+                <dxdo:LayoutGroup ItemHeight="*" Visibility="{Binding Path=ShowLog, Converter={StaticResource BooleanToVisibilityConverter}}">
+                    <dxdo:LayoutPanel >
+                        <views:LoggingUserControl DataContext="{Binding Path=LogViewModel}"/>
+                    </dxdo:LayoutPanel>
+                </dxdo:LayoutGroup>
             </dxdo:LayoutGroup>
         </dxdo:DockLayoutManager>
     </Grid>
