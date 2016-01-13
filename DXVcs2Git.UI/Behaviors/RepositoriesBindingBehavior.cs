@@ -29,7 +29,7 @@ namespace DXVcs2Git.UI.Behaviors {
                 if (branch != null) {
                     var repository = (RepositoryViewModel)node.ParentNode.Content;
                     model.SelectedRepository = repository;
-                    repository.SelectedBranch = repository.Branches.FirstOrDefault();
+                    repository.SelectedBranch = branch;
                     repository.Refresh();
                 }
                 else {
