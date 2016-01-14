@@ -35,5 +35,7 @@ namespace DXVcs2Git.Console {
         public WorkMode WorkMode { get; set; }
         [Option('f', "from", Required = false, HelpText = "Timestamp for history generation")]
         public DateTime From { get; set; }
+        [Option('o', "fork-mode", Required = false, HelpText = "Fork mode - Feature branch will be removed from upstream after accepting merge request")]
+        public bool ForkMode { get; set; }
     }
 }
