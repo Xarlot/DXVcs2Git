@@ -245,7 +245,7 @@ namespace DXVcs2Git.Console {
                 }
 
                 Log.Message("Merge request merging failed");
-                AssignBackConflictedMergeRequest(gitLabWrapper, users, mergeRequest, "Merge request assigned back to author because of conflicts during merge. Resolve conflicts manually and assign it back.");
+                AssignBackConflictedMergeRequest(gitLabWrapper, users, mergeRequest, "Merge request has been assigned back to author because of conflicts during merge. Resolve conflicts manually and assign it back.");
                 return MergeRequestResult.Conflicts;
             }
             Log.Message($"Merge request merging from {sourceBranch} to {targetBranch} failed due conflicts. Resolve conflicts manually.");
@@ -253,7 +253,7 @@ namespace DXVcs2Git.Console {
         }
         static string CalcCommentForFailedCheckoutMergeRequest(List<SyncItem> genericChange) {
             StringBuilder sb = new StringBuilder();
-            sb.AppendLine("Merge request assigned back to author because of vcs has checked out files.");
+            sb.AppendLine("Merge request has been assigned back to author because some files are checked out in vcs.");
             sb.AppendLine("Remove checkout state from files and try again.");
             sb.AppendLine("Files:");
             genericChange.Where(x => x.State == ProcessState.Failed).ToList().ForEach(x => sb.AppendLine(x.VcsPath));
