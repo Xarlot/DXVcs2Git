@@ -79,5 +79,10 @@ namespace DXVcs2Git.Git {
             var mergeRequestsClient = client.GetMergeRequest(mergeRequest.ProjectId);
             return mergeRequestsClient.Update(mergeRequest.Id, new MergeRequestUpdate() { AssigneeId = userInfo.Id });
         }
+        public Comment AddCommentToMergeRequest(MergeRequest mergeRequest, string comment) {
+            var mergeRequestsClient = client.GetMergeRequest(mergeRequest.ProjectId);
+            var commentsClient = mergeRequestsClient.Comments(mergeRequest.Id);
+            return commentsClient.Add(new MergeRequestComment() {Note = comment});
+        }
     }
 }

@@ -4,7 +4,7 @@ using DXVcs2Git.DXVcs;
 
 namespace DXVcs2Git.Core.Serialization {
     public class SyncHistoryWrapper {
-        readonly int historyLimit = 100;
+        readonly int historyLimit = 10;
         readonly SyncHistory history;
         readonly string vcsHistoryPath;
         readonly string localHistoryPath;
