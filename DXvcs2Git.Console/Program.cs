@@ -203,8 +203,10 @@ namespace DXVcs2Git.Console {
                 Log.Message($"Merge attempt from {targetBranch} to {sourceBranch} completed without conflicts");
                 CommentWrapper comment = CalcComment(mergeRequest, branch, autoSyncToken);
                 if (!vcsWrapper.ProcessCheckout(genericChange)) {
-                    Log.Message("Merging merge request failed.");
-                    AssignBackConflictedMergeRequest(gitLabWrapper, users, mergeRequest, CalcCommentForFailedCheckoutMergeRequest(genericChange));
+                    Log.Error("Merging merge request failed because of checked out files:");
+                    var failedChangeSet = genericChange.Where(x => x.State == ProcessState.Failed).ToList();
+                    AssignBackConflictedMergeRequest(gitLabWrapper, users, mergeRequest, CalcCommentForFailedCheckoutMergeRequest(failedChangeSet));
+                    failedChangeSet.ForEach(x => Log.Error(x.VcsPath));
                     return MergeRequestResult.CheckoutFailed;
                 }
                 gitWrapper.Reset(branch.Name);
