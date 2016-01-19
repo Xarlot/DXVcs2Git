@@ -191,30 +191,32 @@ namespace DXVcs2Git.DXVcs {
         }
         public bool ProcessCheckout(IEnumerable<SyncItem> items) {
             var list = items.ToList();
-            if (!list.All(x => ProcessCheckoutItem(x, x.Comment.ToString()))) {
+            list.ForEach(x => {
+                bool result = ProcessCheckoutItem(x, x.Comment.ToString());
+                x.State = result ? ProcessState.Modified : ProcessState.Failed;
+            });
+            if (list.Any(x => x.State != ProcessState.Modified)) {
                 Log.Message("Rollback changes after failed checkout.");
-                list.All(RollbackItem);
+                list.ForEach(x => {
+                    if (x.State == ProcessState.Modified)
+                        RollbackItem(x);
+                });
                 return false;
             }
             return true;
         }
         bool ProcessCheckoutItem(SyncItem item, string comment) {
-            try {
-                switch (item.SyncAction) {
-                    case SyncAction.New:
-                        return CheckOutCreateFile(item.VcsPath, item.LocalPath, comment);
-                    case SyncAction.Modify:
-                        return CheckOutModifyFile(item.VcsPath, item.LocalPath, comment);
-                    case SyncAction.Delete:
-                        return CheckOutDeleteFile(item.VcsPath, item.LocalPath, comment);
-                    case SyncAction.Move:
-                        return CheckOutMoveFile(item.VcsPath, item.NewVcsPath, item.LocalPath, item.NewLocalPath, comment);
-                    default:
-                        throw new ArgumentException("SyncAction");
-                }
-            }
-            finally {
-                item.State = ProcessState.Modified;
+            switch (item.SyncAction) {
+                case SyncAction.New:
+                    return CheckOutCreateFile(item.VcsPath, item.LocalPath, comment);
+                case SyncAction.Modify:
+                    return CheckOutModifyFile(item.VcsPath, item.LocalPath, comment);
+                case SyncAction.Delete:
+                    return CheckOutDeleteFile(item.VcsPath, item.LocalPath, comment);
+                case SyncAction.Move:
+                    return CheckOutMoveFile(item.VcsPath, item.NewVcsPath, item.LocalPath, item.NewLocalPath, comment);
+                default:
+                    throw new ArgumentException("SyncAction");
             }
         }
         public void CreateLabel(string vcsPath, string labelName, string comment = "") {

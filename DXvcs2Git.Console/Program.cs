@@ -156,14 +156,8 @@ namespace DXVcs2Git.Console {
                 var mergeRequestResult = ProcessMergeRequest(vcsWrapper, gitWrapper, gitLabWrapper, users, defaultUser, localGitDir, branch, mergeRequest, syncHistory, forkMode);
                 if (mergeRequestResult == MergeRequestResult.Failed)
                     return 1;
-                if (mergeRequestResult == MergeRequestResult.Conflicts) {
-                    AssignBackConflictedMergeRequest(gitLabWrapper, users, mergeRequest, "Assigned back for resolving merge conflicts");
+                if (mergeRequestResult != MergeRequestResult.Success)
                     result = 1;
-                }
-                if (mergeRequestResult == MergeRequestResult.CheckoutFailed) {
-                    AssignBackConflictedMergeRequest(gitLabWrapper, users, mergeRequest, "Assigned back because of checked out files");
-                    result = 1;
-                }
             }
             return result;
         }
@@ -172,7 +166,7 @@ namespace DXVcs2Git.Console {
             var mr = gitLabWrapper.UpdateMergeRequestAssignee(mergeRequest, author.UserName);
             gitLabWrapper.AddCommentToMergeRequest(mr, comment);
         }
-        static bool ValidateMergeRequest(DXVcsWrapper vcsWrapper, RegisteredUsers users, TrackBranch branch, SyncHistoryItem previous, User defaultUser) {
+        static bool ValidateMergeRequest(DXVcsWrapper vcsWrapper, TrackBranch branch, SyncHistoryItem previous, User defaultUser) {
             var history = vcsWrapper.GenerateHistory(branch, new DateTime(previous.VcsCommitTimeStamp)).Where(x => x.ActionDate.Ticks > previous.VcsCommitTimeStamp);
             if (history.Any(x => x.User != defaultUser.UserName))
                 return false;
@@ -184,7 +178,7 @@ namespace DXVcs2Git.Console {
                 case "opened":
                     return ProcessOpenedMergeRequest(vcsWrapper, gitWrapper, gitLabWrapper, users, defaultUser, localGitDir, branch, mergeRequest, syncHistory, forkMode);
             }
-            return MergeRequestResult.Conflicts;
+            return MergeRequestResult.InvalidState;
         }
         static MergeRequestResult ProcessOpenedMergeRequest(DXVcsWrapper vcsWrapper, GitWrapper gitWrapper, GitLabWrapper gitLabWrapper, RegisteredUsers users, User defaultUser, string localGitDir, TrackBranch branch, MergeRequest mergeRequest, SyncHistoryWrapper syncHistory, bool forkMode) {
             string autoSyncToken = syncHistory.CreateNewToken();
@@ -210,6 +204,7 @@ namespace DXVcs2Git.Console {
                 CommentWrapper comment = CalcComment(mergeRequest, branch, autoSyncToken);
                 if (!vcsWrapper.ProcessCheckout(genericChange)) {
                     Log.Message("Merging merge request failed.");
+                    AssignBackConflictedMergeRequest(gitLabWrapper, users, mergeRequest, CalcCommentForFailedCheckoutMergeRequest(genericChange));
                     return MergeRequestResult.CheckoutFailed;
                 }
                 gitWrapper.Reset(branch.Name);
@@ -231,7 +226,7 @@ namespace DXVcs2Git.Console {
                         var lastCommit = checkinHistory.OrderBy(x => x.ActionDate).LastOrDefault();
                         long newTimeStamp = lastCommit?.ActionDate.Ticks ?? timeStamp;
                         var mergeRequestResult = MergeRequestResult.Success;
-                        if (!ValidateMergeRequest(vcsWrapper, users, branch, lastHistoryItem, defaultUser))
+                        if (!ValidateMergeRequest(vcsWrapper, branch, lastHistoryItem, defaultUser))
                             mergeRequestResult = MergeRequestResult.Mixed;
 
                         syncHistory.Add(gitCommit.Sha, newTimeStamp, autoSyncToken, mergeRequestResult == MergeRequestResult.Success ? SyncHistoryStatus.Success : SyncHistoryStatus.Mixed);
@@ -244,15 +239,23 @@ namespace DXVcs2Git.Console {
                     var lastFailedCommit = failedHistory.OrderBy(x => x.ActionDate).LastOrDefault();
                     syncHistory.Add(gitCommit.Sha, lastFailedCommit?.ActionDate.Ticks ?? timeStamp, autoSyncToken, SyncHistoryStatus.Failed);
                     syncHistory.Save();
-
                     return MergeRequestResult.Failed;
                 }
 
                 Log.Message("Merge request merging failed");
+                AssignBackConflictedMergeRequest(gitLabWrapper, users, mergeRequest, "Merge request assigned back to author because of conflicts during merge. Resolve conflicts manually and assign it back.");
                 return MergeRequestResult.Conflicts;
             }
             Log.Message($"Merge request merging from {sourceBranch} to {targetBranch} failed due conflicts. Resolve conflicts manually.");
             return MergeRequestResult.Conflicts;
+        }
+        static string CalcCommentForFailedCheckoutMergeRequest(List<SyncItem> genericChange) {
+            StringBuilder sb = new StringBuilder();
+            sb.AppendLine("Merge request assigned back to author because of vcs has checked out files.");
+            sb.AppendLine("Remove checkout state from files and try again.");
+            sb.AppendLine("Files:");
+            genericChange.Where(x => x.State == ProcessState.Failed).ToList().ForEach(x => sb.AppendLine(x.VcsPath));
+            return sb.ToString();
         }
         static SyncItem ProcessMergeRequestChanges(MergeRequest mergeRequest, MergeRequestFileData fileData, string localGitDir, TrackBranch branch, string token) {
             string vcsRoot = branch.RepoRoot;
@@ -431,6 +434,7 @@ namespace DXVcs2Git.Console {
         Conflicts,
         CheckoutFailed,
         Mixed,
+        InvalidState,
     }
     public enum ProcessHistoryResult {
         Success,

@@ -9,6 +9,7 @@
     public enum ProcessState {
         Default,
         Modified,
+        Failed,
     }
     public class SyncItem {
         public string LocalPath { get; set; }
