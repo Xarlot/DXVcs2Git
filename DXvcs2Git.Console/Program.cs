@@ -29,6 +29,20 @@ namespace DXVcs2Git.Console {
         }
 
         static int DoWork(CommandLineOptions clo) {
+            WorkMode workMode = clo.WorkMode;
+
+            if (workMode == WorkMode.listener) {
+                return DoListenerWork(clo);
+            }
+            if (workMode == WorkMode.synchronizer) {
+                return DoSyncWork(clo);
+            }
+            return 1;
+        }
+        static int DoListenerWork(CommandLineOptions clo) {
+            return 0;
+        }
+        static int DoSyncWork(CommandLineOptions clo) {
             string localGitDir = clo.LocalFolder != null && Path.IsPathRooted(clo.LocalFolder) ? clo.LocalFolder : Path.Combine(Environment.CurrentDirectory, clo.LocalFolder ?? repoPath);
             EnsureGitDir(localGitDir);
 
@@ -36,7 +50,6 @@ namespace DXVcs2Git.Console {
             string username = clo.Login;
             string password = clo.Password;
             string gitlabauthtoken = clo.AuthToken;
-            WorkMode workMode = clo.WorkMode;
             string branchName = clo.Branch;
             string trackerPath = clo.Tracker;
             string gitServer = clo.Server;
@@ -219,7 +232,7 @@ namespace DXVcs2Git.Console {
                     var gitCommit = gitWrapper.FindCommit(branch.Name, x => CommentWrapper.Parse(x.Message).Token == autoSyncToken);
                     Log.Message("Merge request merged successfully.");
 
-                    if(forkMode && sourceBranchWasCreated && sourceBranch != targetBranch)
+                    if (forkMode && sourceBranchWasCreated && sourceBranch != targetBranch)
                         gitWrapper.RemoveBranch(sourceBranch);
 
                     long timeStamp = lastHistoryItem.VcsCommitTimeStamp;
@@ -305,7 +318,7 @@ namespace DXVcs2Git.Console {
             IList<CommitItem> commits = vcsWrapper.GenerateCommits(history).Where(x => x.TimeStamp > lastCommit && !IsLabel(x)).ToList();
             if (mergeCommits)
                 commits = vcsWrapper.MergeCommits(commits);
-            
+
             if (commits.Count > commitsCount) {
                 Log.Message($"Commits generated. First {commitsCount} of {commits.Count} commits taken.");
                 commits = commits.Take(commitsCount).ToList();
@@ -337,7 +350,7 @@ namespace DXVcs2Git.Console {
                 bool hasModifications = false;
                 Commit last = null;
                 string token = syncHistory.CreateNewToken();
-                foreach(var localCommit in localCommits) {
+                foreach (var localCommit in localCommits) {
                     string localProjectPath = Path.Combine(localGitDir, localCommit.Track.ProjectPath);
                     DirectoryHelper.DeleteDirectory(localProjectPath);
                     vcsWrapper.GetProject(vcsServer, localCommit.Track.Path, localProjectPath, item.TimeStamp);
