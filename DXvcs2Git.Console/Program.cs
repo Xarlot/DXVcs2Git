@@ -156,7 +156,7 @@ namespace DXVcs2Git.Console {
                 var mergeRequestResult = ProcessMergeRequest(vcsWrapper, gitWrapper, gitLabWrapper, users, defaultUser, localGitDir, branch, mergeRequest, syncHistory, forkMode);
                 if (mergeRequestResult == MergeRequestResult.Failed)
                     return 1;
-                if (mergeRequestResult != MergeRequestResult.Success)
+                if (mergeRequestResult == MergeRequestResult.CheckoutFailed || mergeRequestResult == MergeRequestResult.Conflicts || mergeRequestResult == MergeRequestResult.InvalidState)
                     result = 1;
             }
             return result;
@@ -234,7 +234,7 @@ namespace DXVcs2Git.Console {
                         syncHistory.Add(gitCommit.Sha, newTimeStamp, autoSyncToken, mergeRequestResult == MergeRequestResult.Success ? SyncHistoryStatus.Success : SyncHistoryStatus.Mixed);
                         syncHistory.Save();
                         Log.Message("Merge request checkin successfully.");
-                        return MergeRequestResult.Mixed;
+                        return mergeRequestResult;
                     }
                     Log.Error("Merge request checkin failed.");
                     var failedHistory = vcsWrapper.GenerateHistory(branch, new DateTime(timeStamp));
