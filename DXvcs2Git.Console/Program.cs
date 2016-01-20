@@ -40,6 +40,7 @@ namespace DXVcs2Git.Console {
             return 1;
         }
         static int DoListenerWork(CommandLineOptions clo) {
+
             return 0;
         }
         static int DoSyncWork(CommandLineOptions clo) {
@@ -96,18 +97,15 @@ namespace DXVcs2Git.Console {
                 return 1;
             }
 
-            if (workMode.HasFlag(WorkMode.history)) {
-                ProcessHistoryResult result = ProcessHistory(vcsWrapper, gitWrapper, registeredUsers, defaultUser, gitRepoPath, localGitDir, branch, clo.CommitsCount, syncHistory, true);
-                if (result == ProcessHistoryResult.NotEnough)
-                    return 0;
-                if (result == ProcessHistoryResult.Failed)
-                    return 1;
-            }
-            if (workMode.HasFlag(WorkMode.mergerequests)) {
-                int result = ProcessMergeRequests(vcsWrapper, gitWrapper, gitLabWrapper, registeredUsers, defaultUser, gitRepoPath, localGitDir, clo.Branch, clo.Tracker, syncHistory, username, forkMode);
-                if (result != 0)
-                    return result;
-            }
+            ProcessHistoryResult processHistoryResult = ProcessHistory(vcsWrapper, gitWrapper, registeredUsers, defaultUser, gitRepoPath, localGitDir, branch, clo.CommitsCount, syncHistory, true);
+            if (processHistoryResult == ProcessHistoryResult.NotEnough)
+                return 0;
+            if (processHistoryResult == ProcessHistoryResult.Failed)
+                return 1;
+
+            int result = ProcessMergeRequests(vcsWrapper, gitWrapper, gitLabWrapper, registeredUsers, defaultUser, gitRepoPath, localGitDir, clo.Branch, clo.Tracker, syncHistory, username, forkMode);
+            if (result != 0)
+                return result;
             return 0;
         }
         static string GetVcsSyncHistory(DXVcsWrapper vcsWrapper, string historyPath) {
