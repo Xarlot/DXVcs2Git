@@ -51,5 +51,28 @@
                     AutoWidth="True"/>
             </dxg:GridControl.View>
         </dxg:GridControl>
+        <dxr:RibbonStatusBarControl>
+            <dxr:RibbonStatusBarControl.RightItems>
+                <dxb:BarStaticItem Content="Updating repositories..." ShowBorder="False" IsVisible="{Binding IsInitialized, Converter={dxmvvm:BooleanNegationConverter}}">
+                    <dxb:BarStaticItem.ContentTemplate>
+                        <DataTemplate>
+                            <TextBlock x:Name="tBlock" Text="{Binding}"/>
+                            <DataTemplate.Triggers>
+                                <EventTrigger RoutedEvent="FrameworkElement.Loaded" SourceName="tBlock">
+                                    <BeginStoryboard>
+                                        <Storyboard>
+                                            <DoubleAnimation 
+                                                Storyboard.TargetName="tBlock"
+                                                Storyboard.TargetProperty="(FrameworkElement.Opacity)" AutoReverse="True"
+                                                From="1" To="0.3" Duration="0:0:0:0.5" RepeatBehavior="Forever"/>
+                                        </Storyboard>
+                                    </BeginStoryboard>
+                                </EventTrigger>
+                            </DataTemplate.Triggers>
+                        </DataTemplate>
+                    </dxb:BarStaticItem.ContentTemplate>
+                </dxb:BarStaticItem>
+            </dxr:RibbonStatusBarControl.RightItems>
+        </dxr:RibbonStatusBarControl>
     </Grid>
 </UserControl>
