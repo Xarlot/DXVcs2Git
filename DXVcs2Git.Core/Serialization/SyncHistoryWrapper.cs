@@ -50,5 +50,23 @@ namespace DXVcs2Git.Core.Serialization {
                 throw;
             }
         }
+        public SyncHistoryItem GetHistoryHead() {
+            var head = GetHead();
+            do {
+                if (head == null) {
+                    Log.Error("Failed sync. Can`t find history item with success status.");
+                    return null;
+                }
+                if (head.Status == SyncHistoryStatus.Failed) {
+                    Log.Error("Failed sync detected. Repair repo.");
+                    return null;
+                }
+                if (head.Status == SyncHistoryStatus.Success)
+                    break;
+                head = GetPrevious(head);
+            }
+            while (true);
+            return head;
+        }
     }
 }
