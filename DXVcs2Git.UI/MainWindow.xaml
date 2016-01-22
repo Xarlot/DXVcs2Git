@@ -75,6 +75,7 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
         <dxr:RibbonControl Grid.Row="0" RibbonStyle="Office2010" ToolbarShowMode="Hide" AllowCustomization="False" MinimizationButtonVisibility="Collapsed" RibbonHeaderVisibility="Collapsed">
             <dxr:RibbonDefaultPageCategory>
@@ -129,5 +130,6 @@
                 </dxdo:LayoutGroup>
             </dxdo:LayoutGroup>
         </dxdo:DockLayoutManager>
+        <dxr:RibbonStatusBarControl Grid.Row="2" Height="24"/>
     </Grid>
 </dxr:DXRibbonWindow>

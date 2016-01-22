@@ -15,7 +15,7 @@ namespace DXVcs2Git.Core.Configuration {
             if (!File.Exists(SettingsFilePath))
                 return Config.GenerateDefault();
             try {
-                return Serializer.Deserialize<Config>(SettingsFilePath);
+                return Config.Validate(Serializer.Deserialize<Config>(SettingsFilePath));
             }
             catch {
                 return Config.GenerateDefault();

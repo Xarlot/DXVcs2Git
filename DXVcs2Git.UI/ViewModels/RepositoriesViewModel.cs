@@ -8,13 +8,16 @@ using DXVcs2Git.Core.Git;
 using DXVcs2Git.Git;
 using NGitLab.Models;
 using DXVcs2Git.Core.Configuration;
+using System.Threading.Tasks;
+using DXVcs2Git.Core;
 
 namespace DXVcs2Git.UI.ViewModels {
     public class RepositoriesViewModel : ViewModelBase {
         BranchViewModel selectedBranch;
         RepositoryViewModel selectedRepository;
+        bool fake = false;
         public RootViewModel RootViewModel { get { return this.GetParentViewModel<RootViewModel>(); } }
-        public Config Config { get { return RootViewModel.Config; } }
+        public Config Config { get { return RootViewModel?.Config ?? ConfigSerializer.GetConfig(); } }
         public RepoConfigsReader RepoConfigs { get; private set; }
         public IEnumerable<BranchViewModel> Branches {
             get { return GetProperty(() => Branches); }
@@ -46,6 +49,9 @@ namespace DXVcs2Git.UI.ViewModels {
         public RepositoriesViewModel() {
             Refresh();
         }
+        public RepositoriesViewModel(bool fake) {
+            this.fake = fake;
+        }
 
         public void Update() {
             IsInitialized = false;
@@ -54,8 +60,29 @@ namespace DXVcs2Git.UI.ViewModels {
             SelectedRepository = Repositories.With(x => x.FirstOrDefault());
             Refresh();
             IsInitialized = true;
+            SendUpdateMessage();
+        }
 
-            Messenger.Default.Send(new Message(MessageType.Update));
+        void SendUpdateMessage() { if (!fake) Messenger.Default.Send(new Message(MessageType.Update)); }
+
+        public Task BeginUpdate() {
+            Log.Message("Repositories update started");
+            IsInitialized = false;
+            CommandManager.InvalidateRequerySuggested();
+            ConfigSerializer.SaveConfig(Config);            
+            return Task.Run(() => {
+                RepositoriesViewModel rvm = new RepositoriesViewModel(true);
+                rvm.Update();
+                return rvm;
+            }).ContinueWith(_ => {
+                RepoConfigs = _.Result.RepoConfigs;
+                Repositories = _.Result.Repositories;
+                SelectedRepository = _.Result.SelectedRepository;
+                IsInitialized = true;
+                Log.Message("Repositories update completed");
+                SendUpdateMessage();
+                CommandManager.InvalidateRequerySuggested();                
+            }, TaskScheduler.FromCurrentSynchronizationContext());
         }
         bool IsValidConfig(TrackRepository repo) {
             if (string.IsNullOrEmpty(repo.Name))
@@ -74,8 +101,10 @@ namespace DXVcs2Git.UI.ViewModels {
             if (Repositories == null)
                 return;
             Repositories.ForEach(x => x.Refresh());
-            CommandManager.InvalidateRequerySuggested();
-            Messenger.Default.Send(new Message(MessageType.Refresh));
+            if (!fake) {
+                CommandManager.InvalidateRequerySuggested();
+                Messenger.Default.Send(new Message(MessageType.Refresh));
+            }            
         }
         public void RefreshFarm() {
             if (Repositories == null)

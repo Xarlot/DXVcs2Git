@@ -14,10 +14,13 @@ namespace DXVcs2Git.Core {
         }
         private static readonly ILog log = LogManager.GetLogger(typeof(Log));
         public static void Message(string message, Exception ex = null) {
-            log.Info(message, ex);
+            log.Info(FormatMessage(message), ex);
+        }
+        static string FormatMessage(string message) {
+            return String.Format("[{0}] {1}", DateTime.Now.ToLongTimeString(), message);
         }
         public static void Error(string message, Exception exception = null) {
-            log.Error(message, exception);
+            log.Error(FormatMessage(message), exception);
         }
         public static string GetLog() {
             ILog log = log4net.LogManager.GetLogger("PoC");

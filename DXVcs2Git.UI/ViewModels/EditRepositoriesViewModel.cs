@@ -23,13 +23,21 @@ namespace DXVcs2Git.UI.ViewModels {
 
         public EditRepositoriesViewModel() {
             UpdateCommand = DelegateCommandFactory.Create(PerformUpdate, CanUpdate);
+            Messenger.Default.Register<Message>(this, new Action<Message>(OnMessageReceived));
         }
+
+        void OnMessageReceived(Message message) {
+            if (message.MessageType == MessageType.Update)
+                Refresh();
+        }
+
         void SelectedRepositoryChanged() {
             Parameter.SelectedRepository = SelectedRepository;
         }
 
         void PerformUpdate() {
-            Parameter.Update();
+            IsInitialized = false;
+            Parameter.BeginUpdate();            
         }
         protected override void OnParameterChanged(object parameter) {
             base.OnParameterChanged(parameter);
