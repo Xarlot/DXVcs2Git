@@ -12,6 +12,9 @@ namespace DXVcs2Git.Git {
         public GitLabWrapper(string server, string token) {
             client = GitLabClient.Connect(server, token);
         }
+        public IEnumerable<Project> GetProjects() {
+            return client.Projects.Accessible;
+        }
         public Project FindProject(string project) {
             return client.Projects.Accessible.FirstOrDefault(x => x.HttpUrl == project);
         }
@@ -83,6 +86,14 @@ namespace DXVcs2Git.Git {
             var mergeRequestsClient = client.GetMergeRequest(mergeRequest.ProjectId);
             var commentsClient = mergeRequestsClient.Comments(mergeRequest.Id);
             return commentsClient.Add(new MergeRequestComment() {Note = comment});
+        }
+        public IEnumerable<ProjectHook> GetHooks(Project project) {
+            var repository = this.client.GetRepository(project.Id);
+            return repository.ProjectHooks.All;
+        }
+        public ProjectHook UpdateProjectHook(Project project, ProjectHook hook, Uri uri) {
+            var repository = this.client.GetRepository(project.Id);
+            return repository.ProjectHooks.Update(hook.Id, new ProjectHookUpsert() {Url = uri});
         }
     }
 }

@@ -4,11 +4,13 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Net.Sockets;
 using System.Reflection;
 using System.Text;
 using CommandLine;
 using DXVcs2Git.Core;
 using DXVcs2Git.Core.Git;
+using DXVcs2Git.Core.Listener;
 using DXVcs2Git.Core.Serialization;
 using DXVcs2Git.DXVcs;
 using DXVcs2Git.Git;
@@ -20,6 +22,14 @@ using User = DXVcs2Git.Core.User;
 
 namespace DXVcs2Git.Console {
     internal class Program {
+        static readonly string webhookFormat = @"http://{0}:8080/webhook/";
+
+        static IPAddress ipAddress;
+        static IPAddress IP { get { return ipAddress ?? (ipAddress = DetectMyIP()); } }
+        static IPAddress DetectMyIP() {
+            return Dns.GetHostEntry(Dns.GetHostName()).AddressList.FirstOrDefault(ip => ip.AddressFamily == AddressFamily.InterNetwork);
+        }
+
         const string repoPath = "repo";
         const string vcsServer = @"net.tcp://vcsservice.devexpress.devx:9091/DXVCSService";
         static void Main(string[] args) {
@@ -42,38 +52,35 @@ namespace DXVcs2Git.Console {
             }
             return 1;
         }
+
         static int DoListenerWork(CommandLineOptions clo) {
-            var web = new HttpListener();
+            string gitServer = clo.Server;
+            string gitlabauthtoken = clo.AuthToken;
+            string gitRepoPath = clo.Repo;
 
-            web.Prefixes.Add("http://localhost:8080/");
+            GitLabWrapper gitLabWrapper = new GitLabWrapper(gitServer, gitlabauthtoken);
+            var projects = gitLabWrapper.GetProjects();
+            foreach (Project project in projects) {
+                var hooks = gitLabWrapper.GetHooks(project);
+                foreach (ProjectHook hook in hooks) {
+                    if (ReplaceIPInUrlHelper.IsSameHost(hook.Url, IP))
+                        continue;
+                    gitLabWrapper.UpdateProjectHook(project, hook, ReplaceIPInUrlHelper.Replace(hook.Url, IP));
+                }
+            }
 
-            System.Console.WriteLine("Listening..");
 
-            web.Start();
+            WebServer server = new WebServer(string.Format(webhookFormat, IP));
 
-            System.Console.WriteLine(web.GetContext());
+            while (true) {
+                var serverTask = server.Start();
+                var request = serverTask.Result.Request;
+                using (StreamReader ms = new StreamReader(request.InputStream)) {
+                    var projectHookClientSide = ProjectHookClient.ParseHook(ms.ReadToEnd());
+                    System.Console.WriteLine(projectHookClientSide.HookType);
+                }
+            }
 
-            var context = web.GetContext();
-
-            var response = context.Response;
-
-            const string responseString = "<html><body>Hello world</body></html>";
-
-            var buffer = System.Text.Encoding.UTF8.GetBytes(responseString);
-
-            response.ContentLength64 = buffer.Length;
-
-            var output = response.OutputStream;
-
-            output.Write(buffer, 0, buffer.Length);
-
-            System.Console.WriteLine(output);
-
-            output.Close();
-
-            web.Stop();
-
-            System.Console.ReadKey();
             return 0;
         }
         static int DoSyncWork(CommandLineOptions clo) {

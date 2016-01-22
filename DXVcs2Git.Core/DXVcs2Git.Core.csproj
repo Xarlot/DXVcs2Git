@@ -55,6 +55,10 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\Lib\log4net\log4net.dll</HintPath>
     </Reference>
+    <Reference Include="Newtonsoft.Json, Version=8.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>..\packages\Newtonsoft.Json.8.0.2\lib\net45\Newtonsoft.Json.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="NGitLab, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\Lib\NGitLab\NGitLab.dll</HintPath>
@@ -64,10 +68,12 @@
       <Private>True</Private>
     </Reference>
     <Reference Include="System" />
+    <Reference Include="System.ComponentModel.DataAnnotations" />
     <Reference Include="System.Core" />
     <Reference Include="System.DirectoryServices" />
     <Reference Include="System.DirectoryServices.AccountManagement" />
     <Reference Include="System.IdentityModel" />
+    <Reference Include="System.Runtime.Serialization" />
     <Reference Include="System.ServiceModel" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
@@ -92,10 +98,13 @@
     <Compile Include="Git\GitRepoConfig.cs" />
     <Compile Include="Git\GitWrapper.cs" />
     <Compile Include="HistoryItem.cs" />
+    <Compile Include="Listener\ProjectHookClient.cs" />
+    <Compile Include="Listener\ProjectHookClientSide.cs" />
     <Compile Include="Log.cs" />
     <Compile Include="ProjectExtractor.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RegisteredUsers.cs" />
+    <Compile Include="ReplaceIPInUrlHelper.cs" />
     <Compile Include="Serialization\Serializer.cs" />
     <Compile Include="Serialization\SyncHistory.cs" />
     <Compile Include="Serialization\SyncHistoryItem.cs" />
@@ -117,6 +126,7 @@
     <Compile Include="Serialization\SyncHistoryWrapper.cs" />
     <Compile Include="Vcs\WCFServiceHelper.cs" />
     <Compile Include="Properties\Version.cs" />
+    <Compile Include="WebServer.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Key.snk" />
@@ -124,6 +134,7 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>
