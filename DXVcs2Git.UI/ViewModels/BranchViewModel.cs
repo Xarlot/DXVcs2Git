@@ -11,6 +11,7 @@ using DXVcs2Git.Git;
 using DXVcs2Git.UI.Farm;
 using NGitLab.Models;
 using User = NGitLab.Models.User;
+using ThoughtWorks.CruiseControl.Remote;
 
 namespace DXVcs2Git.UI.ViewModels {
     public class BranchViewModel : BindableBase {
@@ -20,11 +21,11 @@ namespace DXVcs2Git.UI.ViewModels {
         public RepositoriesViewModel Repositories { get; }
         public RepositoryViewModel Repository { get; }
         public string Name { get; }
+        FarmStatus oldFarmStatus;
         public FarmStatus FarmStatus {
             get { return GetProperty(() => FarmStatus); }
-            private set { SetProperty(() => FarmStatus, value); }
-        }
-
+            private set { SetProperty(() => FarmStatus, value, new Action(OnFarmStatusChanged)); }
+        }        
         public ICommand ForceBuildCommand { get; private set; }
         public MergeRequestViewModel MergeRequest { get; private set; }
         public bool IsInEditingMergeRequest {
@@ -41,8 +42,8 @@ namespace DXVcs2Git.UI.ViewModels {
             Branch = branch;
             Name = branch.Name;
             Repositories = repositories;
-            FarmStatus = new FarmStatus();
-
+            oldFarmStatus = new FarmStatus();
+            FarmStatus = oldFarmStatus;
             MergeRequest = mergeRequest.With(x => new MergeRequestViewModel(gitLabWrapper, mergeRequest));
             ForceBuildCommand = DelegateCommandFactory.Create(ForceBuild, CanForceBuild);
         }
@@ -71,6 +72,16 @@ namespace DXVcs2Git.UI.ViewModels {
         }
         public void RefreshFarm() {
             FarmStatus = FarmIntegrator.GetTaskStatus(Repository.RepoConfig?.FarmSyncTaskName);
+        }
+        void OnFarmStatusChanged() {
+            try {
+                if (oldFarmStatus.BuildStatus == IntegrationStatus.Unknown)
+                    return;
+                if (oldFarmStatus.ActivityStatus != FarmStatus.ActivityStatus && FarmStatus.ActivityStatus == ActivityStatus.Sleeping)
+                    Repository.Update();                
+            } finally {
+                oldFarmStatus = FarmStatus;
+            }
         }
     }
 }
