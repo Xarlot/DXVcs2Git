@@ -64,11 +64,15 @@ namespace DXVcs2Git.UI.ViewModels {
         }
 
         void SendUpdateMessage() { if (!fake) Messenger.Default.Send(new Message(MessageType.Update)); }
+        void SendBeginUpdateMessage() { if (!fake) Messenger.Default.Send(new Message(MessageType.BeginUpdate)); }
 
-        public Task BeginUpdate() {
+        public Task BeginUpdate() {            
             Log.Message("Repositories update started");
             IsInitialized = false;
+            var selectedRepositoryName = SelectedRepository?.Name;
+            var selectedBranchName = SelectedRepository?.SelectedBranch?.Name;
             CommandManager.InvalidateRequerySuggested();
+            SendBeginUpdateMessage();
             ConfigSerializer.SaveConfig(Config);            
             return Task.Run(() => {
                 RepositoriesViewModel rvm = new RepositoriesViewModel(true);
@@ -77,7 +81,10 @@ namespace DXVcs2Git.UI.ViewModels {
             }).ContinueWith(_ => {
                 RepoConfigs = _.Result.RepoConfigs;
                 Repositories = _.Result.Repositories;
-                SelectedRepository = _.Result.SelectedRepository;
+
+                SelectedRepository = Repositories.FirstOrDefault(x=>x.Name == selectedRepositoryName) ?? _.Result.SelectedRepository;
+                if (SelectedRepository != null)
+                    SelectedRepository.SelectedBranch = SelectedRepository.Branches.FirstOrDefault(x => x.Name == selectedBranchName);
                 IsInitialized = true;
                 Log.Message("Repositories update completed");
                 SendUpdateMessage();
