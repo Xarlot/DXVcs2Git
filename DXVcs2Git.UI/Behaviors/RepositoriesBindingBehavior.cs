@@ -5,34 +5,41 @@ using DXVcs2Git.UI.ViewModels;
 using DevExpress.Mvvm;
 using System;
 using DevExpress.Xpf.Core;
+using DevExpress.Mvvm.UI.Native;
+using System.Collections;
+using System.Windows;
 
 namespace DXVcs2Git.UI.Behaviors {
     public class RepositoriesBindingBehavior : Behavior<GridControl> {
-        readonly Locker selectionLocker = new Locker();
-        int focusedHandle = 0;
-        public RepositoriesBindingBehavior() {
-            selectionLocker.Unlocked += OnSelectionUnlocked;
-        }
-        protected override void OnAttached() {
-            base.OnAttached();
-            AssociatedObject.CurrentItemChanged += AssociatedObjectOnCurrentItemChanged;            
-            Messenger.Default.Register<Message>(this, new Action<Message>(OnMessageReceived));
+        public static readonly DependencyProperty ItemsSourceProperty;        
+        static RepositoriesBindingBehavior() {
+            DependencyPropertyRegistrator<RepositoriesBindingBehavior>.New()
+                .Register(x => x.ItemsSource, out ItemsSourceProperty, null, (x, oldValue, newValue) => x.OnItemsSourceChanged(oldValue, newValue));
         }
 
-        void OnSelectionUnlocked(object sender, EventArgs e) {            
+        void OnItemsSourceChanged(IEnumerable oldValue, IEnumerable newValue) {
+            if (AssociatedObject == null)
+                return;
+            if (AssociatedObject == null)
+                return;
+            var focusedHandle = AssociatedObject?.View.FocusedRowHandle ?? 0;
+            AssociatedObject.ItemsSource = newValue;
+            if (focusedHandle < 0)
+                return;
             AssociatedObject.View.FocusedRowHandle = focusedHandle;
         }
 
-        void OnMessageReceived(Message message) {
-            if (message.MessageType == MessageType.BeginUpdate) {
-                focusedHandle = AssociatedObject?.View.FocusedRowHandle ?? 0;
-                selectionLocker.Lock();
-            }                
-            if (message.MessageType == MessageType.Update)
-                selectionLocker.Unlock();
+        public IEnumerable ItemsSource {
+            get { return (IEnumerable)GetValue(ItemsSourceProperty); }
+            set { SetValue(ItemsSourceProperty, value); }
         }
+        protected override void OnAttached() {
+            base.OnAttached();
+            AssociatedObject.ItemsSource = ItemsSource;
+            AssociatedObject.CurrentItemChanged += AssociatedObjectOnCurrentItemChanged;            
+        }        
         void AssociatedObjectOnCurrentItemChanged(object sender, CurrentItemChangedEventArgs e) {
-            selectionLocker.DoIfNotLocked(UpdateSelection);
+            UpdateSelection();
         }
         void UpdateSelection() {
             var model = AssociatedObject.DataContext as EditRepositoriesViewModel;
@@ -65,8 +72,6 @@ namespace DXVcs2Git.UI.Behaviors {
         }
         protected override void OnDetaching() {
             AssociatedObject.CurrentItemChanged -= AssociatedObjectOnCurrentItemChanged;
-
-            Messenger.Default.Unregister(this);
             base.OnDetaching();
         }
     }

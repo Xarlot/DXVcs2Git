@@ -34,9 +34,9 @@
                 </dxr:RibbonPage>
             </dxr:RibbonDefaultPageCategory>
         </dxr:RibbonControl>
-        <dxg:GridControl ItemsSource="{Binding Path=Repositories}" ShowBorder="False">
+        <dxg:GridControl ShowBorder="False">
             <dxmvvm:Interaction.Behaviors>
-                <behaviors:RepositoriesBindingBehavior/>
+                <behaviors:RepositoriesBindingBehavior ItemsSource="{Binding Path=Repositories}"/>
             </dxmvvm:Interaction.Behaviors>
             <dxg:GridControl.Columns>
                 <dxg:GridColumn FieldName="Name"></dxg:GridColumn>

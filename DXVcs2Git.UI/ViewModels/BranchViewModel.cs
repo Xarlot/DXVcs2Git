@@ -21,13 +21,17 @@ namespace DXVcs2Git.UI.ViewModels {
         public RepositoriesViewModel Repositories { get; }
         public RepositoryViewModel Repository { get; }
         public string Name { get; }
+        public event EventHandler MergeRequestChanged = (_, __) => { };
         FarmStatus oldFarmStatus;
         public FarmStatus FarmStatus {
             get { return GetProperty(() => FarmStatus); }
             private set { SetProperty(() => FarmStatus, value, new Action(OnFarmStatusChanged)); }
         }        
         public ICommand ForceBuildCommand { get; private set; }
-        public MergeRequestViewModel MergeRequest { get; private set; }
+        public MergeRequestViewModel MergeRequest {
+            get { return GetProperty(() => MergeRequest); }
+            private set { SetProperty(() => MergeRequest, value, new Action(OnMergeRequestChanged)); }
+        }        
         public bool IsInEditingMergeRequest {
             get { return GetProperty(() => IsInEditingMergeRequest); }
             internal set { SetProperty(() => IsInEditingMergeRequest, value); }
@@ -77,11 +81,16 @@ namespace DXVcs2Git.UI.ViewModels {
             try {
                 if (oldFarmStatus.BuildStatus == IntegrationStatus.Unknown)
                     return;
-                if (oldFarmStatus.ActivityStatus != FarmStatus.ActivityStatus && FarmStatus.ActivityStatus == ActivityStatus.Sleeping)
-                    Repository.Update();                
+                if (oldFarmStatus.ActivityStatus != FarmStatus.ActivityStatus && FarmStatus.ActivityStatus == ActivityStatus.Sleeping) {
+                    if (MergeRequest != null)
+                        Repositories.BeginUpdate();
+                }                    
             } finally {
                 oldFarmStatus = FarmStatus;
             }
+        }
+        void OnMergeRequestChanged() {
+            MergeRequestChanged(this, null);
         }
     }
 }

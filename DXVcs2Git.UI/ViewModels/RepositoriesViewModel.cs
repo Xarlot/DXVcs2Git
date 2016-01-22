@@ -64,13 +64,11 @@ namespace DXVcs2Git.UI.ViewModels {
         }
 
         void SendUpdateMessage() { if (!fake) Messenger.Default.Send(new Message(MessageType.Update)); }
-        void SendBeginUpdateMessage() { if (!fake) Messenger.Default.Send(new Message(MessageType.BeginUpdate)); }
 
         public Task BeginUpdate() {            
             Log.Message("Repositories update started");
             IsInitialized = false;
             CommandManager.InvalidateRequerySuggested();
-            SendBeginUpdateMessage();
             ConfigSerializer.SaveConfig(Config);            
             return Task.Run(() => {
                 RepositoriesViewModel rvm = new RepositoriesViewModel(true);
