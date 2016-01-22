@@ -26,6 +26,7 @@
                             RibbonStyle="Large" 
                             GlyphSize="Large" 
                             Content="Update"
+                            KeyGesture="F5" dxb:BarManager.KeyGestureWorkingMode="AllKeyGesture"
                             Command="{Binding Path=UpdateCommand}"
                             LargeGlyph="{dx:DXImageOffice2013 Image=Refresh2_32x32.png}">
                         </dxb:BarButtonItem>
