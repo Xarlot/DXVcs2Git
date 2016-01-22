@@ -9,6 +9,7 @@ using DevExpress.Xpf.Core;
 namespace DXVcs2Git.UI.Behaviors {
     public class RepositoriesBindingBehavior : Behavior<GridControl> {
         readonly Locker selectionLocker = new Locker();
+        int focusedHandle = 0;
         public RepositoriesBindingBehavior() {
             selectionLocker.Unlocked += OnSelectionUnlocked;
         }
@@ -18,23 +19,15 @@ namespace DXVcs2Git.UI.Behaviors {
             Messenger.Default.Register<Message>(this, new Action<Message>(OnMessageReceived));
         }
 
-        void OnSelectionUnlocked(object sender, EventArgs e) {
-            var model = AssociatedObject.DataContext as EditRepositoriesViewModel;            
-            var treeList = (TreeListView)AssociatedObject.View;
-            if (model == null || treeList == null)
-                return;
-            object selectedItem = model.SelectedRepository?.SelectedBranch ?? (object)model.SelectedRepository;
-            if (selectedItem == null)
-                return;
-            var handle = treeList.GetNodeByContent(selectedItem)?.RowHandle;
-            if (handle == null)
-                return;
-            treeList.FocusedRowHandle = handle.Value;
+        void OnSelectionUnlocked(object sender, EventArgs e) {            
+            AssociatedObject.View.FocusedRowHandle = focusedHandle;
         }
 
         void OnMessageReceived(Message message) {
-            if (message.MessageType == MessageType.BeginUpdate)
+            if (message.MessageType == MessageType.BeginUpdate) {
+                focusedHandle = AssociatedObject?.View.FocusedRowHandle ?? 0;
                 selectionLocker.Lock();
+            }                
             if (message.MessageType == MessageType.Update)
                 selectionLocker.Unlock();
         }

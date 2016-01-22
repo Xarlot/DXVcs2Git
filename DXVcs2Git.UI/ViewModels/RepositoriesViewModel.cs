@@ -69,8 +69,6 @@ namespace DXVcs2Git.UI.ViewModels {
         public Task BeginUpdate() {            
             Log.Message("Repositories update started");
             IsInitialized = false;
-            var selectedRepositoryName = SelectedRepository?.Name;
-            var selectedBranchName = SelectedRepository?.SelectedBranch?.Name;
             CommandManager.InvalidateRequerySuggested();
             SendBeginUpdateMessage();
             ConfigSerializer.SaveConfig(Config);            
@@ -81,10 +79,7 @@ namespace DXVcs2Git.UI.ViewModels {
             }).ContinueWith(_ => {
                 RepoConfigs = _.Result.RepoConfigs;
                 Repositories = _.Result.Repositories;
-
-                SelectedRepository = Repositories.FirstOrDefault(x=>x.Name == selectedRepositoryName) ?? _.Result.SelectedRepository;
-                if (SelectedRepository != null)
-                    SelectedRepository.SelectedBranch = SelectedRepository.Branches.FirstOrDefault(x => x.Name == selectedBranchName);
+                SelectedRepository = _.Result.SelectedRepository;
                 IsInitialized = true;
                 Log.Message("Repositories update completed");
                 SendUpdateMessage();
