@@ -495,8 +495,12 @@ namespace DevExpress.DXCCTray {
         List<string> allUserNames = new List<string>();
         public DXCCTrayIntegrator(string url) {
             this.url = url;
-            wcfConnectionTimer.Elapsed += WcfConnectionTimer_Elapsed;
+            waitTimeForWCFCallSeconds = 3;
+            waitTime = 5000;
+            waitTimes = new int[] { waitTime, waitTime, waitTime, waitTime * 6, waitTime * 6, waitTime * 12, waitTime * 12, waitTime * 48 };
             watchDogTimer.Interval = waitTime * 3;
+            waitTimeIndex = 0;
+            wcfConnectionTimer.Elapsed += WcfConnectionTimer_Elapsed;            
             watchDogTimer.Elapsed += new System.Timers.ElapsedEventHandler(watchDogTimer_Elapsed);
             checkMulticastTimer.Elapsed += new System.Timers.ElapsedEventHandler(checkMulticastTimer_Elapsed);
             InitUserNames();
