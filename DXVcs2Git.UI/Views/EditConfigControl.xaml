@@ -85,6 +85,9 @@
                             </dxe:ButtonEdit.Buttons>
                         </dxe:ButtonEdit>
                     </dxlc:LayoutItem>
+                    <dxlc:LayoutItem Label="Run on Windows startup: " VerticalAlignment="Center">
+                        <dxe:CheckEdit EditValue="{Binding Path=StartWithWindows, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                    </dxlc:LayoutItem>
                 </dxlc:LayoutControl>
             </dx:DXTabItem>
         </dx:DXTabControl>
