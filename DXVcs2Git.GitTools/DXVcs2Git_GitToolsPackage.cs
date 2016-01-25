@@ -81,8 +81,7 @@ namespace DXVcs2Git.GitTools {
         #endregion
 
         public void ShowMergeRequestUI() {
-            var config = DXVcs2Git.Core.Configuration.ConfigSerializer.GetConfig();
-            var launcher = Path.Combine(config.InstallPath, "DXVcs2Git.Launcher.exe");
+            var launcher = Path.Combine(ConfigSerializer.SettingsPath, "DXVcs2Git.Launcher.exe");
             if (File.Exists(launcher)) {
                 Process.Start(launcher);
                 return;

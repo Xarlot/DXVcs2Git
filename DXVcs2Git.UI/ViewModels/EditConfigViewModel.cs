@@ -8,6 +8,8 @@ using DevExpress.Mvvm.Native;
 using DXVcs2Git.Core.Configuration;
 using System.Windows.Input;
 using DXVcs2Git.Core.Git;
+using Microsoft.Win32;
+using System.IO;
 
 namespace DXVcs2Git.UI.ViewModels {
     public class EditConfigViewModel : ViewModelBase {
@@ -17,6 +19,11 @@ namespace DXVcs2Git.UI.ViewModels {
             get { return GetProperty(() => UpdateDelay); }
             set { SetProperty(() => UpdateDelay, value, OnUpdateDelayChanged); }
         }
+        public bool StartWithWindows {
+            get { return GetProperty(() => StartWithWindows); }
+            set { SetProperty(() => StartWithWindows, value, OnStartWithWindowsChanged); }
+        }        
+
         public IEnumerable<GitRepoConfig> Configs { get; }
         public ICommand RefreshUpdateCommand { get; private set; }
         public bool HasUIValidationErrors {
@@ -26,6 +33,26 @@ namespace DXVcs2Git.UI.ViewModels {
 
         void OnUpdateDelayChanged() {
             AtomFeed.FeedWorker.UpdateDelay = UpdateDelay;
+            StartWithWindows = GetStartWithWindows();
+        }
+        const string registryValueName = "DXVcs2Git";
+        bool GetStartWithWindows() {
+            return Registry.CurrentUser.OpenSubKey("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run", false).GetValue("DXVcs2Git")!=null;
+        }
+        void OnStartWithWindowsChanged() {
+            RegistryKey rkApp = Registry.CurrentUser.OpenSubKey("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run", true);
+            if (StartWithWindows) {
+                if (rkApp.GetValue(registryValueName) != null)
+                    return;
+                var config = ConfigSerializer.GetConfig();
+                var launcher = Path.Combine(ConfigSerializer.SettingsPath, "DXVcs2Git.Launcher.exe");
+                if (File.Exists(launcher))
+                    rkApp.SetValue("DXVcs2Git", String.Format("\"{0}\" -h", launcher));
+            } else {
+                if (rkApp.GetValue(registryValueName) == null)
+                    return;
+                rkApp.DeleteValue(registryValueName);
+            }
         }
 
         public ObservableCollection<EditTrackRepository> Repositories { get; private set; }
