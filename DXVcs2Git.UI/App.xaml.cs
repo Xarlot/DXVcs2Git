@@ -8,6 +8,7 @@ using DevExpress.Xpf.Core;
 using DXVcs2Git.Core;
 using DXVcs2Git.UI.Farm;
 using DXVcs2Git.UI.ViewModels;
+using System.Windows.Interop;
 
 namespace DXVcs2Git.UI {
     /// <summary>
@@ -15,11 +16,23 @@ namespace DXVcs2Git.UI {
     /// </summary>
     public partial class App : Application {
         public static RootViewModel RootModel { get; private set; }
-        protected override void OnStartup(StartupEventArgs e) {            
+        public static UIStartupOptions StartupOptions { get; private set; }
+        protected override void OnStartup(StartupEventArgs e) {
             base.OnStartup(e);
+            StartupOptions = Parser.Default.ParseArguments<UIStartupOptions>(e.Args).MapResult(x => x, x => UIStartupOptions.GenerateDefault());
             Application.Current.DispatcherUnhandledException += CurrentOnDispatcherUnhandledException;
             ThemeManager.ApplicationThemeName = "Office2013";
+            RunWindow();
         }
+
+        void RunWindow() {
+            MainWindow = new MainWindow();
+            MainWindow.WindowState = StartupOptions.State;
+            if (StartupOptions.Hidden)
+                return;
+            MainWindow.Show();
+        }
+
         void CurrentOnDispatcherUnhandledException(object sender, DispatcherUnhandledExceptionEventArgs e) {
             Log.Error("Unhandled exception, ", (Exception)e.Exception);
             DXMessageBox.Show("Ooooops, some shit happens :(" + Environment.NewLine + "See log for details.", "Unhandled exception", MessageBoxButton.OK);

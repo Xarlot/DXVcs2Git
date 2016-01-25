@@ -40,7 +40,9 @@ namespace DXVcs2Git.UI.Behaviors {
             icon.TrayMouseDoubleClick += OnTrayDoubleClick;
             AssociatedObject.Closing += OnWindowClosing;
             Dispatcher.BeginInvoke(DispatcherPriority.ApplicationIdle, new Action(() => {
-                hwndSource = PresentationSource.FromVisual(AssociatedObject) as HwndSource;
+                var helper = new WindowInteropHelper(AssociatedObject);
+                helper.EnsureHandle();
+                hwndSource = HwndSource.FromHwnd(helper.Handle) as HwndSource;
                 hwndSource.AddHook(OnHwndSourceHook);
             }));
         }

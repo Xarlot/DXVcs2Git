@@ -12,7 +12,6 @@ namespace DXVcs2Git.UI.NativeMethods {
         public static void Main(string[] args) {
             if(mutex.WaitOne(TimeSpan.Zero, true)) {
                 var app = new App();
-                app.InitializeComponent();
                 app.Run();
                 mutex.ReleaseMutex();
             } else {
