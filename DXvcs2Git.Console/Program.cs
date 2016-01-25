@@ -67,7 +67,6 @@ namespace DXVcs2Git.Console {
                 }
             }
 
-
             WebServer server = new WebServer(WebHookHelper.GetSharedHookUrl(IP));
 
             while (true) {
