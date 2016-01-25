@@ -7,6 +7,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Reflection;
 using System.Text;
+using System.Threading;
 using CommandLine;
 using DXVcs2Git.Core;
 using DXVcs2Git.Core.Git;
@@ -61,24 +62,26 @@ namespace DXVcs2Git.Console {
             foreach (Project project in projects) {
                 var hooks = gitLabWrapper.GetHooks(project);
                 foreach (ProjectHook hook in hooks) {
-                    if (WebHookHelper.IsSameHost(hook.Url, IP) || !WebHookHelper.ISSharedHook(hook.Url))
+                    if (WebHookHelper.IsSameHost(hook.Url, IP) || !WebHookHelper.IsSharedHook(hook.Url))
                         continue;
                     gitLabWrapper.UpdateProjectHook(project, hook, WebHookHelper.Replace(hook.Url, IP));
                 }
             }
 
             WebServer server = new WebServer(WebHookHelper.GetSharedHookUrl(IP));
-
+            server.Start();
             while (true) {
-                var serverTask = server.Start();
-                var request = serverTask.Result.Request;
-                using (StreamReader ms = new StreamReader(request.InputStream)) {
-                    var projectHookClientSide = ProjectHookClient.ParseHook(ms.ReadToEnd());
-                    System.Console.WriteLine(projectHookClientSide.HookType);
-                }
+                Thread.Sleep(10);
+                var request = server.GetRequest();
+                if (request == null)
+                    continue;
+                ProcessWebHook(request);
             }
 
             return 0;
+        }
+        static void ProcessWebHook(HttpListenerRequest request) {
+            
         }
         static int DoSyncWork(CommandLineOptions clo) {
             string localGitDir = clo.LocalFolder != null && Path.IsPathRooted(clo.LocalFolder) ? clo.LocalFolder : Path.Combine(Environment.CurrentDirectory, clo.LocalFolder ?? repoPath);

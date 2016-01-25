@@ -16,7 +16,7 @@ namespace DXVcs2Git.Core {
             var newUriBuilder = new UriBuilder(url);
             return newUriBuilder.Host == ip.ToString();
         }
-        public static bool ISSharedHook(Uri url) {
+        public static bool IsSharedHook(Uri url) {
             var newUriBuilder = new UriBuilder(url);
             if (newUriBuilder.Path == SharedWebHook)
                 return true;
