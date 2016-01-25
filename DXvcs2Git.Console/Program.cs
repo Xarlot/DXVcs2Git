@@ -22,8 +22,6 @@ using User = DXVcs2Git.Core.User;
 
 namespace DXVcs2Git.Console {
     internal class Program {
-        static readonly string webhookFormat = @"http://{0}:8080/webhook/";
-
         static IPAddress ipAddress;
         static IPAddress IP { get { return ipAddress ?? (ipAddress = DetectMyIP()); } }
         static IPAddress DetectMyIP() {
@@ -63,14 +61,14 @@ namespace DXVcs2Git.Console {
             foreach (Project project in projects) {
                 var hooks = gitLabWrapper.GetHooks(project);
                 foreach (ProjectHook hook in hooks) {
-                    if (ReplaceIPInUrlHelper.IsSameHost(hook.Url, IP))
+                    if (WebHookHelper.IsSameHost(hook.Url, IP) || !WebHookHelper.ISSharedHook(hook.Url))
                         continue;
-                    gitLabWrapper.UpdateProjectHook(project, hook, ReplaceIPInUrlHelper.Replace(hook.Url, IP));
+                    gitLabWrapper.UpdateProjectHook(project, hook, WebHookHelper.Replace(hook.Url, IP));
                 }
             }
 
 
-            WebServer server = new WebServer(string.Format(webhookFormat, IP));
+            WebServer server = new WebServer(WebHookHelper.GetSharedHookUrl(IP));
 
             while (true) {
                 var serverTask = server.Start();
