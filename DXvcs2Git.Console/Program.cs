@@ -3,11 +3,14 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Net;
+using System.Net.Sockets;
 using System.Reflection;
 using System.Text;
 using CommandLine;
 using DXVcs2Git.Core;
 using DXVcs2Git.Core.Git;
+using DXVcs2Git.Core.Listener;
 using DXVcs2Git.Core.Serialization;
 using DXVcs2Git.DXVcs;
 using DXVcs2Git.Git;
@@ -19,6 +22,14 @@ using User = DXVcs2Git.Core.User;
 
 namespace DXVcs2Git.Console {
     internal class Program {
+        static readonly string webhookFormat = @"http://{0}:8080/webhook/";
+
+        static IPAddress ipAddress;
+        static IPAddress IP { get { return ipAddress ?? (ipAddress = DetectMyIP()); } }
+        static IPAddress DetectMyIP() {
+            return Dns.GetHostEntry(Dns.GetHostName()).AddressList.FirstOrDefault(ip => ip.AddressFamily == AddressFamily.InterNetwork);
+        }
+
         const string repoPath = "repo";
         const string vcsServer = @"net.tcp://vcsservice.devexpress.devx:9091/DXVCSService";
         static void Main(string[] args) {
@@ -31,6 +42,48 @@ namespace DXVcs2Git.Console {
         }
 
         static int DoWork(CommandLineOptions clo) {
+            WorkMode workMode = clo.WorkMode;
+
+            if (workMode == WorkMode.listener) {
+                return DoListenerWork(clo);
+            }
+            if (workMode == WorkMode.synchronizer) {
+                return DoSyncWork(clo);
+            }
+            return 1;
+        }
+
+        static int DoListenerWork(CommandLineOptions clo) {
+            string gitServer = clo.Server;
+            string gitlabauthtoken = clo.AuthToken;
+            string gitRepoPath = clo.Repo;
+
+            GitLabWrapper gitLabWrapper = new GitLabWrapper(gitServer, gitlabauthtoken);
+            var projects = gitLabWrapper.GetProjects();
+            foreach (Project project in projects) {
+                var hooks = gitLabWrapper.GetHooks(project);
+                foreach (ProjectHook hook in hooks) {
+                    if (ReplaceIPInUrlHelper.IsSameHost(hook.Url, IP))
+                        continue;
+                    gitLabWrapper.UpdateProjectHook(project, hook, ReplaceIPInUrlHelper.Replace(hook.Url, IP));
+                }
+            }
+
+
+            WebServer server = new WebServer(string.Format(webhookFormat, IP));
+
+            while (true) {
+                var serverTask = server.Start();
+                var request = serverTask.Result.Request;
+                using (StreamReader ms = new StreamReader(request.InputStream)) {
+                    var projectHookClientSide = ProjectHookClient.ParseHook(ms.ReadToEnd());
+                    System.Console.WriteLine(projectHookClientSide.HookType);
+                }
+            }
+
+            return 0;
+        }
+        static int DoSyncWork(CommandLineOptions clo) {
             string localGitDir = clo.LocalFolder != null && Path.IsPathRooted(clo.LocalFolder) ? clo.LocalFolder : Path.Combine(Environment.CurrentDirectory, clo.LocalFolder ?? repoPath);
             EnsureGitDir(localGitDir);
 
@@ -38,7 +91,6 @@ namespace DXVcs2Git.Console {
             string username = clo.Login;
             string password = clo.Password;
             string gitlabauthtoken = clo.AuthToken;
-            WorkMode workMode = clo.WorkMode;
             string branchName = clo.Branch;
             string trackerPath = clo.Tracker;
             string gitServer = clo.Server;
@@ -78,18 +130,15 @@ namespace DXVcs2Git.Console {
             if (gitWrapper == null)
                 return 1;
 
-            if (workMode.HasFlag(WorkMode.history)) {
-                ProcessHistoryResult result = ProcessHistory(vcsWrapper, gitWrapper, registeredUsers, defaultUser, gitRepoPath, localGitDir, branch, clo.CommitsCount, syncHistory, true);
-                if (result == ProcessHistoryResult.NotEnough)
-                    return 0;
-                if (result == ProcessHistoryResult.Failed)
-                    return 1;
-            }
-            if (workMode.HasFlag(WorkMode.mergerequests)) {
-                int result = ProcessMergeRequests(vcsWrapper, gitWrapper, gitLabWrapper, registeredUsers, defaultUser, gitRepoPath, localGitDir, clo.Branch, clo.Tracker, syncHistory, username, forkMode);
-                if (result != 0)
-                    return result;
-            }
+            ProcessHistoryResult processHistoryResult = ProcessHistory(vcsWrapper, gitWrapper, registeredUsers, defaultUser, gitRepoPath, localGitDir, branch, clo.CommitsCount, syncHistory, true);
+            if (processHistoryResult == ProcessHistoryResult.NotEnough)
+                return 0;
+            if (processHistoryResult == ProcessHistoryResult.Failed)
+                return 1;
+
+            int result = ProcessMergeRequests(vcsWrapper, gitWrapper, gitLabWrapper, registeredUsers, defaultUser, gitRepoPath, localGitDir, clo.Branch, clo.Tracker, syncHistory, username, forkMode);
+            if (result != 0)
+                return result;
             return 0;
         }
         static CheckMergeChangesResult CheckChangesForMerging(GitLabWrapper gitLabWrapper, string gitRepoPath, string branchName, SyncHistoryItem head, DXVcsWrapper vcsWrapper, TrackBranch branch, SyncHistoryWrapper syncHistory, User defaultUser) {
@@ -237,7 +286,7 @@ namespace DXVcs2Git.Console {
                     var gitCommit = gitWrapper.FindCommit(branch.Name, x => CommentWrapper.Parse(x.Message).Token == autoSyncToken);
                     Log.Message("Merge request merged successfully.");
 
-                    if(forkMode && sourceBranchWasCreated && sourceBranch != targetBranch)
+                    if (forkMode && sourceBranchWasCreated && sourceBranch != targetBranch)
                         gitWrapper.RemoveBranch(sourceBranch);
 
                     long timeStamp = lastHistoryItem.VcsCommitTimeStamp;
@@ -351,7 +400,7 @@ namespace DXVcs2Git.Console {
                 bool hasModifications = false;
                 Commit last = null;
                 string token = syncHistory.CreateNewToken();
-                foreach(var localCommit in localCommits) {
+                foreach (var localCommit in localCommits) {
                     string localProjectPath = Path.Combine(localGitDir, localCommit.Track.ProjectPath);
                     DirectoryHelper.DeleteDirectory(localProjectPath);
                     vcsWrapper.GetProject(vcsServer, localCommit.Track.Path, localProjectPath, item.TimeStamp);

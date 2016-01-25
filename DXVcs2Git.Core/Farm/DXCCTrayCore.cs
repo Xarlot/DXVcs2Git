@@ -5,15 +5,12 @@ using System.Threading;
 using ThoughtWorks.CruiseControl.Remote;
 using System.Xml;
 using DevExpress.CCNetSmart.Lib;
-using System.Runtime.Remoting;
 using System.Collections;
 using System.IO;
 using System.IO.Compression;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Net.Sockets;
-using DevExpress.Xpf.Core;
 using DXVcs2Git.Core;
-using Sapient.Framework.Tools.BuildIt;
 
 namespace DevExpress.DXCCTray {
     public class ServerInfo {
@@ -1605,7 +1602,7 @@ namespace DevExpress.DXCCTray {
                 SmartCruiseManager.SendNotification(project, recepient, sender);
                 return true;
             } catch {
-                DXMessageBox.Show("Send notification not supported");
+                //DXMessageBox.Show("Send notification not supported");
                 return false;
             }
         }
@@ -1751,32 +1748,32 @@ namespace DevExpress.DXCCTray {
             return result.GetHashCode();
         }
         const string powerShellScriptsDXVCSPath = "$/CCNetConfig/DXCCTray/PowerShellScripts.xml";
-        public PSScript[] GetDefaultPowerShellScripts() {
-            List<PSScript> result = new List<PSScript>();
-            try {
-                string dxvcsServicePath = SmartCruiseManager.GetDXVCSServicePath();
-                DXVCSDriver vcs = new DXVCSDriver();
-                vcs.Open(dxvcsServicePath, null, null);
+        //public PSScript[] GetDefaultPowerShellScripts() {
+        //    List<PSScript> result = new List<PSScript>();
+        //    try {
+        //        string dxvcsServicePath = SmartCruiseManager.GetDXVCSServicePath();
+        //        DXVCSDriver vcs = new DXVCSDriver();
+        //        vcs.Open(dxvcsServicePath, null, null);
 
-                DXBuild.Core.VSSLocation[] loc = new DXBuild.Core.VSSLocation[1];
-                loc[0] = new DXBuild.Core.VSSLocation(powerShellScriptsDXVCSPath, string.Empty, true);
-                byte[][] data = vcs.GetFilesFromSS(loc, string.Empty);
-                if(data.Length != 1 || data[0] == null || data[0].Length == 0)
-                    return null;
-                string fileText = Encoding.UTF8.GetString(data[0]);
-                XmlDocument doc = new XmlDocument();
-                doc.LoadXml(fileText);
-                foreach(XmlNode psNode in doc.GetElementsByTagName("PSScript")) {
-                    string name = psNode.Attributes["Name"].Value;
-                    string script = SmartCCNetHelper.UnescapeXml(psNode.InnerText);
-                    PSScript psScript = new PSScript(name, script, true);
-                    result.Add(psScript);
-                }
-            } catch(Exception exc) {
-                Log.Error("exception", exc);
-            }
-            return result.ToArray();
-        }
+        //        DXBuild.Core.VSSLocation[] loc = new DXBuild.Core.VSSLocation[1];
+        //        loc[0] = new DXBuild.Core.VSSLocation(powerShellScriptsDXVCSPath, string.Empty, true);
+        //        byte[][] data = vcs.GetFilesFromSS(loc, string.Empty);
+        //        if(data.Length != 1 || data[0] == null || data[0].Length == 0)
+        //            return null;
+        //        string fileText = Encoding.UTF8.GetString(data[0]);
+        //        XmlDocument doc = new XmlDocument();
+        //        doc.LoadXml(fileText);
+        //        foreach(XmlNode psNode in doc.GetElementsByTagName("PSScript")) {
+        //            string name = psNode.Attributes["Name"].Value;
+        //            string script = SmartCCNetHelper.UnescapeXml(psNode.InnerText);
+        //            PSScript psScript = new PSScript(name, script, true);
+        //            result.Add(psScript);
+        //        }
+        //    } catch(Exception exc) {
+        //        Log.Error("exception", exc);
+        //    }
+        //    return result.ToArray();
+        //}
     }
     public class FarmProjectList {
         string name;

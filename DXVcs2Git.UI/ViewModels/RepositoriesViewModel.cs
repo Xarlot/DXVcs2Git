@@ -4,8 +4,6 @@ using System.Windows.Input;
 using DevExpress.Mvvm;
 using DevExpress.Mvvm.Native;
 using DevExpress.Mvvm.POCO;
-using DXVcs2Git.Core.Git;
-using DXVcs2Git.Git;
 using NGitLab.Models;
 using DXVcs2Git.Core.Configuration;
 using System.Threading.Tasks;

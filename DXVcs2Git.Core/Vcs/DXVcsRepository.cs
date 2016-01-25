@@ -5,8 +5,8 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using DXVcs2Git.Core;
+using DXVcs2Git.Core.Farm.DXVCSClient;
 using DXVCS;
-using DXVCSClient;
 
 namespace DXVcs2Git.DXVcs {
     class DXVcsRepository : IDXVcsRepository {
@@ -45,25 +45,6 @@ namespace DXVcs2Git.DXVcs {
             return result.ToArray();
         }
 
-        public FileDiffInfo GetFileDiffInfo(string vcsFile, SpacesAction spacesAction = SpacesAction.IgnoreAll) {
-            return GetFileDiffInfo(vcsFile, null, spacesAction);
-        }
-
-        public FileDiffInfo GetFileDiffInfo(string vcsFile, Action<int, int> progressAction, SpacesAction spacesAction) {
-            var history = new FileHistory(vcsFile, Service);
-            FileDiffInfo diffInfo = new FileDiffInfo(history.Count);
-            diffInfo.SpacesAction = spacesAction;
-
-            int index = 0;
-            foreach (FileVersionInfo fileVersionInfo in history) {
-                if (progressAction != null)
-                    progressAction(index, history.Count);
-
-                diffInfo.AddItem(index, fileVersionInfo);
-                index++;
-            }
-            return diffInfo;
-        }
         public IList<ProjectHistoryInfo> GetProjectHistory(string vcsPath, bool recursive, DateTime? from = null, DateTime? to = null) {
             if (string.IsNullOrEmpty(vcsPath))
                 throw new ArgumentException("vcsPath");

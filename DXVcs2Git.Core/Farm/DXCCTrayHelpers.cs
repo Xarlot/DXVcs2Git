@@ -1,7 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Drawing;
-using System.Text;
 using System.Xml;
 using System.IO;
 using System.Security;
@@ -9,15 +7,14 @@ using System.Runtime.InteropServices;
 using System.Reflection;
 using DevExpress.CCNetSmart.Lib;
 using System.Text.RegularExpressions;
-using System.Windows.Interop;
-using DevExpress.Xpf.Core;
+
 using DXVcs2Git.Core;
 using DXVcs2Git.UI.Farm;
 
 namespace DevExpress.DXCCTray {
     class DXCCTrayConfiguration {
         static public void ShowError(string text) {
-            DXMessageBox.Show(text);
+//            DXMessageBox.Show(text);
         }
         const bool defaultAlwaysOnTop = false;
         const bool defaultMinimized = false;
@@ -176,116 +173,116 @@ namespace DevExpress.DXCCTray {
             get { return trackedProjects; }
         }
 
-        static Color needVolunteerColorLight;
-        static Color needVolunteerColorDark;
-        static Color needNextVolunteerColorLight;
-        static Color needNextVolunteerColorDark;
-        static Color fixingColorLight;
-        static Color fixingColorDark;
+        //static Color needVolunteerColorLight;
+        //static Color needVolunteerColorDark;
+        //static Color needNextVolunteerColorLight;
+        //static Color needNextVolunteerColorDark;
+        //static Color fixingColorLight;
+        //static Color fixingColorDark;
 
 
-        public static Color NeedVolunteerColorLight {
-            get {
-                return needVolunteerColorLight;
-            }
-        }
+        //public static Color NeedVolunteerColorLight {
+        //    get {
+        //        return needVolunteerColorLight;
+        //    }
+        //}
 
-        public static Color NeedVolunteerColorDark {
-            get {
-                return needVolunteerColorDark;
-            }
-        }
-        public static Color NeedNextVolunteerColorLight {
-            get {
-                return needNextVolunteerColorLight;
-            }
-        }
-        public static Color NeedNextVolunteerColorDark {
-            get {
-                return needNextVolunteerColorDark;
-            }
-        }
-        public static Color FixingColorLight {
-            get {
-                return fixingColorLight;
-            }
-        }
-        public static Color FixingColorDark {
-            get {
-                return fixingColorDark;
-            }
-        }
+        //public static Color NeedVolunteerColorDark {
+        //    get {
+        //        return needVolunteerColorDark;
+        //    }
+        //}
+        //public static Color NeedNextVolunteerColorLight {
+        //    get {
+        //        return needNextVolunteerColorLight;
+        //    }
+        //}
+        //public static Color NeedNextVolunteerColorDark {
+        //    get {
+        //        return needNextVolunteerColorDark;
+        //    }
+        //}
+        //public static Color FixingColorLight {
+        //    get {
+        //        return fixingColorLight;
+        //    }
+        //}
+        //public static Color FixingColorDark {
+        //    get {
+        //        return fixingColorDark;
+        //    }
+        //}
 
         static string fileName = "dxcctray.config";
 
-        public readonly static Color DefaultNeedVolunteerColorLight;
-        public readonly static Color DefaultNeedVolunteerColorDark;
-        public readonly static Color DefaultNeedNextVolunteerColorLight;
-        public readonly static Color DefaultNeedNextVolunteerColorDark;
-        public readonly static Color DefaultFixingColorLight;
-        public readonly static Color DefaultFixingColorDark;
+        //public readonly static Color DefaultNeedVolunteerColorLight;
+        //public readonly static Color DefaultNeedVolunteerColorDark;
+        //public readonly static Color DefaultNeedNextVolunteerColorLight;
+        //public readonly static Color DefaultNeedNextVolunteerColorDark;
+        //public readonly static Color DefaultFixingColorLight;
+        //public readonly static Color DefaultFixingColorDark;
 
-        public static string VolunteerColorString {
-            get {
-                return GetVolunteerColorString(needVolunteerColorLight, needVolunteerColorDark,
-                    needNextVolunteerColorLight, needNextVolunteerColorDark,
-                    fixingColorLight, fixingColorDark);
-            }
-            set {
-                GetVolunteerColorsFromString(value, ref needVolunteerColorLight, ref needVolunteerColorDark,
-                    ref needNextVolunteerColorLight, ref needNextVolunteerColorDark,
-                    ref fixingColorLight, ref fixingColorDark);
-            }
-        }
+        //public static string VolunteerColorString {
+        //    get {
+        //        return GetVolunteerColorString(needVolunteerColorLight, needVolunteerColorDark,
+        //            needNextVolunteerColorLight, needNextVolunteerColorDark,
+        //            fixingColorLight, fixingColorDark);
+        //    }
+        //    set {
+        //        GetVolunteerColorsFromString(value, ref needVolunteerColorLight, ref needVolunteerColorDark,
+        //            ref needNextVolunteerColorLight, ref needNextVolunteerColorDark,
+        //            ref fixingColorLight, ref fixingColorDark);
+        //    }
+        //}
 
-        public static string GetVolunteerColorString(Color needVolunteerColorLight,
-            Color needVolunteerColorDark,
-            Color needNextVolunteerColorLight,
-            Color needNextVolunteerColorDark,
-            Color fixingColorLight,
-            Color fixingColorDark) {
-            return string.Join("#", new string[] {
-                       		                    ((uint)needVolunteerColorLight.ToArgb()).ToString(),
-                       		                    ((uint)needVolunteerColorDark.ToArgb()).ToString(),
-                       		                    ((uint)needNextVolunteerColorLight.ToArgb()).ToString(),
-                       		                    ((uint)needNextVolunteerColorDark.ToArgb()).ToString(),
-                       		                    ((uint)fixingColorLight.ToArgb()).ToString(),
-                       		                    ((uint)fixingColorDark.ToArgb()).ToString()
-                       		                });
-        }
-        public static void GetVolunteerColorsFromString(string value, ref Color needVolunteerColorLight,
-            ref Color needVolunteerColorDark,
-            ref Color needNextVolunteerColorLight,
-            ref Color needNextVolunteerColorDark,
-            ref Color fixingColorLight,
-            ref Color fixingColorDark) {
-            string[] colors = value.Split(new char[] { '#' }, StringSplitOptions.RemoveEmptyEntries);
-            if(colors.Length != 6) throw new ArgumentException();
-            needVolunteerColorLight = Color.FromArgb((int)uint.Parse(colors[0]));
-            needVolunteerColorDark = Color.FromArgb((int)uint.Parse(colors[1]));
-            needNextVolunteerColorLight = Color.FromArgb((int)uint.Parse(colors[2]));
-            needNextVolunteerColorDark = Color.FromArgb((int)uint.Parse(colors[3]));
-            fixingColorLight = Color.FromArgb((int)uint.Parse(colors[4]));
-            fixingColorDark = Color.FromArgb((int)uint.Parse(colors[5]));
-        }
+        //public static string GetVolunteerColorString(Color needVolunteerColorLight,
+        //    Color needVolunteerColorDark,
+        //    Color needNextVolunteerColorLight,
+        //    Color needNextVolunteerColorDark,
+        //    Color fixingColorLight,
+        //    Color fixingColorDark) {
+        //    return string.Join("#", new string[] {
+        //               		                    ((uint)needVolunteerColorLight.ToArgb()).ToString(),
+        //               		                    ((uint)needVolunteerColorDark.ToArgb()).ToString(),
+        //               		                    ((uint)needNextVolunteerColorLight.ToArgb()).ToString(),
+        //               		                    ((uint)needNextVolunteerColorDark.ToArgb()).ToString(),
+        //               		                    ((uint)fixingColorLight.ToArgb()).ToString(),
+        //               		                    ((uint)fixingColorDark.ToArgb()).ToString()
+        //               		                });
+        //}
+        //public static void GetVolunteerColorsFromString(string value, ref Color needVolunteerColorLight,
+        //    ref Color needVolunteerColorDark,
+        //    ref Color needNextVolunteerColorLight,
+        //    ref Color needNextVolunteerColorDark,
+        //    ref Color fixingColorLight,
+        //    ref Color fixingColorDark) {
+        //    string[] colors = value.Split(new char[] { '#' }, StringSplitOptions.RemoveEmptyEntries);
+        //    if(colors.Length != 6) throw new ArgumentException();
+        //    needVolunteerColorLight = Color.FromArgb((int)uint.Parse(colors[0]));
+        //    needVolunteerColorDark = Color.FromArgb((int)uint.Parse(colors[1]));
+        //    needNextVolunteerColorLight = Color.FromArgb((int)uint.Parse(colors[2]));
+        //    needNextVolunteerColorDark = Color.FromArgb((int)uint.Parse(colors[3]));
+        //    fixingColorLight = Color.FromArgb((int)uint.Parse(colors[4]));
+        //    fixingColorDark = Color.FromArgb((int)uint.Parse(colors[5]));
+        //}
 
         static DXCCTrayConfiguration() {
             defaultUserName = Environment.UserName;
-            DefaultFixingColorLight = Color.FromArgb(160, 255, 160);
-            DefaultFixingColorDark = Color.FromArgb(0, 160, 0);
-            DefaultNeedNextVolunteerColorLight = Color.FromArgb(255, 255, 160);
-            DefaultNeedNextVolunteerColorDark = Color.FromArgb(0xB2, 0x69, 0x00);
-            DefaultNeedVolunteerColorLight = Color.FromArgb(0xFF, 0xA3, 0xA3);
-            DefaultNeedVolunteerColorDark = Color.FromArgb(160, 0, 0);
+            //DefaultFixingColorLight = Color.FromArgb(160, 255, 160);
+            //DefaultFixingColorDark = Color.FromArgb(0, 160, 0);
+            //DefaultNeedNextVolunteerColorLight = Color.FromArgb(255, 255, 160);
+            //DefaultNeedNextVolunteerColorDark = Color.FromArgb(0xB2, 0x69, 0x00);
+            //DefaultNeedVolunteerColorLight = Color.FromArgb(0xFF, 0xA3, 0xA3);
+            //DefaultNeedVolunteerColorDark = Color.FromArgb(160, 0, 0);
             LoadDefaultVolunteerColors();
         }
         static void LoadDefaultVolunteerColors() {
-            fixingColorLight = DefaultFixingColorLight;
-            fixingColorDark = DefaultFixingColorDark;
-            needNextVolunteerColorLight = DefaultNeedNextVolunteerColorLight;
-            needNextVolunteerColorDark = DefaultNeedNextVolunteerColorDark;
-            needVolunteerColorLight = DefaultNeedVolunteerColorLight;
-            needVolunteerColorDark = DefaultNeedVolunteerColorDark;
+            //fixingColorLight = DefaultFixingColorLight;
+            //fixingColorDark = DefaultFixingColorDark;
+            //needNextVolunteerColorLight = DefaultNeedNextVolunteerColorLight;
+            //needNextVolunteerColorDark = DefaultNeedNextVolunteerColorDark;
+            //needVolunteerColorLight = DefaultNeedVolunteerColorLight;
+            //needVolunteerColorDark = DefaultNeedVolunteerColorDark;
         }
         public static bool LocalConfig = false;
         public static void LoadConfiguration() {
@@ -356,11 +353,11 @@ namespace DevExpress.DXCCTray {
                     skinName = LoadString(doc, "skinName", defaultSkinName);
                     popupHideTimeout = LoadInt(doc, "popupHideTimeout", defaultPopupHideTimeout);
                     string tempString;
-                    if(TryLoadString(doc, "volunteerColorString", out tempString)) {
-                        VolunteerColorString = tempString;
-                    } else {
-                        LoadDefaultVolunteerColors();
-                    }
+                    //if(TryLoadString(doc, "volunteerColorString", out tempString)) {
+                    //    VolunteerColorString = tempString;
+                    //} else {
+                    //    LoadDefaultVolunteerColors();
+                    //}
                     byte[] lastProjectDurationDictionaryData = LoadBase64(doc, "lastProjectDurationDictionary", null);
                     ProjectInfo.LoadLastBuildDurationDict(lastProjectDurationDictionaryData);
                 } catch(Exception exc) {
@@ -561,7 +558,7 @@ namespace DevExpress.DXCCTray {
                 xw.WriteStartElement("gridNotificationsXml");
                 xw.WriteRaw(gridNotificationsXml);
                 xw.WriteEndElement();
-                xw.WriteElementString("volunteerColorString", VolunteerColorString);
+                //xw.WriteElementString("volunteerColorString", VolunteerColorString);
                 xw.WriteElementString("alwaysOnTop", AlwaysOnTop.ToString());
                 xw.WriteElementString("refreshTime", RefreshTime.ToString());
                 xw.WriteElementString("minimized", Minimized.ToString());
@@ -635,11 +632,11 @@ namespace DevExpress.DXCCTray {
             }
             return false;
         }
-        public static void AddDXCCTrayToStartup(IWin32Window owner) {
-        }
-        public static void RemoveDXCCTrayFromStartup(IWin32Window owner) {
+        //public static void AddDXCCTrayToStartup(IWin32Window owner) {
+        //}
+        //public static void RemoveDXCCTrayFromStartup(IWin32Window owner) {
 
-        }
+        //}
         public static void ParseBuildUrl(string buildUrl, out string project, out string build) {
             string fake;
             ParseBuildUrl(buildUrl, out fake, out project, out build);

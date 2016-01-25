@@ -189,7 +189,7 @@ namespace DXVCS {
                     if(!string.IsNullOrEmpty(user) && !string.IsNullOrEmpty(password)) {
                         factory.Credentials.Windows.ClientCredential = new System.Net.NetworkCredential(user, password);
                     }
-                    service = new WCFService<IDXVCSService>(factory, delegate(IDXVCSService s) { return new ServiceLogger(s); });
+                    service = new WCFService<IDXVCSService>(factory);
                     services.Add(serviceName, service);
                 }
                 return service;

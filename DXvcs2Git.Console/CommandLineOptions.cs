@@ -2,14 +2,9 @@
 using CommandLine;
 
 namespace DXVcs2Git.Console {
-    [Flags]
     public enum WorkMode {
-        directchanges = 0x1,
-        history = 0x2,
-        mergerequests = 0x4,
-        initialize = 0x8,
-        allhistory = directchanges | history | initialize,
-        all = allhistory | mergerequests,
+        listener,
+        synchronizer,
     }
 
     public class CommandLineOptions {
@@ -31,7 +26,7 @@ namespace DXVcs2Git.Console {
         public string LocalFolder { get; set; }
         [Option('t', "tracker", Required = true, HelpText = "Path to config with items to track")]
         public string Tracker { get; set; }
-        [Option('m', "mode", Required = false, Default = WorkMode.history, HelpText = "Work mode")]
+        [Option('m', "mode", Required = false, Default = WorkMode.synchronizer, HelpText = "Work mode")]
         public WorkMode WorkMode { get; set; }
         [Option('f', "from", Required = false, HelpText = "Timestamp for history generation")]
         public DateTime From { get; set; }

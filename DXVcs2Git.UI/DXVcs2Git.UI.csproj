@@ -121,8 +121,13 @@
     <Reference Include="DevExpress.Xpf.Themes.VS2010.v15.2, Version=15.2.4.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
       <HintPath>..\Lib\DX\DevExpress.Xpf.Themes.VS2010.v15.2.dll</HintPath>
     </Reference>
-    <Reference Include="DXBuild.Core">
-      <HintPath>..\Lib\DXFarm\DXBuild.Core.dll</HintPath>
+    <Reference Include="DXVCS, Version=1.0.0.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\Lib\DXVcs\DXVCS.dll</HintPath>
+    </Reference>
+    <Reference Include="DXVCSCore, Version=1.0.0.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\Lib\DXVcs\DXVCSCore.dll</HintPath>
     </Reference>
     <Reference Include="Hardcodet.Wpf.TaskbarNotification, Version=1.0.5.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\Hardcodet.NotifyIcon.Wpf.1.0.5\lib\net451\Hardcodet.Wpf.TaskbarNotification.dll</HintPath>
@@ -196,13 +201,8 @@
     <Compile Include="Behaviors\RibbonWindowButtonsInjectionBehavior.cs" />
     <Compile Include="Behaviors\TaskBarIconBehavior.cs" />
     <Compile Include="Behaviors\ValidateEditConfigBehavior.cs" />
-    <Compile Include="NativeMethods\EntryPoint.cs" />
-    <Compile Include="Farm\BuildNotificationViewInfo.cs" />
     <Compile Include="Farm\DXCCTrayHelpers.cs" />
-    <Compile Include="Farm\DXCCTrayCore.cs" />
-    <Compile Include="Farm\FarmHelper.cs" />
-    <Compile Include="Farm\ProjectI.cs" />
-    <Compile Include="Farm\SmartProjectActivity.cs" />
+    <Compile Include="NativeMethods\EntryPoint.cs" />
     <Compile Include="NativeMethods\NativeMethods.cs" />
     <Compile Include="Services\FolderBrowserCustomDialogService.cs" />
     <Compile Include="ViewModels\ConfigsReader.cs" />
