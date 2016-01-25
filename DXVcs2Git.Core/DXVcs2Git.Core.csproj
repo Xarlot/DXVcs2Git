@@ -43,10 +43,6 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\Lib\DXFarm\ccnet.smart.plugin.dll</HintPath>
     </Reference>
-    <Reference Include="DXBuild.Core, Version=1.0.7500.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\Lib\DXFarm\DXBuild.Core.dll</HintPath>
-    </Reference>
     <Reference Include="DXVCS, Version=1.0.0.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\Lib\DXVcs\DXVCS.dll</HintPath>
@@ -125,6 +121,13 @@
     <Compile Include="DataEncryptor.cs" />
     <Compile Include="DirectoryHelper.cs" />
     <Compile Include="CommitItem.cs" />
+    <Compile Include="Farm\BuildNotificationViewInfo.cs" />
+    <Compile Include="Farm\DXCCTrayCore.cs" />
+    <Compile Include="Farm\DXCCTrayHelpers.cs" />
+    <Compile Include="Farm\FarmHelper.cs" />
+    <Compile Include="Farm\FileSystem.cs" />
+    <Compile Include="Farm\ProjectI.cs" />
+    <Compile Include="Farm\SmartProjectActivity.cs" />
     <Compile Include="Git\GitLabWrapper.cs" />
     <Compile Include="Git\GitReaderWrapper.cs" />
     <Compile Include="Git\GitRepoConfig.cs" />

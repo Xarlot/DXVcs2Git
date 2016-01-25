@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Text;
 using DevExpress.DXCCTray;
 using ThoughtWorks.CruiseControl.Remote;
 
@@ -45,6 +46,33 @@ namespace DXVcs2Git.UI.Farm {
         [DisplayName("Tags")]
         public ProjectTagCollection tags { get { return tags_; } set { tags_ = value; } }
     }
+    public class ProjectTagCollection {
+        string[] tags;
+        public string[] Tags {
+            get { return tags; }
+        }
+        public ProjectTagCollection(string[] tags) {
+            this.tags = tags;
+        }
+        public bool Contains(string tag) {
+            for (int i = 0; i < tags.Length; i++) {
+                if (tag == tags[i])
+                    return true;
+            }
+            return false;
+        }
+        public override string ToString() {
+            StringBuilder sb = new StringBuilder();
+            for (int i = 0; i < tags.Length; i++) {
+                if (i > 0)
+                    sb.Append(", ");
+                sb.Append(tags[i]);
+            }
+            return sb.ToString();
+        }
+    }
+
+
 
     enum InfoType {
         Projects, Servers, Notifications

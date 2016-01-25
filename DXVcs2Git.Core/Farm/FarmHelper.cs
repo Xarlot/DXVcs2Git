@@ -5,12 +5,9 @@ using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
 using System.Text;
-using System.Windows;
 using System.Windows.Threading;
 using DevExpress.CCNetSmart.Lib;
 using DevExpress.DXCCTray;
-using DevExpress.Mvvm.Native;
-using DevExpress.Xpf.Core;
 using DXVcs2Git.Core;
 using ThoughtWorks.CruiseControl.Remote;
 
@@ -91,7 +88,7 @@ namespace DXVcs2Git.UI.Farm {
 
         void RaiseRefreshed() {
             var refreshed = Refreshed;
-            refreshed.Do(x => x(this, EventArgs.Empty));
+            refreshed?.Invoke(this, EventArgs.Empty);
         }
         public FarmStatus GetTaskStatus(string task) {
             lock (this.syncLocker) {
@@ -172,7 +169,7 @@ namespace DXVcs2Git.UI.Farm {
                         sb2.Append(project);
                         messageProjectsCount++;
                     }
-                    DXMessageBox.Show($"These projects was not forced, cause they are stopped:\n\n{sb2.ToString()}", "Attention");
+                    Log.Error($"These projects was not forced, cause they are stopped:\n\n{sb2.ToString()}");
                 }
             }
         }
@@ -180,7 +177,7 @@ namespace DXVcs2Git.UI.Farm {
         bool CheckForceBuild(ProjectTagI[] projects, string projectPaths) {
             bool isShowMessage;
             if (projects.Length > 20) {
-                DXMessageBox.Show("\"Force Build\" is limited to 20 projects at a time.", "DXCCTray");
+                Log.Error("\"Force Build\" is limited to 20 projects at a time.");
                 return false;
             }
             bool isOk = CheckForceBuildTriggered(projects, out isShowMessage);
@@ -190,7 +187,7 @@ namespace DXVcs2Git.UI.Farm {
             return ShowForceBuildDialog(projectPaths);
         }
         bool ShowForceBuildDialog(string projects) {
-            return DXMessageBox.Show($"You are going to force build of these projects:\n\n{projects}", "Attention", MessageBoxButton.OKCancel) == MessageBoxResult.OK;
+            return true;
         }
         bool CheckForceBuildTriggered(ProjectTagI[] projects, out bool isShowMessage) {
             StringBuilder triggeredProjects = new StringBuilder();
@@ -202,7 +199,7 @@ namespace DXVcs2Git.UI.Farm {
             isShowMessage = false;
             if (triggeredProjects.Length > 0) {
                 isShowMessage = true;
-                return DXMessageBox.Show($"These projects:\r\n\r\n{triggeredProjects.ToString()}\r\nis automatically rebuilt when changed. Press OK if you need to force build for these projects.", "Stop!", MessageBoxButton.OKCancel) == MessageBoxResult.OK;
+                return true;
             }
             return true;
         }
