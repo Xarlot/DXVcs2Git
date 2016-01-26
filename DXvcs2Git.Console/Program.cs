@@ -10,8 +10,7 @@ using System.Text;
 using System.Threading;
 using CommandLine;
 using DXVcs2Git.Core;
-using DXVcs2Git.Core.Git;
-using DXVcs2Git.Core.Listener;
+using DXVcs2Git.Core.GitLab;
 using DXVcs2Git.Core.Serialization;
 using DXVcs2Git.DXVcs;
 using DXVcs2Git.Git;
@@ -81,7 +80,18 @@ namespace DXVcs2Git.Console {
             return 0;
         }
         static void ProcessWebHook(HttpListenerRequest request) {
-            
+            var hookType = ProjectHookClient.ParseHookType(request);
+            if (hookType == null)
+                return;
+            var hook = ProjectHookClient.ParseHook(hookType);
+            if (hook.HookType == ProjectHookType.push)
+                ProcessPushHook((PushHookClient)hook);
+            else if (hook.HookType == ProjectHookType.merge_request)
+                ProcessMergeRequestHook((MergeRequestHookClient)hook);
+        }
+        static void ProcessMergeRequestHook(MergeRequestHookClient hook) {
+        }
+        static void ProcessPushHook(PushHookClient hook) {
         }
         static int DoSyncWork(CommandLineOptions clo) {
             string localGitDir = clo.LocalFolder != null && Path.IsPathRooted(clo.LocalFolder) ? clo.LocalFolder : Path.Combine(Environment.CurrentDirectory, clo.LocalFolder ?? repoPath);

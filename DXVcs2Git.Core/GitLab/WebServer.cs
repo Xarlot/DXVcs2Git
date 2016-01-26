@@ -22,16 +22,15 @@ namespace DXVcs2Git.Core {
             CancellationTokenSource source = new CancellationTokenSource();
             CancellationToken token = source.Token;
 
-            TaskFactory taskFactory = new TaskFactory(token, TaskCreationOptions.LongRunning, TaskContinuationOptions.LongRunning, TaskScheduler.Current);
+            TaskFactory taskFactory = new TaskFactory(token, TaskCreationOptions.LongRunning, TaskContinuationOptions.LongRunning, TaskScheduler.Default);
             this.listenerTask = taskFactory.StartNew(() => {
-                while (token.IsCancellationRequested) {
+                while (!token.IsCancellationRequested) {
                     var context = this.listener.GetContextAsync();
                     var request = context.Result.Request;
                     this.requests.Enqueue(request);
                 }
 
             }, token);
-            this.listenerTask.Wait(token);
         }
         public HttpListenerRequest GetRequest() {
             HttpListenerRequest request;
