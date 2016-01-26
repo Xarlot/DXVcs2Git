@@ -10,6 +10,7 @@ using System.Windows.Input;
 using DXVcs2Git.Core.Git;
 using Microsoft.Win32;
 using System.IO;
+using System.ComponentModel;
 
 namespace DXVcs2Git.UI.ViewModels {
     public class EditConfigViewModel : ViewModelBase {
@@ -22,6 +23,10 @@ namespace DXVcs2Git.UI.ViewModels {
         public bool StartWithWindows {
             get { return GetProperty(() => StartWithWindows); }
             set { SetProperty(() => StartWithWindows, value, OnStartWithWindowsChanged); }
+        }
+        public string KeyGesture {
+            get { return GetProperty(() => KeyGesture); }
+            set { string oldValue = KeyGesture; SetProperty(() => KeyGesture, value, ()=>OnKeyGestureChanged(oldValue)); }
         }        
 
         public IEnumerable<GitRepoConfig> Configs { get; }
@@ -30,7 +35,15 @@ namespace DXVcs2Git.UI.ViewModels {
             get { return GetProperty(() => HasUIValidationErrors); }
             set { SetProperty(() => HasUIValidationErrors, value); }
         }
-
+        public ObservableCollection<EditTrackRepository> Repositories { get; private set; }
+        public ObservableCollection<string> AvailableTokens {
+            get { return GetProperty(() => AvailableTokens); }
+            private set { SetProperty(() => AvailableTokens, value); }
+        }
+        public ObservableCollection<string> AvailableConfigs {
+            get { return GetProperty(() => AvailableConfigs); }
+            private set { SetProperty(() => AvailableConfigs, value); }
+        }        
         void OnUpdateDelayChanged() {
             AtomFeed.FeedWorker.UpdateDelay = UpdateDelay;
             StartWithWindows = GetStartWithWindows();
@@ -54,20 +67,16 @@ namespace DXVcs2Git.UI.ViewModels {
                 rkApp.DeleteValue(registryValueName);
             }
         }
-
-        public ObservableCollection<EditTrackRepository> Repositories { get; private set; }
-        public ObservableCollection<string> AvailableTokens {
-            get { return GetProperty(() => AvailableTokens); }
-            private set { SetProperty(() => AvailableTokens, value); }
+        void OnKeyGestureChanged(string oldValue) {
+            NativeMethods.HotKeyHelper.UnregisterHotKey();
+            NativeMethods.HotKeyHelper.RegisterHotKey(KeyGesture);
         }
-        public ObservableCollection<string> AvailableConfigs {
-            get { return GetProperty(() => AvailableConfigs); }
-            private set { SetProperty(() => AvailableConfigs, value); }
-        }
+        
 
         public EditConfigViewModel(Config config) {
             this.config = config;
             this.configsReader = new RepoConfigsReader();
+            KeyGesture = config.KeyGesture;
             Configs = this.configsReader.RegisteredConfigs;
             UpdateDelay = AtomFeed.FeedWorker.UpdateDelay;
             RefreshUpdateCommand = DelegateCommandFactory.Create(AtomFeed.FeedWorker.Update);
@@ -93,6 +102,7 @@ namespace DXVcs2Git.UI.ViewModels {
         public void UpdateConfig() {
             config.Repositories = Repositories.With(x => x.Select(repo => new TrackRepository() { Name = repo.Name, ConfigName  = repo.ConfigName, LocalPath = repo.LocalPath, Server = repo.RepoConfig.Server, Token = repo.Token}).ToArray());
             config.UpdateDelay = UpdateDelay;
+            config.KeyGesture = KeyGesture;
         }
         public void UpdateTokens() {
             AvailableTokens = Repositories.Return(x => new ObservableCollection<string>(x.Select(repo => repo.Token).Distinct()), () => new ObservableCollection<string>());

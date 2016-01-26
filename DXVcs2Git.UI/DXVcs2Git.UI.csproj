@@ -193,6 +193,7 @@
     </ApplicationDefinition>
     <Compile Include="AtomFeed\FeedWorker.cs" />
     <Compile Include="AtomFeed\VsixElementExtension.cs" />
+    <Compile Include="Behaviors\HotKeyEditorBehavior.cs" />
     <Compile Include="Behaviors\RibbonWindowButtonsInjectionBehavior.cs" />
     <Compile Include="Behaviors\TaskBarIconBehavior.cs" />
     <Compile Include="Behaviors\ValidateEditConfigBehavior.cs" />
@@ -203,6 +204,7 @@
     <Compile Include="Farm\FarmHelper.cs" />
     <Compile Include="Farm\ProjectI.cs" />
     <Compile Include="Farm\SmartProjectActivity.cs" />
+    <Compile Include="NativeMethods\HotKeyHelper.cs" />
     <Compile Include="NativeMethods\NativeMethods.cs" />
     <Compile Include="Services\FolderBrowserCustomDialogService.cs" />
     <Compile Include="UIStartupOptions.cs" />

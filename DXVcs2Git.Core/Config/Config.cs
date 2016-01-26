@@ -9,6 +9,7 @@ namespace DXVcs2Git.Core.Configuration {
         public string InstallPath { get; set; }
         public string LastVersion { get; set; }
         public int UpdateDelay { get; set; }
+        public string KeyGesture { get; set; }
 
         public static Config GenerateDefault() {
             var result = Validate(new Config());
