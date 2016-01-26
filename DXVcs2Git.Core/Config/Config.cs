@@ -10,6 +10,7 @@ namespace DXVcs2Git.Core.Configuration {
         public string LastVersion { get; set; }
         public int UpdateDelay { get; set; }
         public string KeyGesture { get; set; }
+        public bool AlwaysSure { get; set; }
 
         public static Config GenerateDefault() {
             var result = Validate(new Config());

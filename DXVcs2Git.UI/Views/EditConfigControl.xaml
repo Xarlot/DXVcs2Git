@@ -95,6 +95,25 @@
                             </dxmvvm:Interaction.Behaviors>
                         </dxe:TextEdit>
                     </dxlc:LayoutItem>
+                    <dxlc:LayoutItem Label="Are you always sure?" VerticalAlignment="Center">
+                        <dxe:CheckEdit EditValue="{Binding Path=AlwaysSure1, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                    </dxlc:LayoutItem>
+                    <dxlc:LayoutGroup Orientation="Vertical" Visibility="{Binding AlwaysSure1, Converter={dxmvvm:BooleanToVisibilityConverter}}">
+                        <dxlc:LayoutItem Label="Really sure?" VerticalAlignment="Center">
+                            <dxe:CheckEdit EditValue="{Binding Path=AlwaysSure2, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                        </dxlc:LayoutItem>
+                        <dxlc:LayoutGroup Orientation="Vertical" Visibility="{Binding AlwaysSure2, Converter={dxmvvm:BooleanToVisibilityConverter}}">
+                            <dxlc:LayoutItem Label="Sure that always sure?" VerticalAlignment="Center">
+                                <dxe:CheckEdit EditValue="{Binding Path=AlwaysSure3, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                            </dxlc:LayoutItem>
+                            <dxlc:LayoutGroup Orientation="Vertical" Visibility="{Binding AlwaysSure3, Converter={dxmvvm:BooleanToVisibilityConverter}}">
+                                <dxlc:LayoutItem Label="Okay, this is the last one. Sure?" VerticalAlignment="Center">
+                                    <dxe:CheckEdit EditValue="{Binding Path=AlwaysSure4, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                </dxlc:LayoutItem>
+                                <TextBlock FontWeight="Bold" Text="Congratulations! Surely you are the guy who is sure that he's always sure!" VerticalAlignment="Center" Visibility="{Binding AlwaysSure4, Converter={dxmvvm:BooleanToVisibilityConverter}}"/>
+                            </dxlc:LayoutGroup>
+                        </dxlc:LayoutGroup>
+                    </dxlc:LayoutGroup>
                 </dxlc:LayoutControl>
             </dx:DXTabItem>
         </dx:DXTabControl>

@@ -28,6 +28,22 @@ namespace DXVcs2Git.UI.ViewModels {
             get { return GetProperty(() => KeyGesture); }
             set { string oldValue = KeyGesture; SetProperty(() => KeyGesture, value, ()=>OnKeyGestureChanged(oldValue)); }
         }        
+        public bool AlwaysSure1 {
+            get { return GetProperty(() => AlwaysSure1); }
+            set { SetProperty(() => AlwaysSure1, value, ()=> { AlwaysSure2 &= AlwaysSure1; AlwaysSure3 &= AlwaysSure2; AlwaysSure4 &= AlwaysSure3; }); }
+        }
+        public bool AlwaysSure2 {
+            get { return GetProperty(() => AlwaysSure2); }
+            set { SetProperty(() => AlwaysSure2, value, () => { AlwaysSure3 &= AlwaysSure2; AlwaysSure4 &= AlwaysSure3; }); }
+        }
+        public bool AlwaysSure3 {
+            get { return GetProperty(() => AlwaysSure3); }
+            set { SetProperty(() => AlwaysSure3, value, () => { AlwaysSure4 &= AlwaysSure3; }); }
+        }
+        public bool AlwaysSure4 {
+            get { return GetProperty(() => AlwaysSure4); }
+            set { SetProperty(() => AlwaysSure4, value); }
+        }        
 
         public IEnumerable<GitRepoConfig> Configs { get; }
         public ICommand RefreshUpdateCommand { get; private set; }
@@ -82,6 +98,7 @@ namespace DXVcs2Git.UI.ViewModels {
             RefreshUpdateCommand = DelegateCommandFactory.Create(AtomFeed.FeedWorker.Update);
             Repositories = CreateEditRepositories(config);
             Repositories.CollectionChanged += RepositoriesOnCollectionChanged;
+            AlwaysSure4 = AlwaysSure3 = AlwaysSure2 = AlwaysSure1 = config.AlwaysSure;
             UpdateTokens();
         }
         void RepositoriesOnCollectionChanged(object sender, NotifyCollectionChangedEventArgs e) {
@@ -103,6 +120,7 @@ namespace DXVcs2Git.UI.ViewModels {
             config.Repositories = Repositories.With(x => x.Select(repo => new TrackRepository() { Name = repo.Name, ConfigName  = repo.ConfigName, LocalPath = repo.LocalPath, Server = repo.RepoConfig.Server, Token = repo.Token}).ToArray());
             config.UpdateDelay = UpdateDelay;
             config.KeyGesture = KeyGesture;
+            config.AlwaysSure = AlwaysSure4;
         }
         public void UpdateTokens() {
             AvailableTokens = Repositories.Return(x => new ObservableCollection<string>(x.Select(repo => repo.Token).Distinct()), () => new ObservableCollection<string>());
