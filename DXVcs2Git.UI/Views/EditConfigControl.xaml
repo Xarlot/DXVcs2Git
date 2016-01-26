@@ -110,7 +110,7 @@
                                 <dxlc:LayoutItem Label="Okay, this is the last one. Sure?" VerticalAlignment="Center">
                                     <dxe:CheckEdit EditValue="{Binding Path=AlwaysSure4, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
                                 </dxlc:LayoutItem>
-                                <dxlc:LayoutItem FontWeight="Bold" Label="Congratulations! Surely you are the guy who is sure that he's always sure!" VerticalAlignment="Center" Visibility="{Binding AlwaysSure4, Converter={dxmvvm:BooleanToVisibilityConverter}}"/>
+                                <TextBlock FontWeight="Bold" Text="Congratulations! Surely you are the guy who is sure that he's always sure!" VerticalAlignment="Center" Visibility="{Binding AlwaysSure4, Converter={dxmvvm:BooleanToVisibilityConverter}}"/>
                             </dxlc:LayoutGroup>
                         </dxlc:LayoutGroup>
                     </dxlc:LayoutGroup>
