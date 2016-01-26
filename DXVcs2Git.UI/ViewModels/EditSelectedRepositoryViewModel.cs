@@ -31,6 +31,7 @@ namespace DXVcs2Git.UI.ViewModels {
             get { return GetProperty(() => HasEditableMergeRequest); }
             private set { SetProperty(() => HasEditableMergeRequest, value, HasEditableMergeRequestChanged); }
         }
+        bool AlwaysSure { get { return Core.Configuration.ConfigSerializer.GetConfig().AlwaysSure; } }
         void HasEditableMergeRequestChanged() {
             if (SelectedBranch != null)
                 SelectedBranch.IsInEditingMergeRequest = HasEditableMergeRequest;
@@ -101,14 +102,14 @@ namespace DXVcs2Git.UI.ViewModels {
             return null;
         }
         public void UpdateMergeRequest(EditMergeRequestData data) {
-            if (MessageBoxService.Show("Are you sure?", "Update merge request", MessageBoxButton.OKCancel) == MessageBoxResult.OK) {
+            if (AlwaysSure || MessageBoxService.Show("Are you sure?", "Update merge request", MessageBoxButton.OKCancel) == MessageBoxResult.OK) {
                 SelectedBranch.UpdateMergeRequest(CalcMergeRequestTitle(data.Comment), CalcMergeRequestDescription(data.Comment), data.AssignToService ? CalcServiceName() : null);
                 CloseEditableMergeRequest();
                 Parameter.Refresh();
             }
         }
         public void CloseMergeRequest() {
-            if (MessageBoxService.Show("Are you sure?", "Close merge request", MessageBoxButton.OKCancel) == MessageBoxResult.OK) {
+            if (AlwaysSure || MessageBoxService.Show("Are you sure?", "Close merge request", MessageBoxButton.OKCancel) == MessageBoxResult.OK) {
                 SelectedBranch.CloseMergeRequest();
                 CloseEditableMergeRequest();
                 Parameter.Refresh();
