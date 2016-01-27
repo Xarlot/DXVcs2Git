@@ -322,6 +322,10 @@
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\DXVcs2Git.AdministratorMethods\DXVcs2Git.AdministratorMethods.csproj">
+      <Project>{531e2e2e-0189-4a73-87cf-21aacda8b01f}</Project>
+      <Name>DXVcs2Git.AdministratorMethods</Name>
+    </ProjectReference>
     <ProjectReference Include="..\DXVcs2Git.Core\DXVcs2Git.Core.csproj">
       <Project>{7ce585b7-1f19-442d-b1a4-0c1ad855a55c}</Project>
       <Name>DXVcs2Git.Core</Name>

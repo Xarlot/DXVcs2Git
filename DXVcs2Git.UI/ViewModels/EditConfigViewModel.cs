@@ -11,6 +11,7 @@ using DXVcs2Git.Core.Git;
 using Microsoft.Win32;
 using System.IO;
 using System.ComponentModel;
+using System.Text;
 
 namespace DXVcs2Git.UI.ViewModels {
     public class EditConfigViewModel : ViewModelBase {
@@ -44,6 +45,33 @@ namespace DXVcs2Git.UI.ViewModels {
             get { return GetProperty(() => AlwaysSure4); }
             set { SetProperty(() => AlwaysSure4, value); }
         }        
+        public bool CommonXaml {
+            get { return GetProperty(() => CommonXaml); }
+            set { SetProperty(() => CommonXaml, value); }
+        }        
+
+        public bool DiagramXaml {
+            get { return GetProperty(() => DiagramXaml); }
+            set { SetProperty(() => DiagramXaml, value); }
+        }
+        public ICommand UpdateWpf2SLProperties { get; private set; }
+
+        async System.Threading.Tasks.Task UpdateCommonXamlProperty() {
+            if (CommonXaml)
+                await NativeMethods.AdministratorMethods.SetWpf2SlKeyAsync("Common");
+            else
+                await NativeMethods.AdministratorMethods.ResetWpf2SlKeyAsync("Common");
+        }
+        async System.Threading.Tasks.Task UpdateDiagramXamlProperty() {
+            if (DiagramXaml)
+                await NativeMethods.AdministratorMethods.SetWpf2SlKeyAsync("Diagram");
+            else
+                await NativeMethods.AdministratorMethods.ResetWpf2SlKeyAsync("Diagram");
+        }                
+        bool GetWpf2SlKey(string value) {
+            var ev = Environment.GetEnvironmentVariable("wpf2slkey", EnvironmentVariableTarget.Machine);
+            return ev?.Contains(value) ?? false;
+        }
 
         public IEnumerable<GitRepoConfig> Configs { get; }
         public ICommand RefreshUpdateCommand { get; private set; }
@@ -96,10 +124,17 @@ namespace DXVcs2Git.UI.ViewModels {
             Configs = this.configsReader.RegisteredConfigs;
             UpdateDelay = AtomFeed.FeedWorker.UpdateDelay;
             RefreshUpdateCommand = DelegateCommandFactory.Create(AtomFeed.FeedWorker.Update);
+            CommonXaml = GetWpf2SlKey("Common");
+            DiagramXaml = GetWpf2SlKey("Diagram");
             Repositories = CreateEditRepositories(config);
             Repositories.CollectionChanged += RepositoriesOnCollectionChanged;
             AlwaysSure4 = AlwaysSure3 = AlwaysSure2 = AlwaysSure1 = config.AlwaysSure;
+            UpdateWpf2SLProperties = new AsyncCommand(() => OnUpdateWpf2SLProperties());
             UpdateTokens();
+        }
+        async System.Threading.Tasks.Task OnUpdateWpf2SLProperties() {
+            await UpdateCommonXamlProperty();
+            await UpdateDiagramXamlProperty();
         }
         void RepositoriesOnCollectionChanged(object sender, NotifyCollectionChangedEventArgs e) {
             UpdateTokens();
