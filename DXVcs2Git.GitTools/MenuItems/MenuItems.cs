@@ -108,7 +108,7 @@ namespace DXVcs2Git.GitTools {
         public VsDevExpressMenuItem CreateItem(bool isPopup) {
             if (VsSource == null)
                 return null;
-            var commandBarControl = (CommandBarControl)VsSource;
+            var commandBarControl = (CommandBarControl)VsSource;            
             if (commandBarControl.Type != MsoControlType.msoControlPopup) {
                 CommandBar parentCommandBar = commandBarControl.Parent;
                 if (parentCommandBar == null)
@@ -120,7 +120,7 @@ namespace DXVcs2Git.GitTools {
             var childItem = new VsDevExpressMenuItem();
             childItem.VsSource = isPopup
                 ? ((CommandBarPopup)VsSource).Controls.Add(MsoControlType.msoControlPopup, Type.Missing, Type.Missing, Type.Missing, Type.Missing)
-                : ((CommandBarPopup)VsSource).Controls.Add(MsoControlType.msoControlButton, Type.Missing, Type.Missing, Type.Missing, Type.Missing);
+                : ((CommandBarPopup)VsSource).Controls.Add(MsoControlType.msoControlButton, Type.Missing, Type.Missing, Type.Missing, Type.Missing);            
             ItemsInternal.Add(childItem);
             childItem.Parent = this;
             return childItem;
