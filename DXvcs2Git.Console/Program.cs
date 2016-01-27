@@ -352,6 +352,7 @@ namespace DXVcs2Git.Console {
             }
             Log.Message($"Merge request merging failed due conflicts. Resolve conflicts manually.");
             vcsWrapper.ProcessUndoChechout(genericChange);
+            AssignBackConflictedMergeRequest(gitLabWrapper, users, mergeRequest, "Merge request has been assigned back to author because of conflicts during merge. Resolve conflicts manually and assign it back.");
 
             return MergeRequestResult.Conflicts;
         }
