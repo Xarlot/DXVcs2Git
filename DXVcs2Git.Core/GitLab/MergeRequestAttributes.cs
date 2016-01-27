@@ -32,5 +32,9 @@ namespace DXVcs2Git.Core.GitLab {
         public int IID { get; set; }
         [DataMember(Name = "description")]
         public string Description { get; set; }
+        [DataMember(Name = "work_in_process")]
+        public bool WorkInProcess { get; set; }
+        [DataMember(Name = "action")]
+        public string Action { get; set; }
     }
 }

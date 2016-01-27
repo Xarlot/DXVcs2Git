@@ -22,7 +22,7 @@ namespace DXVcs2Git.UI.Farm {
         }
         public static void Start(Dispatcher dispatcher, Action invalidateCallback) {
             Dispatcher = dispatcher;
-            InvalidateCallback = invalidateCallback;
+            InvalidateCallback = invalidateCallback ?? (() => {});
             Instance.Refreshed += InstanceOnRefreshed;
             Instance.StartIntegrator();
         }

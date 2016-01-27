@@ -8,7 +8,6 @@ namespace DXVcs2Git.Core.GitLab {
         [DataMember(Name = "object_kind")]
         public ProjectHookType HookType { get; internal set; }
 
-
         public string Json { get; set; }
 
         public static ProjectHookTypeClient ParseHookType(HttpListenerRequest message) {

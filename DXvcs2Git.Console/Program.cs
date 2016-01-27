@@ -8,12 +8,14 @@ using System.Net.Sockets;
 using System.Reflection;
 using System.Text;
 using System.Threading;
+using System.Windows.Threading;
 using CommandLine;
 using DXVcs2Git.Core;
 using DXVcs2Git.Core.GitLab;
 using DXVcs2Git.Core.Serialization;
 using DXVcs2Git.DXVcs;
 using DXVcs2Git.Git;
+using DXVcs2Git.UI.Farm;
 using LibGit2Sharp;
 using NGitLab;
 using NGitLab.Models;
@@ -54,9 +56,10 @@ namespace DXVcs2Git.Console {
         static int DoListenerWork(CommandLineOptions clo) {
             string gitServer = clo.Server;
             string gitlabauthtoken = clo.AuthToken;
-            string gitRepoPath = clo.Repo;
 
             GitLabWrapper gitLabWrapper = new GitLabWrapper(gitServer, gitlabauthtoken);
+            FarmIntegrator.Start(Dispatcher.CurrentDispatcher, null);
+
             var projects = gitLabWrapper.GetProjects();
             foreach (Project project in projects) {
                 var hooks = gitLabWrapper.GetHooks(project);
@@ -74,22 +77,67 @@ namespace DXVcs2Git.Console {
                 var request = server.GetRequest();
                 if (request == null)
                     continue;
-                ProcessWebHook(request);
+                ProcessWebHook(gitLabWrapper, request);
             }
 
             return 0;
         }
-        static void ProcessWebHook(HttpListenerRequest request) {
+        static void ProcessWebHook(GitLabWrapper gitLabWrapper, HttpListenerRequest request) {
             var hookType = ProjectHookClient.ParseHookType(request);
             if (hookType == null)
                 return;
+            Log.Message($"Web hook received. Web hook type: {hookType.HookType}");
             var hook = ProjectHookClient.ParseHook(hookType);
             if (hook.HookType == ProjectHookType.push)
                 ProcessPushHook((PushHookClient)hook);
             else if (hook.HookType == ProjectHookType.merge_request)
-                ProcessMergeRequestHook((MergeRequestHookClient)hook);
+                ProcessMergeRequestHook(gitLabWrapper, (MergeRequestHookClient)hook);
         }
-        static void ProcessMergeRequestHook(MergeRequestHookClient hook) {
+        static void ProcessMergeRequestHook(GitLabWrapper gitLabWrapper, MergeRequestHookClient hook) {
+            Log.Message($"Merge hook state = {hook.Attributes.State}");
+            if (!IsOpenedState(hook))
+                return;
+            if (!ShouldForceSyncTask(gitLabWrapper, hook))
+                return;
+            var project = gitLabWrapper.GetProject(hook.Attributes.TargetProjectId);
+            var mergeRequest = gitLabWrapper.GetMergeRequest(project, hook.Attributes.Id);
+            var xmlComments = gitLabWrapper.GetComments(mergeRequest).Where(x => IsXml(x.Note));
+            var options = xmlComments.Select(x => MergeRequestOptions.ConvertFromString(x.Note)).FirstOrDefault();
+            if (options != null)
+                ForceBuild(options.SyncTask);
+            else
+                Log.Message("Merge request can`t be merged because merge request notes has no farm config.");
+        }
+        static bool ShouldForceSyncTask(GitLabWrapper gitLabWrapper, MergeRequestHookClient hook) {
+            var project = gitLabWrapper.GetProject(hook.Attributes.TargetProjectId);
+            var mergeRequest = gitLabWrapper.GetMergeRequest(project, hook.Attributes.Id);
+            var assignee = mergeRequest.Assignee;
+            if (assignee == null || !assignee.IsAdmin) {
+                Log.Message("Force sync rejected because assignee is not set or not admin.");
+                return false;
+            }
+
+            if (hook.Attributes.WorkInProcess) {
+                Log.Message("Force sync rejected because merge request has work in process flag.");
+                return false;
+            }
+
+            if (hook.Attributes.MergeStatus != "can_be_merged") {
+                Log.Message("Force sync rejected because merge request can`t be merged automatically.");
+                return false;
+            }
+
+            return true;
+        }
+        static void ForceBuild(string syncTask) {
+            Log.Message($"Build forced: {syncTask}");
+            FarmIntegrator.ForceBuild(syncTask);
+        }
+        static bool IsXml(string xml) {
+            return !string.IsNullOrEmpty(xml) && xml.StartsWith("<");
+        }
+        static bool IsOpenedState(MergeRequestHookClient hook) {
+            return hook.Attributes.State == "opened" || hook.Attributes.State == "reopened";
         }
         static void ProcessPushHook(PushHookClient hook) {
         }
@@ -265,67 +313,46 @@ namespace DXVcs2Git.Console {
 
             var changes = gitLabWrapper.GetMergeRequestChanges(mergeRequest).Where(x => branch.TrackItems.FirstOrDefault(track => x.OldPath.StartsWith(track.ProjectPath)) != null);
             var genericChange = changes.Select(x => ProcessMergeRequestChanges(mergeRequest, x, localGitDir, branch, autoSyncToken)).ToList();
-
-            string sourceBranch = mergeRequest.SourceBranch;
-            bool sourceBranchWasCreated = gitWrapper.EnsureBranch(sourceBranch, null);
-            gitWrapper.Reset(sourceBranch);
-            Log.Message($"Reset branch {sourceBranch} completed.");
-
-            string targetBranch = mergeRequest.TargetBranch;
-            gitWrapper.EnsureBranch(targetBranch, null);
-            gitWrapper.Reset(targetBranch);
-            Log.Message($"Reset branch {targetBranch} completed.");
-            var result = gitWrapper.Merge(sourceBranch, defaultUser);
-            if (result != MergeStatus.Conflicts) {
-                Log.Message($"Merge attempt from {targetBranch} to {sourceBranch} completed without conflicts");
-                CommentWrapper comment = CalcComment(mergeRequest, branch, autoSyncToken);
-                if (!vcsWrapper.ProcessCheckout(genericChange)) {
-                    Log.Error("Merging merge request failed because of checked out files:");
-                    var failedChangeSet = genericChange.Where(x => x.State == ProcessState.Failed).ToList();
-                    AssignBackConflictedMergeRequest(gitLabWrapper, users, mergeRequest, CalcCommentForFailedCheckoutMergeRequest(failedChangeSet));
-                    failedChangeSet.ForEach(x => Log.Error(x.VcsPath));
-                    return MergeRequestResult.CheckoutFailed;
-                }
-                gitWrapper.Reset(branch.Name);
-                gitWrapper.Pull(defaultUser, branch.Name);
-
-                mergeRequest = gitLabWrapper.ProcessMergeRequest(mergeRequest, comment.ToString());
-                if (mergeRequest.State == "merged") {
-                    gitWrapper.Reset(branch.Name);
-                    gitWrapper.Pull(defaultUser, branch.Name);
-                    var gitCommit = gitWrapper.FindCommit(branch.Name, x => CommentWrapper.Parse(x.Message).Token == autoSyncToken);
-                    Log.Message("Merge request merged successfully.");
-
-                    if (forkMode && sourceBranchWasCreated && sourceBranch != targetBranch)
-                        gitWrapper.RemoveBranch(sourceBranch);
-
-                    long timeStamp = lastHistoryItem.VcsCommitTimeStamp;
-                    if (vcsWrapper.ProcessCheckIn(genericChange, comment.ToString())) {
-                        var checkinHistory = vcsWrapper.GenerateHistory(branch, new DateTime(timeStamp)).Where(x => x.ActionDate.Ticks > timeStamp);
-                        var lastCommit = checkinHistory.OrderBy(x => x.ActionDate).LastOrDefault();
-                        long newTimeStamp = lastCommit?.ActionDate.Ticks ?? timeStamp;
-                        var mergeRequestResult = MergeRequestResult.Success;
-                        if (!ValidateMergeRequest(vcsWrapper, branch, lastHistoryItem, defaultUser))
-                            mergeRequestResult = MergeRequestResult.Mixed;
-
-                        syncHistory.Add(gitCommit.Sha, newTimeStamp, autoSyncToken, mergeRequestResult == MergeRequestResult.Success ? SyncHistoryStatus.Success : SyncHistoryStatus.Mixed);
-                        syncHistory.Save();
-                        Log.Message("Merge request checkin successfully.");
-                        return mergeRequestResult;
-                    }
-                    Log.Error("Merge request checkin failed.");
-                    var failedHistory = vcsWrapper.GenerateHistory(branch, new DateTime(timeStamp));
-                    var lastFailedCommit = failedHistory.OrderBy(x => x.ActionDate).LastOrDefault();
-                    syncHistory.Add(gitCommit.Sha, lastFailedCommit?.ActionDate.Ticks ?? timeStamp, autoSyncToken, SyncHistoryStatus.Failed);
-                    syncHistory.Save();
-                    return MergeRequestResult.Failed;
-                }
-
-                Log.Message("Merge request merging failed");
-                AssignBackConflictedMergeRequest(gitLabWrapper, users, mergeRequest, "Merge request has been assigned back to author because of conflicts during merge. Resolve conflicts manually and assign it back.");
-                return MergeRequestResult.Conflicts;
+            if (!vcsWrapper.ProcessCheckout(genericChange)) {
+                Log.Error("Merging merge request failed because of checked out files:");
+                var failedChangeSet = genericChange.Where(x => x.State == ProcessState.Failed).ToList();
+                AssignBackConflictedMergeRequest(gitLabWrapper, users, mergeRequest, CalcCommentForFailedCheckoutMergeRequest(failedChangeSet));
+                failedChangeSet.ForEach(x => Log.Error(x.VcsPath));
+                return MergeRequestResult.CheckoutFailed;
             }
-            Log.Message($"Merge request merging from {sourceBranch} to {targetBranch} failed due conflicts. Resolve conflicts manually.");
+            CommentWrapper comment = CalcComment(mergeRequest, branch, autoSyncToken);
+            mergeRequest = gitLabWrapper.ProcessMergeRequest(mergeRequest, comment.ToString());
+            if (mergeRequest.State == "merged") {
+                Log.Message("Merge request merged successfully.");
+
+                var project = gitLabWrapper.GetProject(mergeRequest.ProjectId);
+                var targetBranch = gitLabWrapper.GetBranch(project, mergeRequest.TargetBranch);
+                var gitCommit = targetBranch.Commit;
+
+                long timeStamp = lastHistoryItem.VcsCommitTimeStamp;
+                if (vcsWrapper.ProcessCheckIn(genericChange, comment.ToString())) {
+                    var checkinHistory = vcsWrapper.GenerateHistory(branch, new DateTime(timeStamp)).Where(x => x.ActionDate.Ticks > timeStamp);
+                    var lastCommit = checkinHistory.OrderBy(x => x.ActionDate).LastOrDefault();
+                    long newTimeStamp = lastCommit?.ActionDate.Ticks ?? timeStamp;
+                    var mergeRequestResult = MergeRequestResult.Success;
+                    if (!ValidateMergeRequest(vcsWrapper, branch, lastHistoryItem, defaultUser))
+                        mergeRequestResult = MergeRequestResult.Mixed;
+
+                    syncHistory.Add(gitCommit.Id.ToString(), newTimeStamp, autoSyncToken, mergeRequestResult == MergeRequestResult.Success ? SyncHistoryStatus.Success : SyncHistoryStatus.Mixed);
+                    syncHistory.Save();
+                    Log.Message("Merge request checkin successfully.");
+                    return mergeRequestResult;
+                }
+                Log.Error("Merge request checkin failed.");
+                var failedHistory = vcsWrapper.GenerateHistory(branch, new DateTime(timeStamp));
+                var lastFailedCommit = failedHistory.OrderBy(x => x.ActionDate).LastOrDefault();
+                syncHistory.Add(gitCommit.Id.ToString(), lastFailedCommit?.ActionDate.Ticks ?? timeStamp, autoSyncToken, SyncHistoryStatus.Failed);
+                syncHistory.Save();
+                return MergeRequestResult.Failed;
+            }
+            Log.Message($"Merge request merging failed due conflicts. Resolve conflicts manually.");
+            vcsWrapper.ProcessUndoChechout(genericChange);
+
             return MergeRequestResult.Conflicts;
         }
         static string CalcCommentForFailedCheckoutMergeRequest(List<SyncItem> genericChange) {

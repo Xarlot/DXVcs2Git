@@ -74,6 +74,9 @@ namespace DXVcs2Git.UI.ViewModels {
             mergeRequest = this.gitLabWrapper.UpdateMergeRequestAssignee(mergeRequest, assignee);
             MergeRequest = new MergeRequestViewModel(this.gitLabWrapper, mergeRequest);
         }
+        public void UpdateMergeRequest(string comment) {
+            this.gitLabWrapper.AddCommentToMergeRequest(MergeRequest.MergeRequest, comment);
+        }
         public void RefreshFarm() {
             FarmStatus = FarmIntegrator.GetTaskStatus(Repository.RepoConfig?.FarmSyncTaskName);
         }

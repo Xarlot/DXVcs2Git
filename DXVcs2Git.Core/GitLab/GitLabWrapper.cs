@@ -15,6 +15,9 @@ namespace DXVcs2Git.Git {
         public IEnumerable<Project> GetProjects() {
             return client.Projects.Accessible;
         }
+        public Project GetProject(int id) {
+            return this.client.Projects[id];
+        }
         public Project FindProject(string project) {
             return client.Projects.Accessible.FirstOrDefault(x => x.HttpUrl == project);
         }
@@ -22,6 +25,10 @@ namespace DXVcs2Git.Git {
             mergeRequestsHandler = mergeRequestsHandler ?? (x => true);
             var mergeRequestsClient = client.GetMergeRequest(project.Id);
             return mergeRequestsClient.AllInState(MergeRequestState.opened).Where(x => mergeRequestsHandler(x));
+        }
+        public MergeRequest GetMergeRequest(Project project, int id) {
+            var mergeRequestsClient = client.GetMergeRequest(project.Id);
+            return mergeRequestsClient[id];
         }
         public IEnumerable<MergeRequestFileData> GetMergeRequestChanges(MergeRequest mergeRequest) {
             var mergeRequestsClient = client.GetMergeRequest(mergeRequest.ProjectId);
@@ -72,6 +79,11 @@ namespace DXVcs2Git.Git {
                 throw;
             }
         }
+        public Branch GetBranch(Project project, string branch) {
+            var repo = this.client.GetRepository(project.Id);
+            var branchesClient = repo.Branches;
+            return branchesClient[branch];
+        }
         public IEnumerable<Branch> GetBranches(Project project) {
             var repo = this.client.GetRepository(project.Id);
             var branchesClient = repo.Branches;
@@ -94,6 +106,11 @@ namespace DXVcs2Git.Git {
         public ProjectHook UpdateProjectHook(Project project, ProjectHook hook, Uri uri) {
             var repository = this.client.GetRepository(project.Id);
             return repository.ProjectHooks.Update(hook.Id, new ProjectHookUpsert() {Url = uri});
+        }
+        public IEnumerable<Comment> GetComments(MergeRequest mergeRequest) {
+            var mergeRequestsClient = client.GetMergeRequest(mergeRequest.ProjectId);
+            var commentsClient = mergeRequestsClient.Comments(mergeRequest.Id);
+            return commentsClient.All;
         }
     }
 }

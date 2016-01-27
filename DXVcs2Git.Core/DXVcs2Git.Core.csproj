@@ -132,6 +132,7 @@
     <Compile Include="GitLab\HttpRequestParser.cs" />
     <Compile Include="GitLab\MergeRequestAttributes.cs" />
     <Compile Include="GitLab\MergeRequestHookClient.cs" />
+    <Compile Include="GitLab\MergeRequestOptions.cs" />
     <Compile Include="GitLab\MergeRequestUser.cs" />
     <Compile Include="GitLab\PushHookClient.cs" />
     <Compile Include="Git\GitReaderWrapper.cs" />

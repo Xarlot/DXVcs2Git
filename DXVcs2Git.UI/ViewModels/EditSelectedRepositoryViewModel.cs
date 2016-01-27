@@ -1,11 +1,15 @@
 ﻿using System;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Windows;
 using System.Windows.Input;
 using DevExpress.Mvvm;
 using DevExpress.Mvvm.Native;
+using DevExpress.XtraPrinting.Native.WebClientUIControl;
+using DXVcs2Git.Core;
 using DXVcs2Git.Core.Git;
+using DXVcs2Git.Core.GitLab;
 
 namespace DXVcs2Git.UI.ViewModels {
     public class EditSelectedRepositoryViewModel : ViewModelBase {
@@ -104,9 +108,13 @@ namespace DXVcs2Git.UI.ViewModels {
         public void UpdateMergeRequest(EditMergeRequestData data) {
             if (AlwaysSure || MessageBoxService.Show("Are you sure?", "Update merge request", MessageBoxButton.OKCancel) == MessageBoxResult.OK) {
                 SelectedBranch.UpdateMergeRequest(CalcMergeRequestTitle(data.Comment), CalcMergeRequestDescription(data.Comment), data.AssignToService ? CalcServiceName() : null);
+                SelectedBranch.UpdateMergeRequest(CalcOptionsComment(data.Options));
                 CloseEditableMergeRequest();
                 Parameter.Refresh();
             }
+        }
+        string CalcOptionsComment(MergeRequestOptions options) {
+            return MergeRequestOptions.ConvertToString(options);
         }
         public void CloseMergeRequest() {
             if (AlwaysSure || MessageBoxService.Show("Are you sure?", "Close merge request", MessageBoxButton.OKCancel) == MessageBoxResult.OK) {

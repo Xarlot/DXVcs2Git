@@ -2,6 +2,7 @@
 using DevExpress.Mvvm;
 using DevExpress.Mvvm.Native;
 using DevExpress.Mvvm.POCO;
+using DXVcs2Git.Core.GitLab;
 
 namespace DXVcs2Git.UI.ViewModels {
     public class EditMergeRequestViewModel : ViewModelBase {
@@ -42,7 +43,14 @@ namespace DXVcs2Git.UI.ViewModels {
             Parent.CancelMergeRequestChanges();
         }
         void PerformApplyMergeRequest() {
-            Parent.ApplyMergeRequestChanges(new EditMergeRequestData() { Comment = Comment, AssignToService = AssignedToService });
+            Parent.ApplyMergeRequestChanges(new EditMergeRequestData() { Comment = Comment, AssignToService = AssignedToService, Options = CreateMergeRequestOptions()});
+        }
+        MergeRequestOptions CreateMergeRequestOptions() {
+            return new MergeRequestOptions() {
+                Force = true,
+                SyncTask = Parameter.Repository.RepoConfig.FarmSyncTaskName,
+                WatchTask = Parameter.Repository.RepoConfig.FarmTaskName,
+            };
         }
         bool CanApplyMergeRequest() {
             return IsModified;

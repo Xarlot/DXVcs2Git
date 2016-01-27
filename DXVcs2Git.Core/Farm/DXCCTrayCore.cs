@@ -32,11 +32,11 @@ namespace DevExpress.DXCCTray {
         public bool Equals(ServerInfo info) {
             bool equalsTypes = true;
 
-            if(Types.Count != info.Types.Count)
+            if (Types.Count != info.Types.Count)
                 equalsTypes = false;
             else {
-                for(int i = 0; i < Types.Count; i++) {
-                    if(Types[i] != info.Types[i]) {
+                for (int i = 0; i < Types.Count; i++) {
+                    if (Types[i] != info.Types[i]) {
                         equalsTypes = false;
                         break;
                     }
@@ -95,9 +95,9 @@ namespace DevExpress.DXCCTray {
         DateTime lastPendingStart = DateTime.MaxValue;
 
         public static byte[] GetLastBuildDurationDictSaveData() {
-            lock(lastBuildDurationDictionary) {
-                using(MemoryStream ms = new MemoryStream()) {
-                    using(DeflateStream ds = new DeflateStream(ms, CompressionMode.Compress, true)) {
+            lock (lastBuildDurationDictionary) {
+                using (MemoryStream ms = new MemoryStream()) {
+                    using (DeflateStream ds = new DeflateStream(ms, CompressionMode.Compress, true)) {
                         BinaryFormatter bf = new BinaryFormatter();
                         bf.Serialize(ds, lastBuildDurationDictionary);
                     }
@@ -106,35 +106,35 @@ namespace DevExpress.DXCCTray {
             }
         }
         public static void LoadLastBuildDurationDict(byte[] data) {
-            if(data == null) {
-                lock(lastBuildDurationDictionary) {
+            if (data == null) {
+                lock (lastBuildDurationDictionary) {
                     lastBuildDurationDictionary.Clear();
                 }
                 return;
             }
             Dictionary<string, TimeSpan> tempDict;
-            using(MemoryStream ms = new MemoryStream(data)) {
-                using(DeflateStream ds = new DeflateStream(ms, CompressionMode.Decompress)) {
+            using (MemoryStream ms = new MemoryStream(data)) {
+                using (DeflateStream ds = new DeflateStream(ms, CompressionMode.Decompress)) {
                     BinaryFormatter bf = new BinaryFormatter();
                     tempDict = (Dictionary<string, TimeSpan>)bf.Deserialize(ds);
                 }
             }
-            lock(lastBuildDurationDictionary) {
+            lock (lastBuildDurationDictionary) {
                 lastBuildDurationDictionary.Clear();
-                foreach(KeyValuePair<string, TimeSpan> pair in tempDict) {
+                foreach (KeyValuePair<string, TimeSpan> pair in tempDict) {
                     lastBuildDurationDictionary[pair.Key] = pair.Value;
                 }
             }
         }
 
         public void TryLoadLastBuildDurationFromDict() {
-            if(isLoadedFromDictionary)
+            if (isLoadedFromDictionary)
                 return;
-            lock(lastBuildDurationDictionary) {
-                if(isLoadedFromDictionary)
+            lock (lastBuildDurationDictionary) {
+                if (isLoadedFromDictionary)
                     return;
                 TimeSpan ts;
-                if(lastBuildDurationDictionary.TryGetValue(WebURL, out ts)) {
+                if (lastBuildDurationDictionary.TryGetValue(WebURL, out ts)) {
                     lastBuildDuration = ts;
                 }
                 isLoadedFromDictionary = true;
@@ -142,7 +142,7 @@ namespace DevExpress.DXCCTray {
         }
 
         void SaveLastBuldsDurationToDict() {
-            lock(lastBuildDurationDictionary) {
+            lock (lastBuildDurationDictionary) {
                 lastBuildDurationDictionary[WebURL] = lastBuildDuration;
             }
         }
@@ -153,19 +153,20 @@ namespace DevExpress.DXCCTray {
 
         public void SetBuildStatus(ProjectActivity activity, IntegrationStatus buildStatus) {
             masterDetails = null;
-            if(Activity != null) {
-                if(!IsBuildingOrPrepareRemoteProject(Activity) && IsBuildingOrPrepareRemoteProject(activity)) {
+            if (Activity != null) {
+                if (!IsBuildingOrPrepareRemoteProject(Activity) && IsBuildingOrPrepareRemoteProject(activity)) {
                     isBuildInProgress = true;
                     lastBuildStart = DateTime.Now;
                 }
-                if(isBuildInProgress && IsBuildingOrPrepareRemoteProject(Activity) && !IsBuildingOrPrepareRemoteProject(activity) && buildStatus == IntegrationStatus.Success) {
+                if (isBuildInProgress && IsBuildingOrPrepareRemoteProject(Activity) && !IsBuildingOrPrepareRemoteProject(activity) && buildStatus == IntegrationStatus.Success) {
                     isBuildInProgress = false;
                     lastBuildStop = DateTime.Now;
                     lastBuildDuration = lastBuildStop - lastBuildStart;
                     SaveLastBuldsDurationToDict();
                 }
-            } else {
-                if(IsBuildingOrPrepareRemoteProject(activity)) {
+            }
+            else {
+                if (IsBuildingOrPrepareRemoteProject(activity)) {
                     isBuildInProgress = true;
                     lastBuildStart = DateTime.Now;
                     lastBuildStop = DateTime.MaxValue;
@@ -173,36 +174,36 @@ namespace DevExpress.DXCCTray {
                 }
             }
 
-            if(Activity != SmartProjectActivity.TypePending && activity == SmartProjectActivity.TypePending) {
-                if(Activity == null)
+            if (Activity != SmartProjectActivity.TypePending && activity == SmartProjectActivity.TypePending) {
+                if (Activity == null)
                     monitorPendingNotFromStart = true;
                 else
                     monitorPendingNotFromStart = false;
 
                 lastPendingStart = DateTime.Now;
             }
-            if(Activity == SmartProjectActivity.TypePending && activity != SmartProjectActivity.TypePending) {
+            if (Activity == SmartProjectActivity.TypePending && activity != SmartProjectActivity.TypePending) {
                 monitorPendingNotFromStart = false;
                 lastPendingStart = DateTime.MaxValue;
             }
-            if(buildStatus != IntegrationStatus.Success && (BuildStatus == IntegrationStatus.Success || Activity == null)) {
+            if (buildStatus != IntegrationStatus.Success && (BuildStatus == IntegrationStatus.Success || Activity == null)) {
                 monitorBuildFailureNotFromStart = (Activity == null);
                 firstBuildFailure = DateTime.Now;
             }
 
-            if(Activity != activity)
+            if (Activity != activity)
                 Activity = activity;
             BuildStatus = buildStatus;
         }
 
         public string Details {
             get {
-                if(BuildStatus == IntegrationStatus.Failure || BuildStatus == IntegrationStatus.Exception) {
+                if (BuildStatus == IntegrationStatus.Failure || BuildStatus == IntegrationStatus.Exception) {
                     DateTime now = DateTime.Now;
-                    if(now > firstBuildFailure) {
+                    if (now > firstBuildFailure) {
                         TimeSpan failureTime = now - firstBuildFailure;
                         string additional = string.Empty;
-                        if(monitorBuildFailureNotFromStart)
+                        if (monitorBuildFailureNotFromStart)
                             additional = " more than";
                         string masterDetails = GetMasterDetails();
                         return string.Format("Failure{0} {1} {2}{3}", additional, new CCTimeFormatter(failureTime), string.IsNullOrEmpty(masterDetails) ? string.Empty : "- ", masterDetails);
@@ -213,35 +214,37 @@ namespace DevExpress.DXCCTray {
         }
         string masterDetails;
         string GetMasterDetails() {
-            if(masterDetails != null)
+            if (masterDetails != null)
                 return masterDetails;
             string message = string.Empty;
 
-            if(CurrentMessage.Length > 0) {
+            if (CurrentMessage.Length > 0) {
                 message = " - " + CurrentMessage;
             }
 
-            if(Activity.IsSleeping()) {
-                if(NextBuildTime == DateTime.MaxValue)
+            if (Activity.IsSleeping()) {
+                if (NextBuildTime == DateTime.MaxValue)
                     message = "Not auto-triggered" + message;
                 else
                     message = string.Format("Next: {0:T}", NextBuildTime) + message;
-            } else {
-                if(Activity == SmartProjectActivity.TypePending && lastPendingStart != DateTime.MaxValue) {
+            }
+            else {
+                if (Activity == SmartProjectActivity.TypePending && lastPendingStart != DateTime.MaxValue) {
                     TimeSpan pendingTime = DateTime.Now - lastPendingStart;
                     string additional = string.Empty;
-                    if(monitorPendingNotFromStart)
+                    if (monitorPendingNotFromStart)
                         additional = " more than";
                     return string.Format("Pending{0} {1}", additional, new CCTimeFormatter(pendingTime)) + message;
                 }
 
-                if(isBuildInProgress && (lastBuildStart != DateTime.MaxValue) && IsBuildingOrPrepareRemoteProject(Activity)) {
+                if (isBuildInProgress && (lastBuildStart != DateTime.MaxValue) && IsBuildingOrPrepareRemoteProject(Activity)) {
                     TimeSpan durationRemaining = DurationRemaining;
-                    if(durationRemaining != TimeSpan.MaxValue) {
-                        if(durationRemaining <= TimeSpan.Zero)
+                    if (durationRemaining != TimeSpan.MaxValue) {
+                        if (durationRemaining <= TimeSpan.Zero)
                             return string.Format("Taking {0} longer", new CCTimeFormatter(durationRemaining.Negate())) + message;
                         return string.Format("Remains {0}", new CCTimeFormatter(durationRemaining)) + message;
-                    } else {
+                    }
+                    else {
                         TimeSpan buildTime = DateTime.Now - lastBuildStart;
                         return string.Format("Building {0}", new CCTimeFormatter(buildTime)) + message;
                     }
@@ -253,7 +256,7 @@ namespace DevExpress.DXCCTray {
 
         TimeSpan DurationRemaining {
             get {
-                if(!(isBuildInProgress && !(lastBuildDuration == TimeSpan.MaxValue))) {
+                if (!(isBuildInProgress && !(lastBuildDuration == TimeSpan.MaxValue))) {
                     return TimeSpan.MaxValue;
                 }
                 return (TimeSpan)((lastBuildStart + lastBuildDuration) - DateTime.Now);
@@ -271,7 +274,7 @@ namespace DevExpress.DXCCTray {
             }
 
             bool AddIfNeeded(StringBuilder sb, int value, string type) {
-                if(value != 0) {
+                if (value != 0) {
                     sb.AppendFormat("{0} {1} ", value, type);
                     return true;
                 }
@@ -280,9 +283,9 @@ namespace DevExpress.DXCCTray {
 
             public override string ToString() {
                 StringBuilder sb = new StringBuilder();
-                if(!AddIfNeeded(sb, this.timeSpan.Days, "d"))
-                    if(!AddIfNeeded(sb, this.timeSpan.Hours, "h"))
-                        if(!AddIfNeeded(sb, this.timeSpan.Minutes, "m"))
+                if (!AddIfNeeded(sb, this.timeSpan.Days, "d"))
+                    if (!AddIfNeeded(sb, this.timeSpan.Hours, "h"))
+                        if (!AddIfNeeded(sb, this.timeSpan.Minutes, "m"))
                             AddIfNeeded(sb, this.timeSpan.Seconds, "sec");
                 return sb.ToString().Trim();
             }
@@ -297,7 +300,7 @@ namespace DevExpress.DXCCTray {
 
         public override bool Equals(object obj) {
             QueueInfo info = obj as QueueInfo;
-            if(info == null)
+            if (info == null)
                 return false;
             return Name == info.Name && Type == info.Type && Queue == info.Queue;
         }
@@ -336,7 +339,7 @@ namespace DevExpress.DXCCTray {
 
 
         public void SetActiveMode(bool state) {
-            foreach(DXCCTrayIntegrator integrator in list) {
+            foreach (DXCCTrayIntegrator integrator in list) {
                 integrator.ActiveMode = state;
             }
         }
@@ -354,15 +357,15 @@ namespace DevExpress.DXCCTray {
         }
 
         public bool ContainsName(string url) {
-            foreach(DXCCTrayIntegrator integrator in list) {
-                if(integrator.Url == url)
+            foreach (DXCCTrayIntegrator integrator in list) {
+                if (integrator.Url == url)
                     return true;
             }
             return false;
         }
 
         public void Add(string url) {
-            if(ContainsName(url))
+            if (ContainsName(url))
                 return;
             list.Add(new DXCCTrayIntegrator(url));
         }
@@ -392,7 +395,8 @@ namespace DevExpress.DXCCTray {
             get {
                 try {
                     return list[counter];
-                } catch(Exception) {
+                }
+                catch (Exception) {
                     throw new InvalidOperationException();
                 }
             }
@@ -404,7 +408,8 @@ namespace DevExpress.DXCCTray {
             get {
                 try {
                     return (Object)list[counter];
-                } catch(Exception) {
+                }
+                catch (Exception) {
                     throw new InvalidOperationException();
                 }
             }
@@ -435,7 +440,7 @@ namespace DevExpress.DXCCTray {
             get { return internalIsAlive; }
             set {
                 internalIsAlive = value;
-                if(!internalIsAlive)
+                if (!internalIsAlive)
                     prevDiffRequest = DateTime.MinValue;
             }
         }
@@ -497,7 +502,7 @@ namespace DevExpress.DXCCTray {
             waitTimes = new int[] { waitTime, waitTime, waitTime, waitTime * 6, waitTime * 6, waitTime * 12, waitTime * 12, waitTime * 48 };
             watchDogTimer.Interval = waitTime * 3;
             waitTimeIndex = 0;
-            wcfConnectionTimer.Elapsed += WcfConnectionTimer_Elapsed;            
+            wcfConnectionTimer.Elapsed += WcfConnectionTimer_Elapsed;
             watchDogTimer.Elapsed += new System.Timers.ElapsedEventHandler(watchDogTimer_Elapsed);
             checkMulticastTimer.Elapsed += new System.Timers.ElapsedEventHandler(checkMulticastTimer_Elapsed);
             InitUserNames();
@@ -508,18 +513,18 @@ namespace DevExpress.DXCCTray {
         }
         private void InitUserNames() {
             allUserNames.Add(Environment.UserName);
-            if(!allUserNames.Contains(DXCCTrayConfiguration.WorkUserName)) {
+            if (!allUserNames.Contains(DXCCTrayConfiguration.WorkUserName)) {
                 allUserNames.Add(DXCCTrayConfiguration.WorkUserName);
             }
             string[] hgUserNames = FindMercurialLogins();
-            foreach(string hgUserName in hgUserNames) {
-                if(!string.IsNullOrEmpty(hgUserName)) {
-                    if(!allUserNames.Contains(hgUserName)) {
+            foreach (string hgUserName in hgUserNames) {
+                if (!string.IsNullOrEmpty(hgUserName)) {
+                    if (!allUserNames.Contains(hgUserName)) {
                         allUserNames.Add(hgUserName);
                     }
-                    if(hgUserName.Contains(".")) {
+                    if (hgUserName.Contains(".")) {
                         string userNameWithoutDots = hgUserName.Replace(".", " ");
-                        if(!allUserNames.Contains(userNameWithoutDots)) {
+                        if (!allUserNames.Contains(userNameWithoutDots)) {
                             allUserNames.Add(userNameWithoutDots);
                         }
                     }
@@ -528,8 +533,8 @@ namespace DevExpress.DXCCTray {
             Log.Message("Found names: " + string.Join(";", allUserNames));
         }
         bool CheckUserName(string userName) {
-            foreach(string user in allUserNames) {
-                if(user.Equals(userName, StringComparison.InvariantCultureIgnoreCase)) {
+            foreach (string user in allUserNames) {
+                if (user.Equals(userName, StringComparison.InvariantCultureIgnoreCase)) {
                     return true;
                 }
             }
@@ -537,39 +542,42 @@ namespace DevExpress.DXCCTray {
         }
         void sendServerIAmHereTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e) {
             try {
-                foreach(string user in allUserNames) {
+                foreach (string user in allUserNames) {
                     SmartCruiseManager.IAMHere(user);
                 }
-            } catch(Exception exc) {
+            }
+            catch (Exception exc) {
                 Log.Message(exc.ToString());
             }
         }
         string[] FindMercurialLogins() {
             string mercurialConfigFile = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "mercurial.ini");
             List<string> names = new List<string>();
-            if(File.Exists(mercurialConfigFile)) {
+            if (File.Exists(mercurialConfigFile)) {
                 try {
-                    foreach(string line in File.ReadAllLines(mercurialConfigFile)) {
+                    foreach (string line in File.ReadAllLines(mercurialConfigFile)) {
                         int startIndex = line.IndexOf("username", StringComparison.InvariantCultureIgnoreCase);
-                        if(startIndex < 0) {
+                        if (startIndex < 0) {
                             continue;
                         }
                         startIndex = line.IndexOf("=", startIndex + "username".Length);
-                        if(startIndex < 0) {
+                        if (startIndex < 0) {
                             break;
                         }
                         startIndex++;
                         int endIndex = line.IndexOf("<", startIndex);
-                        if(endIndex < 0) {
+                        if (endIndex < 0) {
                             endIndex = line.Length - 1;
-                        } else {
+                        }
+                        else {
                             endIndex--;
                         }
                         string newName = line.Substring(startIndex, endIndex - startIndex + 1).TrimEnd().TrimStart();
-                        if(!names.Contains(newName))
+                        if (!names.Contains(newName))
                             names.Add(newName);
                     }
-                } catch(Exception exc) {
+                }
+                catch (Exception exc) {
                     Log.Message(exc.ToString());
                 }
             }
@@ -578,12 +586,12 @@ namespace DevExpress.DXCCTray {
         public void SaveProjectMessages() {
             CruiseServerSnapshot snapshot = SmartCruiseManager.GetCruiseServerSnapshot();
             List<string> projectMessages = new List<string>();
-            foreach(ProjectStatus status in snapshot.ProjectStatuses) {
-                if(status.BuildStatus != IntegrationStatus.Success && !string.IsNullOrEmpty(status.CurrentMessage)) {
+            foreach (ProjectStatus status in snapshot.ProjectStatuses) {
+                if (status.BuildStatus != IntegrationStatus.Success && !string.IsNullOrEmpty(status.CurrentMessage)) {
                     projectMessages.Add(string.Format("{0}{1}{2}", status.Name, SmartConstants.Delimiter, status.CurrentMessage));
                 }
             }
-            if(projectMessages.Count > 0) {
+            if (projectMessages.Count > 0) {
                 File.WriteAllLines("ProjectMessages.txt", projectMessages);
             }
         }
@@ -592,34 +600,36 @@ namespace DevExpress.DXCCTray {
                 Log.Message("Watch dog has rose.");
                 watchDogTimer.Stop();
 
-                if(isRunning) {
+                if (isRunning) {
                     StopAbort();
                     thread.Join(3000);
                     Start();
                 }
-            } catch(Exception ex) {
+            }
+            catch (Exception ex) {
                 Log.Message(ex.ToString());
             }
         }
 
         public void Start() {
-            if(!isRunning) {
+            if (!isRunning) {
                 isRunning = true;
                 thread = new Thread(new ThreadStart(Run));
                 thread.IsBackground = true;
                 thread.Start();
-            } else
+            }
+            else
                 throw new InvalidOperationException("Integrator already started");
         }
 
         public void Stop() {
-            if(udpProcessor != null) {
+            if (udpProcessor != null) {
                 StopMulticastMode();
             }
             isRunning = false;
         }
         public void StopMulticastMode() {
-            if(udpProcessor.IsReceiving) {
+            if (udpProcessor.IsReceiving) {
                 udpProcessor.StopReceiveMessages();
             }
             udpProcessor.reseiveMessageCompleted -= new UDPMulticastingPacketProcessor.ReseiveMessageEventHandler(udpProcessor_reseiveMessageCompleted);
@@ -641,31 +651,33 @@ namespace DevExpress.DXCCTray {
         bool requestMode = false;
         public bool MulticastMode { get { return !requestMode; } }
         void Run() {
-            while(SmartCruiseManager == null) {
+            while (SmartCruiseManager == null) {
                 ClearLists();
                 IsAlive = false;
                 Thread.Sleep(waitTime);
             }
-            while(true) {
+            while (true) {
                 try {
-                    if(string.IsNullOrEmpty(this.name))
+                    if (string.IsNullOrEmpty(this.name))
                         this.name = SmartCruiseManager.GetFarmName();
                     break;
-                } catch(Exception exc) {
+                }
+                catch (Exception exc) {
                     Log.Error("exception", exc);
                     Thread.Sleep(waitTime);
                 }
             }
             IsAlive = true;
-            if(!requestMode) {
+            if (!requestMode) {
                 try {
                     RestartMulticastTimer();
                     string multicastAddress = SmartCruiseManager.GetMulticastAddress();
                     RunMulticastMode(multicastAddress);
                     return;
-                } catch(Exception exc) {
+                }
+                catch (Exception exc) {
                     Log.Error("exception", exc);
-                    if(udpProcessor != null) {
+                    if (udpProcessor != null) {
                         StopMulticastMode();
                     }
                 }
@@ -677,13 +689,15 @@ namespace DevExpress.DXCCTray {
         ISmartCruiseManager smartCruiseManager = null;
         System.Timers.Timer wcfConnectionTimer = new System.Timers.Timer(20000);
         bool CheckCruiseManagerWorking(ISmartCruiseManager cruiseManager) {
-            if(cruiseManager == null || !WCFHelper.IsClientAvailable<ISmartCruiseManager>(cruiseManager)) {
+            if (cruiseManager == null || !WCFHelper.IsClientAvailable<ISmartCruiseManager>(cruiseManager)) {
                 return false;
             }
             try {
                 cruiseManager.IAMHere(DXCCTrayConfiguration.WorkUserName);
                 return true;
-            } catch {
+            }
+            catch(Exception ex) {
+                Log.Error("CheckCruiseManagerWorking throws exception", ex);
                 return false;
             }
         }
@@ -698,45 +712,47 @@ namespace DevExpress.DXCCTray {
             get {
                 wcfConnectionTimer.Stop();
                 try {
-                    if((!needProxy || connectedToProxy) && CheckCruiseManagerWorking(smartCruiseManager))
+                    if ((!needProxy || connectedToProxy) && CheckCruiseManagerWorking(smartCruiseManager))
                         return smartCruiseManager;
                     connectedToProxy = false;
                     this.nearestUrlWCF = string.Empty;
-                    if(string.IsNullOrEmpty(urlWCF)) {
+                    if (string.IsNullOrEmpty(urlWCF)) {
                         urlWCF = GetSmartCruiseManagerWCFUrl();
                     }
-                    if(string.IsNullOrEmpty(urlWCF)) {
+                    if (string.IsNullOrEmpty(urlWCF)) {
                         return null;
                     }
                     WCFHelper.PrepareWCFClient<ISmartCruiseManager>(ref smartCruiseManager, urlWCF, waitTimeForWCFCallSeconds, true);
-                    if(!CheckCruiseManagerWorking(smartCruiseManager)) {
+                    if (!CheckCruiseManagerWorking(smartCruiseManager)) {
                         Log.Message("Smart Cruise Manager not working: " + urlWCF);
-                        if(smartCruiseNotWorkingTimer.Elapsed.TotalSeconds == 1) 
+                        if (smartCruiseNotWorkingTimer.Elapsed.TotalSeconds == 1)
                             Log.Message(Environment.StackTrace);
                         smartCruiseNotWorkingTimer.Restart();
                         lastConnectedCCPath = string.Empty;
                         return null;
-                    } else if(lastConnectedCCPath != urlWCF) {
+                    }
+                    else if (lastConnectedCCPath != urlWCF) {
                         Log.Message("Connected to Cruise Control: " + urlWCF);
                         lastConnectedCCPath = urlWCF;
                     }
                     needProxy = !IsTCPAddressInLAN(urlWCF);
-                    if(needProxy && (DateTime.Now - lastAccessToSmartCruiseManager).TotalMinutes > reconnectProxyIntervalMinutes) {
+                    if (needProxy && (DateTime.Now - lastAccessToSmartCruiseManager).TotalMinutes > reconnectProxyIntervalMinutes) {
                         lastAccessToSmartCruiseManager = DateTime.Now;
-                    } else {
+                    }
+                    else {
                         this.nearestUrlWCF = urlWCF;
                         return smartCruiseManager;
                     }
                     string proxy = smartCruiseManager.GetProxy();
 
-                    if(string.IsNullOrEmpty(proxy)) {
+                    if (string.IsNullOrEmpty(proxy)) {
                         Log.Message("Proxy not found");
                         lastConnectedCCProxyPath = string.Empty;
                         return smartCruiseManager;
                     }
                     ISmartCruiseManager smartCruiseManagerProxy = null;
                     WCFHelper.PrepareWCFClient<ISmartCruiseManager>(ref smartCruiseManagerProxy, proxy, waitTimeForWCFCallSeconds, true);
-                    if(lastConnectedCCProxyPath != proxy) {
+                    if (lastConnectedCCProxyPath != proxy) {
                         Log.Message("Connected to proxy: " + proxy);
                         lastConnectedCCProxyPath = proxy;
                     }
@@ -744,21 +760,24 @@ namespace DevExpress.DXCCTray {
                     this.nearestUrlWCF = proxy;
                     connectedToProxy = true;
                     return smartCruiseManager;
-                } catch(Exception exc) {
+                }
+                catch (Exception exc) {
                     Log.Error("exception", exc);
                     return null;
-                } finally {
+                }
+                finally {
                     wcfConnectionTimer.Start();
                 }
             }
         }
         void CloseWCFConnection() {
             wcfConnectionTimer.Stop();
-            if(smartCruiseManager == null)
+            if (smartCruiseManager == null)
                 return;
             try {
                 WCFHelper.Close<ISmartCruiseManager>(smartCruiseManager);
-            } catch(Exception exc) {
+            }
+            catch (Exception exc) {
                 Log.Error("exception", exc);
             }
         }
@@ -769,12 +788,14 @@ namespace DevExpress.DXCCTray {
             try {
                 ICruiseManager cruiseManager = new RemoteCruiseManagerFactory().GetCruiseManager(Url);
                 urlWCF = cruiseManager.GetStatisticsDocument(SmartConstants.GetWCFManagerUrl);
-                if(string.IsNullOrEmpty(urlWCF))
+                if (string.IsNullOrEmpty(urlWCF))
                     Log.Message("Created WCF url is empty: " + Url);
                 return urlWCF;
-            } catch(SocketException) {
+            }
+            catch (SocketException) {
                 Log.Message("Error: Can't connect to " + Url);
-            } catch(Exception exc) {
+            }
+            catch (Exception exc) {
                 Log.Error("exception", exc);
             }
             return string.Empty;
@@ -782,7 +803,7 @@ namespace DevExpress.DXCCTray {
 
         bool IsTCPAddressInLAN(string address) {
             string proxyHost = NetworkHelper.GetHostFromTcpSource(address);
-            if(proxyHost == null) {
+            if (proxyHost == null) {
                 Log.Message("Incorrect tcp address: " + address);
                 return false;
             }
@@ -794,8 +815,8 @@ namespace DevExpress.DXCCTray {
             string source = new Uri(string.IsNullOrEmpty(nearestUrlWCF) ? Url : nearestUrlWCF).Host;
             udpProcessor = new UDPMulticastingPacketProcessor(parts[0], int.Parse(parts[1]), source);
             udpProcessor.reseiveMessageCompleted += new UDPMulticastingPacketProcessor.ReseiveMessageEventHandler(udpProcessor_reseiveMessageCompleted);
-            
-            if(!udpProcessor.IsReceiving) {
+
+            if (!udpProcessor.IsReceiving) {
                 udpProcessor.StartReceiveMessagesAsync();
             }
             Log.Message(string.Format("Activated Multicast Mode for: {0} ({1}) source: {2}", Name, multicastAddress, source));
@@ -803,14 +824,15 @@ namespace DevExpress.DXCCTray {
         }
         void RunRequestMode() {
             Log.Message("Activated Request Mode for: " + Name);
-            while(isRunning) {
+            while (isRunning) {
                 try {
 #if !DEBUG
                     watchDogTimer.Start();
 #endif
                     try {
                         IsAlive = SmartCruiseManager != null;
-                    } catch(Exception exc) {
+                    }
+                    catch (Exception exc) {
                         Log.Error("exception", exc);
                         IsAlive = false;
                     }
@@ -820,39 +842,43 @@ namespace DevExpress.DXCCTray {
                     bool hasQueuesChanges = false;
                     bool notificationsChanged = false;
 
-                    if(isRunning && IsAlive) {
+                    if (isRunning && IsAlive) {
                         FillListsSmart(out hasProjectsChanges, out hasQueuesChanges, out notificationsChanged, out hasServersChanges);
                     }
 
                     watchDogTimer.Stop();
 
-                    if(IsAlive) {
+                    if (IsAlive) {
                         waitTimeIndex = 0;
-                        if(!checkMulticastTimer.Enabled) {
+                        if (!checkMulticastTimer.Enabled) {
                             Log.Message(string.Format("RunRequestMode - RestartMulticastTimer.  multicastTryCounter:{0}", multicastTryCounter));
                             RestartMulticastTimer();
                         }
-                        if(OnChanged != null) {
+                        if (OnChanged != null) {
                             OnChanged(this, hasServersChanges, hasProjectsChanges, hasQueuesChanges, notificationsChanged);
                         }
-                    } else {
+                    }
+                    else {
                         checkMulticastTimer.Stop();
                         multicastTryCounter = 0;
                         ClearLists();
-                        if(waitTimeIndex != waitTimes.Length - 1) {
+                        if (waitTimeIndex != waitTimes.Length - 1) {
                             waitTimeIndex++;
                             Log.Message(string.Format("Server \"{0}\" error. Set wait time to {1} s", Name, (waitTimes[waitTimeIndex] / 1000)));
-                        } else {
+                        }
+                        else {
                             Log.Message(string.Format("Server \"{0}\" error. Wait time is max ({1} s)", Name, (waitTimes[waitTimeIndex] / 1000)));
                         }
                     }
                     Thread.Sleep(waitTimes[waitTimeIndex]);
-                } catch(ThreadAbortException) {
+                }
+                catch (ThreadAbortException) {
 #if !DEBUG
                     watchDogTimer.Stop();
 #endif
                     return;
-                } catch {
+                }
+                catch {
 #if !DEBUG
                     watchDogTimer.Stop();
 #endif
@@ -869,14 +895,16 @@ namespace DevExpress.DXCCTray {
         }
         private void RestartAnotherMode() {
             StopAbort();
-            if(!requestMode) {
+            if (!requestMode) {
                 Log.Message("Multicast deactivated for: " + Name);
-            } else {
+            }
+            else {
                 Log.Message(string.Format("{0} try multicast: {1}", multicastTryCounter, Name));
             }
-            if(requestMode || (!requestMode && multicastTryCounter > 0)) {
+            if (requestMode || (!requestMode && multicastTryCounter > 0)) {
                 requestMode = !requestMode;
-            } else {
+            }
+            else {
                 multicastTryCounter++;
             }
             thread.Join(3000);
@@ -884,11 +912,12 @@ namespace DevExpress.DXCCTray {
         }
         int multicastTryCounter = 0;
         private void RestartMulticastTimer() {
-            if(!requestMode) {
+            if (!requestMode) {
                 checkMulticastTimer.Interval = checkMulticastPeriod;
-            } else {
+            }
+            else {
                 checkMulticastTimer.Interval = multicastRestartPeriods[multicastTryCounter];
-                if(multicastTryCounter < multicastRestartPeriods.Length - 1) {
+                if (multicastTryCounter < multicastRestartPeriods.Length - 1) {
                     multicastTryCounter++;
                 }
             }
@@ -905,31 +934,35 @@ namespace DevExpress.DXCCTray {
             CCServerAdditionalInfo ccServerAddInfo = null;
 
             try {
-                if(messageName == SmartConstants.SnapshotMessageName) {
+                if (messageName == SmartConstants.SnapshotMessageName) {
                     snapshot = (CruiseServerSnapshot)SmartCCNetHelper.DeserializeObject(reseivedData);
                 }
-            } catch(Exception exc) {
+            }
+            catch (Exception exc) {
                 Log.Error("exception", exc);
             }
             try {
-                if(messageName == SmartConstants.ServersMessageName) {
+                if (messageName == SmartConstants.ServersMessageName) {
                     servers = SmartCCNetHelper.DecompressStringData(reseivedData);
                 }
-            } catch(Exception exc) {
+            }
+            catch (Exception exc) {
                 Log.Error("exception", exc);
             }
             try {
-                if(messageName == SmartConstants.AdditionalInformationMessageName) {
+                if (messageName == SmartConstants.AdditionalInformationMessageName) {
                     ccServerAddInfo = (CCServerAdditionalInfo)SmartCCNetHelper.DeserializeObject(reseivedData);
                 }
-            } catch(Exception exc) {
+            }
+            catch (Exception exc) {
                 Log.Error("exception", exc);
             }
             try {
-                if(messageName == SmartConstants.BuildNotificationsformationMessageName) {
+                if (messageName == SmartConstants.BuildNotificationsformationMessageName) {
                     notifications = (BuildNotification[])SmartCCNetHelper.DeserializeObject(reseivedData);
                 }
-            } catch(Exception exc) {
+            }
+            catch (Exception exc) {
                 Log.Error("exception", exc);
             }
             bool hasServersChanges = false;
@@ -937,28 +970,30 @@ namespace DevExpress.DXCCTray {
             bool hasQueuesChanges = false;
             bool notificationsChanged = false;
 
-            if(servers != null) {
+            if (servers != null) {
                 hasServersChanges = FillServerList(servers);
-            } else {
+            }
+            else {
                 hasServersChanges = false;
             }
-            if(snapshot != null) {
+            if (snapshot != null) {
                 hasProjectsChanges = UpdateProjectList(snapshot.ProjectStatuses);
-                if(IsAlive) {
+                if (IsAlive) {
                     hasQueuesChanges = FillQueueList(snapshot.QueueSetSnapshot.Queues);
                 }
             }
-            if(ccServerAddInfo != null) {
+            if (ccServerAddInfo != null) {
                 FillAdditionalInfo(ccServerAddInfo);
             }
-            if(notifications != null) {
+            if (notifications != null) {
                 notificationsChanged = FillNotifications(notifications);
             }
-            if(IsAlive) {
-                if(OnChanged != null) {
+            if (IsAlive) {
+                if (OnChanged != null) {
                     OnChanged(this, hasServersChanges, hasProjectsChanges, hasQueuesChanges, notificationsChanged);
                 }
-            } else {
+            }
+            else {
                 ClearLists();
             }
         }
@@ -974,12 +1009,13 @@ namespace DevExpress.DXCCTray {
         public List<BuildNotification> Notifications = new List<BuildNotification>();
         bool FillNotifications(BuildNotification[] notifications) {
             bool result = false;
-            lock(Notifications) {
-                foreach(BuildNotification bn in notifications) {
-                    if(CheckUserName(bn.Recipient)) {
+            lock (Notifications) {
+                foreach (BuildNotification bn in notifications) {
+                    if (CheckUserName(bn.Recipient)) {
                         try {
                             SmartCruiseManager.BuildNotificationRecieved(bn.Guid);
-                        } catch(Exception ex) {
+                        }
+                        catch (Exception ex) {
                             Log.Error("exception", ex);
                             break;
                         }
@@ -1003,7 +1039,7 @@ namespace DevExpress.DXCCTray {
             prevDiffRequest = DateTime.MinValue;
             additionalInformationUpdateDict.Clear();
 
-            if(OnChanged != null) {
+            if (OnChanged != null) {
                 OnChanged(this, true, true, true, false);
             }
         }
@@ -1011,14 +1047,16 @@ namespace DevExpress.DXCCTray {
             string serversInfo = string.Empty;
             try {
                 serversInfo = SmartCruiseManager.GetServerList();
-            } catch(Exception ex) {
+            }
+            catch (Exception ex) {
                 Log.Error("exception", ex);
                 IsAlive = false;
                 return true;
             }
             try {
                 return FillServerList(SmartCCNetHelper.FromBase64FlateAndToStream(serversInfo));
-            } catch(Exception ex) {
+            }
+            catch (Exception ex) {
                 IsAlive = true;
                 Log.Error("exception", ex);
                 return true;
@@ -1029,7 +1067,7 @@ namespace DevExpress.DXCCTray {
             //    isAlive = true;
             //    return false;
             //}
-            if(serversInfoXml == null) {
+            if (serversInfoXml == null) {
                 throw new ArgumentNullException();
             }
             IsAlive = true;
@@ -1040,69 +1078,69 @@ namespace DevExpress.DXCCTray {
                 Dictionary<string, ServerInfo> newServerDict = new Dictionary<string, ServerInfo>();
 
                 doc.MoveToContent();
-                while(doc.Read()) {
-                    if(doc.NodeType == XmlNodeType.Element && doc.Name == "server") {
+                while (doc.Read()) {
+                    if (doc.NodeType == XmlNodeType.Element && doc.Name == "server") {
                         ServerInfo info = new ServerInfo();
-                        while(doc.Read()) {
-                            if(doc.Name == "server")
+                        while (doc.Read()) {
+                            if (doc.Name == "server")
                                 break;
-                            if(doc.NodeType != XmlNodeType.Element || doc.IsEmptyElement)
+                            if (doc.NodeType != XmlNodeType.Element || doc.IsEmptyElement)
                                 continue;
                             string name = doc.Name;
-                            switch(name) {
+                            switch (name) {
                                 case "name":
                                     doc.Read();
-                                    if(doc.NodeType == XmlNodeType.Text)
+                                    if (doc.NodeType == XmlNodeType.Text)
                                         info.Name = doc.Value;
                                     break;
                                 case "host":
                                     doc.Read();
-                                    if(doc.NodeType == XmlNodeType.Text)
+                                    if (doc.NodeType == XmlNodeType.Text)
                                         info.Host = doc.Value;
                                     break;
                                 case "vmid":
                                     doc.Read();
-                                    if(doc.NodeType == XmlNodeType.Text)
+                                    if (doc.NodeType == XmlNodeType.Text)
                                         info.VMID = doc.Value;
                                     break;
                                 case "status":
                                     doc.Read();
-                                    if(doc.NodeType == XmlNodeType.Text)
+                                    if (doc.NodeType == XmlNodeType.Text)
                                         info.Status = doc.Value;
                                     break;
                                 case "projectName":
                                     doc.Read();
-                                    if(doc.NodeType == XmlNodeType.Text)
+                                    if (doc.NodeType == XmlNodeType.Text)
                                         info.ProjectName = doc.Value;
                                     break;
                                 case "isRunning":
                                     doc.Read();
-                                    if(doc.NodeType == XmlNodeType.Text)
+                                    if (doc.NodeType == XmlNodeType.Text)
                                         info.IsRunning = doc.Value.Equals("true", StringComparison.InvariantCultureIgnoreCase) ? true : false;
                                     break;
                                 case "guid":
                                     doc.Read();
-                                    if(doc.NodeType == XmlNodeType.Text)
+                                    if (doc.NodeType == XmlNodeType.Text)
                                         info.Guid = doc.Value;
                                     break;
                                 case "creator":
                                     doc.Read();
-                                    if(doc.NodeType == XmlNodeType.Text)
+                                    if (doc.NodeType == XmlNodeType.Text)
                                         info.Creator = doc.Value;
                                     break;
                                 case "remainedTime":
                                     doc.Read();
-                                    if(doc.NodeType == XmlNodeType.Text)
+                                    if (doc.NodeType == XmlNodeType.Text)
                                         info.RemainedTime = int.Parse(doc.Value);
                                     break;
 
                                 case "types":
-                                    while(doc.Read()) {
-                                        if(doc.Name == "types")
+                                    while (doc.Read()) {
+                                        if (doc.Name == "types")
                                             break;
-                                        if(doc.NodeType != XmlNodeType.Element)
+                                        if (doc.NodeType != XmlNodeType.Element)
                                             continue;
-                                        if(doc.Name == "type") {
+                                        if (doc.Name == "type") {
                                             doc.Read();
                                             info.Types.Add(doc.Value);
                                         }
@@ -1117,25 +1155,27 @@ namespace DevExpress.DXCCTray {
                 }
 
                 bool hasChanges = false;
-                if(newServerList.Count == serverList.Count) {
-                    foreach(ServerInfo info in serverList) {
+                if (newServerList.Count == serverList.Count) {
+                    foreach (ServerInfo info in serverList) {
                         ServerInfo newInfo;
-                        if(!newServerDict.TryGetValue(info.Name, out newInfo) || !info.Equals(newInfo)) {
+                        if (!newServerDict.TryGetValue(info.Name, out newInfo) || !info.Equals(newInfo)) {
                             hasChanges = true;
                             break;
                         }
                     }
-                } else
+                }
+                else
                     hasChanges = true;
 
-                if(hasChanges) {
-                    lock(ServerList) {
+                if (hasChanges) {
+                    lock (ServerList) {
                         serverList = newServerList;
                     }
                 }
 
                 return hasChanges;
-            } catch(Exception) {
+            }
+            catch (Exception) {
                 return true;//throw;                
             }
         }
@@ -1152,47 +1192,52 @@ namespace DevExpress.DXCCTray {
             SmartJournalItem[] diffList;
             serversChanged = FillServerList();
             try {
-                lock(this) {
+                lock (this) {
                     try {
                         notifications = (BuildNotification[])SmartCCNetHelper.GetSerializedObject(SmartCruiseManager.GetBuildNotifications(DXCCTrayConfiguration.WorkUserName));
-                        if(notifications != null && notifications.Length > 0) {
+                        if (notifications != null && notifications.Length > 0) {
                             FillNotifications(notifications);
                             notificationsChanged = true;
                         }
-                    } catch(Exception ex) {
+                    }
+                    catch (Exception ex) {
                         Log.Error("exception", ex);
                     }
                     try {
                         CCServerAdditionalInfo additionalInformation = (CCServerAdditionalInfo)SmartCCNetHelper.GetSerializedObject(SmartCruiseManager.GetAdditionalInformation());
-                        if(additionalInformation != null) {
+                        if (additionalInformation != null) {
                             FillAdditionalInfo(additionalInformation);
                         }
-                    } catch(Exception ex) {
+                    }
+                    catch (Exception ex) {
                         Log.Error("exception", ex);
                     }
                     try {
                         diffs = SmartCruiseManager.GetDiffsRequest(SmartJournal.CreateRequest(prevDiffRequest));
-                    } catch(Exception ex) {
+                    }
+                    catch (Exception ex) {
                         Log.Error("exception", ex);
                         IsAlive = false;
                         return;
                     }
                     IsAlive = true;
                     diffList = (SmartJournalItem[])SmartCCNetHelper.GetSerializedObject(diffs);
-                    if(diffList.Length == 0)
+                    if (diffList.Length == 0)
                         return;
-                    if(diffList[0].Action == SmartJournalAction.Sync) {
+                    if (diffList[0].Action == SmartJournalAction.Sync) {
                         resultDiffRequest = (DateTime)diffList[0].Info;
                     }
                 }
-                if(diffList.Length > 1) {
+                if (diffList.Length > 1) {
                     FillListsSmartProjectsAndQueues(out projectsHasChanges, out queueHasChanges, diffList);
                 }
                 resultSuccess = true;
-            } finally {
-                if(resultSuccess) {
+            }
+            finally {
+                if (resultSuccess) {
                     prevDiffRequest = resultDiffRequest;
-                } else {
+                }
+                else {
                     prevDiffRequest = DateTime.MinValue;
                 }
             }
@@ -1200,33 +1245,36 @@ namespace DevExpress.DXCCTray {
         void FillListsSmartProjectsAndQueues(out bool projectsHasChanges, out bool queueHasChanges, SmartJournalItem[] diffList) {
             projectsHasChanges = false;
             queueHasChanges = false;
-            if(diffList[1].Action == SmartJournalAction.Reset) {
+            if (diffList[1].Action == SmartJournalAction.Reset) {
                 List<ProjectStatus> pList = new List<ProjectStatus>();
                 List<QueueSnapshot> qList = new List<QueueSnapshot>();
-                for(int i = 2; i < diffList.Length; i++) {
-                    if(diffList[i].Type == SmartJournalItemType.Project) {
+                for (int i = 2; i < diffList.Length; i++) {
+                    if (diffList[i].Type == SmartJournalItemType.Project) {
                         pList.Add((ProjectStatus)diffList[i].Info);
-                    } else {
+                    }
+                    else {
                         qList.Add((QueueSnapshot)diffList[i].Info);
                     }
                 }
                 projectsHasChanges = UpdateProjectList(pList.ToArray());
                 queueHasChanges = FillQueueList(qList);
-            } else {
-                foreach(SmartJournalItem item in diffList) {
-                    if(item.Type == SmartJournalItemType.Project) {
-                        if(item.Action == SmartJournalAction.Add || item.Action == SmartJournalAction.Update) {
+            }
+            else {
+                foreach (SmartJournalItem item in diffList) {
+                    if (item.Type == SmartJournalItemType.Project) {
+                        if (item.Action == SmartJournalAction.Add || item.Action == SmartJournalAction.Update) {
                             AddOrUpdateProject((ProjectStatus)item.Info);
                         }
-                        if(item.Action == SmartJournalAction.Delete) {
+                        if (item.Action == SmartJournalAction.Delete) {
                             DeleteProject((string)item.Info);
                         }
                         projectsHasChanges = true;
-                    } else if(item.Type == SmartJournalItemType.Queue) {
-                        if(item.Action == SmartJournalAction.Add || item.Action == SmartJournalAction.Update) {
+                    }
+                    else if (item.Type == SmartJournalItemType.Queue) {
+                        if (item.Action == SmartJournalAction.Add || item.Action == SmartJournalAction.Update) {
                             AddOrUpdateQueue((QueueSnapshot)item.Info);
                         }
-                        if(item.Action == SmartJournalAction.Delete) {
+                        if (item.Action == SmartJournalAction.Delete) {
                             DeleteQueue((string)item.Info);
                         }
                         queueHasChanges = true;
@@ -1235,7 +1283,7 @@ namespace DevExpress.DXCCTray {
             }
         }
         void AddOrUpdateQueue(QueueSnapshot qSnapshot) {
-            lock(queueList) {
+            lock (queueList) {
                 string queueName = qSnapshot.QueueName;
                 QueueInfo[] newQueues = QueueSnapShotToArray(qSnapshot);
                 UpdateQueueList(newQueues, queueName);
@@ -1243,15 +1291,16 @@ namespace DevExpress.DXCCTray {
         }
 
         void DeleteQueue(string name) {
-            lock(queueList) {
-                for(int i = 0; i < queueList.Count; i++) {
-                    if(queueList[i].Type == QueueInfoType.Queue) {
-                        if(queueList[i].Name == name) {
+            lock (queueList) {
+                for (int i = 0; i < queueList.Count; i++) {
+                    if (queueList[i].Type == QueueInfoType.Queue) {
+                        if (queueList[i].Name == name) {
                             queueList.RemoveAt(i);
                             i--;
                         }
-                    } else if(queueList[i].Type == QueueInfoType.Project) {
-                        if(queueList[i].Queue == name) {
+                    }
+                    else if (queueList[i].Type == QueueInfoType.Project) {
+                        if (queueList[i].Queue == name) {
                             queueList.RemoveAt(i);
                             i--;
                         }
@@ -1261,21 +1310,22 @@ namespace DevExpress.DXCCTray {
         }
 
         ProjectInfo AddOrUpdateProject(ProjectStatus ps) {
-            lock(projectList) {
+            lock (projectList) {
                 ProjectInfo foundProjectInfo;
-                if(projectDict.TryGetValue(ps.Name, out foundProjectInfo)) {
+                if (projectDict.TryGetValue(ps.Name, out foundProjectInfo)) {
                     UpdateProjectInfo(foundProjectInfo, ps);
-                    if(foundProjectInfo.Server != "Empty") {
-                        for(int i = 0; i < projectList.Count; i++) {
+                    if (foundProjectInfo.Server != "Empty") {
+                        for (int i = 0; i < projectList.Count; i++) {
                             ProjectInfo info = projectList[i];
-                            if(info == foundProjectInfo)
+                            if (info == foundProjectInfo)
                                 continue;
-                            if(info.Server == foundProjectInfo.Server) {
+                            if (info.Server == foundProjectInfo.Server) {
                                 info.Server = "Empty";
                             }
                         }
                     }
-                } else {
+                }
+                else {
                     ProjectInfo nI = new ProjectInfo();
                     nI.Name = ps.Name;
                     foundProjectInfo = nI;
@@ -1288,9 +1338,9 @@ namespace DevExpress.DXCCTray {
         }
 
         void DeleteProject(string name) {
-            lock(projectList) {
-                for(int i = 0; i < projectList.Count; i++) {
-                    if(projectList[i].Name == name) {
+            lock (projectList) {
+                for (int i = 0; i < projectList.Count; i++) {
+                    if (projectList[i].Name == name) {
                         projectDict.Remove(name);
                         additionalInformationUpdateDict.Remove(name);
                         projectList.RemoveAt(i);
@@ -1300,7 +1350,7 @@ namespace DevExpress.DXCCTray {
             }
         }
         public void UpdateProjectInfo(string projectName) {
-            if(additionalInformationUpdateDict.ContainsKey(projectName)) {
+            if (additionalInformationUpdateDict.ContainsKey(projectName)) {
                 additionalInformationUpdateDict.Remove(projectName);
             }
         }
@@ -1309,7 +1359,7 @@ namespace DevExpress.DXCCTray {
         Random additionalInformationUpdateRandomizer = new Random(DateTime.Now.GetHashCode());
         void CheckAndUpdateAdditionalInfo(ProjectInfo info) {
             DateTime lastAdditionalInformationUpdate;
-            if(!additionalInformationUpdateDict.TryGetValue(info.Name, out lastAdditionalInformationUpdate)
+            if (!additionalInformationUpdateDict.TryGetValue(info.Name, out lastAdditionalInformationUpdate)
                 || DateTime.Now.Subtract(lastAdditionalInformationUpdate).TotalMinutes > (240.0 + additionalInformationUpdateRandomizer.NextDouble() * 3.0)) {
                 UpdateProjectAdditionalInfo(info);
             }
@@ -1328,22 +1378,22 @@ namespace DevExpress.DXCCTray {
         }
         bool UpdateProjectList(ProjectStatus[] psList) {
             bool hasChanges = false;
-            lock(projectList) {
-                if(projectList.Count == 0) {
+            lock (projectList) {
+                if (projectList.Count == 0) {
                     BeginUpdateProjectList();
-                    if(!LoadProjectString()) {
+                    if (!LoadProjectString()) {
                         EndUpdateProjectList();
                     }
                 }
                 Dictionary<string, bool> toRemove = new Dictionary<string, bool>();
-                foreach(ProjectStatus newInfo in psList) {
+                foreach (ProjectStatus newInfo in psList) {
                     hasChanges = true;
                     ProjectInfo info = AddOrUpdateProject(newInfo);
                     toRemove.Add(info.Name, false);
                 }
-                for(int i = 0; i < projectList.Count; i++) {
+                for (int i = 0; i < projectList.Count; i++) {
                     ProjectInfo info = projectList[i];
-                    if(!toRemove.ContainsKey(info.Name)) {
+                    if (!toRemove.ContainsKey(info.Name)) {
                         hasChanges = true;
                         projectDict.Remove(info.Name);
                         additionalInformationUpdateDict.Remove(info.Name);
@@ -1369,9 +1419,9 @@ namespace DevExpress.DXCCTray {
             info.SetBuildStatus(status.Activity, status.BuildStatus);
             info.TryLoadLastBuildDurationFromDict();
 
-            lock(ServerList) {
-                foreach(ServerInfo serverInfo in serverList) {
-                    if(serverInfo.ProjectName == info.Name) {
+            lock (ServerList) {
+                foreach (ServerInfo serverInfo in serverList) {
+                    if (serverInfo.ProjectName == info.Name) {
                         newServer = serverInfo.Name;
                         break;
                     }
@@ -1381,18 +1431,19 @@ namespace DevExpress.DXCCTray {
             CheckAndUpdateAdditionalInfo(info);
         }
         void UpdateString(ref string oldValue, string value) {
-            if(oldValue != value)
+            if (oldValue != value)
                 oldValue = value;
         }
         Dictionary<string, string> projectStringCached = new Dictionary<string, string>();
         bool LoadProjectString() {
-            if(!InUpdateProjectList()) {
+            if (!InUpdateProjectList()) {
                 throw new InvalidOperationException("For update project list only!");
             }
             string projectsStringCompressed = string.Empty;
             try {
                 projectsStringCompressed = SmartCruiseManager.GetProjectsConfigurations();
-            } catch(Exception exc) {
+            }
+            catch (Exception exc) {
                 Log.Error("exception", exc);
                 return false;
             }
@@ -1400,10 +1451,10 @@ namespace DevExpress.DXCCTray {
             XmlDocument doc = new XmlDocument();
             doc.LoadXml(projectsString);
             XmlNodeList projectsNodes = doc.GetElementsByTagName("project");
-            foreach(XmlNode projectNode in projectsNodes) {
+            foreach (XmlNode projectNode in projectsNodes) {
                 string projectName = string.Empty;
-                foreach(XmlNode child in projectNode.ChildNodes) {
-                    if(child.Name.Equals("name", StringComparison.InvariantCultureIgnoreCase)) {
+                foreach (XmlNode child in projectNode.ChildNodes) {
+                    if (child.Name.Equals("name", StringComparison.InvariantCultureIgnoreCase)) {
                         projectName = child.InnerText;
                         break;
                     }
@@ -1415,14 +1466,16 @@ namespace DevExpress.DXCCTray {
         void UpdateProjectAdditionalInfo(ProjectInfo info) {
             try {
                 string projectString;
-                if(InUpdateProjectList() && projectStringCached.ContainsKey(info.Name)) {
+                if (InUpdateProjectList() && projectStringCached.ContainsKey(info.Name)) {
                     projectString = projectStringCached[info.Name];
-                } else {
+                }
+                else {
                     projectString = SmartCruiseManager.GetProject(info.Name);
                 }
                 UpdateProjectAdditionalInfo(info, projectString);
                 additionalInformationUpdateDict[info.Name] = DateTime.Now;
-            } catch(Exception exc) {
+            }
+            catch (Exception exc) {
                 Log.Error("exception", exc);
                 info.QueueName = "none";
             }
@@ -1432,11 +1485,11 @@ namespace DevExpress.DXCCTray {
             doc.LoadXml(projectString);
 
             XmlNodeList nodeList = doc.GetElementsByTagName("triggers");
-            if(nodeList.Count == 1) {
-                foreach(XmlNode trigerNode in nodeList[0].ChildNodes) {
-                    if(trigerNode.Name == "intervalTrigger") {
-                        foreach(XmlNode condNode in trigerNode.ChildNodes) {
-                            if(condNode.Name == "buildCondition") {
+            if (nodeList.Count == 1) {
+                foreach (XmlNode trigerNode in nodeList[0].ChildNodes) {
+                    if (trigerNode.Name == "intervalTrigger") {
+                        foreach (XmlNode condNode in trigerNode.ChildNodes) {
+                            if (condNode.Name == "buildCondition") {
                                 info.IsBuildIfModification = condNode.InnerText == "IfModificationExists";
                             }
                         }
@@ -1444,33 +1497,33 @@ namespace DevExpress.DXCCTray {
                 }
             }
 
-            foreach(XmlNode xmlNode in doc.GetElementsByTagName("queue")) {
-                if(xmlNode.ParentNode.Name == "project") {
+            foreach (XmlNode xmlNode in doc.GetElementsByTagName("queue")) {
+                if (xmlNode.ParentNode.Name == "project") {
                     UpdateString(ref info.QueueName, xmlNode.InnerXml);
                 }
             }
             XmlNodeList subProjectsNode = doc.GetElementsByTagName("subProjects");
             info.ProjectsChilds.Clear();
-            if(subProjectsNode.Count > 0) {
-                foreach(XmlNode spNode in subProjectsNode[0].ChildNodes) {
+            if (subProjectsNode.Count > 0) {
+                foreach (XmlNode spNode in subProjectsNode[0].ChildNodes) {
                     info.ProjectsChilds.Add(spNode.InnerText);
                 }
             }
             info.Types.Clear();
             info.Tags.Clear();
             StringBuilder tags = new StringBuilder(), types = new StringBuilder();
-            foreach(XmlNode xmlNode in doc.GetElementsByTagName("string")) {
-                switch(xmlNode.ParentNode.Name) {
+            foreach (XmlNode xmlNode in doc.GetElementsByTagName("string")) {
+                switch (xmlNode.ParentNode.Name) {
                     case "projectTypes":
                         string type = xmlNode.InnerXml;
-                        if(types.Length > 0)
+                        if (types.Length > 0)
                             types.Append(", ");
                         types.Append(type);
                         info.Types.Add(type);
                         break;
                     case "projectTags":
                         string tag = xmlNode.InnerXml;
-                        if(tags.Length > 0)
+                        if (tags.Length > 0)
                             tags.Append(", ");
                         tags.Append(tag);
                         info.Tags.Add(tag);
@@ -1481,11 +1534,11 @@ namespace DevExpress.DXCCTray {
             info.TagsString = tags.ToString();
         }
         bool FillQueueList(IEnumerable queues) {
-            if(queues == null)
+            if (queues == null)
                 throw new NullReferenceException();
             List<QueueInfo> newQueueList = new List<QueueInfo>();
 
-            foreach(QueueSnapshot queue in queues) {
+            foreach (QueueSnapshot queue in queues) {
                 newQueueList.AddRange(QueueSnapShotToArray(queue));
             }
             return UpdateQueueList(newQueueList.ToArray(), null);
@@ -1493,23 +1546,24 @@ namespace DevExpress.DXCCTray {
 
         bool UpdateQueueList(QueueInfo[] newQueueList, string queueName) {
             bool hasChanges = false;
-            for(int i = 0; i < queueList.Count; i++) {
+            for (int i = 0; i < queueList.Count; i++) {
                 QueueInfo info = queueList[i];
                 bool oldExists = false;
-                foreach(QueueInfo newInfo in newQueueList) {
-                    if(info == newInfo) {
+                foreach (QueueInfo newInfo in newQueueList) {
+                    if (info == newInfo) {
                         hasChanges = true;
                         oldExists = true;
                         newInfo.Exists = true;
                     }
                 }
-                if(!oldExists) {
-                    if(queueName != null) {
-                        if(info.Type == QueueInfoType.Queue) {
-                            if(info.Name != queueName)
+                if (!oldExists) {
+                    if (queueName != null) {
+                        if (info.Type == QueueInfoType.Queue) {
+                            if (info.Name != queueName)
                                 continue;
-                        } else if(info.Type == QueueInfoType.Project) {
-                            if(info.Queue != queueName)
+                        }
+                        else if (info.Type == QueueInfoType.Project) {
+                            if (info.Queue != queueName)
                                 continue;
                         }
                     }
@@ -1519,10 +1573,10 @@ namespace DevExpress.DXCCTray {
                 }
             }
 
-            foreach(QueueInfo info in newQueueList) {
-                if(!info.Exists) {
+            foreach (QueueInfo info in newQueueList) {
+                if (!info.Exists) {
                     hasChanges = true;
-                    if(!queueList.Contains(info))
+                    if (!queueList.Contains(info))
                         queueList.Add(info);
                 }
             }
@@ -1536,7 +1590,7 @@ namespace DevExpress.DXCCTray {
             info.Type = QueueInfoType.Queue;
             newQueueList.Add(info);
 
-            foreach(QueuedRequestSnapshot request in queue.Requests) {
+            foreach (QueuedRequestSnapshot request in queue.Requests) {
                 info = new QueueInfo();
                 info.Name = request.ProjectName;
                 info.Type = QueueInfoType.Project;
@@ -1548,10 +1602,10 @@ namespace DevExpress.DXCCTray {
         public string[] ForceBuild(string[] projectNames) {
             List<string> stoppedList = new List<string>();
             try {
-                foreach(string projectName in projectNames) {
-                    foreach(ProjectInfo info in projectList) {
-                        if(info.Name == projectName) {
-                            if(info.Status != ProjectIntegratorState.Running) {
+                foreach (string projectName in projectNames) {
+                    foreach (ProjectInfo info in projectList) {
+                        if (info.Name == projectName) {
+                            if (info.Status != ProjectIntegratorState.Running) {
                                 stoppedList.Add(projectName);
                                 break;
                             }
@@ -1560,7 +1614,8 @@ namespace DevExpress.DXCCTray {
                         }
                     }
                 }
-            } catch(Exception ex) {
+            }
+            catch (Exception ex) {
                 DXCCTrayConfiguration.ShowError(string.Format("Unable to force build because of the following error:\n{0}", ex.Message));
             }
             return stoppedList.ToArray();
@@ -1568,21 +1623,23 @@ namespace DevExpress.DXCCTray {
         public void UpdateServerTime(string server, int newRemainsMinutes) {
             try {
                 SmartCruiseManager.UpdateServerTime(server, TimeSpan.FromMinutes(newRemainsMinutes));
-            } catch(Exception exc) {
+            }
+            catch (Exception exc) {
                 Log.Error("exception", exc);
             }
         }
         public bool ForceBuildOn(string projectName, string serverName) {
             try {
-                foreach(ProjectInfo info in projectList) {
-                    if(info.Name == projectName) {
-                        if(info.Status != ProjectIntegratorState.Running)
+                foreach (ProjectInfo info in projectList) {
+                    if (info.Name == projectName) {
+                        if (info.Status != ProjectIntegratorState.Running)
                             return false;
                         SmartCruiseManager.ForceBuild(projectName,
                             string.Format("{0}{1}#{2}", SmartServerList.forceOnServerMark, DXCCTrayConfiguration.WorkUserName, serverName));
                     }
                 }
-            } catch(Exception ex) {
+            }
+            catch (Exception ex) {
                 DXCCTrayConfiguration.ShowError(string.Format("Unable to force build because of the following error:\n{0}", ex.Message));
             }
             return true;
@@ -1592,7 +1649,8 @@ namespace DevExpress.DXCCTray {
                 Guid guid = Guid.NewGuid();
                 SmartCruiseManager.GetServer(vmInfo, guid, DXCCTrayConfiguration.WorkUserName, psScript);
                 return guid.ToString();
-            } catch(Exception ex) {
+            }
+            catch (Exception ex) {
                 DXCCTrayConfiguration.ShowError(string.Format("Unable to GetServerAsync because of the following error:\n{0}", ex.Message));
                 return string.Empty;
             }
@@ -1601,7 +1659,8 @@ namespace DevExpress.DXCCTray {
             try {
                 SmartCruiseManager.SendNotification(project, recepient, sender);
                 return true;
-            } catch {
+            }
+            catch {
                 //DXMessageBox.Show("Send notification not supported");
                 return false;
             }
@@ -1609,7 +1668,8 @@ namespace DevExpress.DXCCTray {
         public string[] GetBreakers(string projectName) {
             try {
                 return SmartCruiseManager.GetProjectBreakers(projectName);
-            } catch {
+            }
+            catch {
                 return new string[0];
             }
         }
@@ -1619,71 +1679,75 @@ namespace DevExpress.DXCCTray {
 
         public void AbortBuild(string[] projectNames) {
             try {
-                foreach(string projectName in projectNames) {
-                    foreach(ProjectInfo info in projectList) {
-                        if(info.Name == projectName) {
+                foreach (string projectName in projectNames) {
+                    foreach (ProjectInfo info in projectList) {
+                        if (info.Name == projectName) {
                             SmartCruiseManager.AbortBuild(projectName, DXCCTrayConfiguration.WorkUserName);
                             break;
                         }
                     }
                 }
 
-            } catch(Exception ex) {
+            }
+            catch (Exception ex) {
                 DXCCTrayConfiguration.ShowError(string.Format("Unable to abort build because of the following error:\n{0}", ex.Message));
             }
         }
 
         public void StartProject(string[] projectNames) {
             try {
-                foreach(string projectName in projectNames) {
-                    foreach(ProjectInfo info in projectList) {
-                        if(info.Name == projectName) {
+                foreach (string projectName in projectNames) {
+                    foreach (ProjectInfo info in projectList) {
+                        if (info.Name == projectName) {
                             SmartCruiseManager.StartProject(projectName);
                             break;
                         }
                     }
                 }
 
-            } catch(Exception ex) {
+            }
+            catch (Exception ex) {
                 DXCCTrayConfiguration.ShowError(string.Format("Unable to start project because of the following error:\n{0}", ex.Message));
             }
         }
 
         public void StopProject(string[] projectNames) {
             try {
-                foreach(string projectName in projectNames) {
-                    foreach(ProjectInfo info in projectList) {
-                        if(info.Name == projectName) {
+                foreach (string projectName in projectNames) {
+                    foreach (ProjectInfo info in projectList) {
+                        if (info.Name == projectName) {
                             SmartCruiseManager.StopProject(projectName);
                             break;
                         }
                     }
                 }
 
-            } catch(Exception ex) {
+            }
+            catch (Exception ex) {
                 DXCCTrayConfiguration.ShowError(string.Format("Unable to stop project because of the following error:\n{0}", ex.Message));
             }
         }
         public void CancelPending(string[] projectNames) {
             try {
-                foreach(string projectName in projectNames) {
-                    foreach(ProjectInfo info in projectList) {
-                        if(info.Name == projectName) {
+                foreach (string projectName in projectNames) {
+                    foreach (ProjectInfo info in projectList) {
+                        if (info.Name == projectName) {
                             SmartCruiseManager.CancelPendingRequest(projectName);
                             break;
                         }
                     }
                 }
 
-            } catch(Exception ex) {
+            }
+            catch (Exception ex) {
                 DXCCTrayConfiguration.ShowError(string.Format("Unable to cancel pending project because of the following error:\n{0}", ex.Message));
             }
         }
         public void FixBuild(string[] projectNames) {
             try {
-                foreach(string projectName in projectNames) {
-                    foreach(ProjectInfo info in projectList) {
-                        if(info.Name == projectName) {
+                foreach (string projectName in projectNames) {
+                    foreach (ProjectInfo info in projectList) {
+                        if (info.Name == projectName) {
                             SmartCruiseManager.SendMessage(projectName,
                                 new ThoughtWorks.CruiseControl.Remote.Message(string.Format("{0}{1}", DXCCTrayConfiguration.WorkUserName, SmartConstants.FixingBuildMessage)));
                             break;
@@ -1691,24 +1755,25 @@ namespace DevExpress.DXCCTray {
                     }
                 }
 
-            } catch(Exception ex) {
+            }
+            catch (Exception ex) {
                 DXCCTrayConfiguration.ShowError(string.Format("Unable to fix build because of the following error:\n{0}", ex.Message));
             }
         }
 
         public void FinishFixBuild(string[] projectNames) {
             try {
-                foreach(string projectName in projectNames) {
-                    foreach(ProjectInfo info in projectList) {
-                        if(info.Name == projectName) {
-                            if(!info.Details.Contains(DXCCTrayConfiguration.WorkUserName))
+                foreach (string projectName in projectNames) {
+                    foreach (ProjectInfo info in projectList) {
+                        if (info.Name == projectName) {
+                            if (!info.Details.Contains(DXCCTrayConfiguration.WorkUserName))
                                 throw new InvalidOperationException(string.Format("You are not fixing the build '{0}'.", projectName));
                         }
                     }
                 }
-                foreach(string projectName in projectNames) {
-                    foreach(ProjectInfo info in projectList) {
-                        if(info.Name == projectName) {
+                foreach (string projectName in projectNames) {
+                    foreach (ProjectInfo info in projectList) {
+                        if (info.Name == projectName) {
                             SmartCruiseManager.SendMessage(projectName,
                                 new ThoughtWorks.CruiseControl.Remote.Message(string.Format("{0}{1}", DXCCTrayConfiguration.WorkUserName, SmartConstants.FinishFixingBuildMessage)));
                             break;
@@ -1716,7 +1781,8 @@ namespace DevExpress.DXCCTray {
                     }
                 }
 
-            } catch(Exception ex) {
+            }
+            catch (Exception ex) {
                 DXCCTrayConfiguration.ShowError(string.Format("Unable to fix build because of the following error:\n{0}", ex.Message));
             }
         }
@@ -1724,21 +1790,23 @@ namespace DevExpress.DXCCTray {
         public void StartServer(string serverName) {
             try {
                 SmartCruiseManager.StartServer(serverName, DXCCTrayConfiguration.WorkUserName);
-            } catch(Exception ex) {
+            }
+            catch (Exception ex) {
                 DXCCTrayConfiguration.ShowError(string.Format("Unable to start server because of the following error:\n{0}", ex.Message));
             }
         }
         public void StopServer(string serverName) {
             try {
                 SmartCruiseManager.StopServer(serverName, DXCCTrayConfiguration.WorkUserName);
-            } catch(Exception ex) {
+            }
+            catch (Exception ex) {
                 DXCCTrayConfiguration.ShowError(string.Format("Unable to stop server because of the following error:\n{0}", ex.Message));
             }
         }
 
         public override bool Equals(object obj) {
             DXCCTrayIntegrator integrator = obj as DXCCTrayIntegrator;
-            if(integrator == null)
+            if (integrator == null)
                 return false;
             return name == integrator.name && Url == integrator.Url;
         }
