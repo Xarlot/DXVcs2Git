@@ -37,7 +37,14 @@ namespace DXVcs2Git.Git {
         }
         public MergeRequest ProcessMergeRequest(MergeRequest mergeRequest, string comment) {
             var mergeRequestsClient = client.GetMergeRequest(mergeRequest.ProjectId);
-            return mergeRequestsClient.Accept(mergeRequest.Id, new MergeCommitMessage() { Message = comment });
+            try {
+                return mergeRequestsClient.Accept(mergeRequest.Id, new MergeCommitMessage() {Message = comment});
+            }
+            catch (Exception ex) {
+                Log.Error("Merging has thrown exception", ex);
+                mergeRequest.State = "merging_failed";
+                return mergeRequest;
+            }
         }
         public MergeRequest UpdateMergeRequestTitleAndDescription(MergeRequest mergeRequest, string title, string description) {
             var mergeRequestsClient = client.GetMergeRequest(mergeRequest.ProjectId);
