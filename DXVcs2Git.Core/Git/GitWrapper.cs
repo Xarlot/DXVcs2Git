@@ -193,6 +193,7 @@ namespace DXVcs2Git {
             Fetch();
             this.repo.Reset(ResetMode.Hard);
             this.repo.RemoveUntrackedFiles();
+            Log.Message($"Reset branch {branchName} completed.");
         }
         public MergeStatus Merge(string sourceBranch, User merger) {
             Branch branch = repo.Branches[sourceBranch];

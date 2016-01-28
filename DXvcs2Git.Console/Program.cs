@@ -325,12 +325,17 @@ namespace DXVcs2Git.Console {
             if (mergeRequest.State == "merged") {
                 Log.Message("Merge request merged successfully.");
 
-                var project = gitLabWrapper.GetProject(mergeRequest.ProjectId);
-                var targetBranch = gitLabWrapper.GetBranch(project, mergeRequest.TargetBranch);
-                var gitCommit = targetBranch.Commit;
-
+                string targetBranch = mergeRequest.TargetBranch;
+                bool sourceBranchWasCreated = gitWrapper.EnsureBranch(targetBranch, null);
+                gitWrapper.Reset(targetBranch);
+                gitWrapper.Pull(defaultUser, targetBranch);
+                var gitCommit = gitWrapper.FindCommit(branch.Name, x => CommentWrapper.Parse(x.Message).Token == autoSyncToken);
                 long timeStamp = lastHistoryItem.VcsCommitTimeStamp;
+
                 if (vcsWrapper.ProcessCheckIn(genericChange, comment.ToString())) {
+                    if (forkMode && sourceBranchWasCreated && mergeRequest.SourceBranch != targetBranch)
+                        gitWrapper.RemoveBranch(mergeRequest.SourceBranch);
+
                     var checkinHistory = vcsWrapper.GenerateHistory(branch, new DateTime(timeStamp)).Where(x => x.ActionDate.Ticks > timeStamp);
                     var lastCommit = checkinHistory.OrderBy(x => x.ActionDate).LastOrDefault();
                     long newTimeStamp = lastCommit?.ActionDate.Ticks ?? timeStamp;
@@ -338,7 +343,7 @@ namespace DXVcs2Git.Console {
                     if (!ValidateMergeRequest(vcsWrapper, branch, lastHistoryItem, defaultUser))
                         mergeRequestResult = MergeRequestResult.Mixed;
 
-                    syncHistory.Add(gitCommit.Id.ToString(), newTimeStamp, autoSyncToken, mergeRequestResult == MergeRequestResult.Success ? SyncHistoryStatus.Success : SyncHistoryStatus.Mixed);
+                    syncHistory.Add(gitCommit.Sha, newTimeStamp, autoSyncToken, mergeRequestResult == MergeRequestResult.Success ? SyncHistoryStatus.Success : SyncHistoryStatus.Mixed);
                     syncHistory.Save();
                     Log.Message("Merge request checkin successfully.");
                     return mergeRequestResult;
