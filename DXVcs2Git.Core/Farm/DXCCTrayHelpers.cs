@@ -285,6 +285,7 @@ namespace DevExpress.DXCCTray {
             //needVolunteerColorDark = DefaultNeedVolunteerColorDark;
         }
         public static bool LocalConfig = false;
+        static string defaultConfigPath = "DXVcs2Git.Core.dxcctray.config";
         public static void LoadConfiguration() {
             string fullFileName = Path.Combine(Assembly.GetExecutingAssembly().Location, fileName);
             if(!LocalConfig){
@@ -373,7 +374,7 @@ namespace DevExpress.DXCCTray {
             updateUrl = LoadString(doc, "updateUrl", string.Empty);
         }
         static void LoadDefaultFarmListAndUpdateUrl() {
-            string defaultConfig = GetResource("DXCCTray.default.config");
+            string defaultConfig = GetResource(defaultConfigPath);
             XmlDocument doc = new XmlDocument();
             doc.LoadXml(defaultConfig);
             LoadFarmList(doc);
@@ -485,13 +486,13 @@ namespace DevExpress.DXCCTray {
             gridServersXml = LoadString(doc, "gridServersXml", string.Empty);
         }
         public static void LoadDefaultLayoutAndGrid() {            
-            string defaultConfig = GetResource("DXCCTray.default.config");
+            string defaultConfig = GetResource(defaultConfigPath);
             XmlDocument doc = new XmlDocument();
             doc.LoadXml(defaultConfig);
             LoadLayoutAndGrid(doc);
         }
         public static void LoadDefaultLayout() {
-            string defaultConfig = GetResource("DXCCTray.default.config");
+            string defaultConfig = GetResource(defaultConfigPath);
             XmlDocument doc = new XmlDocument();
             doc.LoadXml(defaultConfig);
             layoutXml = LoadString(doc, "layoutXml", string.Empty);
@@ -502,91 +503,6 @@ namespace DevExpress.DXCCTray {
             string result = textReader.ReadToEnd();
             textReader.Close();
             return result;
-        }
-        public static void SaveConfiguration() {
-            string fullFileName = Path.Combine(Assembly.GetExecutingAssembly().Location, fileName);
-            if(!LocalConfig) {
-                fullFileName = Path.Combine(GetLocalStoragePath(), fileName);
-            }
-            if(File.Exists(fullFileName)) {
-                FileInfo fileInfo = new FileInfo(fullFileName);
-                fileInfo.Attributes = FileAttributes.Normal;
-            }
-            XmlWriterSettings xwSettings = new XmlWriterSettings();
-            xwSettings.Indent = true;
-            MemoryStream ms = new MemoryStream();
-            using(XmlWriter xw = XmlWriter.Create(ms, xwSettings)) {
-                xw.WriteStartDocument();
-                xw.WriteStartElement("config");
-                xw.WriteStartElement("integrators");
-                foreach(string url in FarmList) {
-                    xw.WriteStartElement("integrator");
-                    xw.WriteAttributeString("url", url);
-                    xw.WriteEndElement();
-                }
-                xw.WriteEndElement();
-                xw.WriteStartElement("buildNotifications");
-                foreach(BuildNotificationViewInfo bnvi in buildNotifications) {
-                    xw.WriteStartElement("notification");
-                    xw.WriteRaw(SmartCCNetHelper.GetSerializeString(bnvi.Notification));
-                    xw.WriteEndElement();
-                }
-                xw.WriteEndElement();
-                xw.WriteStartElement("PowerShellScripts");
-                foreach(PSScript script in powerShellScripts) {
-                    xw.WriteStartElement("PowerShellScript");
-                    xw.WriteRaw(SmartCCNetHelper.GetSerializeString(script));
-                    xw.WriteEndElement();
-                }
-                xw.WriteEndElement();
-                xw.WriteStartElement("lastProjectDurationDictionary");
-                byte[] lastBuildDurationData = ProjectInfo.GetLastBuildDurationDictSaveData();
-                xw.WriteBase64(lastBuildDurationData, 0, lastBuildDurationData.Length);
-                xw.WriteEndElement();
-                xw.WriteStartElement("layoutXml");
-                xw.WriteRaw(layoutXml);
-                xw.WriteEndElement();
-                xw.WriteStartElement("gridProjectXml");
-                xw.WriteRaw(gridProjectXml);
-                xw.WriteEndElement();
-                xw.WriteStartElement("gridTestsXml");
-                xw.WriteRaw(gridTestsXml);
-                xw.WriteEndElement();
-                xw.WriteStartElement("gridServersXml");
-                xw.WriteRaw(gridServersXml);
-                xw.WriteEndElement();
-                xw.WriteStartElement("gridNotificationsXml");
-                xw.WriteRaw(gridNotificationsXml);
-                xw.WriteEndElement();
-                //xw.WriteElementString("volunteerColorString", VolunteerColorString);
-                xw.WriteElementString("alwaysOnTop", AlwaysOnTop.ToString());
-                xw.WriteElementString("refreshTime", RefreshTime.ToString());
-                xw.WriteElementString("minimized", Minimized.ToString());
-                xw.WriteElementString("buildLogMaximized", BuildLogMaximized.ToString());
-                xw.WriteElementString("formWidth", FormWidth.ToString());
-                xw.WriteElementString("formHeight", FormHeight.ToString());
-                xw.WriteElementString("formLeft", FormLeft.ToString());
-                xw.WriteElementString("formTop", FormTop.ToString());
-                xw.WriteElementString("updateUrl", UpdateUrl);
-                xw.WriteElementString("workUserName", WorkUserName);
-                xw.WriteElementString("useSkin", UseSkin.ToString());
-                xw.WriteElementString("UsePowerShellScript", UsePowerShellScript.ToString());
-                xw.WriteElementString("needAskForStutup", NeedAskForStutup.ToString());
-                xw.WriteElementString("alreadyReloadGridTestsLayout", AlreadyReloadGridTestsLayout.ToString());
-                xw.WriteElementString("skinName", SkinName);
-                xw.WriteElementString("popupHideTimeout", PopupHideTimeout.ToString());
-                xw.WriteStartElement("trackedProjects");
-                foreach(ProjectShortInfo info in TrackedProjects) {
-                    xw.WriteStartElement("trackedProject");
-                    xw.WriteAttributeString("name", info.Name);
-                    xw.WriteAttributeString("status", info.BuildStatus);
-                    xw.WriteEndElement();
-                }
-                xw.WriteEndElement();
-                xw.WriteEndElement();
-                xw.WriteEndDocument();
-            }
-            File.WriteAllBytes(fullFileName, ms.ToArray());
         }
     }
     public class ProjectShortInfo {
