@@ -97,9 +97,12 @@ namespace DXVcs2Git.Git {
             return branchesClient.All;
         }
         public MergeRequest UpdateMergeRequestAssignee(MergeRequest mergeRequest, string user) {
-            var userInfo = GetUsers().First(x => x.Username == user);
-            var mergeRequestsClient = client.GetMergeRequest(mergeRequest.ProjectId);
-            return mergeRequestsClient.Update(mergeRequest.Id, new MergeRequestUpdate() { AssigneeId = userInfo.Id });
+            var userInfo = GetUsers().FirstOrDefault(x => x.Username == user);
+            if (mergeRequest.Assignee?.Username != userInfo?.Username) {
+                var mergeRequestsClient = client.GetMergeRequest(mergeRequest.ProjectId);
+                return mergeRequestsClient.Update(mergeRequest.Id, new MergeRequestUpdate() {AssigneeId = userInfo?.Id});
+            }
+            return mergeRequest;
         }
         public Comment AddCommentToMergeRequest(MergeRequest mergeRequest, string comment) {
             var mergeRequestsClient = client.GetMergeRequest(mergeRequest.ProjectId);

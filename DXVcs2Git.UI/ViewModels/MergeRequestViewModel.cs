@@ -22,8 +22,8 @@ namespace DXVcs2Git.UI.ViewModels {
             Title = MergeRequest.Title;
             SourceBranch = MergeRequest.SourceBranch;
             TargetBranch = MergeRequest.TargetBranch;
-            Author = MergeRequest.Author.Name;
-            Assignee = MergeRequest.Assignee?.Name;
+            Author = MergeRequest.Author.Username;
+            Assignee = MergeRequest.Assignee?.Username;
         }
     }
 }
