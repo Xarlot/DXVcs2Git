@@ -30,7 +30,7 @@ namespace DXVcs2Git.Console {
         public WorkMode WorkMode { get; set; }
         [Option('f', "from", Required = false, HelpText = "Timestamp for history generation")]
         public DateTime From { get; set; }
-        [Option('m', "minites", Required = false, Default = 10, HelpText = "Duration in minutes")]
+        [Option('i', "interval", Required = false, Default = 30, HelpText = "Duration in minutes")]
         public int Timeout { get; set; }
     }
 }

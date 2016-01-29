@@ -71,6 +71,9 @@ namespace DXVcs2Git.Git {
             var mergeRequestsClient = client.GetMergeRequest(mergeRequest.ProjectId);
             return mergeRequestsClient.Update(mergeRequest.Id, new MergeRequestUpdate() { NewState = "reopen", Description = autoMergeFailedComment });
         }
+        public User GetUser(int id) {
+            return this.client.Users[id];
+        }
         public IEnumerable<User> GetUsers() {
             var usersClient = this.client.Users;
             return usersClient.All.ToList();

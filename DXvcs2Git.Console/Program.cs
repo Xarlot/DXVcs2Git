@@ -89,7 +89,8 @@ namespace DXVcs2Git.Console {
             var hookType = ProjectHookClient.ParseHookType(request);
             if (hookType == null)
                 return;
-            Log.Message($"Web hook received. Web hook type: {hookType.HookType}");
+            Log.Message($"Web hook received.");
+            Log.Message($"Web hook type: {hookType.HookType}.");
             var hook = ProjectHookClient.ParseHook(hookType);
             if (hook.HookType == ProjectHookType.push)
                 ProcessPushHook((PushHookClient)hook);
@@ -97,9 +98,18 @@ namespace DXVcs2Git.Console {
                 ProcessMergeRequestHook(gitLabWrapper, (MergeRequestHookClient)hook);
         }
         static void ProcessMergeRequestHook(GitLabWrapper gitLabWrapper, MergeRequestHookClient hook) {
-            Log.Message($"Merge hook state = {hook.Attributes.State}");
+            Log.Message($"Merge hook title: {hook.Attributes.Description}");
+            Log.Message($"Merge hook state: {hook.Attributes.State}");
+
             if (!IsOpenedState(hook))
                 return;
+
+            Log.Message($"Merge hook action: {hook.Attributes.Action}");
+            Log.Message($"Merge hook merge status: {hook.Attributes.MergeStatus}");
+            Log.Message($"Merge hook author: {gitLabWrapper.GetUser(hook.Attributes.AuthorId).Name}.");
+            Log.Message($"Merge hook target branch: {hook.Attributes.TargetBranch}.");
+            Log.Message($"Merge hook sourceBranch branch: {hook.Attributes.SourceBranch}.");
+
             if (!ShouldForceSyncTask(gitLabWrapper, hook))
                 return;
             var project = gitLabWrapper.GetProject(hook.Attributes.TargetProjectId);
