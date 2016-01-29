@@ -114,7 +114,7 @@ namespace DXVcs2Git.Console {
             var project = gitLabWrapper.GetProject(hook.Attributes.TargetProjectId);
             var mergeRequest = gitLabWrapper.GetMergeRequest(project, hook.Attributes.Id);
             var assignee = mergeRequest.Assignee;
-            if (assignee == null || !assignee.IsAdmin) {
+            if (assignee == null || !assignee.Name.StartsWith("dxvcs2git")) {
                 Log.Message("Force sync rejected because assignee is not set or not admin.");
                 return false;
             }
