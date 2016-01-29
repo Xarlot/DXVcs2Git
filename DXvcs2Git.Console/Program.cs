@@ -66,7 +66,9 @@ namespace DXVcs2Git.Console {
                 foreach (ProjectHook hook in hooks) {
                     if (WebHookHelper.IsSameHost(hook.Url, IP) || !WebHookHelper.IsSharedHook(hook.Url))
                         continue;
-                    gitLabWrapper.UpdateProjectHook(project, hook, WebHookHelper.Replace(hook.Url, IP));
+                    Uri url = WebHookHelper.Replace(hook.Url, IP);
+                    gitLabWrapper.UpdateProjectHook(project, hook, url);
+                    Log.Message($"WebHook registered for project {project.Name} at {url}");
                 }
             }
 

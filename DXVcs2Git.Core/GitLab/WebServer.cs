@@ -18,6 +18,7 @@ namespace DXVcs2Git.Core {
             if (this.listener.IsListening)
                 throw new ArgumentException("already listening");
             this.listener.Start();
+            Log.Message($"Web server started at {url}");
 
             CancellationTokenSource source = new CancellationTokenSource();
             CancellationToken token = source.Token;
