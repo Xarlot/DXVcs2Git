@@ -85,7 +85,7 @@ namespace DXVcs2Git.Console {
 
             return 0;
         }
-        static void ProcessWebHook(GitLabWrapper gitLabWrapper, HttpListenerRequest request) {
+        static void ProcessWebHook(GitLabWrapper gitLabWrapper, WebHookRequest request) {
             var hookType = ProjectHookClient.ParseHookType(request);
             if (hookType == null)
                 return;
@@ -120,6 +120,7 @@ namespace DXVcs2Git.Console {
                 ForceBuild(options.SyncTask);
             else
                 Log.Message("Merge request can`t be merged because merge request notes has no farm config.");
+            Log.Message("");
         }
         static bool ShouldForceSyncTask(GitLabWrapper gitLabWrapper, MergeRequestHookClient hook) {
             var project = gitLabWrapper.GetProject(hook.Attributes.TargetProjectId);

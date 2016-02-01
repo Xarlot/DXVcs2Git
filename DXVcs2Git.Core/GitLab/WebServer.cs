@@ -3,10 +3,11 @@ using System.Collections.Concurrent;
 using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
+using DXVcs2Git.Core.GitLab;
 
 namespace DXVcs2Git.Core {
     public class WebServer : IDisposable {
-        readonly ConcurrentQueue<HttpListenerRequest> requests = new ConcurrentQueue<HttpListenerRequest>();
+        readonly ConcurrentQueue<WebHookRequest> requests = new ConcurrentQueue<WebHookRequest>();
         readonly string url;
         readonly HttpListener listener = new HttpListener();
         Task listenerTask;
@@ -27,14 +28,23 @@ namespace DXVcs2Git.Core {
             this.listenerTask = taskFactory.StartNew(() => {
                 while (!token.IsCancellationRequested) {
                     var context = this.listener.GetContextAsync();
-                    var request = context.Result.Request;
+                    var httpRequest = context.Result.Request;
+                    var request = new WebHookRequest() {Request = HttpRequestParser.Extract(httpRequest)};
                     this.requests.Enqueue(request);
-                }
+                    var response = context.Result.Response;
+                    response.StatusCode = 200;
 
+                    var message = System.Text.Encoding.UTF8.GetBytes("OK");
+                    response.ContentLength64 = message.Length;
+                    response.ContentType = "text";
+                    var outputstream = response.OutputStream;
+                    outputstream.Write(message, 0, message.Length);
+                    outputstream.Close();
+                }
             }, token);
         }
-        public HttpListenerRequest GetRequest() {
-            HttpListenerRequest request;
+        public WebHookRequest GetRequest() {
+            WebHookRequest request;
             if (this.requests.TryDequeue(out request))
                 return request;
             return null;

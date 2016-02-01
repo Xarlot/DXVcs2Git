@@ -10,8 +10,8 @@ namespace DXVcs2Git.Core.GitLab {
 
         public string Json { get; set; }
 
-        public static ProjectHookTypeClient ParseHookType(HttpListenerRequest message) {
-            var projectHook = message.Parse<ProjectHookTypeClient>();
+        public static ProjectHookTypeClient ParseHookType(WebHookRequest message) {
+            var projectHook = HttpRequestParser.Parse<ProjectHookTypeClient>(message.Request);
             return projectHook;
         }
         public static ProjectHookClient ParseHook(ProjectHookTypeClient hookType) {

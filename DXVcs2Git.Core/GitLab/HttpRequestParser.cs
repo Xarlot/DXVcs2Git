@@ -5,10 +5,10 @@ using Newtonsoft.Json.Converters;
 
 namespace DXVcs2Git.Core.GitLab {
     public static class HttpRequestParser {
-        public static T Parse<T>(this HttpListenerRequest message) where T : IParseApiSupported {
+        public static string Extract(HttpListenerRequest message) {
             using (var reader = new StreamReader(message.InputStream)) {
                 string jsonString = reader.ReadToEnd();
-                return Parse<T>(jsonString);
+                return jsonString;
             }
         }
         public static T Parse<T>(string json) where T : IParseApiSupported {
