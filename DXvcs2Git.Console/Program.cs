@@ -250,18 +250,23 @@ namespace DXVcs2Git.Console {
             }
         }
         static GitWrapper CreateGitWrapper(string gitRepoPath, string localGitDir, TrackBranch branch, string username, string password) {
-            GitWrapper gitWrapper = new GitWrapper(localGitDir, gitRepoPath, new UsernamePasswordCredentials() { Username = username, Password = password });
-            if (gitWrapper.IsEmpty) {
-                Log.Error($"Specified branch {branch.Name} in repo {gitRepoPath} is empty. Initialize repo properly.");
+            try { GitWrapper gitWrapper = new GitWrapper(localGitDir, gitRepoPath, new UsernamePasswordCredentials() { Username = username, Password = password });
+                if(gitWrapper.IsEmpty) {
+                    Log.Error($"Specified branch {branch.Name} in repo {gitRepoPath} is empty. Initialize repo properly.");
+                    return null;
+                }
+
+                gitWrapper.EnsureBranch(branch.Name, null);
+                gitWrapper.CheckOut(branch.Name);
+                gitWrapper.Fetch(updateTags: true);
+                Log.Message($"Branch {branch.Name} initialized.");
+
+                return gitWrapper;
+            }
+            catch(Exception e) {
+                Log.Error("Git Wrapper was not created: " + e.Message, e);
                 return null;
             }
-
-            gitWrapper.EnsureBranch(branch.Name, null);
-            gitWrapper.CheckOut(branch.Name);
-            gitWrapper.Fetch(updateTags: true);
-            Log.Message($"Branch {branch.Name} initialized.");
-
-            return gitWrapper;
         }
         static TrackBranch FindBranch(string branchName, string trackerPath) {
             string localPath = Path.GetDirectoryName(Assembly.GetEntryAssembly().Location);
