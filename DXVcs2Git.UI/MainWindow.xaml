@@ -31,6 +31,7 @@
         <viewModels:RootViewModel/>
     </dxr:DXRibbonWindow.DataContext>
     <dxmvvm:Interaction.Behaviors>
+        <dxmvvm:NotificationService x:Name="notificationService"/>
         <dx:DialogService x:Name="downloaderDialogService">
             <dx:DialogService.DialogStyle>
                 <Style TargetType="{x:Type dx:DXDialogWindow}">

@@ -13,6 +13,7 @@ namespace DXVcs2Git.UI.ViewModels {
         public ICommand SettingsCommand { get; private set; }
         public ICommand ShowLogCommand { get; private set; }
         public ICommand DownloadNewVersionCommand { get; private set; }
+        public INotificationService NotificationService { get { return GetService<INotificationService>("notificationService"); } }
         public IDialogService SettingsDialogService { get { return GetService<IDialogService>("settingsDialogService"); } }
         public IDialogService DownloaderDialogService { get { return GetService<IDialogService>("downloaderDialogService"); } }
         public Config Config { get; private set; }
