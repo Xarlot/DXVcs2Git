@@ -18,66 +18,17 @@
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
         <dx:DXTabControl>
-            <dx:DXTabItem Header="Repositories">
-                <dxg:GridControl ItemsSource="{Binding Path=Repositories}" SelectionMode="Row">
-                    <dxmvvm:Interaction.Behaviors>
-                        <dxg:GridDragDropManager>
-                            <dxg:GridDragDropManager.DragElementTemplate>
-                                <DataTemplate>
-                                    <TextBlock Text="{Binding Path=Name}"/>
-                                </DataTemplate>
-                            </dxg:GridDragDropManager.DragElementTemplate>
-                            </dxg:GridDragDropManager>
-                    </dxmvvm:Interaction.Behaviors>
-                    <dxg:GridControl.Columns>
-                        <dxg:GridColumn FieldName="Name"/>
-                        <dxg:GridColumn FieldName="ConfigName">
-                            <dxg:GridColumn.EditSettings>
-                                <dxe:ComboBoxEditSettings IsTextEditable="False" ItemsSource="{Binding Path=AvailableConfigs}"/>
-                            </dxg:GridColumn.EditSettings>
-                        </dxg:GridColumn>
-                        <dxg:GridColumn FieldName="LocalPath">
-                            <dxg:GridColumn.CellTemplate>
-                                <DataTemplate>
-                                    <dxe:ButtonEdit IsTextEditable="true" x:Name="PART_Editor" >
-                                        <dxmvvm:Interaction.Behaviors>
-                                            <dxe:CustomDialogServiceEditorBehavior>
-                                                <dxe:CustomDialogServiceEditorBehavior.DialogServiceTemplate>
-                                                    <DataTemplate>
-                                                        <ContentControl>
-                                                            <services:FolderBrowserCustomDialogService/>
-                                                        </ContentControl>
-                                                    </DataTemplate>
-                                                </dxe:CustomDialogServiceEditorBehavior.DialogServiceTemplate>
-                                            </dxe:CustomDialogServiceEditorBehavior>
-                                        </dxmvvm:Interaction.Behaviors>
-                                    </dxe:ButtonEdit>
-                                </DataTemplate>
-                            </dxg:GridColumn.CellTemplate>
-                        </dxg:GridColumn>
-                        <dxg:GridColumn FieldName="Token">
-                            <dxg:GridColumn.EditSettings>
-                                <dxe:ComboBoxEditSettings ItemsSource="{Binding Path=AvailableTokens}"/>
-                            </dxg:GridColumn.EditSettings>
-                            </dxg:GridColumn>
-                            <dxg:GridColumn Header="Server"  FieldName="RepoConfig.Server" ReadOnly="True"/>
-                    </dxg:GridControl.Columns>
-                    <dxg:GridControl.View>
-                        <dxg:TableView 
-                            NewItemRowPosition="Bottom" 
-                            AutoWidth="True" 
-                            EditorButtonShowMode="ShowAlways" 
-                            ShowDataNavigator="True" 
-                            EditorShowMode="MouseUp">
-                            <dxmvvm:Interaction.Behaviors>
-                                <behaviors:ValidateEditConfigBehavior/>
-                            </dxmvvm:Interaction.Behaviors>
-                        </dxg:TableView>
-                    </dxg:GridControl.View>
-                </dxg:GridControl>
-            </dx:DXTabItem>
             <dx:DXTabItem Header="Application">
                 <dxlc:LayoutControl Orientation="Vertical" VerticalAlignment="Top">
+                    <dxlc:LayoutItem Label="Default theme: " VerticalAlignment="Center">
+                        <dxe:ComboBoxEdit 
+                            EditValue="{Binding Path=DefaultTheme, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
+                            IsTextEditable="False"
+                            ItemsSource="{x:Static dx:Theme.Themes}" 
+                            DisplayMember="FullName" 
+                            ValueMember="Name">
+                        </dxe:ComboBoxEdit>
+                    </dxlc:LayoutItem>
                     <dxlc:LayoutItem Label="Update delay: " VerticalAlignment="Center">
                         <dxe:ButtonEdit EditValue="{Binding Path=UpdateDelay, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" AllowDefaultButton="False">
                             <dxe:ButtonEdit.Buttons>
@@ -115,6 +66,64 @@
                         </dxlc:LayoutGroup>
                     </dxlc:LayoutGroup>
                 </dxlc:LayoutControl>
+            </dx:DXTabItem>
+            <dx:DXTabItem Header="Repositories">
+                <dxg:GridControl ItemsSource="{Binding Path=Repositories}" SelectionMode="Row">
+                    <dxmvvm:Interaction.Behaviors>
+                        <dxg:GridDragDropManager>
+                            <dxg:GridDragDropManager.DragElementTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding Path=Name}"/>
+                                </DataTemplate>
+                            </dxg:GridDragDropManager.DragElementTemplate>
+                        </dxg:GridDragDropManager>
+                    </dxmvvm:Interaction.Behaviors>
+                    <dxg:GridControl.Columns>
+                        <dxg:GridColumn FieldName="Name"/>
+                        <dxg:GridColumn FieldName="ConfigName">
+                            <dxg:GridColumn.EditSettings>
+                                <dxe:ComboBoxEditSettings IsTextEditable="False" ItemsSource="{Binding Path=AvailableConfigs}"/>
+                            </dxg:GridColumn.EditSettings>
+                        </dxg:GridColumn>
+                        <dxg:GridColumn FieldName="LocalPath">
+                            <dxg:GridColumn.CellTemplate>
+                                <DataTemplate>
+                                    <dxe:ButtonEdit IsTextEditable="true" x:Name="PART_Editor" >
+                                        <dxmvvm:Interaction.Behaviors>
+                                            <dxe:CustomDialogServiceEditorBehavior>
+                                                <dxe:CustomDialogServiceEditorBehavior.DialogServiceTemplate>
+                                                    <DataTemplate>
+                                                        <ContentControl>
+                                                            <services:FolderBrowserCustomDialogService/>
+                                                        </ContentControl>
+                                                    </DataTemplate>
+                                                </dxe:CustomDialogServiceEditorBehavior.DialogServiceTemplate>
+                                            </dxe:CustomDialogServiceEditorBehavior>
+                                        </dxmvvm:Interaction.Behaviors>
+                                    </dxe:ButtonEdit>
+                                </DataTemplate>
+                            </dxg:GridColumn.CellTemplate>
+                        </dxg:GridColumn>
+                        <dxg:GridColumn FieldName="Token">
+                            <dxg:GridColumn.EditSettings>
+                                <dxe:ComboBoxEditSettings ItemsSource="{Binding Path=AvailableTokens}"/>
+                            </dxg:GridColumn.EditSettings>
+                        </dxg:GridColumn>
+                        <dxg:GridColumn Header="Server"  FieldName="RepoConfig.Server" ReadOnly="True"/>
+                    </dxg:GridControl.Columns>
+                    <dxg:GridControl.View>
+                        <dxg:TableView 
+                            NewItemRowPosition="Bottom" 
+                            AutoWidth="True" 
+                            EditorButtonShowMode="ShowAlways" 
+                            ShowDataNavigator="True" 
+                            EditorShowMode="MouseUp">
+                            <dxmvvm:Interaction.Behaviors>
+                                <behaviors:ValidateEditConfigBehavior/>
+                            </dxmvvm:Interaction.Behaviors>
+                        </dxg:TableView>
+                    </dxg:GridControl.View>
+                </dxg:GridControl>
             </dx:DXTabItem>
             <dx:DXTabItem Header="Wpf2Sl">
                 <dxlc:LayoutControl Orientation="Vertical" VerticalAlignment="Top">

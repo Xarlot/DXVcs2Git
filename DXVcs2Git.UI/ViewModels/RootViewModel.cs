@@ -3,12 +3,14 @@ using System.Windows.Input;
 using System.Windows.Threading;
 using DevExpress.Mvvm;
 using DevExpress.Mvvm.Native;
+using DevExpress.Xpf.Core;
 using DXVcs2Git.Core;
 using DXVcs2Git.UI.Farm;
 using DXVcs2Git.Core.Configuration;
 
 namespace DXVcs2Git.UI.ViewModels {
     public class RootViewModel : ViewModelBase {
+        const string DefaultThemeName = "Office2013";
         public RepositoriesViewModel Repositories { get; private set; }
         public ICommand SettingsCommand { get; private set; }
         public ICommand ShowLogCommand { get; private set; }
@@ -34,6 +36,7 @@ namespace DXVcs2Git.UI.ViewModels {
             ShowLogCommand = DelegateCommandFactory.Create(PerformShowLog);
             DownloadNewVersionCommand = DelegateCommandFactory.Create(DownloadNewVersion, CanDownloadNewVersion);
             Config = ConfigSerializer.GetConfig();
+            UpdateDefaultTheme();
             LogViewModel = new LoggingViewModel();
             Version = $"Git tools {VersionInfo.Version}";
         }
@@ -63,6 +66,10 @@ namespace DXVcs2Git.UI.ViewModels {
         }
         public void Initialize() {
             Repositories.Update();
+            UpdateDefaultTheme();
+        }
+        void UpdateDefaultTheme() {
+            ThemeManager.ApplicationThemeName = Config?.DefaultTheme ?? DefaultThemeName;
         }
         public void Refresh() {
             Repositories.Refresh();

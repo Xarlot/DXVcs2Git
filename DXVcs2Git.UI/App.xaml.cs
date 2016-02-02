@@ -21,7 +21,6 @@ namespace DXVcs2Git.UI {
             base.OnStartup(e);
             StartupOptions = Parser.Default.ParseArguments<UIStartupOptions>(e.Args).MapResult(x => x, x => UIStartupOptions.GenerateDefault());
             Application.Current.DispatcherUnhandledException += CurrentOnDispatcherUnhandledException;
-            ThemeManager.ApplicationThemeName = "Office2013";
             RunWindow();
         }
 

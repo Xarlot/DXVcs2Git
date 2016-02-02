@@ -10,13 +10,16 @@ using System.Windows.Input;
 using DXVcs2Git.Core.Git;
 using Microsoft.Win32;
 using System.IO;
-using System.ComponentModel;
-using System.Text;
 
 namespace DXVcs2Git.UI.ViewModels {
     public class EditConfigViewModel : ViewModelBase {
         readonly Config config;
         readonly RepoConfigsReader configsReader;
+
+        public string DefaultTheme {
+            get { return GetProperty(() => DefaultTheme); }
+            set { SetProperty(() => DefaultTheme, value); }
+        }
         public int UpdateDelay {
             get { return GetProperty(() => UpdateDelay); }
             set { SetProperty(() => UpdateDelay, value, OnUpdateDelayChanged); }
@@ -27,11 +30,11 @@ namespace DXVcs2Git.UI.ViewModels {
         }
         public string KeyGesture {
             get { return GetProperty(() => KeyGesture); }
-            set { string oldValue = KeyGesture; SetProperty(() => KeyGesture, value, ()=>OnKeyGestureChanged(oldValue)); }
-        }        
+            set { string oldValue = KeyGesture; SetProperty(() => KeyGesture, value, () => OnKeyGestureChanged(oldValue)); }
+        }
         public bool AlwaysSure1 {
             get { return GetProperty(() => AlwaysSure1); }
-            set { SetProperty(() => AlwaysSure1, value, ()=> { AlwaysSure2 &= AlwaysSure1; AlwaysSure3 &= AlwaysSure2; AlwaysSure4 &= AlwaysSure3; }); }
+            set { SetProperty(() => AlwaysSure1, value, () => { AlwaysSure2 &= AlwaysSure1; AlwaysSure3 &= AlwaysSure2; AlwaysSure4 &= AlwaysSure3; }); }
         }
         public bool AlwaysSure2 {
             get { return GetProperty(() => AlwaysSure2); }
@@ -44,11 +47,11 @@ namespace DXVcs2Git.UI.ViewModels {
         public bool AlwaysSure4 {
             get { return GetProperty(() => AlwaysSure4); }
             set { SetProperty(() => AlwaysSure4, value); }
-        }        
+        }
         public bool CommonXaml {
             get { return GetProperty(() => CommonXaml); }
             set { SetProperty(() => CommonXaml, value); }
-        }        
+        }
 
         public bool DiagramXaml {
             get { return GetProperty(() => DiagramXaml); }
@@ -67,7 +70,7 @@ namespace DXVcs2Git.UI.ViewModels {
                 await NativeMethods.AdministratorMethods.SetWpf2SlKeyAsync("Diagram");
             else
                 await NativeMethods.AdministratorMethods.ResetWpf2SlKeyAsync("Diagram");
-        }                
+        }
         bool GetWpf2SlKey(string value) {
             var ev = Environment.GetEnvironmentVariable("wpf2slkey", EnvironmentVariableTarget.Machine);
             return ev?.Contains(value) ?? false;
@@ -87,14 +90,14 @@ namespace DXVcs2Git.UI.ViewModels {
         public ObservableCollection<string> AvailableConfigs {
             get { return GetProperty(() => AvailableConfigs); }
             private set { SetProperty(() => AvailableConfigs, value); }
-        }        
+        }
         void OnUpdateDelayChanged() {
             AtomFeed.FeedWorker.UpdateDelay = UpdateDelay;
             StartWithWindows = GetStartWithWindows();
         }
         const string registryValueName = "DXVcs2Git";
         bool GetStartWithWindows() {
-            return Registry.CurrentUser.OpenSubKey("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run", false).GetValue("DXVcs2Git")!=null;
+            return Registry.CurrentUser.OpenSubKey("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run", false).GetValue("DXVcs2Git") != null;
         }
         void OnStartWithWindowsChanged() {
             RegistryKey rkApp = Registry.CurrentUser.OpenSubKey("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run", true);
@@ -105,7 +108,8 @@ namespace DXVcs2Git.UI.ViewModels {
                 var launcher = Path.Combine(ConfigSerializer.SettingsPath, "DXVcs2Git.Launcher.exe");
                 if (File.Exists(launcher))
                     rkApp.SetValue("DXVcs2Git", String.Format("\"{0}\" -h", launcher));
-            } else {
+            }
+            else {
                 if (rkApp.GetValue(registryValueName) == null)
                     return;
                 rkApp.DeleteValue(registryValueName);
@@ -115,12 +119,12 @@ namespace DXVcs2Git.UI.ViewModels {
             NativeMethods.HotKeyHelper.UnregisterHotKey();
             NativeMethods.HotKeyHelper.RegisterHotKey(KeyGesture);
         }
-        
 
         public EditConfigViewModel(Config config) {
             this.config = config;
             this.configsReader = new RepoConfigsReader();
             KeyGesture = config.KeyGesture;
+            DefaultTheme = config.DefaultTheme;
             Configs = this.configsReader.RegisteredConfigs;
             UpdateDelay = AtomFeed.FeedWorker.UpdateDelay;
             RefreshUpdateCommand = DelegateCommandFactory.Create(AtomFeed.FeedWorker.Update);
@@ -129,7 +133,7 @@ namespace DXVcs2Git.UI.ViewModels {
             Repositories = CreateEditRepositories(config);
             Repositories.CollectionChanged += RepositoriesOnCollectionChanged;
             AlwaysSure4 = AlwaysSure3 = AlwaysSure2 = AlwaysSure1 = config.AlwaysSure;
-            UpdateWpf2SLProperties = new AsyncCommand(() => OnUpdateWpf2SLProperties());
+            UpdateWpf2SLProperties = new AsyncCommand(OnUpdateWpf2SLProperties);
             UpdateTokens();
         }
         async System.Threading.Tasks.Task OnUpdateWpf2SLProperties() {
@@ -152,10 +156,11 @@ namespace DXVcs2Git.UI.ViewModels {
             };
         }
         public void UpdateConfig() {
-            config.Repositories = Repositories.With(x => x.Select(repo => new TrackRepository() { Name = repo.Name, ConfigName  = repo.ConfigName, LocalPath = repo.LocalPath, Server = repo.RepoConfig.Server, Token = repo.Token}).ToArray());
+            config.Repositories = Repositories.With(x => x.Select(repo => new TrackRepository() { Name = repo.Name, ConfigName = repo.ConfigName, LocalPath = repo.LocalPath, Server = repo.RepoConfig.Server, Token = repo.Token }).ToArray());
             config.UpdateDelay = UpdateDelay;
             config.KeyGesture = KeyGesture;
             config.AlwaysSure = AlwaysSure4;
+            this.config.DefaultTheme = DefaultTheme;
         }
         public void UpdateTokens() {
             AvailableTokens = Repositories.Return(x => new ObservableCollection<string>(x.Select(repo => repo.Token).Distinct()), () => new ObservableCollection<string>());
