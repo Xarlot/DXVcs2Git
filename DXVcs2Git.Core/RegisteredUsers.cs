@@ -15,11 +15,32 @@ namespace DXVcs2Git.Core {
         readonly GitLabWrapper gitLabWrapper;
         public RegisteredUsers(GitLabWrapper gitLabWrapper, DXVcsWrapper vcsWrapper) {
             this.gitLabWrapper = gitLabWrapper;
-            ADUsers = ADWrapper.GetUsers().ToDictionary(x => x.UserName);
-            Users = gitLabWrapper.GetUsers().Select(x => new User(x.Username, GetEmail(x.Username), x.Name, true)).ToDictionary(x => x.UserName, new UserNameEqualityComparer());
+            ADUsers = ADWrapper.GetUsers().ToDictionary(x => x.UserName, new UserNameEqualityComparer());
+            Users = CreateGitLabUsers().ToDictionary(x => x.UserName, new UserNameEqualityComparer());
             this.VcsUsers = vcsWrapper.GetUsers().ToList();
         }
-
+        IEnumerable<User> CreateGitLabUsers() {
+            var gitlabUsers = gitLabWrapper.GetUsers();
+            foreach (var gitLabUser in gitlabUsers) {
+                if (CalcIsKnownUser(gitLabUser)) {
+                    yield return new User(gitLabUser.Username, GetEmail(gitLabUser.Username), gitLabUser.Name, true);
+                }
+                else if (CalcIsRenamedUser(gitLabUser)) {
+                    var adUser = ADUsers.Values.First(x => x.Email == gitLabUser.Email);
+                    var renamedUser = this.gitLabWrapper.RenameUser(gitLabUser, adUser.UserName, adUser.DisplayName, adUser.Email);
+                    yield return new User(renamedUser.Username, GetEmail(renamedUser.Username), renamedUser.Name, true);
+                }
+                else {
+                    yield return new User(gitLabUser.Username, GetEmail(gitLabUser.Username), gitLabUser.Name, true);
+                }
+            }
+        }
+        bool CalcIsRenamedUser(NGitLab.Models.User gitLabUser) {
+            return ADUsers.Values.Any(x => x.Email == gitLabUser.Email);
+        }
+        bool CalcIsKnownUser(NGitLab.Models.User gitLabUser) {
+            return ADUsers.ContainsKey(gitLabUser.Username);
+        }
         public User GetUser(string name) {
             User user;
             if (Users.TryGetValue(name, out user))

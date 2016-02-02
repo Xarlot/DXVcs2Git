@@ -89,6 +89,17 @@ namespace DXVcs2Git.Git {
                 throw;
             }
         }
+        public User RenameUser(User gitLabUser, string userName, string displayName, string email) {
+            try {
+                var userClient = this.client.Users;
+                var userUpsert = new UserUpsert() { Username = userName, Name = displayName, Email = email, Password = new Guid().ToString() };
+                return userClient.Update(gitLabUser.Id, userUpsert);
+            }
+            catch (Exception ex) {
+                Log.Error($"Can`t change user {userName} email {email}", ex);
+                throw;
+            }
+        }
         public Branch GetBranch(Project project, string branch) {
             var repo = this.client.GetRepository(project.Id);
             var branchesClient = repo.Branches;
