@@ -44,7 +44,7 @@ namespace DXVcs2Git.UI.ViewModels {
         }
         void DownloadNewVersion() {
             var model = new UriDownloaderViewModel(AtomFeed.FeedWorker.NewVersionUri, AtomFeed.FeedWorker.NewVersion);
-            DownloaderDialogService.ShowDialog(new UICommand[] { model.RestartCommand, model.CancelCommand }, "Downloading new version...", model);
+            DownloaderDialogService.ShowDialog(new[] { model.RestartCommand, model.CancelCommand }, "Downloading new version...", model);
         }
         bool CanDownloadNewVersion() {
             return AtomFeed.FeedWorker.HasNewVersion;
