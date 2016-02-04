@@ -53,7 +53,7 @@ namespace DXVcs2Git.UI.ViewModels {
         }
 
         bool CanForceBuild() {
-            return Repositories.IsInitialized && FarmStatus.ActivityStatus == ActivityStatus.Sleeping;
+            return Repositories.IsInitialized && (FarmStatus.ActivityStatus == ActivityStatus.Sleeping || FarmStatus.ActivityStatus == ActivityStatus.Pending);
         }
         void ForceBuild() {
             Repository.ForceBuild();

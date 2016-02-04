@@ -136,12 +136,10 @@ namespace DXVcs2Git.Console {
                 return false;
             }
 
-            if (hook.Attributes.MergeStatus != "can_be_merged") {
-                Log.Message("Force sync rejected because merge request can`t be merged automatically.");
-                return false;
-            }
-
-            return true;
+            if (hook.Attributes.MergeStatus == "unchecked" || hook.Attributes.MergeStatus == "can_be_merged")
+                return true;
+            Log.Message("Force sync rejected because merge request can`t be merged automatically.");
+            return false;
         }
         static void ForceBuild(string syncTask) {
             Log.Message($"Build forced: {syncTask}");
