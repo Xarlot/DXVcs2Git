@@ -195,15 +195,7 @@ namespace DXVcs2Git.DXVcs {
                 bool result = ProcessCheckoutItem(x, x.Comment.ToString());
                 x.State = result ? ProcessState.Modified : ProcessState.Failed;
             });
-            if (list.Any(x => x.State != ProcessState.Modified)) {
-                Log.Message("Rollback changes after failed checkout.");
-                list.ForEach(x => {
-                    if (x.State == ProcessState.Modified)
-                        RollbackItem(x);
-                });
-                return false;
-            }
-            return true;
+            return list.All(x => x.State == ProcessState.Modified);
         }
         bool ProcessCheckoutItem(SyncItem item, string comment) {
             switch (item.SyncAction) {
@@ -237,7 +229,12 @@ namespace DXVcs2Git.DXVcs {
             Log.Message("Check in changes success.");
             return true;
         }
-        public bool ProcessUndoChechout(IEnumerable<SyncItem> items) {
+        public bool ProcessUndoCheckout(IEnumerable<SyncItem> items) {
+            Log.Message("Rollback changes after failed checkout.");
+            items.ToList().ForEach(x => {
+                if (x.State == ProcessState.Modified)
+                    RollbackItem(x);
+            });
             return true;
         }
         public IList<HistoryItem> GenerateHistory(TrackBranch branch, DateTime from) {

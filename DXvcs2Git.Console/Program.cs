@@ -333,6 +333,7 @@ namespace DXVcs2Git.Console {
                 Log.Error("Merging merge request failed because of checked out files:");
                 var failedChangeSet = genericChange.Where(x => x.State == ProcessState.Failed).ToList();
                 AssignBackConflictedMergeRequest(gitLabWrapper, users, mergeRequest, CalcCommentForFailedCheckoutMergeRequest(failedChangeSet));
+                vcsWrapper.ProcessUndoCheckout(genericChange);
                 failedChangeSet.ForEach(x => Log.Error(x.VcsPath));
                 return MergeRequestResult.CheckoutFailed;
             }
@@ -369,7 +370,7 @@ namespace DXVcs2Git.Console {
                 return MergeRequestResult.Failed;
             }
             Log.Message($"Merge request merging failed due conflicts. Resolve conflicts manually.");
-            vcsWrapper.ProcessUndoChechout(genericChange);
+            vcsWrapper.ProcessUndoCheckout(genericChange);
             AssignBackConflictedMergeRequest(gitLabWrapper, users, mergeRequest, "Merge request has been assigned back to author because of conflicts during merge. Resolve conflicts manually and assign it back.");
 
             return MergeRequestResult.Conflicts;
