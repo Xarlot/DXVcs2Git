@@ -269,8 +269,7 @@ namespace DXVcs2Git.DXVcs {
             var grouped = historyItems.AsParallel().GroupBy(x => x.ActionDate);
             var commits = grouped.Select(x => new CommitItem() { Items = x.ToList(), TimeStamp = x.First().ActionDate }).OrderBy(x => x.TimeStamp);
             var totalCommits = commits.ToList();
-            int index = totalCommits.FindIndex(x => x.Items.Any(y => y.Message.ToLowerInvariant() == "create"));
-            totalCommits = totalCommits.Skip(index).ToList();
+            totalCommits = totalCommits.ToList();
             return totalCommits;
         }
         public IList<CommitItem> MergeCommits(IList<CommitItem> commits) {

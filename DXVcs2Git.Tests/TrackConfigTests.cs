@@ -158,7 +158,39 @@ namespace DXVcs2Git.Tests {
             serializer.Serialize(new List<TrackBranch>() { branch }, $@"z:\trackconfig_dataaccess_{branchName}.config");
 
         }
+        [Test, Explicit]
+        public void GenerateUWP141Config() {
+            GenerateWinRTConfig("2014.1");
+        }
+        void GenerateWinRTConfig(string branchName) {
+            List<TrackItem> items = new List<TrackItem>();
+            items.Add(new TrackItem() { Path = $@"$/{branchName}/WinRT/DevExpress.Core", ProjectPath = "DevExpress.Core" });
+            items.Add(new TrackItem() { Path = $@"$/{branchName}/WinRT/DevExpress.Drawing", ProjectPath = "DevExpress.Drawing" });
+            items.Add(new TrackItem() { Path = $@"$/{branchName}/WinRT/DevExpress.Pdf.Core", ProjectPath = "DevExpress.Pdf.Core" });
+            items.Add(new TrackItem() { Path = $@"$/{branchName}/WinRT/DevExpress.TestFramework", ProjectPath = "DevExpress.TestFramework" });
+            items.Add(new TrackItem() { Path = $@"$/{branchName}/WinRT/DevExpress.TestRunner", ProjectPath = "DevExpress.TestRunner" });
+            items.Add(new TrackItem() { Path = $@"$/{branchName}/WinRT/DevExpress.TestsKey", ProjectPath = "DevExpress.TestsKey" });
+            items.Add(new TrackItem() { Path = $@"$/{branchName}/WinRT/DevExpress.TestUtils", ProjectPath = "DevExpress.TestUtils" });
+            items.Add(new TrackItem() { Path = $@"$/{branchName}/WinRT/DevExpress.UI.Xaml", ProjectPath = "DevExpress.UI.Xaml" });
+            items.Add(new TrackItem() { Path = $@"$/{branchName}/WinRT/DevExpress.UI.Xaml.Charts", ProjectPath = "DevExpress.UI.Xaml.Charts" });
+            items.Add(new TrackItem() { Path = $@"$/{branchName}/WinRT/DevExpress.UI.Xaml.Controls", ProjectPath = "DevExpress.UI.Xaml.Controls" });
+            items.Add(new TrackItem() { Path = $@"$/{branchName}/WinRT/DevExpress.UI.Xaml.Editors", ProjectPath = "DevExpress.UI.Xaml.Editors" });
+            items.Add(new TrackItem() { Path = $@"$/{branchName}/WinRT/DevExpress.UI.Xaml.Gauges", ProjectPath = "DevExpress.UI.Xaml.Gauges" });
+            items.Add(new TrackItem() { Path = $@"$/{branchName}/WinRT/DevExpress.UI.Xaml.Grid", ProjectPath = "DevExpress.UI.Xaml.Grid" });
+            items.Add(new TrackItem() { Path = $@"$/{branchName}/WinRT/DevExpress.UI.Xaml.Layout", ProjectPath = "DevExpress.UI.Xaml.Layout" });
+            items.Add(new TrackItem() { Path = $@"$/{branchName}/WinRT/DevExpress.UI.Xaml.Map", ProjectPath = "DevExpress.UI.Xaml.Map" });
+            items.Add(new TrackItem() { Path = $@"$/{branchName}/WinRT/DevExpress.WinRT.Projects.Installers", ProjectPath = "DevExpress.WinRT.Projects.Installers" });
+            items.Add(new TrackItem() { Path = $@"$/{branchName}/WinRT/DevExpress.WinRT.Projects.Wizards", ProjectPath = "DevExpress.WinRT.Projects.Wizards" });
+            items.Add(new TrackItem() { Path = $@"$/{branchName}/WinRT/Shared", ProjectPath = "Shared" });
+            items.Add(new TrackItem() { Path = $@"$/{branchName}/WinRT/Tools", ProjectPath = "Tools" });
+            TrackBranch branch = new TrackBranch($"{branchName}", $@"$/{branchName}/UWP.GIT/sync.config", $@"$/{branchName}", items);
 
+            SharpSerializerXmlSettings settings = new SharpSerializerXmlSettings();
+            settings.IncludeAssemblyVersionInTypeName = false;
+            settings.IncludePublicKeyTokenInTypeName = false;
+            SharpSerializer serializer = new SharpSerializer(settings);
+            serializer.Serialize(new List<TrackBranch>() { branch }, $@"z:\trackconfig_uwp_{branchName}.config");
 
+        }
     }
 }
