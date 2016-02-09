@@ -66,6 +66,9 @@ namespace DXVcs2Git.Core {
             if (string.IsNullOrEmpty(loginCandidate))
                 return null;
             string login = CalcLogin(loginCandidate);
+            User gitlabUser;
+            if(Users.TryGetValue(login, out gitlabUser))
+                return gitlabUser;
             User adUser = ADUsers[login];
             User gitLabUser = new User(userInfo.Name, adUser.Email, adUser.DisplayName, true);
             this.gitLabWrapper.RegisterUser(gitLabUser.UserName, gitLabUser.DisplayName, gitLabUser.Email);
