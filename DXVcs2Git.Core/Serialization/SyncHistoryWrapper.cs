@@ -41,7 +41,7 @@ namespace DXVcs2Git.Core.Serialization {
         }
         public void Save() {
             try {
-                this.vcsWrapper.CheckOutFile(this.vcsHistoryPath, this.localHistoryPath, string.Empty, true, true);
+                this.vcsWrapper.CheckOutFile(this.vcsHistoryPath, this.localHistoryPath, true, string.Empty);
                 SyncHistory.Serialize(this.history.Clone(this.historyLimit), localHistoryPath);
                 this.vcsWrapper.CheckInFile(vcsHistoryPath, localHistoryPath, string.Empty);
             }

@@ -12,12 +12,10 @@ namespace DXVcs2Git.DXVcs {
         void CheckOutFile(string vcsFile, string localFile, string comment, bool dontGetLocalCopy = false);
         void CheckInFile(string vcsFile, string localFile, string comment);
         void UndoCheckout(string vcsFile, string localFile);
-        void ResetCheckout(string vcsPath);
         string GetFileWorkingPath(string vcsFile);
         bool IsUnderVss(string vcsFile);
         bool IsCheckedOut(string vcsPath);
         bool IsCheckedOutByMe(string vcsPath);
-        bool IsCheckedOutByGitAdmin(string vcsPath);
         void AddFile(string vcsFile, byte[] fileBytes, string comment);
         void AddProject(string vcsPath, string comment);
         void CreateLabel(string vcsPath, string labelName, string comment);

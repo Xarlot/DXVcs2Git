@@ -28,9 +28,9 @@ namespace DXVcs2Git.Console {
         public string Tracker { get; set; }
         [Option('m', "mode", Required = false, Default = WorkMode.synchronizer, HelpText = "Work mode")]
         public WorkMode WorkMode { get; set; }
+        [Option('f', "from", Required = false, HelpText = "Timestamp for history generation")]
+        public DateTime From { get; set; }
         [Option('i', "interval", Required = false, Default = 30, HelpText = "Duration in minutes")]
         public int Timeout { get; set; }
-        [Option('f', "fatality", Required = false, HelpText = "Allow reset checked state from another user")]
-        public bool AllowReset { get; set; }
     }
 }

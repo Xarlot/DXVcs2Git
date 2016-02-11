@@ -10,8 +10,6 @@ using DXVCS;
 
 namespace DXVcs2Git.DXVcs {
     class DXVcsRepository : IDXVcsRepository {
-        readonly string gitAdmins = "Git";
-
         readonly string serviceUrl;
         readonly string user ;
         readonly string password;
@@ -589,11 +587,7 @@ namespace DXVcs2Git.DXVcs {
             Service.UndoCheckOut(new[] { vcsFile }, new[] { false });
 
             Log.Message($"Undo checkout file {vcsFile}.");
-        }
-        public void ResetCheckout(string vcsFile) {
-            if (string.IsNullOrEmpty(vcsFile))
-                throw new ArgumentException("vcsFile");
-            Service.ResetCheckOutState(new[] {vcsFile});
+
         }
         public void AddFile(string vcsFile, byte[] fileBytes, string comment) {
             if (string.IsNullOrEmpty(vcsFile))
@@ -789,12 +783,6 @@ namespace DXVcs2Git.DXVcs {
         }
         public bool IsCheckedOutByMe(string vcsFile) {
             return GetFileData(vcsFile).CheckedOutMe;
-        }
-        public bool IsCheckedOutByGitAdmin(string vcsFile) {
-            var fileData = GetFileData(vcsFile);
-            string user = fileData.CheckedOutUser;
-            var admins = Service.GetGroupUsers(this.gitAdmins);
-            return admins.Any(x => x.Name == user);
         }
         public void CreateLabel(string vcsPath, string labelName, string comment) {
             if (string.IsNullOrEmpty(vcsPath))
