@@ -71,8 +71,12 @@ namespace DXVcs2Git.DXVcs {
                 return false;
             }
         }
-
+        public bool CheckInNewFile(string vcsPath, string localPath, string comment) {
+            Log.Message($"Check in for new file {vcsPath}");
+            return CheckInFile(vcsPath, localPath, comment);
+        }
         public bool CheckInChangedFile(string vcsPath, string localPath, string comment) {
+            Log.Message($"Check in for changed file {vcsPath}");
             return CheckInFile(vcsPath, localPath, comment);
         }
         public bool CheckOut(SyncItem item, string comment) {
@@ -81,7 +85,7 @@ namespace DXVcs2Git.DXVcs {
         public bool CheckIn(SyncItem item, string comment) {
             switch (item.SyncAction) {
                 case SyncAction.New:
-                    return CheckInChangedFile(item.VcsPath, item.LocalPath, comment);
+                    return CheckInNewFile(item.VcsPath, item.LocalPath, comment);
                 case SyncAction.Modify:
                     return CheckInChangedFile(item.VcsPath, item.LocalPath, comment);
                 case SyncAction.Delete:
@@ -92,8 +96,9 @@ namespace DXVcs2Git.DXVcs {
                     throw new ArgumentException("SyncAction");
             }
         }
-        bool CheckOutModifyFile(string vcsFile, string localFile, string comment) {
-            return CheckOutFile(vcsFile, localFile, true, comment);
+        bool CheckOutModifyFile(string vcsPath, string localFile, string comment) {
+            Log.Message($"Checkout for modify file {vcsPath}");
+            return CheckOutFile(vcsPath, localFile, true, comment);
         }
         public bool RollbackItem(SyncItem item) {
             if (item.State == ProcessState.Default)
@@ -102,6 +107,7 @@ namespace DXVcs2Git.DXVcs {
         }
         bool CheckOutCreateFile(string vcsPath, string localPath, string comment) {
             try {
+                Log.Message($"Checkout for create file {vcsPath}");
                 var repo = DXVcsConnectionHelper.Connect(server, this.user, this.password);
                 if (!repo.IsUnderVss(vcsPath))
                     repo.AddFile(vcsPath, new byte[0], comment);
@@ -115,6 +121,7 @@ namespace DXVcs2Git.DXVcs {
         }
         bool CheckOutDeleteFile(string vcsPath, string localPath, string comment) {
             try {
+                Log.Message($"Checkout for deleted file {vcsPath}");
                 var repo = DXVcsConnectionHelper.Connect(server, this.user, this.password);
                 if (!repo.IsUnderVss(vcsPath))
                     return true;
@@ -132,6 +139,7 @@ namespace DXVcs2Git.DXVcs {
         }
         bool CheckInDeletedFile(string vcsPath, string localPath, string comment) {
             try {
+                Log.Message($"Checkin for deleted file {vcsPath}");
                 var repo = DXVcsConnectionHelper.Connect(server, this.user, this.password);
                 if (!repo.IsUnderVss(vcsPath))
                     return true;
@@ -150,6 +158,7 @@ namespace DXVcs2Git.DXVcs {
         }
         bool CheckOutMoveFile(string vcsPath, string newVcsPath, string localPath, string newLocalPath, string comment) {
             try {
+                Log.Message($"Checkout for move file {vcsPath}");
                 var repo = DXVcsConnectionHelper.Connect(server, this.user, this.password);
                 if (!repo.IsUnderVss(vcsPath)) {
                     Log.Error($"Move file failed. Can`t locate {vcsPath}.");
@@ -169,6 +178,7 @@ namespace DXVcs2Git.DXVcs {
         }
         bool CheckInMovedFile(string vcsPath, string newVcsPath, string localPath, string newLocalPath, string comment) {
             try {
+                Log.Message($"Checkin for moved file {vcsPath}");
                 var repo = DXVcsConnectionHelper.Connect(server, this.user, this.password);
                 if (!repo.IsUnderVss(vcsPath)) {
                     Log.Error($"Move file failed. Can`t locate {vcsPath}.");
