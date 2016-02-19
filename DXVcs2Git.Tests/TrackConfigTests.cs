@@ -192,5 +192,27 @@ namespace DXVcs2Git.Tests {
             serializer.Serialize(new List<TrackBranch>() { branch }, $@"z:\trackconfig_uwp_{branchName}.config");
 
         }
+
+        [Test, Explicit]
+        public void GenerateUWPDemosConfig() {
+            GenerateUWPDemoConfig("2016.1");
+        }
+        void GenerateUWPDemoConfig(string branchName) {
+            List<TrackItem> items = new List<TrackItem>();
+            items.Add(new TrackItem() { Path = $@"$/{branchName}/Demos.UWP/DemoLauncher", ProjectPath = "DemoLauncher" });
+            items.Add(new TrackItem() { Path = $@"$/{branchName}/Demos.UWP/DevExpress.PackageRegistrator", ProjectPath = "DevExpress.PackageRegistrator" });
+            items.Add(new TrackItem() { Path = $@"$/{branchName}/Demos.UWP/DXCRM", ProjectPath = "DXCRM" });
+            items.Add(new TrackItem() { Path = $@"$/{branchName}/Demos.UWP/FeatureDemo", ProjectPath = "FeatureDemo" });
+            items.Add(new TrackItem() { Path = $@"$/{branchName}/Demos.UWP/FinanceTracker", ProjectPath = "FinanceTracker" });
+            items.Add(new TrackItem() { Path = $@"$/{branchName}/Demos.UWP/HybridDemo", ProjectPath = "HybridDemo" });
+            TrackBranch branch = new TrackBranch($"{branchName}", $@"$/{branchName}/Demos.UWP.GIT/sync.config", $@"$/{branchName}", items);
+
+            SharpSerializerXmlSettings settings = new SharpSerializerXmlSettings();
+            settings.IncludeAssemblyVersionInTypeName = false;
+            settings.IncludePublicKeyTokenInTypeName = false;
+            SharpSerializer serializer = new SharpSerializer(settings);
+            serializer.Serialize(new List<TrackBranch>() { branch }, $@"z:\trackconfig_uwp_demos_{branchName}.config");
+
+        }
     }
 }
