@@ -202,10 +202,55 @@ namespace DXVcs2Git.DXVcs {
         public bool ProcessCheckout(IEnumerable<SyncItem> items) {
             var list = items.ToList();
             list.ForEach(x => {
+                bool result = ProcessBeforeCheckout(x);
+                x.State = result ? x.State : ProcessState.Failed;
+            });
+
+            if (list.Any(x => x.State != ProcessState.Default))
+                return false;
+
+            list.ForEach(x => {
                 bool result = ProcessCheckoutItem(x, x.Comment.ToString());
                 x.State = result ? ProcessState.Modified : ProcessState.Failed;
             });
             return list.All(x => x.State == ProcessState.Modified);
+        }
+        bool ProcessBeforeCheckout(SyncItem item) {
+            switch (item.SyncAction) {
+                case SyncAction.New:
+                    return BeforeCheckOutCreateFile(item.VcsPath, item.LocalPath);
+                case SyncAction.Modify:
+                    return BeforeCheckOutModifyFile(item.VcsPath, item.LocalPath);
+                case SyncAction.Delete:
+                    return BeforeCheckOutDeleteFile(item.VcsPath, item.LocalPath);
+                case SyncAction.Move:
+                    return BeforeCheckOutMoveFile(item.VcsPath, item.NewVcsPath, item.LocalPath, item.NewLocalPath);
+                default:
+                    throw new ArgumentException("SyncAction");
+            }
+        }
+        bool BeforeCheckOutMoveFile(string vcsPath, string newVcsPath, string localPath, string newLocalPath) {
+            return PerformSimpleTestBeforeCheckout(vcsPath) && PerformSimpleTestBeforeCheckout(newVcsPath);
+        }
+        bool BeforeCheckOutDeleteFile(string vcsPath, string localPath) {
+            return PerformSimpleTestBeforeCheckout(vcsPath);
+        }
+        bool BeforeCheckOutModifyFile(string vcsPath, string localPath) {
+            return PerformSimpleTestBeforeCheckout(vcsPath);
+        }
+        bool BeforeCheckOutCreateFile(string vcsPath, string localPath) {
+            return PerformSimpleTestBeforeCheckout(vcsPath);
+        }
+        bool PerformSimpleTestBeforeCheckout(string vcsPath) {
+            try {
+                var repo = DXVcsConnectionHelper.Connect(server, this.user, this.password);
+                return !repo.IsUnderVss(vcsPath) || !repo.IsCheckedOut(vcsPath) || repo.IsCheckedOutByMe(vcsPath);
+            }
+            catch (Exception ex) {
+                Log.Error($"Test file {vcsPath} before ckeckout failed.", ex);
+            }
+            return true;
+
         }
         bool ProcessCheckoutItem(SyncItem item, string comment) {
             switch (item.SyncAction) {
