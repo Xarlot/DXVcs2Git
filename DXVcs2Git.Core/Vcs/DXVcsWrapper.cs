@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.DirectoryServices.ActiveDirectory;
 using System.IO;
 using System.Linq;
 using DXVcs2Git.Core;
@@ -244,6 +245,12 @@ namespace DXVcs2Git.DXVcs {
         bool PerformSimpleTestBeforeCheckout(string vcsPath) {
             try {
                 var repo = DXVcsConnectionHelper.Connect(server, this.user, this.password);
+                bool hasLiveLinks = repo.HasLiveLinks(vcsPath);
+                if (hasLiveLinks) {
+                    Log.Error($"Can`t process shared file {vcsPath}. Destroy active links or sync this file manually using vcs.");
+                    return false;
+                }
+
                 return !repo.IsUnderVss(vcsPath) || !repo.IsCheckedOut(vcsPath) || repo.IsCheckedOutByMe(vcsPath);
             }
             catch (Exception ex) {

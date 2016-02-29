@@ -795,5 +795,11 @@ namespace DXVcs2Git.DXVcs {
         public UserInfo[] GetUsers() {
             return Service.GetUsers();
         }
+        public bool HasLiveLinks(string vcsPath) {
+            if (string.IsNullOrEmpty(vcsPath))
+                throw new ArgumentException("vcsPath");
+            var links = Service.GetLinks(vcsPath);
+            return links.Sum(x => x.Deleted ? 0 : 1) > 1;
+        }
     }
 }
