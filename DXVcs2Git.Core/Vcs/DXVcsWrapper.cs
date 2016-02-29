@@ -245,7 +245,7 @@ namespace DXVcs2Git.DXVcs {
         bool PerformSimpleTestBeforeCheckout(string vcsPath) {
             try {
                 var repo = DXVcsConnectionHelper.Connect(server, this.user, this.password);
-                bool hasLiveLinks = repo.HasLiveLinks(vcsPath);
+                bool hasLiveLinks = repo.IsUnderVss(vcsPath) && repo.HasLiveLinks(vcsPath);
                 if (hasLiveLinks) {
                     Log.Error($"Can`t process shared file {vcsPath}. Destroy active links or sync this file manually using vcs.");
                     return false;
