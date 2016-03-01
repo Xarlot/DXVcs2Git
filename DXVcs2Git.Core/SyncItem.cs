@@ -10,6 +10,7 @@
         Default,
         Modified,
         Failed,
+        Ignored,
     }
     public class SyncItem {
         public string LocalPath { get; set; }

@@ -84,6 +84,9 @@ namespace DXVcs2Git.DXVcs {
             return CheckOutFile(item.VcsPath, item.LocalPath, true, comment);
         }
         public bool CheckIn(SyncItem item, string comment) {
+            if (item.State == ProcessState.Ignored)
+                return true;
+
             switch (item.SyncAction) {
                 case SyncAction.New:
                     return CheckInNewFile(item.VcsPath, item.LocalPath, comment);
@@ -200,75 +203,124 @@ namespace DXVcs2Git.DXVcs {
                 return false;
             }
         }
-        public bool ProcessCheckout(IEnumerable<SyncItem> items) {
+        public bool ProcessCheckout(IEnumerable<SyncItem> items, bool ignoreSharedFiles) {
             var list = items.ToList();
             list.ForEach(x => {
-                bool result = ProcessBeforeCheckout(x);
-                x.State = result ? x.State : ProcessState.Failed;
+                TestFileResult result = ProcessBeforeCheckout(x, ignoreSharedFiles);
+                x.State = CalcBeforeCheckoutState(result);
             });
 
-            if (list.Any(x => x.State != ProcessState.Default))
+            if (list.Any(x => x.State == ProcessState.Failed))
                 return false;
 
             list.ForEach(x => {
-                bool result = ProcessCheckoutItem(x, x.Comment.ToString());
-                x.State = result ? ProcessState.Modified : ProcessState.Failed;
+                TestFileResult result = ProcessCheckoutItem(x, x.Comment.ToString());
+                x.State = CalcCheckoutStateAfterCheckout(result);
             });
-            return list.All(x => x.State == ProcessState.Modified);
+            return list.All(x => x.State == ProcessState.Modified || x.State == ProcessState.Ignored);
         }
-        bool ProcessBeforeCheckout(SyncItem item) {
+        static ProcessState CalcCheckoutStateAfterCheckout(TestFileResult result) {
+            switch (result) {
+                case TestFileResult.Ok:
+                    return ProcessState.Modified;
+                case TestFileResult.Fail:
+                    return ProcessState.Failed;
+                case TestFileResult.Ignore:
+                    return ProcessState.Ignored;
+                default:
+                    throw new Exception("result");
+
+            }
+        }
+        static ProcessState CalcBeforeCheckoutState(TestFileResult result) {
+            switch (result) {
+                case TestFileResult.Ok:
+                    return ProcessState.Default;
+                case TestFileResult.Fail:
+                    return ProcessState.Failed;
+                case TestFileResult.Ignore:
+                    return ProcessState.Ignored;
+                default:
+                    throw new Exception("result");
+
+            }
+        }
+        TestFileResult ProcessBeforeCheckout(SyncItem item, bool ignoreSharedFiles) {
+            TestFileResult result;
             switch (item.SyncAction) {
                 case SyncAction.New:
-                    return BeforeCheckOutCreateFile(item.VcsPath, item.LocalPath);
+                    result = BeforeCheckOutCreateFile(item.VcsPath, item.LocalPath, ignoreSharedFiles);
+                    break;
                 case SyncAction.Modify:
-                    return BeforeCheckOutModifyFile(item.VcsPath, item.LocalPath);
+                    result = BeforeCheckOutModifyFile(item.VcsPath, item.LocalPath, ignoreSharedFiles);
+                    break;
                 case SyncAction.Delete:
-                    return BeforeCheckOutDeleteFile(item.VcsPath, item.LocalPath);
+                    result = BeforeCheckOutDeleteFile(item.VcsPath, item.LocalPath, ignoreSharedFiles);
+                    break;
                 case SyncAction.Move:
-                    return BeforeCheckOutMoveFile(item.VcsPath, item.NewVcsPath, item.LocalPath, item.NewLocalPath);
+                    result = BeforeCheckOutMoveFile(item.VcsPath, item.NewVcsPath, item.LocalPath, item.NewLocalPath, ignoreSharedFiles);
+                    break;
                 default:
                     throw new ArgumentException("SyncAction");
             }
+            return result;
         }
-        bool BeforeCheckOutMoveFile(string vcsPath, string newVcsPath, string localPath, string newLocalPath) {
-            return PerformSimpleTestBeforeCheckout(vcsPath) && PerformSimpleTestBeforeCheckout(newVcsPath);
+        TestFileResult BeforeCheckOutMoveFile(string vcsPath, string newVcsPath, string localPath, string newLocalPath, bool ignoreSharedFiles) {
+            var oldPathResult = PerformSimpleTestBeforeCheckout(vcsPath, ignoreSharedFiles);
+            if (oldPathResult != TestFileResult.Ok)
+                return oldPathResult;
+            return PerformSimpleTestBeforeCheckout(newVcsPath, ignoreSharedFiles);
         }
-        bool BeforeCheckOutDeleteFile(string vcsPath, string localPath) {
-            return PerformSimpleTestBeforeCheckout(vcsPath);
+        TestFileResult BeforeCheckOutDeleteFile(string vcsPath, string localPath, bool ignoreSharedFiles) {
+            return PerformSimpleTestBeforeCheckout(vcsPath, ignoreSharedFiles);
         }
-        bool BeforeCheckOutModifyFile(string vcsPath, string localPath) {
-            return PerformSimpleTestBeforeCheckout(vcsPath);
+        TestFileResult BeforeCheckOutModifyFile(string vcsPath, string localPath, bool ignoreSharedFiles) {
+            return PerformSimpleTestBeforeCheckout(vcsPath, ignoreSharedFiles);
         }
-        bool BeforeCheckOutCreateFile(string vcsPath, string localPath) {
-            return PerformSimpleTestBeforeCheckout(vcsPath);
+        TestFileResult BeforeCheckOutCreateFile(string vcsPath, string localPath, bool ignoreSharedFiles) {
+            return PerformSimpleTestBeforeCheckout(vcsPath, ignoreSharedFiles);
         }
-        bool PerformSimpleTestBeforeCheckout(string vcsPath) {
+        TestFileResult PerformSimpleTestBeforeCheckout(string vcsPath, bool ignoreSharedFiles) {
             try {
                 var repo = DXVcsConnectionHelper.Connect(server, this.user, this.password);
-                bool hasLiveLinks = repo.IsUnderVss(vcsPath) && repo.HasLiveLinks(vcsPath);
+                if (!repo.IsUnderVss(vcsPath))
+                    return TestFileResult.Ok;
+
+                bool hasLiveLinks = repo.HasLiveLinks(vcsPath);
                 if (hasLiveLinks) {
+                    if (ignoreSharedFiles)
+                        return TestFileResult.Ignore;
                     Log.Error($"Can`t process shared file {vcsPath}. Destroy active links or sync this file manually using vcs.");
-                    return false;
+                    return TestFileResult.Fail;
                 }
 
-                return !repo.IsUnderVss(vcsPath) || !repo.IsCheckedOut(vcsPath) || repo.IsCheckedOutByMe(vcsPath);
+                var filedata = repo.GetFileData(vcsPath);
+
+                bool isFree = !filedata.CheckedOut || filedata.CheckedOutMe;
+                if (!isFree) {
+                    Log.Error($"Can`t process checked out file {vcsPath}. Contact {filedata.CheckedOutUser} or resert check out state.");
+                    return TestFileResult.Fail;
+                }
+                return TestFileResult.Ok;
             }
             catch (Exception ex) {
                 Log.Error($"Test file {vcsPath} before ckeckout failed.", ex);
             }
-            return true;
-
+            return TestFileResult.Fail;
         }
-        bool ProcessCheckoutItem(SyncItem item, string comment) {
+        TestFileResult ProcessCheckoutItem(SyncItem item, string comment) {
+            if (item.State == ProcessState.Ignored)
+                return TestFileResult.Ignore;
+
             switch (item.SyncAction) {
                 case SyncAction.New:
-                    return CheckOutCreateFile(item.VcsPath, item.LocalPath, comment);
+                    return CheckOutCreateFile(item.VcsPath, item.LocalPath, comment) ? TestFileResult.Ok : TestFileResult.Fail;
                 case SyncAction.Modify:
-                    return CheckOutModifyFile(item.VcsPath, item.LocalPath, comment);
+                    return CheckOutModifyFile(item.VcsPath, item.LocalPath, comment) ? TestFileResult.Ok : TestFileResult.Fail;
                 case SyncAction.Delete:
-                    return CheckOutDeleteFile(item.VcsPath, item.LocalPath, comment);
+                    return CheckOutDeleteFile(item.VcsPath, item.LocalPath, comment) ? TestFileResult.Ok : TestFileResult.Fail;
                 case SyncAction.Move:
-                    return CheckOutMoveFile(item.VcsPath, item.NewVcsPath, item.LocalPath, item.NewLocalPath, comment);
+                    return CheckOutMoveFile(item.VcsPath, item.NewVcsPath, item.LocalPath, item.NewLocalPath, comment) ? TestFileResult.Ok : TestFileResult.Fail;
                 default:
                     throw new ArgumentException("SyncAction");
             }
@@ -409,5 +461,11 @@ namespace DXVcs2Git.DXVcs {
                 throw;
             }
         }
+    }
+
+    public enum TestFileResult {
+        Ok,
+        Fail,
+        Ignore
     }
 }

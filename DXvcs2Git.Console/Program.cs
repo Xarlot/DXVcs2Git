@@ -329,12 +329,13 @@ namespace DXVcs2Git.Console {
 
             var changes = gitLabWrapper.GetMergeRequestChanges(mergeRequest).Where(x => branch.TrackItems.FirstOrDefault(track => x.OldPath.StartsWith(track.ProjectPath)) != null);
             var genericChange = changes.Select(x => ProcessMergeRequestChanges(mergeRequest, x, localGitDir, branch, autoSyncToken)).ToList();
-            if (!vcsWrapper.ProcessCheckout(genericChange)) {
-                Log.Error("Merging merge request failed because of checked out files:");
+            bool ignoreSharedFiles = gitLabWrapper.ShouldIgnoreSharedFiles(mergeRequest);
+
+            if (!vcsWrapper.ProcessCheckout(genericChange, ignoreSharedFiles)) {
+                Log.Error("Merging merge request failed because of checked out or shared files.");
                 var failedChangeSet = genericChange.Where(x => x.State == ProcessState.Failed).ToList();
                 AssignBackConflictedMergeRequest(gitLabWrapper, users, mergeRequest, CalcCommentForFailedCheckoutMergeRequest(failedChangeSet));
                 vcsWrapper.ProcessUndoCheckout(genericChange);
-                failedChangeSet.ForEach(x => Log.Error(x.VcsPath));
                 return MergeRequestResult.CheckoutFailed;
             }
             CommentWrapper comment = CalcComment(mergeRequest, branch, autoSyncToken);
