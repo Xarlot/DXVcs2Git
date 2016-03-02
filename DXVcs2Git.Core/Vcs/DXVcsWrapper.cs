@@ -266,15 +266,38 @@ namespace DXVcs2Git.DXVcs {
             return result;
         }
         TestFileResult BeforeCheckOutMoveFile(string vcsPath, string newVcsPath, string localPath, string newLocalPath, bool ignoreSharedFiles) {
+            if (!PerformHasFileTestBeforeCheckout(vcsPath)) {
+                Log.Error($"Check move capability. Source file {vcsPath} is not found in vcs.");
+                return TestFileResult.Fail;
+            }
+            if (PerformHasFileTestBeforeCheckout(vcsPath)) {
+                Log.Error($"Check move capability. Target file {vcsPath} is found in vcs.");
+                return TestFileResult.Fail;
+            }
+
             var oldPathResult = PerformSimpleTestBeforeCheckout(vcsPath, ignoreSharedFiles);
             if (oldPathResult != TestFileResult.Ok)
                 return oldPathResult;
             return PerformSimpleTestBeforeCheckout(newVcsPath, ignoreSharedFiles);
         }
+        bool PerformHasFileTestBeforeCheckout(string vcsPath) {
+            try {
+                var repo = DXVcsConnectionHelper.Connect(server, this.user, this.password);
+                return repo.IsUnderVss(vcsPath);
+            }
+            catch (Exception ex) {
+                Log.Error($"Test file {vcsPath} before ckeckout failed.", ex);
+                return false;
+            }
+        }
         TestFileResult BeforeCheckOutDeleteFile(string vcsPath, string localPath, bool ignoreSharedFiles) {
             return PerformSimpleTestBeforeCheckout(vcsPath, ignoreSharedFiles);
         }
         TestFileResult BeforeCheckOutModifyFile(string vcsPath, string localPath, bool ignoreSharedFiles) {
+            if (!PerformHasFileTestBeforeCheckout(vcsPath)) {
+                Log.Error($"Check modify capability. File {vcsPath} is not found in vcs.");
+                return TestFileResult.Fail;
+            }
             return PerformSimpleTestBeforeCheckout(vcsPath, ignoreSharedFiles);
         }
         TestFileResult BeforeCheckOutCreateFile(string vcsPath, string localPath, bool ignoreSharedFiles) {

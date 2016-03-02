@@ -143,5 +143,10 @@ namespace DXVcs2Git.Git {
             var comment = commentsClient.All.LastOrDefault();
             return comment?.Note == Ignoresharedfiles;
         }
+        public IEnumerable<MergeRequestFileData> GetFileChanges(MergeRequest mergeRequest) {
+            var mergeRequestsClient = client.GetMergeRequest(mergeRequest.ProjectId);
+            var changes = mergeRequestsClient.Changes(mergeRequest.Id);
+            return changes.Changes.Files;
+        }
     }
 }
