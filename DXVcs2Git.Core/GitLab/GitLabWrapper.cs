@@ -8,7 +8,7 @@ using User = NGitLab.Models.User;
 
 namespace DXVcs2Git.Git {
     public class GitLabWrapper {
-        const string Ignoresharedfiles = "[ISF]";
+        const string IgnoreValidation = "[IGNOREVALIDATION]";
         readonly GitLabClient client;
         public GitLabWrapper(string server, string token) {
             client = GitLabClient.Connect(server, token);
@@ -141,7 +141,7 @@ namespace DXVcs2Git.Git {
             var mergeRequestsClient = client.GetMergeRequest(mergeRequest.ProjectId);
             var commentsClient = mergeRequestsClient.Comments(mergeRequest.Id);
             var comment = commentsClient.All.LastOrDefault();
-            return comment?.Note == Ignoresharedfiles;
+            return comment?.Note == IgnoreValidation;
         }
         public IEnumerable<MergeRequestFileData> GetFileChanges(MergeRequest mergeRequest) {
             var mergeRequestsClient = client.GetMergeRequest(mergeRequest.ProjectId);

@@ -327,7 +327,7 @@ namespace DXVcs2Git.DXVcs {
                 return TestFileResult.Ok;
             }
             catch (Exception ex) {
-                Log.Error($"Test file {vcsPath} before ckeckout failed.", ex);
+                Log.Error($"Test file {vcsPath} before checkout failed.", ex);
             }
             return TestFileResult.Fail;
         }

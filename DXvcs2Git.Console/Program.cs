@@ -7,6 +7,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Reflection;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Windows.Threading;
 using CommandLine;
@@ -249,8 +250,9 @@ namespace DXVcs2Git.Console {
             }
         }
         static GitWrapper CreateGitWrapper(string gitRepoPath, string localGitDir, TrackBranch branch, string username, string password) {
-            try { GitWrapper gitWrapper = new GitWrapper(localGitDir, gitRepoPath, new UsernamePasswordCredentials() { Username = username, Password = password });
-                if(gitWrapper.IsEmpty) {
+            try {
+                GitWrapper gitWrapper = new GitWrapper(localGitDir, gitRepoPath, new UsernamePasswordCredentials() { Username = username, Password = password });
+                if (gitWrapper.IsEmpty) {
                     Log.Error($"Specified branch {branch.Name} in repo {gitRepoPath} is empty. Initialize repo properly.");
                     return null;
                 }
@@ -262,7 +264,7 @@ namespace DXVcs2Git.Console {
 
                 return gitWrapper;
             }
-            catch(Exception e) {
+            catch (Exception e) {
                 Log.Error("Git Wrapper was not created: " + e.Message, e);
                 return null;
             }
@@ -329,10 +331,10 @@ namespace DXVcs2Git.Console {
 
             var changes = gitLabWrapper.GetMergeRequestChanges(mergeRequest).Where(x => branch.TrackItems.FirstOrDefault(track => x.OldPath.StartsWith(track.ProjectPath)) != null);
             var genericChange = changes.Select(x => ProcessMergeRequestChanges(mergeRequest, x, localGitDir, branch, autoSyncToken)).ToList();
-            bool ignoreSharedFiles = gitLabWrapper.ShouldIgnoreSharedFiles(mergeRequest);
+            bool ignoreValidation = gitLabWrapper.ShouldIgnoreSharedFiles(mergeRequest);
 
-            if (!vcsWrapper.ProcessCheckout(genericChange, ignoreSharedFiles)) {
-                Log.Error("Merging merge request failed because of checked out or shared files.");
+            if (!ValidateMergeRequestChanges(gitLabWrapper, mergeRequest, ignoreValidation) || !vcsWrapper.ProcessCheckout(genericChange, ignoreValidation)) {
+                Log.Error("Merging merge request failed because failed validation.");
                 var failedChangeSet = genericChange.Where(x => x.State == ProcessState.Failed).ToList();
                 AssignBackConflictedMergeRequest(gitLabWrapper, users, mergeRequest, CalcCommentForFailedCheckoutMergeRequest(failedChangeSet));
                 vcsWrapper.ProcessUndoCheckout(genericChange);
@@ -376,12 +378,31 @@ namespace DXVcs2Git.Console {
 
             return MergeRequestResult.Conflicts;
         }
+        static bool ValidateMergeRequestChanges(GitLabWrapper gitLabWrapper, MergeRequest mergeRequest, bool ignoreValidation) {
+            if (ignoreValidation)
+                return true;
+
+            bool result = true;
+            var fileChanges = gitLabWrapper.GetFileChanges(mergeRequest);
+            foreach (var fileChange in fileChanges) {
+                if (!ValidateFileChange(fileChange)) {
+                    Log.Error($"File {fileChange.OldPath} has nonwindows line endings. Only windows line endings allowed.");
+                    result = false;
+                }
+            }
+            return result;
+        }
+        static Regex NewlinePattern { get; } = new Regex(@"^[+][^+?]", RegexOptions.Compiled);
+        static HashSet<string> CheckFilesList { get; } = new HashSet<string> { ".cs", ".xaml", ".csproj", ".sln", ".tt", ".resx" };
+        static bool ValidateFileChange(MergeRequestFileData diff) {
+            if (!CheckFilesList.Contains(Path.GetExtension(diff.OldPath)))
+                return true;
+            var chunks = diff.Diff.Split(new[] {'\n'}, StringSplitOptions.RemoveEmptyEntries);
+            return chunks.Where(x => NewlinePattern.IsMatch(x)).Select(chunk => chunk.ToCharArray()).All(charArray => charArray.LastOrDefault() == '\r');
+        }
         static string CalcCommentForFailedCheckoutMergeRequest(List<SyncItem> genericChange) {
             StringBuilder sb = new StringBuilder();
-            sb.AppendLine("Merge request has been assigned back to author because some files are checked out in vcs.");
-            sb.AppendLine("Remove checkout state from files and try again.");
-            sb.AppendLine("Files:");
-            genericChange.Where(x => x.State == ProcessState.Failed).ToList().ForEach(x => sb.AppendLine(x.VcsPath));
+            sb.AppendLine("Merge request has been assigned back because of changed validation.");
             return sb.ToString();
         }
         static SyncItem ProcessMergeRequestChanges(MergeRequest mergeRequest, MergeRequestFileData fileData, string localGitDir, TrackBranch branch, string token) {
