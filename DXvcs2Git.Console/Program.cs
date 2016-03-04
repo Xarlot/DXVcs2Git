@@ -397,7 +397,8 @@ namespace DXVcs2Git.Console {
         static bool ValidateFileChange(MergeRequestFileData diff) {
             if (!CheckFilesList.Contains(Path.GetExtension(diff.OldPath)))
                 return true;
-            var chunks = diff.Diff.Split(new[] {'\n'}, StringSplitOptions.RemoveEmptyEntries);
+            var fixeol = diff.Diff.Replace("\n\\ No newline at end of file\n", Environment.NewLine);
+            var chunks = fixeol.Split(new[] {'\n'}, StringSplitOptions.RemoveEmptyEntries);
             return chunks.Where(x => NewlinePattern.IsMatch(x)).Select(chunk => chunk.ToCharArray()).All(charArray => charArray.LastOrDefault() == '\r');
         }
         static string CalcCommentForFailedCheckoutMergeRequest(List<SyncItem> genericChange) {
