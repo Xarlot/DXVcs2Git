@@ -270,8 +270,8 @@ namespace DXVcs2Git.DXVcs {
                 Log.Error($"Check move capability. Source file {vcsPath} is not found in vcs.");
                 return TestFileResult.Fail;
             }
-            if (PerformHasFileTestBeforeCheckout(vcsPath)) {
-                Log.Error($"Check move capability. Target file {vcsPath} is found in vcs.");
+            if (PerformHasFileTestBeforeCheckout(newVcsPath)) {
+                Log.Error($"Check move capability. Target file {newVcsPath} is found in vcs.");
                 return TestFileResult.Fail;
             }
 
