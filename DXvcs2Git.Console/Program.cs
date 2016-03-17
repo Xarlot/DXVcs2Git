@@ -324,6 +324,7 @@ namespace DXVcs2Git.Console {
             return MergeRequestResult.InvalidState;
         }
         static MergeRequestResult ProcessOpenedMergeRequest(DXVcsWrapper vcsWrapper, GitWrapper gitWrapper, GitLabWrapper gitLabWrapper, RegisteredUsers users, User defaultUser, string localGitDir, TrackBranch branch, MergeRequest mergeRequest, SyncHistoryWrapper syncHistory) {
+            StringBuilder errorMessage = new StringBuilder();
             string autoSyncToken = syncHistory.CreateNewToken();
             var lastHistoryItem = syncHistory.GetHead();
 
@@ -333,11 +334,11 @@ namespace DXVcs2Git.Console {
             var genericChange = changes.Select(x => ProcessMergeRequestChanges(mergeRequest, x, localGitDir, branch, autoSyncToken)).ToList();
             bool ignoreValidation = gitLabWrapper.ShouldIgnoreSharedFiles(mergeRequest);
 
-            if (!ValidateMergeRequestChanges(gitLabWrapper, mergeRequest, ignoreValidation) || !vcsWrapper.ProcessCheckout(genericChange, ignoreValidation)) {
+            if (!ValidateMergeRequestChanges(gitLabWrapper, mergeRequest, ignoreValidation, errorMessage) || !vcsWrapper.ProcessCheckout(genericChange, ignoreValidation, errorMessage)) {
                 Log.Error("Merging merge request failed because failed validation.");
                 var failedChangeSet = genericChange.Where(x => x.State == ProcessState.Failed).ToList();
-                AssignBackConflictedMergeRequest(gitLabWrapper, users, mergeRequest, CalcCommentForFailedCheckoutMergeRequest(failedChangeSet));
-                vcsWrapper.ProcessUndoCheckout(genericChange);
+                AssignBackConflictedMergeRequest(gitLabWrapper, users, mergeRequest, CalcCommentForFailedCheckoutMergeRequest(failedChangeSet, errorMessage));
+                vcsWrapper.ProcessUndoCheckout(genericChange, errorMessage);
                 return MergeRequestResult.CheckoutFailed;
             }
             CommentWrapper comment = CalcComment(mergeRequest, branch, autoSyncToken);
@@ -352,7 +353,7 @@ namespace DXVcs2Git.Console {
                 var gitCommit = gitWrapper.FindCommit(branch.Name, x => CommentWrapper.Parse(x.Message).Token == autoSyncToken);
                 long timeStamp = lastHistoryItem.VcsCommitTimeStamp;
 
-                if (vcsWrapper.ProcessCheckIn(genericChange, comment.ToString())) {
+                if (vcsWrapper.ProcessCheckIn(genericChange, comment.ToString(), errorMessage)) {
                     var checkinHistory = vcsWrapper.GenerateHistory(branch, new DateTime(timeStamp)).Where(x => x.ActionDate.Ticks > timeStamp);
                     var lastCommit = checkinHistory.OrderBy(x => x.ActionDate).LastOrDefault();
                     long newTimeStamp = lastCommit?.ActionDate.Ticks ?? timeStamp;
@@ -373,12 +374,14 @@ namespace DXVcs2Git.Console {
                 return MergeRequestResult.Failed;
             }
             Log.Message($"Merge request merging failed due conflicts. Resolve conflicts manually.");
-            vcsWrapper.ProcessUndoCheckout(genericChange);
-            AssignBackConflictedMergeRequest(gitLabWrapper, users, mergeRequest, "Merge request has been assigned back to author because of conflicts during merge. Resolve conflicts manually and assign it back.");
+            vcsWrapper.ProcessUndoCheckout(genericChange, errorMessage);
+
+            errorMessage.Insert(0, "Merge request has been assigned back to author because of conflicts during merge. Resolve conflicts manually and assign it back.\r\n");
+            AssignBackConflictedMergeRequest(gitLabWrapper, users, mergeRequest, errorMessage.ToString());
 
             return MergeRequestResult.Conflicts;
         }
-        static bool ValidateMergeRequestChanges(GitLabWrapper gitLabWrapper, MergeRequest mergeRequest, bool ignoreValidation) {
+        static bool ValidateMergeRequestChanges(GitLabWrapper gitLabWrapper, MergeRequest mergeRequest, bool ignoreValidation, StringBuilder errorMessage) {
             if (ignoreValidation)
                 return true;
 
@@ -387,6 +390,7 @@ namespace DXVcs2Git.Console {
             foreach (var fileChange in fileChanges) {
                 if (!ValidateFileChange(fileChange)) {
                     Log.Error($"File {fileChange.OldPath} has nonwindows line endings. Only windows line endings allowed.");
+                    errorMessage.AppendLine(Log.LastErrorMessage);
                     result = false;
                 }
             }
@@ -401,9 +405,10 @@ namespace DXVcs2Git.Console {
             var chunks = fixeol.Split(new[] {'\n'}, StringSplitOptions.RemoveEmptyEntries);
             return chunks.Where(x => NewlinePattern.IsMatch(x)).Select(chunk => chunk.ToCharArray()).All(charArray => charArray.LastOrDefault() == '\r');
         }
-        static string CalcCommentForFailedCheckoutMergeRequest(List<SyncItem> genericChange) {
+        static string CalcCommentForFailedCheckoutMergeRequest(List<SyncItem> genericChange, StringBuilder errorMessage) {
             StringBuilder sb = new StringBuilder();
             sb.AppendLine("Merge request has been assigned back because of changed validation.");
+            sb.AppendLine(errorMessage.ToString());
             return sb.ToString();
         }
         static SyncItem ProcessMergeRequestChanges(MergeRequest mergeRequest, MergeRequestFileData fileData, string localGitDir, TrackBranch branch, string token) {
