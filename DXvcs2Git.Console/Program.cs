@@ -329,14 +329,14 @@ namespace DXVcs2Git.Console {
 
             Log.Message($"Start merging mergerequest {mergeRequest.Title}");
 
+            Log.ResetErrorsAccumulator();
             var changes = gitLabWrapper.GetMergeRequestChanges(mergeRequest).Where(x => branch.TrackItems.FirstOrDefault(track => x.OldPath.StartsWith(track.ProjectPath)) != null);
             var genericChange = changes.Select(x => ProcessMergeRequestChanges(mergeRequest, x, localGitDir, branch, autoSyncToken)).ToList();
             bool ignoreValidation = gitLabWrapper.ShouldIgnoreSharedFiles(mergeRequest);
 
             if (!ValidateMergeRequestChanges(gitLabWrapper, mergeRequest, ignoreValidation) || !vcsWrapper.ProcessCheckout(genericChange, ignoreValidation)) {
                 Log.Error("Merging merge request failed because failed validation.");
-                var failedChangeSet = genericChange.Where(x => x.State == ProcessState.Failed).ToList();
-                AssignBackConflictedMergeRequest(gitLabWrapper, users, mergeRequest, CalcCommentForFailedCheckoutMergeRequest(failedChangeSet));
+                AssignBackConflictedMergeRequest(gitLabWrapper, users, mergeRequest, CalcCommentForFailedCheckoutMergeRequest(genericChange));
                 vcsWrapper.ProcessUndoCheckout(genericChange);
                 return MergeRequestResult.CheckoutFailed;
             }
@@ -374,7 +374,7 @@ namespace DXVcs2Git.Console {
             }
             Log.Message($"Merge request merging failed due conflicts. Resolve conflicts manually.");
             vcsWrapper.ProcessUndoCheckout(genericChange);
-            AssignBackConflictedMergeRequest(gitLabWrapper, users, mergeRequest, "Merge request has been assigned back to author because of conflicts during merge. Resolve conflicts manually and assign it back.");
+            AssignBackConflictedMergeRequest(gitLabWrapper, users, mergeRequest, CalcCommentForFailedCheckoutMergeRequest(genericChange));
 
             return MergeRequestResult.Conflicts;
         }
@@ -404,6 +404,7 @@ namespace DXVcs2Git.Console {
         static string CalcCommentForFailedCheckoutMergeRequest(List<SyncItem> genericChange) {
             StringBuilder sb = new StringBuilder();
             sb.AppendLine("Merge request has been assigned back because of changed validation.");
+            sb.AppendLine(Log.GetErrorsAccumulatorContent());
             return sb.ToString();
         }
         static SyncItem ProcessMergeRequestChanges(MergeRequest mergeRequest, MergeRequestFileData fileData, string localGitDir, TrackBranch branch, string token) {
