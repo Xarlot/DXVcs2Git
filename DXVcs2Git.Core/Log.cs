@@ -13,7 +13,6 @@ namespace DXVcs2Git.Core {
             log4net.Config.XmlConfigurator.Configure();
         }
         private static readonly ILog log = LogManager.GetLogger(typeof(Log));
-        private static string lastErrorMessage;
         public static void Message(string message, Exception ex = null) {
             log.Info(FormatMessage(message), ex);
         }
@@ -21,7 +20,6 @@ namespace DXVcs2Git.Core {
             return String.Format("[{0}] {1}", DateTime.Now.ToLongTimeString(), message);
         }
         public static void Error(string message, Exception exception = null) {
-            lastErrorMessage = message;
             log.Error(FormatMessage(message), exception);
         }
         public static string GetLog() {
@@ -33,9 +31,6 @@ namespace DXVcs2Git.Core {
             foreach (var ev in mappender.GetEvents())
                 sb.AppendLine(ev.RenderedMessage);
             return sb.ToString();
-        }
-        public static string LastErrorMessage {
-            get { return lastErrorMessage; }
         }
     }
 

@@ -41,10 +41,9 @@ namespace DXVcs2Git.Core.Serialization {
         }
         public void Save() {
             try {
-                var errorMessage = new System.Text.StringBuilder();
-                this.vcsWrapper.CheckOutFile(this.vcsHistoryPath, this.localHistoryPath, true, string.Empty, errorMessage);
+                this.vcsWrapper.CheckOutFile(this.vcsHistoryPath, this.localHistoryPath, true, string.Empty);
                 SyncHistory.Serialize(this.history.Clone(this.historyLimit), localHistoryPath);
-                this.vcsWrapper.CheckInFile(vcsHistoryPath, localHistoryPath, string.Empty, errorMessage);
+                this.vcsWrapper.CheckInFile(vcsHistoryPath, localHistoryPath, string.Empty);
             }
             catch (Exception ex) {
                 Log.Error($"Save history to {vcsHistoryPath} failed.", ex);

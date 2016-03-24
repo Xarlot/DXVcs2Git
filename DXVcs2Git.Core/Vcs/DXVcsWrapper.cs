@@ -5,7 +5,6 @@ using System.IO;
 using System.Linq;
 using DXVcs2Git.Core;
 using DXVCS;
-using System.Text;
 
 namespace DXVcs2Git.DXVcs {
     public class DXVcsWrapper {
@@ -17,7 +16,7 @@ namespace DXVcs2Git.DXVcs {
             this.user = $@"corp\{user}";
             this.password = password;
         }
-        public bool CheckOutFile(string vcsPath, string localPath, bool dontGetLocalCopy, string comment, StringBuilder errorMessage) {
+        public bool CheckOutFile(string vcsPath, string localPath, bool dontGetLocalCopy, string comment) {
             try {
                 var repo = DXVcsConnectionHelper.Connect(server, this.user, this.password);
                 if (repo.IsUnderVss(vcsPath)) {
@@ -26,25 +25,22 @@ namespace DXVcs2Git.DXVcs {
                             return true;
                         var fileData = repo.GetFileData(vcsPath);
                         Log.Message($"File {vcsPath} is checked out by {fileData.CheckedOutUser} already. Check out failed.");
-                        errorMessage.AppendLine(Log.LastErrorMessage);
                         return false;
                     }
                     repo.CheckOutFile(vcsPath, localPath, comment, dontGetLocalCopy);
                 }
                 else {
                     Log.Error($"File {vcsPath} is not under vss.");
-                    errorMessage.AppendLine(Log.LastErrorMessage);
                     return false;
                 }
                 return true;
             }
             catch (Exception ex) {
                 Log.Error($"Checkout file {vcsPath} failed. ", ex);
-                errorMessage.AppendLine(Log.LastErrorMessage);
                 return false;
             }
         }
-        public bool CheckInFile(string vcsPath, string localPath, string comment, StringBuilder errorMessage) {
+        public bool CheckInFile(string vcsPath, string localPath, string comment) {
             try {
                 var repo = DXVcsConnectionHelper.Connect(server, this.user, this.password);
                 if (repo.IsUnderVss(vcsPath) && repo.IsCheckedOutByMe(vcsPath)) {
@@ -52,18 +48,16 @@ namespace DXVcs2Git.DXVcs {
                 }
                 else {
                     Log.Error($"File {vcsPath} is not under vss.");
-                    errorMessage.AppendLine(Log.LastErrorMessage);
                     return false;
                 }
                 return true;
             }
             catch (Exception ex) {
                 Log.Error($"Checkin file {vcsPath} failed. ", ex);
-                errorMessage.AppendLine(Log.LastErrorMessage);
                 return false;
             }
         }
-        public bool UndoCheckoutFile(string vcsPath, string localPath, StringBuilder errorMessage) {
+        public bool UndoCheckoutFile(string vcsPath, string localPath) {
             try {
                 var repo = DXVcsConnectionHelper.Connect(server, this.user, this.password);
                 if (repo.IsUnderVss(vcsPath)) {
@@ -75,48 +69,47 @@ namespace DXVcs2Git.DXVcs {
             }
             catch (Exception ex) {
                 Log.Error($"Undo checkout file {vcsPath} failed. ", ex);
-                errorMessage.AppendLine(Log.LastErrorMessage);
                 return false;
             }
         }
-        public bool CheckInNewFile(string vcsPath, string localPath, string comment, StringBuilder errorMessage) {
+        public bool CheckInNewFile(string vcsPath, string localPath, string comment) {
             Log.Message($"Check in for new file {vcsPath}");
-            return CheckInFile(vcsPath, localPath, comment, errorMessage);
+            return CheckInFile(vcsPath, localPath, comment);
         }
-        public bool CheckInChangedFile(string vcsPath, string localPath, string comment, StringBuilder errorMessage) {
+        public bool CheckInChangedFile(string vcsPath, string localPath, string comment) {
             Log.Message($"Check in for changed file {vcsPath}");
-            return CheckInFile(vcsPath, localPath, comment, errorMessage);
+            return CheckInFile(vcsPath, localPath, comment);
         }
-        public bool CheckOut(SyncItem item, string comment, StringBuilder errorMessage) {
-            return CheckOutFile(item.VcsPath, item.LocalPath, true, comment, errorMessage);
+        public bool CheckOut(SyncItem item, string comment) {
+            return CheckOutFile(item.VcsPath, item.LocalPath, true, comment);
         }
-        public bool CheckIn(SyncItem item, string comment, StringBuilder errorMessage) {
+        public bool CheckIn(SyncItem item, string comment) {
             if (item.State == ProcessState.Ignored)
                 return true;
 
             switch (item.SyncAction) {
                 case SyncAction.New:
-                    return CheckInNewFile(item.VcsPath, item.LocalPath, comment, errorMessage);
+                    return CheckInNewFile(item.VcsPath, item.LocalPath, comment);
                 case SyncAction.Modify:
-                    return CheckInChangedFile(item.VcsPath, item.LocalPath, comment, errorMessage);
+                    return CheckInChangedFile(item.VcsPath, item.LocalPath, comment);
                 case SyncAction.Delete:
-                    return CheckInDeletedFile(item.VcsPath, item.LocalPath, comment, errorMessage);
+                    return CheckInDeletedFile(item.VcsPath, item.LocalPath, comment);
                 case SyncAction.Move:
-                    return CheckInMovedFile(item.VcsPath, item.NewVcsPath, item.LocalPath, item.NewLocalPath, comment, errorMessage);
+                    return CheckInMovedFile(item.VcsPath, item.NewVcsPath, item.LocalPath, item.NewLocalPath, comment);
                 default:
                     throw new ArgumentException("SyncAction");
             }
         }
-        bool CheckOutModifyFile(string vcsPath, string localFile, string comment, StringBuilder errorMessage) {
+        bool CheckOutModifyFile(string vcsPath, string localFile, string comment) {
             Log.Message($"Checkout for modify file {vcsPath}");
-            return CheckOutFile(vcsPath, localFile, true, comment, errorMessage);
+            return CheckOutFile(vcsPath, localFile, true, comment);
         }
-        public bool RollbackItem(SyncItem item, StringBuilder errorMessage) {
+        public bool RollbackItem(SyncItem item) {
             if (item.State == ProcessState.Default)
                 return true;
-            return UndoCheckoutFile(item.VcsPath, item.LocalPath, errorMessage);
+            return UndoCheckoutFile(item.VcsPath, item.LocalPath);
         }
-        bool CheckOutCreateFile(string vcsPath, string localPath, string comment, StringBuilder errorMessage) {
+        bool CheckOutCreateFile(string vcsPath, string localPath, string comment) {
             try {
                 Log.Message($"Checkout for create file {vcsPath}");
                 var repo = DXVcsConnectionHelper.Connect(server, this.user, this.password);
@@ -127,11 +120,10 @@ namespace DXVcs2Git.DXVcs {
             }
             catch (Exception ex) {
                 Log.Error($"Add new file {vcsPath} failed.", ex);
-                errorMessage.AppendLine(Log.LastErrorMessage);
                 return false;
             }
         }
-        bool CheckOutDeleteFile(string vcsPath, string localPath, string comment, StringBuilder errorMessage) {
+        bool CheckOutDeleteFile(string vcsPath, string localPath, string comment) {
             try {
                 Log.Message($"Checkout for deleted file {vcsPath}");
                 var repo = DXVcsConnectionHelper.Connect(server, this.user, this.password);
@@ -139,7 +131,6 @@ namespace DXVcs2Git.DXVcs {
                     return true;
                 if (repo.IsCheckedOut(vcsPath) && !repo.IsCheckedOutByMe(vcsPath)) {
                     Log.Error($"File {vcsPath} is checked out already.");
-                    errorMessage.AppendLine(Log.LastErrorMessage);
                     return false;
                 }
                 repo.CheckOutFile(vcsPath, localPath, comment, true);
@@ -147,11 +138,10 @@ namespace DXVcs2Git.DXVcs {
             }
             catch (Exception ex) {
                 Log.Error($"Add new file {vcsPath} failed.", ex);
-                errorMessage.AppendLine(Log.LastErrorMessage);
                 return false;
             }
         }
-        bool CheckInDeletedFile(string vcsPath, string localPath, string comment, StringBuilder errorMessage) {
+        bool CheckInDeletedFile(string vcsPath, string localPath, string comment) {
             try {
                 Log.Message($"Checkin for deleted file {vcsPath}");
                 var repo = DXVcsConnectionHelper.Connect(server, this.user, this.password);
@@ -159,72 +149,64 @@ namespace DXVcs2Git.DXVcs {
                     return true;
                 if (repo.IsCheckedOut(vcsPath) && !repo.IsCheckedOutByMe(vcsPath)) {
                     Log.Error($"File {vcsPath} is checked out already.");
-                    errorMessage.AppendLine(Log.LastErrorMessage);
                     return false;
                 }
-                UndoCheckoutFile(vcsPath, localPath, errorMessage);
+                UndoCheckoutFile(vcsPath, localPath);
                 repo.DeleteFile(vcsPath, comment);
                 return true;
             }
             catch (Exception ex) {
                 Log.Error($"Remove file {vcsPath} failed.", ex);
-                errorMessage.AppendLine(Log.LastErrorMessage);
                 return false;
             }
         }
-        bool CheckOutMoveFile(string vcsPath, string newVcsPath, string localPath, string newLocalPath, string comment, StringBuilder errorMessage) {
+        bool CheckOutMoveFile(string vcsPath, string newVcsPath, string localPath, string newLocalPath, string comment) {
             try {
                 Log.Message($"Checkout for move file {vcsPath}");
                 var repo = DXVcsConnectionHelper.Connect(server, this.user, this.password);
                 if (!repo.IsUnderVss(vcsPath)) {
                     Log.Error($"Move file failed. Can`t locate {vcsPath}.");
-                    errorMessage.AppendLine(Log.LastErrorMessage);
                     return false;
                 }
                 if (repo.IsUnderVss(newVcsPath)) {
                     Log.Error($"Move file error. File {vcsPath} already exist.");
-                    errorMessage.AppendLine(Log.LastErrorMessage);
                     return false;
                 }
-                CheckOutFile(vcsPath, localPath, true, comment, errorMessage);
+                CheckOutFile(vcsPath, localPath, true, comment);
                 return true;
             }
             catch (Exception ex) {
                 Log.Error($"Add new file {vcsPath} failed.", ex);
-                errorMessage.AppendLine(Log.LastErrorMessage);
                 return false;
             }
         }
-        bool CheckInMovedFile(string vcsPath, string newVcsPath, string localPath, string newLocalPath, string comment, StringBuilder errorMessage) {
+        bool CheckInMovedFile(string vcsPath, string newVcsPath, string localPath, string newLocalPath, string comment) {
             try {
                 Log.Message($"Checkin for moved file {vcsPath}");
                 var repo = DXVcsConnectionHelper.Connect(server, this.user, this.password);
                 if (!repo.IsUnderVss(vcsPath)) {
                     Log.Error($"Move file failed. Can`t locate {vcsPath}.");
-                    errorMessage.AppendLine(Log.LastErrorMessage);
                     return false;
                 }
                 if (repo.IsUnderVss(newVcsPath)) {
                     Log.Error($"Move file error. File {vcsPath} already exist.");
-                    errorMessage.AppendLine(Log.LastErrorMessage);
                     return false;
                 }
                 repo.UndoCheckout(vcsPath, comment);
                 repo.MoveFile(vcsPath, newVcsPath, comment);
-                CheckOutFile(newVcsPath, newLocalPath, true, comment, errorMessage);
-                CheckInFile(newVcsPath, newLocalPath, comment, errorMessage);
+                CheckOutFile(newVcsPath, newLocalPath, true, comment);
+                CheckInFile(newVcsPath, newLocalPath, comment);
                 return true;
             }
             catch (Exception ex) {
                 Log.Error($"Move file {vcsPath} failed.", ex);
-                errorMessage.AppendLine(Log.LastErrorMessage);
                 return false;
             }
         }
-        public bool ProcessCheckout(IEnumerable<SyncItem> items, bool ignoreSharedFiles, StringBuilder errorMessage) {
+        public bool ProcessCheckout(IEnumerable<SyncItem> items, bool ignoreSharedFiles) {
             var list = items.ToList();
             list.ForEach(x => {
-                TestFileResult result = ProcessBeforeCheckout(x, ignoreSharedFiles, errorMessage);
+                TestFileResult result = ProcessBeforeCheckout(x, ignoreSharedFiles);
                 x.State = CalcBeforeCheckoutState(result);
             });
 
@@ -232,7 +214,7 @@ namespace DXVcs2Git.DXVcs {
                 return false;
 
             list.ForEach(x => {
-                TestFileResult result = ProcessCheckoutItem(x, x.Comment.ToString(), errorMessage);
+                TestFileResult result = ProcessCheckoutItem(x, x.Comment.ToString());
                 x.State = CalcCheckoutStateAfterCheckout(result);
             });
             return list.All(x => x.State == ProcessState.Modified || x.State == ProcessState.Ignored);
@@ -263,69 +245,65 @@ namespace DXVcs2Git.DXVcs {
 
             }
         }
-        TestFileResult ProcessBeforeCheckout(SyncItem item, bool ignoreSharedFiles, StringBuilder errorMessage) {
+        TestFileResult ProcessBeforeCheckout(SyncItem item, bool ignoreSharedFiles) {
             TestFileResult result;
             switch (item.SyncAction) {
                 case SyncAction.New:
-                    result = BeforeCheckOutCreateFile(item.VcsPath, item.LocalPath, ignoreSharedFiles, errorMessage);
+                    result = BeforeCheckOutCreateFile(item.VcsPath, item.LocalPath, ignoreSharedFiles);
                     break;
                 case SyncAction.Modify:
-                    result = BeforeCheckOutModifyFile(item.VcsPath, item.LocalPath, ignoreSharedFiles, errorMessage);
+                    result = BeforeCheckOutModifyFile(item.VcsPath, item.LocalPath, ignoreSharedFiles);
                     break;
                 case SyncAction.Delete:
-                    result = BeforeCheckOutDeleteFile(item.VcsPath, item.LocalPath, ignoreSharedFiles, errorMessage);
+                    result = BeforeCheckOutDeleteFile(item.VcsPath, item.LocalPath, ignoreSharedFiles);
                     break;
                 case SyncAction.Move:
-                    result = BeforeCheckOutMoveFile(item.VcsPath, item.NewVcsPath, item.LocalPath, item.NewLocalPath, ignoreSharedFiles, errorMessage);
+                    result = BeforeCheckOutMoveFile(item.VcsPath, item.NewVcsPath, item.LocalPath, item.NewLocalPath, ignoreSharedFiles);
                     break;
                 default:
                     throw new ArgumentException("SyncAction");
             }
             return result;
         }
-        TestFileResult BeforeCheckOutMoveFile(string vcsPath, string newVcsPath, string localPath, string newLocalPath, bool ignoreSharedFiles, StringBuilder errorMessage) {
-            if (!PerformHasFileTestBeforeCheckout(vcsPath, errorMessage)) {
+        TestFileResult BeforeCheckOutMoveFile(string vcsPath, string newVcsPath, string localPath, string newLocalPath, bool ignoreSharedFiles) {
+            if (!PerformHasFileTestBeforeCheckout(vcsPath)) {
                 Log.Error($"Check move capability. Source file {vcsPath} is not found in vcs.");
-                errorMessage.AppendLine(Log.LastErrorMessage);
                 return TestFileResult.Fail;
             }
-            if (PerformHasFileTestBeforeCheckout(newVcsPath, errorMessage)) {
+            if (PerformHasFileTestBeforeCheckout(newVcsPath)) {
                 Log.Error($"Check move capability. Target file {newVcsPath} is found in vcs.");
-                errorMessage.AppendLine(Log.LastErrorMessage);
                 return TestFileResult.Fail;
             }
 
-            var oldPathResult = PerformSimpleTestBeforeCheckout(vcsPath, ignoreSharedFiles, errorMessage);
+            var oldPathResult = PerformSimpleTestBeforeCheckout(vcsPath, ignoreSharedFiles);
             if (oldPathResult != TestFileResult.Ok)
                 return oldPathResult;
-            return PerformSimpleTestBeforeCheckout(newVcsPath, ignoreSharedFiles, errorMessage);
+            return PerformSimpleTestBeforeCheckout(newVcsPath, ignoreSharedFiles);
         }
-        bool PerformHasFileTestBeforeCheckout(string vcsPath, StringBuilder errorMessage) {
+        bool PerformHasFileTestBeforeCheckout(string vcsPath) {
             try {
                 var repo = DXVcsConnectionHelper.Connect(server, this.user, this.password);
                 return repo.IsUnderVss(vcsPath);
             }
             catch (Exception ex) {
                 Log.Error($"Test file {vcsPath} before ckeckout failed.", ex);
-                errorMessage.AppendLine(Log.LastErrorMessage);
                 return false;
             }
         }
-        TestFileResult BeforeCheckOutDeleteFile(string vcsPath, string localPath, bool ignoreSharedFiles, StringBuilder errorMessage) {
-            return PerformSimpleTestBeforeCheckout(vcsPath, ignoreSharedFiles, errorMessage);
+        TestFileResult BeforeCheckOutDeleteFile(string vcsPath, string localPath, bool ignoreSharedFiles) {
+            return PerformSimpleTestBeforeCheckout(vcsPath, ignoreSharedFiles);
         }
-        TestFileResult BeforeCheckOutModifyFile(string vcsPath, string localPath, bool ignoreSharedFiles, StringBuilder errorMessage) {
-            if (!PerformHasFileTestBeforeCheckout(vcsPath, errorMessage)) {
+        TestFileResult BeforeCheckOutModifyFile(string vcsPath, string localPath, bool ignoreSharedFiles) {
+            if (!PerformHasFileTestBeforeCheckout(vcsPath)) {
                 Log.Error($"Check modify capability. File {vcsPath} is not found in vcs.");
-                errorMessage.AppendLine(Log.LastErrorMessage);
                 return TestFileResult.Fail;
             }
-            return PerformSimpleTestBeforeCheckout(vcsPath, ignoreSharedFiles, errorMessage);
+            return PerformSimpleTestBeforeCheckout(vcsPath, ignoreSharedFiles);
         }
-        TestFileResult BeforeCheckOutCreateFile(string vcsPath, string localPath, bool ignoreSharedFiles, StringBuilder errorMessage) {
-            return PerformSimpleTestBeforeCheckout(vcsPath, ignoreSharedFiles, errorMessage);
+        TestFileResult BeforeCheckOutCreateFile(string vcsPath, string localPath, bool ignoreSharedFiles) {
+            return PerformSimpleTestBeforeCheckout(vcsPath, ignoreSharedFiles);
         }
-        TestFileResult PerformSimpleTestBeforeCheckout(string vcsPath, bool ignoreSharedFiles, StringBuilder errorMessage) {
+        TestFileResult PerformSimpleTestBeforeCheckout(string vcsPath, bool ignoreSharedFiles) {
             try {
                 var repo = DXVcsConnectionHelper.Connect(server, this.user, this.password);
                 if (!repo.IsUnderVss(vcsPath))
@@ -336,7 +314,6 @@ namespace DXVcs2Git.DXVcs {
                     if (ignoreSharedFiles)
                         return TestFileResult.Ignore;
                     Log.Error($"Can`t process shared file {vcsPath}. Destroy active links or sync this file manually using vcs.");
-                    errorMessage.AppendLine(Log.LastErrorMessage);
                     return TestFileResult.Fail;
                 }
 
@@ -345,30 +322,28 @@ namespace DXVcs2Git.DXVcs {
                 bool isFree = !filedata.CheckedOut || filedata.CheckedOutMe;
                 if (!isFree) {
                     Log.Error($"Can`t process checked out file {vcsPath}. Contact {filedata.CheckedOutUser} or resert check out state.");
-                    errorMessage.AppendLine(Log.LastErrorMessage);
                     return TestFileResult.Fail;
                 }
                 return TestFileResult.Ok;
             }
             catch (Exception ex) {
                 Log.Error($"Test file {vcsPath} before checkout failed.", ex);
-                errorMessage.AppendLine(Log.LastErrorMessage);
             }
             return TestFileResult.Fail;
         }
-        TestFileResult ProcessCheckoutItem(SyncItem item, string comment, StringBuilder errorMessage) {
+        TestFileResult ProcessCheckoutItem(SyncItem item, string comment) {
             if (item.State == ProcessState.Ignored)
                 return TestFileResult.Ignore;
 
             switch (item.SyncAction) {
                 case SyncAction.New:
-                    return CheckOutCreateFile(item.VcsPath, item.LocalPath, comment, errorMessage) ? TestFileResult.Ok : TestFileResult.Fail;
+                    return CheckOutCreateFile(item.VcsPath, item.LocalPath, comment) ? TestFileResult.Ok : TestFileResult.Fail;
                 case SyncAction.Modify:
-                    return CheckOutModifyFile(item.VcsPath, item.LocalPath, comment, errorMessage) ? TestFileResult.Ok : TestFileResult.Fail;
+                    return CheckOutModifyFile(item.VcsPath, item.LocalPath, comment) ? TestFileResult.Ok : TestFileResult.Fail;
                 case SyncAction.Delete:
-                    return CheckOutDeleteFile(item.VcsPath, item.LocalPath, comment, errorMessage) ? TestFileResult.Ok : TestFileResult.Fail;
+                    return CheckOutDeleteFile(item.VcsPath, item.LocalPath, comment) ? TestFileResult.Ok : TestFileResult.Fail;
                 case SyncAction.Move:
-                    return CheckOutMoveFile(item.VcsPath, item.NewVcsPath, item.LocalPath, item.NewLocalPath, comment, errorMessage) ? TestFileResult.Ok : TestFileResult.Fail;
+                    return CheckOutMoveFile(item.VcsPath, item.NewVcsPath, item.LocalPath, item.NewLocalPath, comment) ? TestFileResult.Ok : TestFileResult.Fail;
                 default:
                     throw new ArgumentException("SyncAction");
             }
@@ -382,21 +357,20 @@ namespace DXVcs2Git.DXVcs {
                 Log.Error($"Create label {labelName} failed.", ex);
             }
         }
-        public bool ProcessCheckIn(IEnumerable<SyncItem> items, string comment, StringBuilder errorMessage) {
+        public bool ProcessCheckIn(IEnumerable<SyncItem> items, string comment) {
             var list = items.ToList();
-            if (!list.All(x => CheckIn(x, comment, errorMessage))) {
+            if (!list.All(x => CheckIn(x, comment))) {
                 Log.Message("Check in changes failed.");
-                errorMessage.AppendLine(Log.LastErrorMessage);
                 return false;
             }
             Log.Message("Check in changes success.");
             return true;
         }
-        public bool ProcessUndoCheckout(IEnumerable<SyncItem> items, StringBuilder errorMessage) {
+        public bool ProcessUndoCheckout(IEnumerable<SyncItem> items) {
             Log.Message("Rollback changes after failed checkout.");
             items.ToList().ForEach(x => {
                 if (x.State == ProcessState.Modified)
-                    RollbackItem(x, errorMessage);
+                    RollbackItem(x);
             });
             return true;
         }
