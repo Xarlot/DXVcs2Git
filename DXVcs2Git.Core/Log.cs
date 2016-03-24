@@ -13,14 +13,19 @@ namespace DXVcs2Git.Core {
             log4net.Config.XmlConfigurator.Configure();
         }
         private static readonly ILog log = LogManager.GetLogger(typeof(Log));
+        private static readonly StringBuilder errorsAccumulator = new StringBuilder();
         public static void Message(string message, Exception ex = null) {
             log.Info(FormatMessage(message), ex);
         }
         static string FormatMessage(string message) {
             return String.Format("[{0}] {1}", DateTime.Now.ToLongTimeString(), message);
         }
+        public static void ResetErrorsAccumulator() {
+            errorsAccumulator.Clear();
+        }
         public static void Error(string message, Exception exception = null) {
             log.Error(FormatMessage(message), exception);
+            errorsAccumulator.AppendLine(message);
         }
         public static string GetLog() {
             ILog log = log4net.LogManager.GetLogger("PoC");
@@ -31,6 +36,9 @@ namespace DXVcs2Git.Core {
             foreach (var ev in mappender.GetEvents())
                 sb.AppendLine(ev.RenderedMessage);
             return sb.ToString();
+        }
+        public static string GetErrorsAccumulatorContent() {
+            return errorsAccumulator.ToString();
         }
     }
 
