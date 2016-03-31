@@ -21,6 +21,7 @@ using LibGit2Sharp;
 using NGitLab;
 using NGitLab.Models;
 using Commit = LibGit2Sharp.Commit;
+using ProjectHookType = DXVcs2Git.Core.GitLab.ProjectHookType;
 using User = DXVcs2Git.Core.User;
 
 namespace DXVcs2Git.Console {
