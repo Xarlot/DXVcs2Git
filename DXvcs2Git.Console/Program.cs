@@ -34,6 +34,7 @@ namespace DXVcs2Git.Console {
 
         const string repoPath = "repo";
         const string vcsServer = @"net.tcp://vcsservice.devexpress.devx:9091/DXVCSService";
+        const int MaxChangesCount = 1000;
         static void Main(string[] args) {
             var result = Parser.Default.ParseArguments<CommandLineOptions>(args);
             var exitCode = result.MapResult(clo => {
@@ -331,8 +332,15 @@ namespace DXVcs2Git.Console {
             Log.Message($"Start merging mergerequest {mergeRequest.Title}");
 
             Log.ResetErrorsAccumulator();
-            var changes = gitLabWrapper.GetMergeRequestChanges(mergeRequest).Where(x => branch.TrackItems.FirstOrDefault(track => x.OldPath.StartsWith(track.ProjectPath)) != null);
-            var genericChange = changes.Select(x => ProcessMergeRequestChanges(mergeRequest, x, localGitDir, branch, autoSyncToken)).ToList();
+            var changes = gitLabWrapper.GetMergeRequestChanges(mergeRequest).ToList();
+            if(changes.Count >= MaxChangesCount) {
+                Log.Error(string.Format("Merge request contains more than {0} changes and cannot be processed. Split it into smaller merge requests", MaxChangesCount));
+                AssignBackConflictedMergeRequest(gitLabWrapper, users, mergeRequest, CalcCommentForFailedCheckoutMergeRequest(null));
+                return MergeRequestResult.Failed;
+            }
+            var genericChange = changes
+                .Where(x => branch.TrackItems.FirstOrDefault(track => x.OldPath.StartsWith(track.ProjectPath)) != null)
+                .Select(x => ProcessMergeRequestChanges(mergeRequest, x, localGitDir, branch, autoSyncToken)).ToList();
             bool ignoreValidation = gitLabWrapper.ShouldIgnoreSharedFiles(mergeRequest);
 
             if (!ValidateMergeRequestChanges(gitLabWrapper, mergeRequest, ignoreValidation) || !vcsWrapper.ProcessCheckout(genericChange, ignoreValidation)) {
