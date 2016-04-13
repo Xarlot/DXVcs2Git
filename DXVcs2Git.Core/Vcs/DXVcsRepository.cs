@@ -615,7 +615,6 @@ namespace DXVcs2Git.DXVcs {
                 CreateProject(temp, folder, comment);
                 temp += @"/" + folder;
             }
-
         }
         public void DeleteFile(string vcsPath, string comment) {
             if (string.IsNullOrEmpty(vcsPath))
@@ -627,6 +626,7 @@ namespace DXVcs2Git.DXVcs {
             if (string.IsNullOrEmpty(vcsPath))
                 throw new ArgumentException("vcsPath");
             Service.SetDeletedProject(vcsPath, comment);
+            Log.Message($"Delete project {vcsPath}.");
         }
         public void MoveFile(string vcsPath, string newVcsPath, string comment) {
             if (string.IsNullOrEmpty(vcsPath))
@@ -657,8 +657,7 @@ namespace DXVcs2Git.DXVcs {
             }
         }
         void RemoveProjectIfNeeded(string oldProjectPath, string comment) {
-            var projectFiles = Service.GetFiles(oldProjectPath);
-            if (projectFiles.Length == 0)
+            if (!Service.GetFiles(oldProjectPath).Any() && !Service.GetProjects(oldProjectPath).Any())
                 DeleteProject(oldProjectPath, comment);
         }
         void MoveFileInternal(string vcsPath, string newVcsPath, string comment) {
