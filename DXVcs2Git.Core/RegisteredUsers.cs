@@ -88,7 +88,7 @@ namespace DXVcs2Git.Core {
         }
     }
     public static class VcsUserParser {
-        static readonly Regex CheckStructure = new Regex(@"^[a-zA-Z]{4}\\[a-zA-Z\.]{1,}$", RegexOptions.Compiled);
+        static readonly Regex CheckStructure = new Regex(@"^[a-zA-Z]{4}\\[a-zA-Z\-\.]{1,}$", RegexOptions.Compiled);
         static readonly Regex ParseUserRegex = new Regex(@"(?<=^[a-zA-Z]{4}\\)\S+", RegexOptions.Compiled);
 
         public static string ParseUser(string x) {
