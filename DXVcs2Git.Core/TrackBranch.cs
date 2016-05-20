@@ -30,5 +30,9 @@ namespace DXVcs2Git.Core {
             TrackItems = trackItems.ToList();
             RepoRoot = repoRoot;
         }
+
+        public bool IsTrackingVcsPath(string vcsPath) {
+            return TrackItems.Any(i => vcsPath.StartsWith(i.Path.TrimEnd('/') + "/"));
+        }
     }
 }

@@ -203,10 +203,10 @@ namespace DXVcs2Git.DXVcs {
                 return false;
             }
         }
-        public bool ProcessCheckout(IEnumerable<SyncItem> items, bool ignoreSharedFiles) {
+        public bool ProcessCheckout(IEnumerable<SyncItem> items, bool ignoreSharedFiles, TrackBranch branch) {
             var list = items.ToList();
             list.ForEach(x => {
-                TestFileResult result = ProcessBeforeCheckout(x, ignoreSharedFiles);
+                TestFileResult result = ProcessBeforeCheckout(x, ignoreSharedFiles, branch);
                 x.State = CalcBeforeCheckoutState(result);
             });
 
@@ -245,34 +245,50 @@ namespace DXVcs2Git.DXVcs {
 
             }
         }
-        TestFileResult ProcessBeforeCheckout(SyncItem item, bool ignoreSharedFiles) {
+        TestFileResult ProcessBeforeCheckout(SyncItem item, bool ignoreSharedFiles, TrackBranch branch) {
             TestFileResult result;
             switch (item.SyncAction) {
                 case SyncAction.New:
-                    result = BeforeCheckOutCreateFile(item.VcsPath, item.LocalPath, ignoreSharedFiles);
+                    result = BeforeCheckOutCreateFile(item.VcsPath, item.LocalPath, ignoreSharedFiles, branch);
                     break;
                 case SyncAction.Modify:
-                    result = BeforeCheckOutModifyFile(item.VcsPath, item.LocalPath, ignoreSharedFiles);
+                    result = BeforeCheckOutModifyFile(item.VcsPath, item.LocalPath, ignoreSharedFiles, branch);
                     break;
                 case SyncAction.Delete:
-                    result = BeforeCheckOutDeleteFile(item.VcsPath, item.LocalPath, ignoreSharedFiles);
+                    result = BeforeCheckOutDeleteFile(item.VcsPath, item.LocalPath, ignoreSharedFiles, branch);
                     break;
                 case SyncAction.Move:
-                    result = BeforeCheckOutMoveFile(item.VcsPath, item.NewVcsPath, item.LocalPath, item.NewLocalPath, ignoreSharedFiles);
+                    SyncAction newAction = SyncAction.Move;
+                    result = BeforeCheckOutMoveFile(item.VcsPath, item.NewVcsPath, item.LocalPath, item.NewLocalPath, ignoreSharedFiles, branch, ref newAction);
+                    item.SyncAction = newAction;
                     break;
                 default:
                     throw new ArgumentException("SyncAction");
             }
             return result;
         }
-        TestFileResult BeforeCheckOutMoveFile(string vcsPath, string newVcsPath, string localPath, string newLocalPath, bool ignoreSharedFiles) {
-            if (!PerformHasFileTestBeforeCheckout(vcsPath)) {
+        TestFileResult BeforeCheckOutMoveFile(string vcsPath, string newVcsPath, string localPath, string newLocalPath, bool ignoreSharedFiles, TrackBranch branch, ref SyncAction newAction) {
+            bool isOldPathTracking = branch.IsTrackingVcsPath(vcsPath);
+            bool isNewPathTracking = branch.IsTrackingVcsPath(newVcsPath);
+
+            if (isOldPathTracking && !PerformHasFileTestBeforeCheckout(vcsPath)) {
                 Log.Error($"Check move capability. Source file {vcsPath} is not found in vcs.");
                 return TestFileResult.Fail;
             }
-            if (PerformHasFileTestBeforeCheckout(newVcsPath)) {
+            if (isNewPathTracking && PerformHasFileTestBeforeCheckout(newVcsPath)) {
                 Log.Error($"Check move capability. Target file {newVcsPath} is found in vcs.");
                 return TestFileResult.Fail;
+            }
+
+            if(!isNewPathTracking && !isOldPathTracking)
+                return TestFileResult.Ignore;
+            if(isNewPathTracking && !isOldPathTracking) {
+                newAction = SyncAction.New;
+                return BeforeCheckOutCreateFile(newVcsPath, localPath, ignoreSharedFiles, branch);
+            }
+            else if(!isNewPathTracking && isOldPathTracking) {
+                newAction = SyncAction.Delete;
+                return BeforeCheckOutDeleteFile(vcsPath, localPath, ignoreSharedFiles, branch);
             }
 
             var oldPathResult = PerformSimpleTestBeforeCheckout(vcsPath, ignoreSharedFiles);
@@ -290,17 +306,23 @@ namespace DXVcs2Git.DXVcs {
                 return false;
             }
         }
-        TestFileResult BeforeCheckOutDeleteFile(string vcsPath, string localPath, bool ignoreSharedFiles) {
+        TestFileResult BeforeCheckOutDeleteFile(string vcsPath, string localPath, bool ignoreSharedFiles, TrackBranch branch) {
+            if(!branch.IsTrackingVcsPath(vcsPath))
+                return TestFileResult.Ignore;
             return PerformSimpleTestBeforeCheckout(vcsPath, ignoreSharedFiles);
         }
-        TestFileResult BeforeCheckOutModifyFile(string vcsPath, string localPath, bool ignoreSharedFiles) {
+        TestFileResult BeforeCheckOutModifyFile(string vcsPath, string localPath, bool ignoreSharedFiles, TrackBranch branch) {
+            if(!branch.IsTrackingVcsPath(vcsPath))
+                return TestFileResult.Ignore;
             if (!PerformHasFileTestBeforeCheckout(vcsPath)) {
                 Log.Error($"Check modify capability. File {vcsPath} is not found in vcs.");
                 return TestFileResult.Fail;
             }
             return PerformSimpleTestBeforeCheckout(vcsPath, ignoreSharedFiles);
         }
-        TestFileResult BeforeCheckOutCreateFile(string vcsPath, string localPath, bool ignoreSharedFiles) {
+        TestFileResult BeforeCheckOutCreateFile(string vcsPath, string localPath, bool ignoreSharedFiles, TrackBranch branch) {
+            if(!branch.IsTrackingVcsPath(vcsPath))
+                return TestFileResult.Ignore;
             return PerformSimpleTestBeforeCheckout(vcsPath, ignoreSharedFiles);
         }
         TestFileResult PerformSimpleTestBeforeCheckout(string vcsPath, bool ignoreSharedFiles) {
