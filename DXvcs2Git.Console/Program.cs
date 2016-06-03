@@ -17,10 +17,8 @@ using DXVcs2Git.Core.Serialization;
 using DXVcs2Git.DXVcs;
 using DXVcs2Git.Git;
 using DXVcs2Git.UI.Farm;
-using LibGit2Sharp;
 using NGitLab;
 using NGitLab.Models;
-using Commit = LibGit2Sharp.Commit;
 using ProjectHookType = DXVcs2Git.Core.GitLab.ProjectHookType;
 using User = DXVcs2Git.Core.User;
 
@@ -253,14 +251,8 @@ namespace DXVcs2Git.Console {
         }
         static GitWrapper CreateGitWrapper(string gitRepoPath, string localGitDir, TrackBranch branch, string username, string password) {
             try {
-                GitWrapper gitWrapper = new GitWrapper(localGitDir, gitRepoPath, new UsernamePasswordCredentials() { Username = username, Password = password });
-                if (gitWrapper.IsEmpty) {
-                    Log.Error($"Specified branch {branch.Name} in repo {gitRepoPath} is empty. Initialize repo properly.");
-                    return null;
-                }
+                var gitWrapper = new GitWrapper(localGitDir, gitRepoPath, branch.Name, new GitCredentials { User = username, Password = password });
 
-                gitWrapper.EnsureBranch(branch.Name, null);
-                gitWrapper.CheckOut(branch.Name);
                 gitWrapper.Fetch(updateTags: true);
                 Log.Message($"Branch {branch.Name} initialized.");
 
@@ -355,10 +347,8 @@ namespace DXVcs2Git.Console {
                 Log.Message("Merge request merged successfully.");
 
                 string targetBranch = mergeRequest.TargetBranch;
-                gitWrapper.EnsureBranch(targetBranch, null);
-                gitWrapper.Reset(targetBranch);
-                gitWrapper.Pull(defaultUser, targetBranch);
-                var gitCommit = gitWrapper.FindCommit(branch.Name, x => CommentWrapper.Parse(x.Message).Token == autoSyncToken);
+                gitWrapper.Pull();
+                var gitCommit = gitWrapper.FindCommit(x => CommentWrapper.Parse(x.Message).Token == autoSyncToken);
                 long timeStamp = lastHistoryItem.VcsCommitTimeStamp;
 
                 if (vcsWrapper.ProcessCheckIn(genericChange, comment.ToString())) {
@@ -377,7 +367,7 @@ namespace DXVcs2Git.Console {
                 Log.Error("Merge request checkin failed.");
                 var failedHistory = vcsWrapper.GenerateHistory(branch, new DateTime(timeStamp));
                 var lastFailedCommit = failedHistory.OrderBy(x => x.ActionDate).LastOrDefault();
-                syncHistory.Add(gitCommit.Id.ToString(), lastFailedCommit?.ActionDate.Ticks ?? timeStamp, autoSyncToken, SyncHistoryStatus.Failed);
+                syncHistory.Add(gitCommit.Sha, lastFailedCommit?.ActionDate.Ticks ?? timeStamp, autoSyncToken, SyncHistoryStatus.Failed);
                 syncHistory.Save();
                 return MergeRequestResult.Failed;
             }
@@ -488,7 +478,7 @@ namespace DXVcs2Git.Console {
             ProjectExtractor extractor = new ProjectExtractor(commits, (item) => {
                 var localCommits = vcsWrapper.GetCommits(item.TimeStamp, item.Items).Where(x => !IsLabel(x)).ToList();
                 bool hasModifications = false;
-                Commit last = null;
+                GitCommit last = null;
                 string token = syncHistory.CreateNewToken();
                 foreach (var localCommit in localCommits) {
                     string localProjectPath = Path.Combine(localGitDir, localCommit.Track.ProjectPath);
@@ -502,7 +492,8 @@ namespace DXVcs2Git.Console {
                     string author = CalcAuthor(localCommit, defaultUser);
                     User user = users.GetUser(author);
                     try {
-                        last = gitWrapper.Commit(comment.ToString(), user, user, localCommit.TimeStamp, false);
+                        gitWrapper.Commit(comment.ToString(), user, localCommit.TimeStamp, false);
+                        last = gitWrapper.FindCommit(x => true);
                         hasModifications = true;
                     }
                     catch (Exception) {
@@ -510,7 +501,7 @@ namespace DXVcs2Git.Console {
                     }
                 }
                 if (hasModifications) {
-                    gitWrapper.Push(branch.Name);
+                    gitWrapper.PushEverything();
                     syncHistory.Add(last.Sha, item.TimeStamp.Ticks, token);
                 }
                 else {
