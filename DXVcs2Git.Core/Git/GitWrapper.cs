@@ -22,10 +22,11 @@ namespace DXVcs2Git {
             proc.StartInfo.RedirectStandardOutput = true;
             proc.StartInfo.RedirectStandardError = true;
             proc.Start();
-            if(!proc.HasExited) {
+            if (!proc.HasExited) {
                 try {
                     proc.PriorityClass = ProcessPriorityClass.High;
-                } catch { }
+                }
+                catch { }
             }
 
             var outputTask = Task.Factory.StartNew(() => proc.StandardOutput.ReadToEnd());
@@ -35,10 +36,11 @@ namespace DXVcs2Git {
             errors = string.Empty;
 
             bool result = proc.WaitForExit(12000000);
-            if(!result) {
+            if (!result) {
                 proc.Kill();
                 throw new Exception("process timed out");
-            } else {
+            }
+            else {
                 Task.WaitAll(outputTask, errorTask);
                 output = outputTask.Result.ToString();
                 errors = errorTask.Result.ToString();
@@ -47,7 +49,7 @@ namespace DXVcs2Git {
         }
 
         static void CheckFail(int code) {
-            if(code != 0)
+            if (code != 0)
                 throw new Exception("git invocation failed");
         }
 
@@ -57,7 +59,7 @@ namespace DXVcs2Git {
 
         public void ShallowClone(string localPath, string branch, string remote) {
             var args = new[] {
-                "clone", "--depth", "1", "--branch", branch, Escape(remote), Escape(localPath)
+                "-c", "filter.lfs.smudge=", "-c", "filter.lfs.required=false", "clone", "--depth", "1", "--branch", branch, Escape(remote), Escape(localPath)
             };
             string output, errors;
             var code = WaitForProcess(gitPath, ".", out output, out errors, args);
@@ -90,7 +92,7 @@ namespace DXVcs2Git {
 
         public void Pull(string repoPath) {
             string output, errors;
-            var code = WaitForProcess(gitPath, repoPath, out output, out errors, "pull");
+            var code = WaitForProcess(gitPath, repoPath, out output, out errors, "lfs pull");
             CheckFail(code);
         }
 
@@ -116,7 +118,7 @@ namespace DXVcs2Git {
             string output, errors;
             var args = new List<string>();
             args.Add("fetch");
-            if(tags) {
+            if (tags) {
                 args.Add("--tags");
             }
             var code = WaitForProcess(gitPath, repoPath, out output, out errors, "fetch");
@@ -168,7 +170,7 @@ namespace DXVcs2Git {
         readonly string repoPath;
         readonly string remotePath;
         readonly GitCmdWrapper gitCmd;
-        
+
         public string GitDirectory {
             get { return repoPath; }
         }
@@ -186,8 +188,10 @@ namespace DXVcs2Git {
             this.repoPath = localPath;
             if (DirectoryHelper.IsGitDir(localPath)) {
                 GitInit();
-            } else {
+            }
+            else {
                 GitClone();
+                Pull();
             }
             Log.Message("End initializing git repo");
         }

@@ -252,8 +252,6 @@ namespace DXVcs2Git.Console {
         static GitWrapper CreateGitWrapper(string gitRepoPath, string localGitDir, TrackBranch branch, string username, string password) {
             try {
                 var gitWrapper = new GitWrapper(localGitDir, gitRepoPath, branch.Name, new GitCredentials { User = username, Password = password });
-
-                gitWrapper.Fetch(updateTags: true);
                 Log.Message($"Branch {branch.Name} initialized.");
 
                 return gitWrapper;
