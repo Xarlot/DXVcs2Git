@@ -2,221 +2,232 @@
 using System.Collections.Generic;
 using System.Linq;
 using DXVcs2Git.Core;
-using LibGit2Sharp;
-using Branch = LibGit2Sharp.Branch;
-using Commit = LibGit2Sharp.Commit;
-using Tag = LibGit2Sharp.Tag;
 using User = DXVcs2Git.Core.User;
+using System.Diagnostics;
+using System.Threading.Tasks;
 
 namespace DXVcs2Git {
-    public class GitWrapper : IDisposable {
-        readonly string path;
-        readonly Credentials credentials;
-        readonly string repoPath;
-        readonly string gitPath;
-        readonly Repository repo;
-        public bool IsEmpty {
-            get { return !repo.Branches.Any(); }
+    class GitCmdWrapper {
+        string gitPath;
+        public GitCmdWrapper(string gitPath) {
+            this.gitPath = gitPath;
         }
+
+        static int WaitForProcess(string fileName, string workingDir, out string output, out string errors, params string[] args) {
+            var proc = new Process();
+            proc.StartInfo.WorkingDirectory = workingDir;
+            proc.StartInfo.FileName = fileName;
+            proc.StartInfo.Arguments = args.Length == 0 ? "" : args.Aggregate((l, r) => l + " " + r);
+            proc.StartInfo.UseShellExecute = false;
+            proc.StartInfo.RedirectStandardOutput = true;
+            proc.StartInfo.RedirectStandardError = true;
+            proc.Start();
+            if(!proc.HasExited) {
+                try {
+                    proc.PriorityClass = ProcessPriorityClass.High;
+                } catch { }
+            }
+
+            var outputTask = Task.Factory.StartNew(() => proc.StandardOutput.ReadToEnd());
+            var errorTask = Task.Factory.StartNew(() => proc.StandardError.ReadToEnd());
+
+            output = string.Empty;
+            errors = string.Empty;
+
+            bool result = proc.WaitForExit(12000000);
+            if(!result) {
+                proc.Kill();
+                throw new Exception("process timed out");
+            } else {
+                Task.WaitAll(outputTask, errorTask);
+                output = outputTask.Result.ToString();
+                errors = errorTask.Result.ToString();
+            }
+            return proc.ExitCode;
+        }
+
+        static void CheckFail(int code) {
+            if(code != 0)
+                throw new Exception("git invocation failed");
+        }
+
+        static string Escape(string str) {
+            return '"' + str + '"';
+        }
+
+        public void ShallowClone(string localPath, string branch, string remote) {
+            var args = new[] {
+                "clone", "--depth", "1", "--branch", branch, Escape(remote), Escape(localPath)
+            };
+            string output, errors;
+            var code = WaitForProcess(gitPath, ".", out output, out errors, args);
+            CheckFail(code);
+        }
+
+        public void Add(string repoPath, string relativePath) {
+            string output, errors;
+            var code = WaitForProcess(gitPath, repoPath, out output, out errors, "add", relativePath);
+            CheckFail(code);
+        }
+
+        public void Commit(string repoPath, string comment, string author, string date) {
+            var args = new[] {
+                "commit",
+                "-m", Escape(comment),
+                "--author", Escape(author),
+                "--date", Escape(date)
+            };
+            string output, errors;
+            var code = WaitForProcess(gitPath, repoPath, out output, out errors, args);
+            CheckFail(code);
+        }
+
+        public void ResetHard(string repoPath) {
+            string output, errors;
+            var code = WaitForProcess(gitPath, repoPath, out output, out errors, "reset", "--hard");
+            CheckFail(code);
+        }
+
+        public void Pull(string repoPath) {
+            string output, errors;
+            var code = WaitForProcess(gitPath, repoPath, out output, out errors, "pull");
+            CheckFail(code);
+        }
+
+        public void Push(string repoPath) {
+            string output, errors;
+            var code = WaitForProcess(gitPath, repoPath, out output, out errors, "push");
+            CheckFail(code);
+        }
+
+        public void Checkout(string repoPath, string branch) {
+            string output, errors;
+            var code = WaitForProcess(gitPath, repoPath, out output, out errors, "checkout", "-B", branch);
+            CheckFail(code);
+        }
+
+        public void Init(string repoPath) {
+            string output, errors;
+            var code = WaitForProcess(gitPath, repoPath, out output, out errors, "init");
+            CheckFail(code);
+        }
+
+        public void Fetch(string repoPath, bool tags) {
+            string output, errors;
+            var args = new List<string>();
+            args.Add("fetch");
+            if(tags) {
+                args.Add("--tags");
+            }
+            var code = WaitForProcess(gitPath, repoPath, out output, out errors, "fetch");
+            CheckFail(code);
+        }
+
+        string GetLog(string repoPath, int from, string format) {
+            var args = new[] {
+                "log",
+                string.Format("HEAD~{0}", from),
+                "-1",
+                string.Format("--pretty=format:\"{0}\"", format)
+            };
+            string output, errors;
+            var code = WaitForProcess(gitPath, repoPath, out output, out errors, args);
+            CheckFail(code);
+            return output.Trim();
+        }
+
+        public GitCommit FindCommit(string repoPath, Func<GitCommit, bool> pred) {
+            string output, errors;
+            var code = WaitForProcess(gitPath, repoPath, out output, out errors,
+                "rev-list", "HEAD", "--count");
+            CheckFail(code);
+            int count = int.Parse(output);
+
+            return Enumerable.Range(0, count).Select(i =>
+                new GitCommit {
+                    Sha = GetLog(repoPath, i, "%H"),
+                    Message = GetLog(repoPath, i, "%B")
+                }
+            ).First(pred);
+        }
+    }
+
+    public class GitCommit {
+        public string Sha;
+        public string Message;
+    }
+
+    public class GitCredentials {
+        public string User;
+        public string Password;
+    }
+
+    public class GitWrapper : IDisposable {
+        readonly string localPath;
+        readonly GitCredentials credentials;
+        readonly string repoPath;
+        readonly string remotePath;
+        readonly GitCmdWrapper gitCmd;
+        
         public string GitDirectory {
             get { return repoPath; }
         }
-        public Credentials Credentials {
+
+        public GitCredentials Credentials {
             get { return credentials; }
         }
 
-        public GitWrapper(string path, string gitPath, Credentials credentials) {
-            this.path = path;
+        public GitWrapper(string localPath, string remotePath, string branch, GitCredentials credentials) {
+            this.localPath = localPath;
             this.credentials = credentials;
-            this.gitPath = gitPath;
+            this.remotePath = remotePath;
+            gitCmd = new GitCmdWrapper(@"C:\Program Files\Git\bin\git.exe");
             Log.Message("Start initializing git repo");
-            this.repoPath = DirectoryHelper.IsGitDir(path) ? GitInit() : GitClone();
+            this.repoPath = localPath;
+            if (DirectoryHelper.IsGitDir(localPath)) {
+                GitInit();
+            } else {
+                GitClone();
+            }
             Log.Message("End initializing git repo");
-            repo = new Repository(repoPath);
         }
-        public string GitInit() {
-            return Repository.Init(path);
+        public void GitInit() {
+            gitCmd.Init(localPath);
         }
-        string GitClone() {
-            CloneOptions options = new CloneOptions();
-            options.CredentialsProvider += (url, fromUrl, types) => credentials;
-            string clonedRepoPath = Repository.Clone(gitPath, path, options);
-            Log.Message($"Git repo {clonedRepoPath} initialized");
-            return clonedRepoPath;
+        void GitClone() {
+            gitCmd.ShallowClone(localPath, "2015.2", remotePath);
+            Log.Message($"Git repo {localPath} initialized");
         }
         public void Dispose() {
         }
         public void Fetch(string remote = "", bool updateTags = false) {
-            FetchOptions options = new FetchOptions();
-            options.CredentialsProvider += (url, fromUrl, types) => credentials;
-            if (updateTags)
-                options.TagFetchMode = TagFetchMode.All;
-            var network = string.IsNullOrEmpty(remote) ? repo.Network.Remotes.FirstOrDefault() : this.repo.Network.Remotes[remote];
-            repo.Fetch(network.Name, options);
+            gitCmd.Fetch(localPath, updateTags);
         }
-        public MergeResult Pull(User user, string branchName) {
-            Branch head = this.repo.Branches[branchName];
-            if (!head.IsTracking)
-                throw new LibGit2SharpException("There is no tracking information for the current branch.");
-            if (head.Remote == null)
-                throw new LibGit2SharpException("No upstream remote for the current branch.");
-            this.Fetch(head.Remote.Name);
-            MergeOptions options = new MergeOptions();
-            options.MergeFileFavor = MergeFileFavor.Theirs;
-            options.FileConflictStrategy = CheckoutFileConflictStrategy.Theirs;
-            return this.repo.MergeFetchedRefs(ToSignature(user), options);
-        }
-        Signature ToSignature(User user, DateTimeOffset? dateTime = null) {
-            return new Signature(user.UserName, user.Email, dateTime ?? DateTimeOffset.Now);
-        }
-        public void Stage(IEnumerable<string> paths) {
-            repo.Stage(paths);
-            Log.Message($"Git stage performed.");
+        public void Pull() {
+            gitCmd.Pull(localPath);
         }
         public void Stage(string path) {
-            repo.Stage(path);
+            gitCmd.Add(localPath, path);
             Log.Message($"Git stage performed.");
         }
-        public Commit Commit(string comment, User user, User committerUser, DateTime timeStamp, bool allowEmpty = true) {
-            CommitOptions commitOptions = new CommitOptions();
-            commitOptions.AllowEmptyCommit = allowEmpty;
-            DateTime localTime = timeStamp.ToLocalTime();
-            var author = ToSignature(user, localTime);
-            var comitter = ToSignature(committerUser, localTime);
-            var commit = repo.Commit(comment, author, comitter, commitOptions);
-            Log.Message($"Git commit performed for {user} {localTime}");
-            return commit;
+        public void Commit(string comment, User user, DateTime timeStamp, bool allowEmpty = true) {
+            var userString = string.Format("{0} <{1}>", user.UserName, user.Email);
+            gitCmd.Commit(localPath, comment, userString, timeStamp.ToString());
         }
-        public void Push(string branch) {
-            Push($@"refs/heads/{branch}", false);
-        }
-        public void Push(string refspec, bool force) {
-            Push(refspec, (remote, options) => repo.Network.Push(remote, force ? $@"+{refspec}" : refspec, refspec, options));
-        }
-        public void RemoveRemoteBranch(string branch) {
-            string refspec = $@":refs/heads/{branch}";
-            Push(refspec, (remote, options) => repo.Network.Push(remote, refspec, options));
-        }
-        void Push(string refspec, Action<Remote, PushOptions> pushAction) {
-            PushOptions options = new PushOptions();
-            options.CredentialsProvider += (url, fromUrl, types) => credentials;
-            options.OnPushStatusError += errors => {
-                Log.Message($"Push to refspec {refspec} failed.");
-                Log.Error($"Error: {errors.Message} in repo {errors.Reference}.");
-                throw new ArgumentException("error while push");
-            };
-            Remote remote = this.repo.Network.Remotes["origin"];
-            pushAction(remote, options);
-            Log.Message($"Push to refspec {refspec} completed.");
-        }
-        public bool EnsureBranch(string name, Commit whereCreateBranch) {
-            Branch localBranch = this.repo.Branches[name];
-            string remoteName = GetOriginName(name);
-            Branch remoteBranch = this.repo.Branches[remoteName];
-            if (localBranch == null) {
-                if (remoteBranch != null) {
-                    localBranch = InitLocalBranch(name, remoteBranch);
-                }
-                else if (whereCreateBranch == null) {
-                    localBranch = repo.CreateBranch(name);
-                    Push(name);
-                }
-                else {
-                    localBranch = CreateBranchFromCommit(name, whereCreateBranch);
-                }
-            }
-            if (remoteBranch != null)
-                repo.Branches.Update(localBranch, b => b.TrackedBranch = remoteBranch.CanonicalName);
-            return remoteBranch == null;
-        }
-        Branch InitLocalBranch(string name, Branch remoteBranch) {
-            return this.repo.CreateBranch(name, remoteBranch.CanonicalName);
-        }
-        Branch CreateBranchFromCommit(string name, Commit whereCreateBranch) {
-            CheckOut(whereCreateBranch);
-            return repo.CreateBranch(name);
+        public void PushEverything() {
+            gitCmd.Push(localPath);
         }
         string GetOriginName(string name) {
             return $"origin/{name}";
         }
-        public Commit FindCommit(string branchName, Func<Commit, bool> handler = null) {
-            var branch = repo.Branches[branchName];
-            var checkHandler = handler ?? (x => true);
-            return branch.Commits.FirstOrDefault(checkHandler);
+        public void CheckOut(string branch) {
+            gitCmd.Checkout(localPath, branch);
         }
-        public Commit FindCommit(string branchName, string comment) {
-            return FindCommit(branchName, x => x.Message?.StartsWith(comment) ?? false);
+        public void Reset() {
+            gitCmd.ResetHard(localPath);
         }
-        public DateTime GetLastCommitTimeStamp(string branchName, User user) {
-            var branch = this.repo.Branches[branchName];
-            var commit = branch.Commits.FirstOrDefault(x => x.Committer.Name == user.UserName || x.Committer.Name == "Administrator");
-            return commit?.Author.When.DateTime.ToUniversalTime() ?? DateTime.MinValue;
-        }
-        public bool CalcHasModification() {
-            RepositoryStatus status = repo.RetrieveStatus();
-            return status.IsDirty;
-        }
-        public void CheckOut(string branchName) {
-            CheckoutOptions options = new CheckoutOptions();
-            options.CheckoutModifiers = CheckoutModifiers.Force;
-            repo.Checkout(repo.Branches[branchName], options);
-        }
-        public void CheckOut(Commit commit) {
-            CheckoutOptions options = new CheckoutOptions();
-            options.CheckoutModifiers = CheckoutModifiers.Force;
-            repo.Checkout(commit, options);
-            Log.Message($"Checkout commit {commit.Id} completed");
-        }
-        public void AddTag(string tagName, GitObject target, string commiterName, DateTime timeStamp, string message) {
-            repo.Tags.Add(tagName, target, new Signature(commiterName, "test@mail.com", timeStamp), message, true);
-            Push($@"refs/tags/{tagName}", true);
-            Log.Message($"Apply tag commit {tagName} completed");
-        }
-        public Tag GetTag(string tagName) {
-            return repo.Tags[tagName];
-        }
-        public Commit GetHead(string branchName) {
-            var branch = repo.Branches[branchName];
-            return branch.Commits.First();
-        }
-        public IEnumerable<TreeEntryChanges> GetChanges(Commit commit, Commit parent) {
-            var treeChanges = repo.Diff.Compare<TreeChanges>(parent.Tree, commit.Tree);
-            var changes = Enumerable.Empty<TreeEntryChanges>();
-            changes = changes.Concat(treeChanges.Added);
-            changes = changes.Concat(treeChanges.Deleted);
-            changes = changes.Concat(treeChanges.Modified);
-            changes = changes.Concat(treeChanges.Renamed);
-            return changes;
-        }
-        public void Reset(string branchName) {
-            CheckOut(branchName);
-            Fetch();
-            this.repo.Reset(ResetMode.Hard);
-            this.repo.RemoveUntrackedFiles();
-            Log.Message($"Reset branch {branchName} completed.");
-        }
-        public MergeStatus Merge(string sourceBranch, User merger) {
-            Branch branch = repo.Branches[sourceBranch];
-            MergeOptions mergeOptions = new MergeOptions();
-            mergeOptions.CommitOnSuccess = false;
-            mergeOptions.FastForwardStrategy = FastForwardStrategy.NoFastForward;
-            mergeOptions.FileConflictStrategy = CheckoutFileConflictStrategy.Normal;
-            MergeResult result = repo.Merge(branch, ToSignature(merger), mergeOptions);
-            return result.Status;
-        }
-        public RevertStatus Revert(string branchName, Commit revertCommit, User user) {
-            return this.repo.Revert(revertCommit, ToSignature(user)).Status;
-        }
-
-        public void RemoveBranch(string branchName) {
-            Branch localBranch = this.repo.Branches[branchName];
-            string remoteName = GetOriginName(branchName);
-            Branch remoteBranch = this.repo.Branches[remoteName];
-            if(localBranch != null)
-                repo.Branches.Remove(localBranch);
-            RemoveRemoteBranch(branchName);
-            if(remoteBranch != null)
-                RemoveRemoteBranch(branchName);
+        public GitCommit FindCommit(Func<GitCommit, bool> pred) {
+            return gitCmd.FindCommit(localPath, pred);
         }
     }
 }
