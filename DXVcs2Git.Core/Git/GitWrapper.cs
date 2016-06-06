@@ -81,8 +81,9 @@ namespace DXVcs2Git {
                 "commit",
                 "-m", Escape(comment),
                 "--author", Escape(author),
-                "--date", Escape(date)
             };
+            Environment.SetEnvironmentVariable("GIT_AUTHOR_DATE", date);
+            Environment.SetEnvironmentVariable("GIT_COMMITTER_DATE", date);
             string output, errors;
             var code = WaitForProcess(gitPath, repoPath, out output, out errors, args);
             CheckFail(code, output, errors);
@@ -220,8 +221,9 @@ namespace DXVcs2Git {
             Log.Message($"Git stage performed.");
         }
         public void Commit(string comment, User user, DateTime timeStamp, bool allowEmpty = true) {
-            var userString = string.Format("{0} <{1}>", user.UserName, user.Email);
-            gitCmd.Commit(localPath, comment, userString, timeStamp.ToString());
+            var userString = $"{user.UserName} <{user.Email}>";
+            var time = timeStamp.ToLocalTime().ToString();
+            gitCmd.Commit(localPath, comment, userString, time);
         }
         public void PushEverything() {
             gitCmd.Push(localPath);
