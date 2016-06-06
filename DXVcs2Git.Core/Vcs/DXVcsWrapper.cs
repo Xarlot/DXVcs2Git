@@ -396,12 +396,45 @@ namespace DXVcs2Git.DXVcs {
             });
             return true;
         }
+
+        public IList<TrackItem> GenerateTrackItems(TrackBranch trackBranch, TrackItem trackItem) {
+            if (!trackItem.GoDeeper)
+                return new List<TrackItem>() {trackItem};
+            try {
+                var repo = DXVcsConnectionHelper.Connect(server, user, password);
+                string trackRoot = trackBranch.GetTrackRoot(trackItem);
+                var projectData = repo.GetProjectData(trackRoot);
+                if (projectData.IsNull || projectData.SubProjectsCount == 0)
+                    return new List<TrackItem>() {trackItem};
+                var innerProjects = repo.GetProjects(trackRoot);
+                if (innerProjects == null || innerProjects.Length == 0) 
+                    return new List<TrackItem>() { trackItem };
+
+                List<TrackItem> result = new List<TrackItem>(innerProjects.Length);
+                foreach (var info in innerProjects) {
+                    var newTrackItem = new TrackItem();
+                    newTrackItem.Branch = trackBranch.Name;
+                    newTrackItem.GoDeeper = false;
+                    newTrackItem.Path = trackItem.Path + @"/" + info.Name;
+                    newTrackItem.ProjectPath = trackItem.ProjectPath + @"\" + info.Name;
+                    newTrackItem.AdditionalOffset = trackItem.AdditionalOffset;
+                    result.Add(newTrackItem);
+                }
+                return result;
+            }
+            catch(Exception ex)  {
+                Log.Error("Generating trackitems from config failed", ex);
+                throw ex;
+            }
+        }
+
         public IList<HistoryItem> GenerateHistory(TrackBranch branch, DateTime from) {
             try {
                 var repo = DXVcsConnectionHelper.Connect(server, user, password);
                 var history = Enumerable.Empty<HistoryItem>();
                 foreach (var trackItem in branch.TrackItems) {
-                    var historyForItem = repo.GetProjectHistory(trackItem.Path, true, from).Select(x =>
+                    string trackPath = branch.GetTrackRoot(trackItem);
+                    var historyForItem = repo.GetProjectHistory(trackPath, true, from).Select(x =>
                         new HistoryItem() {
                             ActionDate = x.ActionDate,
                             Comment = x.Comment,

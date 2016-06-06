@@ -779,6 +779,17 @@ namespace DXVcs2Git.DXVcs {
                 throw new ArgumentException("vcsFile");
             return Service.GetFile(vcsFile);
         }
+
+        public ProjectStateInfo GetProjectData(string vcsProject) {
+            if (string.IsNullOrEmpty(vcsProject))
+                throw new ArgumentException("vcsProject");
+            return Service.FindProject(vcsProject);
+        }
+        public ProjectStateInfo[] GetProjects(string vcsProject) {
+            if (string.IsNullOrEmpty(vcsProject))
+                throw new ArgumentException("vcsProject");
+            return Service.GetProjects(vcsProject);
+        }
         public bool IsCheckedOut(string vcsFile) {
             return GetFileData(vcsFile).CheckedOut;
         }

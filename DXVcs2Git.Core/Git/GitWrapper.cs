@@ -48,9 +48,14 @@ namespace DXVcs2Git {
             return proc.ExitCode;
         }
 
-        static void CheckFail(int code) {
-            if (code != 0)
+        static void CheckFail(int code, string output, string errors) {
+            if (code != 0) { 
+                Log.Error("Git return output:");
+                Log.Error(output);
+                Log.Error("Git return error:");
+                Log.Error(errors);
                 throw new Exception("git invocation failed");
+            }
         }
 
         static string Escape(string str) {
@@ -63,13 +68,12 @@ namespace DXVcs2Git {
             };
             string output, errors;
             var code = WaitForProcess(gitPath, ".", out output, out errors, args);
-            CheckFail(code);
+            CheckFail(code, output, errors);
         }
-
         public void Add(string repoPath, string relativePath) {
             string output, errors;
             var code = WaitForProcess(gitPath, repoPath, out output, out errors, "add", relativePath);
-            CheckFail(code);
+            CheckFail(code, output, errors);
         }
 
         public void Commit(string repoPath, string comment, string author, string date) {
@@ -81,37 +85,37 @@ namespace DXVcs2Git {
             };
             string output, errors;
             var code = WaitForProcess(gitPath, repoPath, out output, out errors, args);
-            CheckFail(code);
+            CheckFail(code, output, errors);
         }
 
         public void ResetHard(string repoPath) {
             string output, errors;
             var code = WaitForProcess(gitPath, repoPath, out output, out errors, "reset", "--hard");
-            CheckFail(code);
+            CheckFail(code, output, errors);
         }
 
         public void Pull(string repoPath) {
             string output, errors;
             var code = WaitForProcess(gitPath, repoPath, out output, out errors, "lfs pull");
-            CheckFail(code);
+            CheckFail(code, output, errors);
         }
 
         public void Push(string repoPath) {
             string output, errors;
             var code = WaitForProcess(gitPath, repoPath, out output, out errors, "push");
-            CheckFail(code);
+            CheckFail(code, output, errors);
         }
 
         public void Checkout(string repoPath, string branch) {
             string output, errors;
             var code = WaitForProcess(gitPath, repoPath, out output, out errors, "checkout", "-B", branch);
-            CheckFail(code);
+            CheckFail(code, output, errors);
         }
 
         public void Init(string repoPath) {
             string output, errors;
             var code = WaitForProcess(gitPath, repoPath, out output, out errors, "init");
-            CheckFail(code);
+            CheckFail(code, output, errors);
         }
 
         public void Fetch(string repoPath, bool tags) {
@@ -122,7 +126,7 @@ namespace DXVcs2Git {
                 args.Add("--tags");
             }
             var code = WaitForProcess(gitPath, repoPath, out output, out errors, "fetch");
-            CheckFail(code);
+            CheckFail(code, output, errors);
         }
 
         string GetLog(string repoPath, int from, string format) {
@@ -134,7 +138,7 @@ namespace DXVcs2Git {
             };
             string output, errors;
             var code = WaitForProcess(gitPath, repoPath, out output, out errors, args);
-            CheckFail(code);
+            CheckFail(code, output, errors);
             return output.Trim();
         }
 
@@ -142,7 +146,7 @@ namespace DXVcs2Git {
             string output, errors;
             var code = WaitForProcess(gitPath, repoPath, out output, out errors,
                 "rev-list", "HEAD", "--count");
-            CheckFail(code);
+            CheckFail(code, output, errors);
             int count = int.Parse(output);
 
             return Enumerable.Range(0, count).Select(i =>
@@ -183,24 +187,25 @@ namespace DXVcs2Git {
             this.localPath = localPath;
             this.credentials = credentials;
             this.remotePath = remotePath;
-            gitCmd = new GitCmdWrapper(@"C:\Program Files\Git\bin\git.exe");
+            gitCmd = new GitCmdWrapper(@"C:\Program Files\Git\cmd\git.exe");
             Log.Message("Start initializing git repo");
             this.repoPath = localPath;
             if (DirectoryHelper.IsGitDir(localPath)) {
-                GitInit();
+                GitInit(branch);
             }
             else {
-                GitClone();
+                GitClone(branch);
                 Pull();
             }
             Log.Message("End initializing git repo");
         }
-        public void GitInit() {
+        public void GitInit(string branch) {
             gitCmd.Init(localPath);
+            CheckOut(branch);
         }
-        void GitClone() {
-            gitCmd.ShallowClone(localPath, "2015.2", remotePath);
-            Log.Message($"Git repo {localPath} initialized");
+        void GitClone(string branch) {
+            gitCmd.ShallowClone(localPath, branch, remotePath);
+            Log.Message($"Git repo {localPath} was cloned with branch {branch}.");
         }
         public void Dispose() {
         }
@@ -226,6 +231,7 @@ namespace DXVcs2Git {
         }
         public void CheckOut(string branch) {
             gitCmd.Checkout(localPath, branch);
+            Log.Message($"Git repo {localPath} was checked out for branch {branch}.");
         }
         public void Reset() {
             gitCmd.ResetHard(localPath);

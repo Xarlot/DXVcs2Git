@@ -166,10 +166,11 @@ namespace DXVcs2Git.Console {
             string trackerPath = clo.Tracker;
             string gitServer = clo.Server;
 
-            TrackBranch branch = FindBranch(branchName, trackerPath);
+            DXVcsWrapper vcsWrapper = new DXVcsWrapper(vcsServer, username, password);
+
+            TrackBranch branch = FindBranch(branchName, trackerPath, vcsWrapper);
             if (branch == null)
                 return 1;
-            DXVcsWrapper vcsWrapper = new DXVcsWrapper(vcsServer, username, password);
 
             string historyPath = GetVcsSyncHistory(vcsWrapper, branch.HistoryPath);
             if (historyPath == null)
@@ -261,10 +262,10 @@ namespace DXVcs2Git.Console {
                 return null;
             }
         }
-        static TrackBranch FindBranch(string branchName, string trackerPath) {
+        static TrackBranch FindBranch(string branchName, string trackerPath, DXVcsWrapper vcsWrapper) {
             string localPath = Path.GetDirectoryName(Assembly.GetEntryAssembly().Location);
             string configPath = Path.Combine(localPath, trackerPath);
-            var branch = GetBranch(branchName, configPath);
+            var branch = GetBranch(branchName, configPath, vcsWrapper);
             if (branch == null) {
                 Log.Error($"Specified branch {branchName} not found in track file.");
                 return null;
@@ -273,7 +274,7 @@ namespace DXVcs2Git.Console {
         }
         static int ProcessMergeRequests(DXVcsWrapper vcsWrapper, GitWrapper gitWrapper, GitLabWrapper gitLabWrapper, RegisteredUsers users, User defaultUser, string gitRepoPath, string localGitDir, string branchName, string tracker, SyncHistoryWrapper syncHistory, string userName) {
             var project = gitLabWrapper.FindProject(gitRepoPath);
-            TrackBranch branch = GetBranch(branchName, tracker);
+            TrackBranch branch = GetBranch(branchName, tracker, vcsWrapper);
             if (branch == null) {
                 Log.Error($"Specified branch {branchName} not found in track file.");
                 return 1;
@@ -481,9 +482,9 @@ namespace DXVcs2Git.Console {
                 foreach (var localCommit in localCommits) {
                     string localProjectPath = Path.Combine(localGitDir, localCommit.Track.ProjectPath);
                     DirectoryHelper.DeleteDirectory(localProjectPath);
-                    vcsWrapper.GetProject(vcsServer, localCommit.Track.Path, localProjectPath, item.TimeStamp);
+                    string trackPath = branch.GetTrackRoot(localCommit.Track);
+                    vcsWrapper.GetProject(vcsServer, trackPath, localProjectPath, item.TimeStamp);
 
-                    gitWrapper.Fetch();
                     Log.Message($"git stage {localCommit.Track.ProjectPath}");
                     gitWrapper.Stage(localCommit.Track.ProjectPath);
                     var comment = CalcComment(localCommit, token);
@@ -526,9 +527,9 @@ namespace DXVcs2Git.Console {
             var commentWrapper = CommentWrapper.Parse(comment.Comment);
             return commentWrapper.Author;
         }
-        static TrackBranch GetBranch(string branchName, string configPath) {
+        static TrackBranch GetBranch(string branchName, string configPath, DXVcsWrapper vcsWrapper) {
             try {
-                var branches = TrackBranch.Deserialize(configPath);
+                var branches = TrackBranch.Deserialize(configPath, vcsWrapper);
                 return branches.First(x => x.Name == branchName);
             }
             catch (Exception ex) {
