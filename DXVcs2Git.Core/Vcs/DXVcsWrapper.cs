@@ -416,7 +416,7 @@ namespace DXVcs2Git.DXVcs {
                     newTrackItem.Branch = trackBranch.Name;
                     newTrackItem.GoDeeper = false;
                     newTrackItem.Path = trackItem.Path + @"/" + info.Name;
-                    newTrackItem.ProjectPath = trackItem.ProjectPath + @"\" + info.Name;
+                    newTrackItem.ProjectPath = Path.Combine(trackItem.ProjectPath, info.Name).Replace(@"\", @"/");
                     newTrackItem.AdditionalOffset = trackItem.AdditionalOffset;
                     result.Add(newTrackItem);
                 }
