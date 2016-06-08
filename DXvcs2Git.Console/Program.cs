@@ -36,7 +36,13 @@ namespace DXVcs2Git.Console {
         static void Main(string[] args) {
             var result = Parser.Default.ParseArguments<CommandLineOptions>(args);
             var exitCode = result.MapResult(clo => {
-                return DoWork(clo);
+                try {
+                    return DoWork(clo);
+                }
+                catch (Exception ex) {
+                    Log.Error("Application crashed with exception", ex);
+                    return 1;
+                }
             },
             errors => 1);
             Environment.Exit(exitCode);
