@@ -514,8 +514,8 @@ namespace DXVcs2Git.DXVcs {
                 repo.GetLatestFileVersion(historyPath, localPath);
                 return localPath;
             }
-            catch (Exception) {
-                Log.Error($"Loading sync history from {historyPath} failed");
+            catch (Exception ex) {
+                Log.Error($"Loading sync history from {historyPath} failed", ex);
                 return null;
             }
         }
