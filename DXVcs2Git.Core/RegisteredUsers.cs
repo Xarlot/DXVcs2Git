@@ -60,6 +60,10 @@ namespace DXVcs2Git.Core {
                 return null;
             string loginCandidate = userInfo.Logins.FirstOrDefault(x => {
                 var check = CalcLogin(x);
+                if (string.IsNullOrEmpty(check)) {
+                    Log.Message($"Login {x} has incorrect structure.");
+                    return false;
+                }
                 User checkUser;
                 return ADUsers.TryGetValue(check, out checkUser);
             });
