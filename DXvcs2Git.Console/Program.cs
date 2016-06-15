@@ -525,7 +525,7 @@ namespace DXVcs2Git.Console {
             string author = localCommit.Author;
             if (string.IsNullOrEmpty(author))
                 author = localCommit.Items.FirstOrDefault(x => !string.IsNullOrEmpty(x.User))?.User;
-            if (author != defaultUser.UserName)
+            if (!IsServiceUser(author, defaultUser.UserName))
                 return author;
             var comment = localCommit.Items.FirstOrDefault(x => CommentWrapper.IsAutoSyncComment(x.Comment));
             if (comment == null)
@@ -533,6 +533,12 @@ namespace DXVcs2Git.Console {
             var commentWrapper = CommentWrapper.Parse(comment.Comment);
             return commentWrapper.Author;
         }
+        static bool IsServiceUser(string author, string defaultUser) {
+            if (author == defaultUser)
+                return true;
+            return author?.StartsWith("dxvcs2git") ?? true;
+        }
+
         static TrackBranch GetBranch(string branchName, string configPath, DXVcsWrapper vcsWrapper) {
             try {
                 var branches = TrackBranch.Deserialize(configPath, vcsWrapper);
