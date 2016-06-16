@@ -2,7 +2,6 @@
 
 namespace DXVcs2Git.Core {
     public class CommentWrapper {
-        //new Regex(@"(?<=sha:\s*)[0-9a-f]+", RegexOptions.Compiled);
         static readonly Regex parseAuthorRegex = new Regex(@"(?<=a:)\S+", RegexOptions.Compiled);
         static readonly Regex parseTokenRegex = new Regex(@"(?<=t:)\S+(?=\])", RegexOptions.Compiled);
         static readonly Regex parseStructureRegex = new Regex(@"\[a:\S+ t:\S+\]", RegexOptions.Compiled);

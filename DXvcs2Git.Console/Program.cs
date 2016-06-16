@@ -493,8 +493,8 @@ namespace DXVcs2Git.Console {
 
                     Log.Message($"git stage {localCommit.Track.ProjectPath}");
                     gitWrapper.Stage(localCommit.Track.ProjectPath);
-                    var comment = CalcComment(localCommit, token);
                     string author = CalcAuthor(localCommit, defaultUser);
+                    var comment = CalcComment(localCommit, author, token);
                     User user = users.GetUser(author);
                     try {
                         gitWrapper.Commit(comment.ToString(), user, localCommit.TimeStamp, false);
@@ -570,16 +570,14 @@ namespace DXVcs2Git.Console {
             }
             return sb.ToString();
         }
-        static CommentWrapper CalcComment(CommitItem item, string token) {
+        static CommentWrapper CalcComment(CommitItem item, string author, string token) {
             CommentWrapper comment = new CommentWrapper();
             comment.TimeStamp = item.TimeStamp.Ticks.ToString();
-            comment.Author = item.Author;
+            comment.Author = author;
             comment.Branch = item.Track.Branch;
             comment.Token = token;
-            if (item.Items.Any(x => !string.IsNullOrEmpty(x.Comment) && CommentWrapper.IsAutoSyncComment(x.Comment))) {
+            if (item.Items.Any(x => !string.IsNullOrEmpty(x.Comment) && CommentWrapper.IsAutoSyncComment(x.Comment))) 
                 comment.Comment = item.Items.Select(x => CommentWrapper.Parse(x.Comment ?? x.Message).Comment).FirstOrDefault(x => !string.IsNullOrEmpty(x));
-                comment.Author = comment.Comment != null ? CommentWrapper.Parse(comment.Comment).Author : comment.Author;
-            }
             else
                 comment.Comment = item.Items.FirstOrDefault(x => !string.IsNullOrEmpty(x.Comment))?.Comment;
             return comment;

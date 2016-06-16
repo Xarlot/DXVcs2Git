@@ -50,10 +50,10 @@ namespace DXVcs2Git {
 
         static void CheckFail(int code, string output, string errors) {
             if (code != 0) { 
-                Log.Error("Git return output:");
-                Log.Error(output);
-                Log.Error("Git return error:");
-                Log.Error(errors);
+                Log.Message("Git return output:");
+                Log.Message(output);
+                Log.Message("Git return error:");
+                Log.Message(errors);
                 throw new Exception("git invocation failed");
             }
         }
@@ -72,21 +72,29 @@ namespace DXVcs2Git {
         }
         public void Add(string repoPath, string relativePath) {
             string output, errors;
-            var code = WaitForProcess(gitPath, repoPath, out output, out errors, "add", relativePath);
-            CheckFail(code, output, errors);
+            try {
+                var code = WaitForProcess(gitPath, repoPath, out output, out errors, "add", relativePath);
+                CheckFail(code, output, errors);
+            }
+            catch {
+            }
         }
 
         public void Commit(string repoPath, string comment, string author, string date) {
-            var args = new[] {
-                "commit",
-                "-m", Escape(comment),
-                "--author", Escape(author),
-            };
-            Environment.SetEnvironmentVariable("GIT_AUTHOR_DATE", date);
-            Environment.SetEnvironmentVariable("GIT_COMMITTER_DATE", date);
-            string output, errors;
-            var code = WaitForProcess(gitPath, repoPath, out output, out errors, args);
-            CheckFail(code, output, errors);
+            try {
+                var args = new[] {
+                    "commit",
+                    "-m", Escape(comment),
+                    "--author", Escape(author),
+                };
+                Environment.SetEnvironmentVariable("GIT_AUTHOR_DATE", date);
+                Environment.SetEnvironmentVariable("GIT_COMMITTER_DATE", date);
+                string output, errors;
+                var code = WaitForProcess(gitPath, repoPath, out output, out errors, args);
+                CheckFail(code, output, errors);
+            }
+            catch {
+            }
         }
 
         public void ResetHard(string repoPath) {
