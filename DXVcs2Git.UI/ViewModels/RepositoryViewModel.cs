@@ -23,11 +23,13 @@ namespace DXVcs2Git.UI.ViewModels {
             get { return GetProperty(() => FarmStatus); }
             private set { SetProperty(() => FarmStatus, value); }
         }
-        public Project Project { get; }
+        public Project Origin { get; }
+        public Project Upstream { get; }
         RepositoriesViewModel Repositories { get; }
         public GitRepoConfig RepoConfig { get; }
         public TrackRepository TrackRepository { get; }
-        public string DefaultServiceName { get { return RepoConfig?.DefaultServiceName; } }
+        public string DefaultServiceName => RepoConfig?.DefaultServiceName;
+
         public BranchViewModel SelectedBranch {
             get { return GetProperty(() => SelectedBranch); }
             set { SetProperty(() => SelectedBranch, value); }
@@ -38,20 +40,21 @@ namespace DXVcs2Git.UI.ViewModels {
             GitReader = new GitReaderWrapper(trackRepository.LocalPath);
             RepoConfig = repositories.RepoConfigs[trackRepository.ConfigName];
             Repositories = repositories;
-            Project = GitLabWrapper.FindProject(GitReader.GetRemoteRepoPath());
+            Origin = GitLabWrapper.FindProject(GitReader.GetOriginRepoPath());
+            Upstream = GitLabWrapper.FindProject(GitReader.GetUpstreamRepoPath());
             Name = name;
             FarmStatus = new FarmStatus();
 
             Update();
         }
         public void Update() {
-            if (Project == null) {
+            if (Origin == null) {
                 Log.Error("Can`t find project");
                 return;
             }
 
-            var mergeRequests = this.GitLabWrapper.GetMergeRequests(Project);
-            var branches = this.GitLabWrapper.GetBranches(Project).ToList();
+            var mergeRequests = this.GitLabWrapper.GetMergeRequests(Origin);
+            var branches = this.GitLabWrapper.GetBranches(Origin).ToList();
             var localBranches = GitReader.GetLocalBranches();
 
             Branches = branches.Where(x => !x.Protected && localBranches.Any(local => local.FriendlyName == x.Name))
@@ -67,7 +70,7 @@ namespace DXVcs2Git.UI.ViewModels {
             FarmIntegrator.ForceBuild(RepoConfig.FarmSyncTaskName);
         }
         public MergeRequest CreateMergeRequest(string title, string description, string user, string sourceBranch, string targetBranch) {
-            return GitLabWrapper.CreateMergeRequest(Project, title, description, user, sourceBranch, targetBranch);
+            return GitLabWrapper.CreateMergeRequest(Origin, Upstream, title, description, user, sourceBranch, targetBranch);
         }
         public void RefreshFarm() {
             if (Branches == null) {
