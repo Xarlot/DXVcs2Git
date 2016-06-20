@@ -17,6 +17,7 @@ using DXVcs2Git.Core.Serialization;
 using DXVcs2Git.DXVcs;
 using DXVcs2Git.Git;
 using DXVcs2Git.UI.Farm;
+using LibGit2Sharp;
 using NGitLab;
 using NGitLab.Models;
 using ProjectHookType = DXVcs2Git.Core.GitLab.ProjectHookType;
@@ -351,12 +352,13 @@ namespace DXVcs2Git.Console {
             if (mergeRequest.State == "merged") {
                 Log.Message("Merge request merged successfully.");
 
-                string targetBranch = mergeRequest.TargetBranch;
                 gitWrapper.Pull();
+                gitWrapper.LFSPull();
+
                 var gitCommit = gitWrapper.FindCommit(x => CommentWrapper.Parse(x.Message).Token == autoSyncToken);
                 long timeStamp = lastHistoryItem.VcsCommitTimeStamp;
 
-                if (vcsWrapper.ProcessCheckIn(genericChange, comment.ToString())) {
+                if (gitCommit != null && vcsWrapper.ProcessCheckIn(genericChange, comment.ToString())) {
                     var checkinHistory = vcsWrapper.GenerateHistory(branch, new DateTime(timeStamp)).Where(x => x.ActionDate.Ticks > timeStamp);
                     var lastCommit = checkinHistory.OrderBy(x => x.ActionDate).LastOrDefault();
                     long newTimeStamp = lastCommit?.ActionDate.Ticks ?? timeStamp;
@@ -370,6 +372,8 @@ namespace DXVcs2Git.Console {
                     return mergeRequestResult;
                 }
                 Log.Error("Merge request checkin failed.");
+                if (gitCommit == null) 
+                    Log.Error($"Can`t find git commit with token {autoSyncToken}");
                 var failedHistory = vcsWrapper.GenerateHistory(branch, new DateTime(timeStamp));
                 var lastFailedCommit = failedHistory.OrderBy(x => x.ActionDate).LastOrDefault();
                 syncHistory.Add(gitCommit.Sha, lastFailedCommit?.ActionDate.Ticks ?? timeStamp, autoSyncToken, SyncHistoryStatus.Failed);
@@ -444,8 +448,9 @@ namespace DXVcs2Git.Console {
         }
         static string CalcVcsPath(string vcsRoot, TrackBranch branch, string path) {
             var trackItem = branch.TrackItems.First(x => path.StartsWith(x.ProjectPath));
-            string result = string.IsNullOrEmpty(trackItem.AdditionalOffset) ? Path.Combine(vcsRoot, path) : Path.Combine(vcsRoot, trackItem.AdditionalOffset, path);
-            return result.Replace("\\", "/");
+            var resultPath = path.Remove(0, trackItem.ProjectPath.Length).TrimStart(@"\/".ToCharArray());
+            string trackPath = branch.GetTrackRoot(trackItem);
+            return Path.Combine(trackPath, resultPath).Replace("\\", "/");
         }
         static ProcessHistoryResult ProcessHistory(DXVcsWrapper vcsWrapper, GitWrapper gitWrapper, RegisteredUsers users, User defaultUser, string gitRepoPath, string localGitDir, TrackBranch branch, int commitsCount, SyncHistoryWrapper syncHistory, bool mergeCommits) {
             IList<CommitItem> commits = GenerateCommits(vcsWrapper, branch, syncHistory, mergeCommits);

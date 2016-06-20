@@ -49,7 +49,7 @@ namespace DXVcs2Git {
         }
 
         static void CheckFail(int code, string output, string errors) {
-            if (code != 0) { 
+            if (code != 0) {
                 Log.Message("Git return output:");
                 Log.Message(output);
                 Log.Message("Git return error:");
@@ -102,13 +102,20 @@ namespace DXVcs2Git {
             var code = WaitForProcess(gitPath, repoPath, out output, out errors, "reset", "--hard");
             CheckFail(code, output, errors);
         }
-
         public void Pull(string repoPath) {
+            var args = new[] {
+                "-c", "filter.lfs.smudge=", "-c", "filter.lfs.required=false", "pull", "--depth", "2"
+            };
+
+            string output, errors;
+            var code = WaitForProcess(gitPath, repoPath, out output, out errors, args);
+            CheckFail(code, output, errors);
+        }
+        public void LFSPull(string repoPath) {
             string output, errors;
             var code = WaitForProcess(gitPath, repoPath, out output, out errors, "lfs pull");
             CheckFail(code, output, errors);
         }
-
         public void Push(string repoPath) {
             string output, errors;
             var code = WaitForProcess(gitPath, repoPath, out output, out errors, "push");
@@ -126,21 +133,29 @@ namespace DXVcs2Git {
             var code = WaitForProcess(gitPath, repoPath, out output, out errors, "init");
             CheckFail(code, output, errors);
         }
-
-        public void Fetch(string repoPath, bool tags) {
+        public void Fetch(string remote, string repoPath, bool tags) {
             string output, errors;
             var args = new List<string>();
             args.Add("fetch");
+            args.Add("--depth");
+            args.Add("1");
+            if (!string.IsNullOrEmpty(remote))
+                args.Add(remote);
             if (tags) {
                 args.Add("--tags");
             }
             var code = WaitForProcess(gitPath, repoPath, out output, out errors, "fetch");
             CheckFail(code, output, errors);
         }
-
+        public void Merge(string repoPath, string remote, string targetBranch, string sourceBranch) {
+            string output, errors;
+            var code = WaitForProcess(gitPath, repoPath, out output, out errors, "merge", remote + $@"/{targetBranch}", $"{sourceBranch}");
+            CheckFail(code, output, errors);
+        }
         string GetLog(string repoPath, int from, string format) {
             var args = new[] {
                 "log",
+                
                 string.Format("HEAD~{0}", from),
                 "-1",
                 string.Format("--pretty=format:\"{0}\"", format)
@@ -163,7 +178,7 @@ namespace DXVcs2Git {
                     Sha = GetLog(repoPath, i, "%H"),
                     Message = GetLog(repoPath, i, "%B")
                 }
-            ).First(pred);
+            ).FirstOrDefault(pred);
         }
     }
 
@@ -204,7 +219,7 @@ namespace DXVcs2Git {
             }
             else {
                 GitClone(branch);
-                Pull();
+                LFSPull();
             }
             Log.Message("End initializing git repo");
         }
@@ -219,10 +234,13 @@ namespace DXVcs2Git {
         public void Dispose() {
         }
         public void Fetch(string remote = "", bool updateTags = false) {
-            gitCmd.Fetch(localPath, updateTags);
+            gitCmd.Fetch(remote, localPath, updateTags);
         }
         public void Pull() {
-            gitCmd.Pull(localPath);
+            gitCmd.Pull(localPath);;
+        }
+        public void LFSPull() {
+            gitCmd.LFSPull(localPath);
         }
         public void Stage(string path) {
             gitCmd.Add(localPath, path);
@@ -248,6 +266,9 @@ namespace DXVcs2Git {
         }
         public GitCommit FindCommit(Func<GitCommit, bool> pred) {
             return gitCmd.FindCommit(localPath, pred);
+        }
+        public void Merge(string upstream, string targetBranch, string sourceBranch) {
+            gitCmd.Merge(localPath, upstream, targetBranch, sourceBranch);
         }
     }
 }

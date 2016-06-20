@@ -48,7 +48,10 @@ namespace DXVcs2Git.Core {
             return result.Replace("\\", "/");
         }
         public bool IsTrackingVcsPath(string vcsPath) {
-            return TrackItems.Any(i => vcsPath.StartsWith(i.Path.TrimEnd('/') + "/"));
+            return TrackItems.Any(x => {
+                string trackingPath = GetTrackRoot(x);
+                return vcsPath.StartsWith(trackingPath.TrimEnd('/') + "/");
+            });
         }
     }
 }
