@@ -62,11 +62,12 @@ namespace DXVcs2Git.Git {
             var mergeRequestClient = this.client.GetMergeRequest(origin.Id);
             var mergeRequest = mergeRequestClient.Create(new MergeRequestCreate() {
                 Title = title,
+                Description = description,
                 SourceBranch = sourceBranch,
                 TargetBranch = targetBranch,
                 TargetProjectId = upstream.Id,
             });
-            return UpdateMergeRequestTitleAndDescription(mergeRequest, title, description);
+            return mergeRequest;
         }
         public MergeRequest ReopenMergeRequest(MergeRequest mergeRequest, string autoMergeFailedComment) {
             var mergeRequestsClient = client.GetMergeRequest(mergeRequest.ProjectId);
