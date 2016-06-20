@@ -22,6 +22,22 @@ namespace DXVcs2Git.UI.NativeMethods {
             process.Start();
             process.WaitForExit();
         }
+        static string ConcatStringsWithDelimeter(this IEnumerable<string> source, string delimeter) {
+            var builder = new StringBuilder();
+            foreach (var str in source.InsertDelimeter(delimeter)) {
+                builder.Append(str);
+            }
+            return builder.ToString();
+        }
+        static IEnumerable<T> InsertDelimeter<T>(this IEnumerable<T> source, T delimeter) {
+            var en = source.GetEnumerator();
+            if (en.MoveNext())
+                yield return en.Current;
+            while (en.MoveNext()) {
+                yield return delimeter;
+                yield return en.Current;
+            }
+        }
         static async Task InvokeAsync(string name, params string[] arguments) {
             await Task.Run(() => Invoke(name, arguments));
         }
