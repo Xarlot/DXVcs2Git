@@ -104,20 +104,22 @@
         </dxr:RibbonControl>
         <dxdo:DockLayoutManager 
             AutoHideMode="Inline"
-            Grid.Row="1" dxb:MergingProperties.ElementMergingBehavior="InternalWithExternal">
+            Grid.Row="1">
             <dxdo:LayoutGroup x:Name="root" Orientation="Vertical">
                 <dxdo:LayoutGroup ItemHeight="4*">
                     <dxdo:LayoutPanel 
-                    ItemWidth="*"
-                    AutoHideExpandState="Expanded"
-                    FloatOnDoubleClick="False">
+                        dxb:MergingProperties.ElementMergingBehavior="InternalWithExternal"
+                        ItemWidth="*"
+                        AutoHideExpandState="Expanded"
+                        FloatOnDoubleClick="False">
                         <local:RepositoriesControl 
                         dxmvvm:ViewModelExtensions.Parameter="{Binding DataContext.Repositories, ElementName=LayoutRoot}"
                         dxmvvm:ViewModelExtensions.ParentViewModel="{Binding DataContext, ElementName=LayoutRoot}">
                         </local:RepositoriesControl>
                     </dxdo:LayoutPanel>
                     <dxdo:LayoutPanel
-                    ItemWidth="2*">
+                        dxb:MergingProperties.ElementMergingBehavior="InternalWithExternal"
+                        ItemWidth="2*">
                         <local:ProcessMergeRequestControl 
                         dxmvvm:ViewModelExtensions.Parameter="{Binding DataContext.Repositories, ElementName=LayoutRoot}"
                         dxmvvm:ViewModelExtensions.ParentViewModel="{Binding DataContext, ElementName=LayoutRoot}">
@@ -125,7 +127,8 @@
                     </dxdo:LayoutPanel>
                 </dxdo:LayoutGroup>
                 <dxdo:LayoutGroup ItemHeight="*" Visibility="{Binding Path=ShowLog, Converter={StaticResource BooleanToVisibilityConverter}}">
-                    <dxdo:LayoutPanel >
+                    <dxdo:LayoutPanel 
+                        dxb:MergingProperties.ElementMergingBehavior="InternalWithExternal">
                         <views:LoggingUserControl DataContext="{Binding Path=LogViewModel}"/>
                     </dxdo:LayoutPanel>
                 </dxdo:LayoutGroup>

@@ -93,7 +93,7 @@ namespace DXVcs2Git.UI.ViewModels {
                 return false;
             if (string.IsNullOrEmpty(repo.Token))
                 return false;
-            return true;
+            return DirectoryHelper.IsGitDir(repo.LocalPath);
         }
         public void Refresh() {
             if (Repositories == null)
