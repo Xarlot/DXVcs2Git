@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Text;
 using System.Windows.Threading;
 using log4net;
@@ -15,16 +16,13 @@ namespace DXVcs2Git.Core {
         private static readonly ILog log = LogManager.GetLogger(typeof(Log));
         private static readonly StringBuilder errorsAccumulator = new StringBuilder();
         public static void Message(string message, Exception ex = null) {
-            log.Info(FormatMessage(message), ex);
-        }
-        static string FormatMessage(string message) {
-            return String.Format("[{0}] {1}", DateTime.Now.ToLongTimeString(), message);
+            log.Info(message, ex);
         }
         public static void ResetErrorsAccumulator() {
             errorsAccumulator.Clear();
         }
         public static void Error(string message, Exception exception = null) {
-            log.Error(FormatMessage(message), exception);
+            log.Error(message, exception);
             errorsAccumulator.AppendLine(message);
         }
         public static string GetLog() {
@@ -33,8 +31,11 @@ namespace DXVcs2Git.Core {
             var hierarchy = (Hierarchy)LogManager.GetRepository();
             var mappender = (LimitedMemoryAppender)hierarchy.Root.GetAppender("LimitedMemoryAppender");
             StringBuilder sb = new StringBuilder();
-            foreach (var ev in mappender.GetEvents())
-                sb.AppendLine(ev.RenderedMessage);
+            using (TextWriter writer = new StringWriter(sb)) {
+                foreach (var ev in mappender.GetEvents()) {
+                    mappender.Layout.Format(writer, ev);
+                }
+            }
             return sb.ToString();
         }
         public static string GetErrorsAccumulatorContent() {
