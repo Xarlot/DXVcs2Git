@@ -429,6 +429,15 @@
     <None Include="app.manifest" Condition="'$(Configuration)'=='Release'">
       <SubType>Designer</SubType>
     </None>
+    <None Include="Configs\UWP_2015.1_New.config">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="Configs\UWP_2015.2_New.config">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="Configs\UWP_2016.1_New.config">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Include="Configs\XPF_2016.1.config">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
