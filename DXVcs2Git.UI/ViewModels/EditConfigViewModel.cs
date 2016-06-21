@@ -52,10 +52,13 @@ namespace DXVcs2Git.UI.ViewModels {
             get { return GetProperty(() => CommonXaml); }
             set { SetProperty(() => CommonXaml, value); }
         }
-
         public bool DiagramXaml {
             get { return GetProperty(() => DiagramXaml); }
             set { SetProperty(() => DiagramXaml, value); }
+        }
+        public bool XPFGITXaml {
+            get { return GetProperty(() => XPFGITXaml); }
+            set { SetProperty(() => XPFGITXaml, value); }
         }
         public ICommand UpdateWpf2SLProperties { get; private set; }
 
@@ -70,6 +73,12 @@ namespace DXVcs2Git.UI.ViewModels {
                 await NativeMethods.AdministratorMethods.SetWpf2SlKeyAsync("Diagram");
             else
                 await NativeMethods.AdministratorMethods.ResetWpf2SlKeyAsync("Diagram");
+        }
+        async System.Threading.Tasks.Task UpdateXPFGITXamlProperty() {
+            if (XPFGITXaml)
+                await NativeMethods.AdministratorMethods.SetWpf2SlKeyAsync("XPF");
+            else
+                await NativeMethods.AdministratorMethods.ResetWpf2SlKeyAsync("XPF");
         }
         bool GetWpf2SlKey(string value) {
             var ev = Environment.GetEnvironmentVariable("wpf2slkey", EnvironmentVariableTarget.Machine);
@@ -130,6 +139,7 @@ namespace DXVcs2Git.UI.ViewModels {
             RefreshUpdateCommand = DelegateCommandFactory.Create(AtomFeed.FeedWorker.Update);
             CommonXaml = GetWpf2SlKey("Common");
             DiagramXaml = GetWpf2SlKey("Diagram");
+            XPFGITXaml = GetWpf2SlKey("XPF");
             Repositories = CreateEditRepositories(config);
             Repositories.CollectionChanged += RepositoriesOnCollectionChanged;
             AlwaysSure4 = AlwaysSure3 = AlwaysSure2 = AlwaysSure1 = config.AlwaysSure;
@@ -139,6 +149,7 @@ namespace DXVcs2Git.UI.ViewModels {
         async System.Threading.Tasks.Task OnUpdateWpf2SLProperties() {
             await UpdateCommonXamlProperty();
             await UpdateDiagramXamlProperty();
+            await UpdateXPFGITXamlProperty();
         }
         void RepositoriesOnCollectionChanged(object sender, NotifyCollectionChangedEventArgs e) {
             UpdateTokens();

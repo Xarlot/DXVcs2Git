@@ -133,6 +133,9 @@
                     <dxlc:LayoutItem Label="Include generic resources from the 'Diagram' repository">
                         <dxe:CheckEdit IsChecked="{Binding DiagramXaml, Mode=TwoWay}" IsEnabled="{Binding ElementName=updateButton, Path=IsEnabled}"/>
                     </dxlc:LayoutItem>
+                    <dxlc:LayoutItem Label="Include generic resources from the 'XPF.GIT' repository">
+                        <dxe:CheckEdit IsChecked="{Binding XPFGITXaml, Mode=TwoWay}" IsEnabled="{Binding ElementName=updateButton, Path=IsEnabled}"/>
+                    </dxlc:LayoutItem>
                     <dx:SimpleButton x:Name="updateButton" Glyph="..\Images\admin.png" HorizontalAlignment="Center" Content="Update" Command="{Binding UpdateWpf2SLProperties}"/>
                 </dxlc:LayoutControl>
             </dx:DXTabItem>
