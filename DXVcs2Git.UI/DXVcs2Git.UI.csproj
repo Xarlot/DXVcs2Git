@@ -444,6 +444,15 @@
     <None Include="Configs\UWP_2016.1_New.config">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+    <None Include="Configs\XPF_Demos_2016.1.config">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="Configs\XPF_Demos_2015.2.config">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="Configs\XPF_Demos_2015.1.config">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Include="Configs\XPF_2016.1.config">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
