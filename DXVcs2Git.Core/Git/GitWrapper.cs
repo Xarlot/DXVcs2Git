@@ -194,26 +194,18 @@ namespace DXVcs2Git {
 
     public class GitWrapper : IDisposable {
         readonly string localPath;
-        readonly GitCredentials credentials;
-        readonly string repoPath;
         readonly string remotePath;
         readonly GitCmdWrapper gitCmd;
-
-        public string GitDirectory {
-            get { return repoPath; }
-        }
-
-        public GitCredentials Credentials {
-            get { return credentials; }
-        }
+        public string GitDirectory { get; }
+        public GitCredentials Credentials { get; }
 
         public GitWrapper(string localPath, string remotePath, string branch, GitCredentials credentials) {
             this.localPath = localPath;
-            this.credentials = credentials;
+            this.Credentials = credentials;
             this.remotePath = remotePath;
             gitCmd = new GitCmdWrapper(@"C:\Program Files\Git\cmd\git.exe");
             Log.Message("Start initializing git repo");
-            this.repoPath = localPath;
+            this.GitDirectory = localPath;
             if (DirectoryHelper.IsGitDir(localPath)) {
                 GitInit(branch);
             }
