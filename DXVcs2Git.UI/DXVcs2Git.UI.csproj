@@ -438,6 +438,15 @@
     <None Include="Configs\Common_2016.1_New.config">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+    <None Include="Configs\DataAccess_2015.1_New.config">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="Configs\DataAccess_2015.2_New.config">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="Configs\DataAccess_2016.1_New.config">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Include="Configs\Diagram_2015.2_New.config">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
