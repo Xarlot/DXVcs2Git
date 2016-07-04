@@ -447,7 +447,8 @@ namespace DXVcs2Git.Console {
             return Path.Combine(localGitDir, path);
         }
         static string CalcVcsPath(string vcsRoot, TrackBranch branch, string path) {
-            var trackItem = branch.TrackItems.First(x => path.StartsWith(x.ProjectPath));
+            var root = path.Split(new[] {@"\", @"/"}, StringSplitOptions.RemoveEmptyEntries).FirstOrDefault();
+            var trackItem = branch.TrackItems.First(x => root == x.ProjectPath);
             var resultPath = path.Remove(0, trackItem.ProjectPath.Length).TrimStart(@"\/".ToCharArray());
             string trackPath = branch.GetTrackRoot(trackItem);
             return Path.Combine(trackPath, resultPath).Replace("\\", "/");
