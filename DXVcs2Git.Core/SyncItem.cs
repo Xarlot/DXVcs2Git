@@ -20,5 +20,7 @@
         public SyncAction SyncAction { get; set; }
         public CommentWrapper Comment { get; set; }
         public ProcessState State { get; set; }
+        public bool SharedFile { get; set; }
+        public bool SingleSharedFile { get; set; }
     }
 }

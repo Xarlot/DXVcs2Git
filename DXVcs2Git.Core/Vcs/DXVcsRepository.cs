@@ -808,10 +808,12 @@ namespace DXVcs2Git.DXVcs {
             return Service.GetUsers();
         }
         public bool HasLiveLinks(string vcsPath) {
+            return GetLiveLinks(vcsPath).Length > 1;
+        }
+        public LinkInfo[] GetLiveLinks(string vcsPath) {
             if (string.IsNullOrEmpty(vcsPath))
                 throw new ArgumentException("vcsPath");
-            var links = Service.GetLinks(vcsPath);
-            return links.Sum(x => x.Deleted ? 0 : 1) > 1;
+            return Service.GetLinks(vcsPath).Where(x => !x.Deleted).ToArray();
         }
     }
 }

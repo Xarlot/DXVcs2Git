@@ -26,5 +26,6 @@ namespace DXVcs2Git.DXVcs {
         ProjectStateInfo GetProjectData(string vcsPath);
         ProjectStateInfo[] GetProjects(string vcsPath);
         bool HasLiveLinks(string vcsPath);
+        LinkInfo[] GetLiveLinks(string vcsPath);
     }
 }

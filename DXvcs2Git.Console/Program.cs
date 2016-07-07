@@ -365,7 +365,8 @@ namespace DXVcs2Git.Console {
                     var mergeRequestResult = MergeRequestResult.Success;
                     if (!ValidateMergeRequest(vcsWrapper, branch, lastHistoryItem, defaultUser))
                         mergeRequestResult = MergeRequestResult.Mixed;
-
+                    if (!ValidateChangeSet(genericChange))
+                        mergeRequestResult = MergeRequestResult.Mixed;
                     syncHistory.Add(gitCommit.Sha, newTimeStamp, autoSyncToken, mergeRequestResult == MergeRequestResult.Success ? SyncHistoryStatus.Success : SyncHistoryStatus.Mixed);
                     syncHistory.Save();
                     Log.Message("Merge request checkin successfully.");
@@ -385,6 +386,9 @@ namespace DXVcs2Git.Console {
             AssignBackConflictedMergeRequest(gitLabWrapper, users, mergeRequest, CalcCommentForFailedCheckoutMergeRequest(genericChange));
 
             return MergeRequestResult.Conflicts;
+        }
+        static bool ValidateChangeSet(List<SyncItem> genericChangeSet) {
+            return !genericChangeSet.Any(x => x.SharedFile);
         }
         static bool ValidateMergeRequestChanges(GitLabWrapper gitLabWrapper, MergeRequest mergeRequest, bool ignoreValidation) {
             if (ignoreValidation)

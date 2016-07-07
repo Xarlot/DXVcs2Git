@@ -206,6 +206,9 @@ namespace DXVcs2Git.DXVcs {
         public bool ProcessCheckout(IEnumerable<SyncItem> items, bool ignoreSharedFiles, TrackBranch branch) {
             var list = items.ToList();
             list.ForEach(x => {
+                var sharedFiles = items.Where(item => IsSharedFile(item.VcsPath)).ToList();
+                sharedFiles.ForEach(sharedFile => CheckIsSingleSharedFile(items, sharedFile));
+
                 TestFileResult result = ProcessBeforeCheckout(x, ignoreSharedFiles, branch);
                 x.State = CalcBeforeCheckoutState(result);
             });
@@ -218,6 +221,36 @@ namespace DXVcs2Git.DXVcs {
                 x.State = CalcCheckoutStateAfterCheckout(result);
             });
             return list.All(x => x.State == ProcessState.Modified || x.State == ProcessState.Ignored);
+        }
+        void CheckIsSingleSharedFile(IEnumerable<SyncItem> files, SyncItem sharedFile) {
+            try {
+                var repo = DXVcsConnectionHelper.Connect(server, this.user, this.password);
+                var liveLinks = repo.GetLiveLinks(sharedFile.VcsPath);
+                int conflicts = 0;
+                foreach (var liveLink in liveLinks) {
+                    if (files.Any(x => x.VcsPath == liveLink.Path)) {
+                        conflicts = conflicts + 1;
+                    }
+                }
+                sharedFile.SharedFile = true;
+                sharedFile.SingleSharedFile = conflicts < 2;
+            }
+            catch (Exception ex) {
+                Log.Error("Check shared file status failure.", ex);
+                throw ex;
+            }
+        }
+        bool IsSharedFile(string vcsPath) {
+            try {
+                var repo = DXVcsConnectionHelper.Connect(server, this.user, this.password);
+                if (!repo.IsUnderVss(vcsPath))
+                    return false;
+                return repo.HasLiveLinks(vcsPath);
+            }
+            catch (Exception ex) {
+                Log.Error("Check shared file status failure.", ex);
+                throw ex;
+            }
         }
         static ProcessState CalcCheckoutStateAfterCheckout(TestFileResult result) {
             switch (result) {
@@ -252,7 +285,7 @@ namespace DXVcs2Git.DXVcs {
                     result = BeforeCheckOutCreateFile(item.VcsPath, item.LocalPath, ignoreSharedFiles, branch);
                     break;
                 case SyncAction.Modify:
-                    result = BeforeCheckOutModifyFile(item.VcsPath, item.LocalPath, ignoreSharedFiles, branch);
+                    result = BeforeCheckOutModifyFile(item.VcsPath, item.LocalPath, ignoreSharedFiles, item.SingleSharedFile, branch);
                     break;
                 case SyncAction.Delete:
                     result = BeforeCheckOutDeleteFile(item.VcsPath, item.LocalPath, ignoreSharedFiles, branch);
@@ -291,10 +324,10 @@ namespace DXVcs2Git.DXVcs {
                 return BeforeCheckOutDeleteFile(vcsPath, localPath, ignoreSharedFiles, branch);
             }
 
-            var oldPathResult = PerformSimpleTestBeforeCheckout(vcsPath, ignoreSharedFiles);
+            var oldPathResult = PerformSimpleTestBeforeCheckout(vcsPath, ignoreSharedFiles, false, false);
             if (oldPathResult != TestFileResult.Ok)
                 return oldPathResult;
-            return PerformSimpleTestBeforeCheckout(newVcsPath, ignoreSharedFiles);
+            return PerformSimpleTestBeforeCheckout(newVcsPath, ignoreSharedFiles, false, false);
         }
         bool PerformHasFileTestBeforeCheckout(string vcsPath) {
             try {
@@ -309,23 +342,23 @@ namespace DXVcs2Git.DXVcs {
         TestFileResult BeforeCheckOutDeleteFile(string vcsPath, string localPath, bool ignoreSharedFiles, TrackBranch branch) {
             if(!branch.IsTrackingVcsPath(vcsPath))
                 return TestFileResult.Ignore;
-            return PerformSimpleTestBeforeCheckout(vcsPath, ignoreSharedFiles);
+            return PerformSimpleTestBeforeCheckout(vcsPath, ignoreSharedFiles, false, false);
         }
-        TestFileResult BeforeCheckOutModifyFile(string vcsPath, string localPath, bool ignoreSharedFiles, TrackBranch branch) {
+        TestFileResult BeforeCheckOutModifyFile(string vcsPath, string localPath, bool ignoreSharedFiles, bool singleSharedFile, TrackBranch branch) {
             if(!branch.IsTrackingVcsPath(vcsPath))
                 return TestFileResult.Ignore;
             if (!PerformHasFileTestBeforeCheckout(vcsPath)) {
                 Log.Error($"Check modify capability. File {vcsPath} is not found in vcs.");
                 return TestFileResult.Fail;
             }
-            return PerformSimpleTestBeforeCheckout(vcsPath, ignoreSharedFiles);
+            return PerformSimpleTestBeforeCheckout(vcsPath, ignoreSharedFiles, singleSharedFile, true);
         }
         TestFileResult BeforeCheckOutCreateFile(string vcsPath, string localPath, bool ignoreSharedFiles, TrackBranch branch) {
             if(!branch.IsTrackingVcsPath(vcsPath))
                 return TestFileResult.Ignore;
-            return PerformSimpleTestBeforeCheckout(vcsPath, ignoreSharedFiles);
+            return PerformSimpleTestBeforeCheckout(vcsPath, ignoreSharedFiles, false, false);
         }
-        TestFileResult PerformSimpleTestBeforeCheckout(string vcsPath, bool ignoreSharedFiles) {
+        TestFileResult PerformSimpleTestBeforeCheckout(string vcsPath, bool ignoreSharedFiles, bool singleSharedFile, bool allowSingleSharedFile) {
             try {
                 var repo = DXVcsConnectionHelper.Connect(server, this.user, this.password);
                 if (!repo.IsUnderVss(vcsPath))
@@ -335,12 +368,15 @@ namespace DXVcs2Git.DXVcs {
                 if (hasLiveLinks) {
                     if (ignoreSharedFiles)
                         return TestFileResult.Ignore;
-                    Log.Error($"Can`t process shared file {vcsPath}. Destroy active links or sync this file manually using vcs.");
-                    return TestFileResult.Fail;
+
+                    if (!allowSingleSharedFile || !singleSharedFile) {
+                        Log.Error($"Can`t process shared file {vcsPath}. Destroy active links or sync this file manually using vcs.");
+                        return TestFileResult.Fail;
+                    }
+                    Log.Message($@"Shared file with simple commit detected {vcsPath}. File change allowed.");
                 }
 
                 var filedata = repo.GetFileData(vcsPath);
-
                 bool isFree = !filedata.CheckedOut || filedata.CheckedOutMe;
                 if (!isFree) {
                     Log.Error($"Can`t process checked out file {vcsPath}. Contact {filedata.CheckedOutUser} or resert check out state.");

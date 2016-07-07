@@ -73,10 +73,6 @@ namespace DXVcs2Git {
         public void Add(string repoPath, string relativePath) {
             string output, errors;
             try {
-                var args = new[] {
-                    "rm", "-r", "--cached", relativePath
-                };
-                WaitForProcess(gitPath, repoPath, out output, out errors, args);
                 var code = WaitForProcess(gitPath, repoPath, out output, out errors, "add", relativePath);
                 CheckFail(code, output, errors);
             }
