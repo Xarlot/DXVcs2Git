@@ -337,7 +337,10 @@ namespace DXVcs2Git.Console {
                 return MergeRequestResult.Failed;
             }
             var genericChange = changes
-                .Where(x => branch.TrackItems.FirstOrDefault(track => x.OldPath.StartsWith(track.ProjectPath)) != null)
+                .Where(x => branch.TrackItems.FirstOrDefault(track => {
+                    var root = x.OldPath.Split(new[] { @"\", @"/" }, StringSplitOptions.RemoveEmptyEntries).FirstOrDefault();
+                    return root == track.ProjectPath;
+                }) != null)
                 .Select(x => ProcessMergeRequestChanges(mergeRequest, x, localGitDir, branch, autoSyncToken)).ToList();
             bool ignoreValidation = gitLabWrapper.ShouldIgnoreSharedFiles(mergeRequest);
 
