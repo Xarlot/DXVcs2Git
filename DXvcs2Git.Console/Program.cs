@@ -332,7 +332,7 @@ namespace DXVcs2Git.Console {
             Log.ResetErrorsAccumulator();
             var changes = gitLabWrapper.GetMergeRequestChanges(mergeRequest).ToList();
             if(changes.Count >= MaxChangesCount) {
-                Log.Error(string.Format("Merge request contains more than {0} changes and cannot be processed. Split it into smaller merge requests", MaxChangesCount));
+                Log.Error($"Merge request contains more than {MaxChangesCount} changes and cannot be processed. Split it into smaller merge requests");
                 AssignBackConflictedMergeRequest(gitLabWrapper, users, mergeRequest, CalcCommentForFailedCheckoutMergeRequest(null));
                 return MergeRequestResult.Failed;
             }
