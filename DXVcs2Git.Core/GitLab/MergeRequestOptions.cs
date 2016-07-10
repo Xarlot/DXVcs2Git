@@ -20,6 +20,16 @@ namespace DXVcs2Git.Core.GitLab {
         protected internal override MergeRequestActionType ActionType => MergeRequestActionType.sync;
     }
 
+    public class MergeRequestTestBuildTask : MergeRequestActionBase {
+        public string Sha { get; }
+
+        public MergeRequestTestBuildTask(string sha) {
+            Sha = sha;
+        }
+
+        protected internal override MergeRequestActionType ActionType => MergeRequestActionType.testbuild;
+    }
+
     public class MergeRequestOptions {
         public static string ConvertToString(MergeRequestOptions options) {
             if (options == null)
