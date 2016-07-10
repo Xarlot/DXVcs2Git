@@ -46,11 +46,7 @@ namespace DXVcs2Git.UI.ViewModels {
             Parent.ApplyMergeRequestChanges(new EditMergeRequestData() { Comment = Comment, AssignToService = AssignedToService, Options = CreateMergeRequestOptions()});
         }
         MergeRequestOptions CreateMergeRequestOptions() {
-            return new MergeRequestOptions() {
-                Force = true,
-                SyncTask = Parameter.Repository.RepoConfig.FarmSyncTaskName,
-                WatchTask = Parameter.Repository.RepoConfig.FarmTaskName,
-            };
+            return new MergeRequestOptions(new MergeRequestSyncAction(Parameter.Repository.RepoConfig.FarmTaskName, Parameter.Repository.RepoConfig.FarmSyncTaskName));
         }
         bool CanApplyMergeRequest() {
             return IsModified;

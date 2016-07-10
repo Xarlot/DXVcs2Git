@@ -31,7 +31,7 @@ namespace DXVcs2Git.Get {
                 Log.Error($"Can`t find project {clo.Repo}");
                 return 1;
             }
-            gitLabWrapper.GetArchive(project, clo.Sha);
+            
             return 0;
         }
     }

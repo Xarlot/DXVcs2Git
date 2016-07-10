@@ -118,14 +118,29 @@ namespace DXVcs2Git.Console {
             Log.Message($"Merge hook target branch: {hook.Attributes.TargetBranch}.");
             Log.Message($"Merge hook sourceBranch branch: {hook.Attributes.SourceBranch}.");
 
-            if (!ShouldForceSyncTask(gitLabWrapper, hook))
+            if (ShouldForceSyncTask(gitLabWrapper, hook)) {
+                ForceSyncBuild(gitLabWrapper, hook);
                 return;
+            }
+            if (ShouldTestMergeRequest(gitLabWrapper, hook)) {
+                ForceTestMergeRequest(gitLabWrapper, hook);
+            }
+        }
+        static void ForceTestMergeRequest(GitLabWrapper gitLabWrapper, MergeRequestHookClient hook) {
+            throw new NotImplementedException();
+        }
+        static bool ShouldTestMergeRequest(GitLabWrapper gitLabWrapper, MergeRequestHookClient hook) {
+            throw new NotImplementedException();
+        }
+        static void ForceSyncBuild(GitLabWrapper gitLabWrapper, MergeRequestHookClient hook) {
             var project = gitLabWrapper.GetProject(hook.Attributes.TargetProjectId);
             var mergeRequest = gitLabWrapper.GetMergeRequest(project, hook.Attributes.Id);
             var xmlComments = gitLabWrapper.GetComments(mergeRequest).Where(x => IsXml(x.Note));
             var options = xmlComments.Select(x => MergeRequestOptions.ConvertFromString(x.Note)).FirstOrDefault();
-            if (options != null)
-                ForceBuild(options.SyncTask);
+            if (options != null && options.ActionType == MergeRequestActionType.sync) {
+                var action = (MergeRequestSyncAction)options.Action;
+                ForceBuild(action.SyncTask);
+            }
             else
                 Log.Message("Merge request can`t be merged because merge request notes has no farm config.");
             Log.Message("");
@@ -135,7 +150,7 @@ namespace DXVcs2Git.Console {
             var mergeRequest = gitLabWrapper.GetMergeRequest(project, hook.Attributes.Id);
             var assignee = mergeRequest.Assignee;
             if (assignee == null || !assignee.Name.StartsWith("dxvcs2git")) {
-                Log.Message("Force sync rejected because assignee is not set or not admin.");
+                Log.Message("Force sync rejected because assignee is not set or not sync task.");
                 return false;
             }
 

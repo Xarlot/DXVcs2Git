@@ -1,6 +1,24 @@
 ﻿using System.IO;
 
 namespace DXVcs2Git.Core.GitLab {
+    public enum MergeRequestActionType {
+        sync,
+        testbuild,
+    }
+
+    public abstract class MergeRequestActionBase {
+        protected internal abstract MergeRequestActionType ActionType { get; }
+    }
+
+    public class MergeRequestSyncAction : MergeRequestActionBase {
+        public string WatckTask { get; }
+        public string SyncTask { get; }
+        public MergeRequestSyncAction(string watchTask, string syncTask) {
+            WatckTask = watchTask;
+            SyncTask = syncTask;
+        }
+        protected internal override MergeRequestActionType ActionType => MergeRequestActionType.sync;
+    }
 
     public class MergeRequestOptions {
         public static string ConvertToString(MergeRequestOptions options) {
@@ -27,8 +45,12 @@ namespace DXVcs2Git.Core.GitLab {
                 }
             }
         }
-        public bool Force { get; set; }
-        public string WatchTask { get; set; }
-        public string SyncTask { get; set; }
+        public MergeRequestActionType ActionType { get; private set; }
+        public MergeRequestActionBase Action { get; private set; }
+
+        public MergeRequestOptions(MergeRequestActionBase action) {
+            ActionType = action.ActionType;
+            Action = action;
+        }
     }
 }
