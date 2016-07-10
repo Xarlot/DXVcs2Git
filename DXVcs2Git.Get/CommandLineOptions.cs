@@ -7,7 +7,7 @@ namespace DXVcs2Git.Get {
         [Option('r', "repo", Required = true, HelpText = "Http git repo path")]
         public string Repo { get; set; }
         [Option('a', "auth", Required = true, HelpText = "GitLab auth token")]
-        public string AuthToken { get; set; }
+        public string Token { get; set; }
         [Option("sha", Required = true, HelpText = "The commit SHA to download")]
         public string Sha { get; set; }
     }

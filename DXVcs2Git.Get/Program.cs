@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using CommandLine;
 using DXVcs2Git.Core;
+using DXVcs2Git.Git;
 
 namespace DXVcs2Git.Get {
     class Program {
@@ -24,7 +25,14 @@ namespace DXVcs2Git.Get {
         }
 
         static int DoWork(CommandLineOptions clo) {
-            throw new NotImplementedException();
+            GitLabWrapper gitLabWrapper = new GitLabWrapper(clo.Server, clo.Token);
+            var project = gitLabWrapper.FindProject(clo.Repo);
+            if (project == null) {
+                Log.Error($"Can`t find project {clo.Repo}");
+                return 1;
+            }
+            gitLabWrapper.GetArchive(project, clo.Sha);
+            return 0;
         }
     }
 }

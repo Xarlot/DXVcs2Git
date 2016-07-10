@@ -1,13 +1,3 @@
--l dxvcs2git.xpf -b 2015.2 -r http://litvinov-lnx/XPF/Common.git -m synchronizer -c 15 -d z:\repo -t trackconfig_common_2015.2.config -p DKG%@S1sp -a X6XV2G_ycz_U4pi4m93K
-
--l dxvcs2git.xpf -b 2016.1 -r http://litvinov-lnx/XPF/Common.git -m listener -c 15 -d z:\repo -t trackconfig_common_2015.2.config -p DKG%@S1sp -a X6XV2G_ycz_U4pi4m93K
-
--l dxvcs2git.diagram -b 2016.1 -r http://litvinov-lnx/XPF/Diagram.git -m all -c 15 -d z:\repo -t trackconfig_diagram_2015.2.config -p PAfJR1G_sF -a wfcyD-GEke9LDEmwzrp- -s http:\\litvinov-lnx
-
--l dxvcs2git.xpf -b 2015.2 -r http://litvinov-lnx/tester/XPF.git -m listener -c 15 -d z:\repo -t trackconfig_testxpf.config -f 9/22/2015 -p DKG%@S1sp -a X6XV2G_ycz_U4pi4m93K -s http:\\litvinov-lnx
-
--l dxvcs2git.xpf -b 2015.2 -r http://litvinov-lnx/tester/XPF.git -m synchronizer -c 15 -d z:\repo -t trackconfig_testxpf.config -f 9/22/2015 -p DKG%@S1sp -a X6XV2G_ycz_U4pi4m93K -s http:\\litvinov-lnx
-
-
-
 -l dxvcs2git.xpf -b 2014.2 -r http://gitserver/XPF/XPF.git -m synchronizer -c 15 -d z:\repo -t trackconfig_total_2014.2.config -p dJ3l_dSA -a EenHhBCFJJHNeHyBLJ1P -s http:\\gitserver
+
+-s http://gitserver -l dxvcs2git.dataaccess -b 2016.1 -r http://gitserver/DataAccess/DataAccess.git -m synchronizer -c 150 -d repo -t trackconfig_DataAccess_2016.1.config -p DG8_SfAg -a y2w1vpk8vaKxsvb47qRA
