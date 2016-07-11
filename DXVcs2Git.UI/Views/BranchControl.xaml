@@ -5,10 +5,11 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:DXVcs2Git.UI.Views"
              xmlns:extensions="clr-namespace:DXVcs2Git.UI.Extensions"
+             xmlns:viewModels="clr-namespace:DXVcs2Git.UI.ViewModels"
              mc:Ignorable="d" 
              d:DesignHeight="300" d:DesignWidth="300">
     <UserControl.DataContext>
-        <extensions:IoC TargetType="{x:Type EditBranchViewModel}"/>
+        <extensions:IoC TargetType="{x:Type viewModels:EditBranchViewModel}"/>
     </UserControl.DataContext>
     <Grid>
 
