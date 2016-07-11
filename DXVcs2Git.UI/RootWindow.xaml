@@ -124,18 +124,12 @@
                         ItemWidth="*"
                         AutoHideExpandState="Expanded"
                         FloatOnDoubleClick="False">
-                        <local:RepositoriesControl 
-                        dxmvvm:ViewModelExtensions.Parameter="{Binding DataContext.Repositories, ElementName=LayoutRoot}"
-                        dxmvvm:ViewModelExtensions.ParentViewModel="{Binding DataContext, ElementName=LayoutRoot}">
-                        </local:RepositoriesControl>
+                        <local:RepositoriesControl/>
                     </dxdo:LayoutPanel>
                     <dxdo:LayoutPanel
                         dxb:MergingProperties.ElementMergingBehavior="InternalWithExternal"
                         ItemWidth="2*">
-                        <local:ProcessMergeRequestControl 
-                        dxmvvm:ViewModelExtensions.Parameter="{Binding DataContext.Repositories, ElementName=LayoutRoot}"
-                        dxmvvm:ViewModelExtensions.ParentViewModel="{Binding DataContext, ElementName=LayoutRoot}">
-                        </local:ProcessMergeRequestControl>
+                        <views:BranchControl/>
                     </dxdo:LayoutPanel>
                 </dxdo:LayoutGroup>
                 <dxdo:LayoutGroup ItemHeight="*" Visibility="{Binding Path=ShowLog, Converter={StaticResource BooleanToVisibilityConverter}}">
@@ -149,3 +143,4 @@
         <dxr:RibbonStatusBarControl Grid.Row="2" Height="24"/>
     </Grid>
 </dxr:DXRibbonWindow>
+

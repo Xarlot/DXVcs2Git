@@ -14,8 +14,8 @@ namespace DXVcs2Git.UI.ViewModels {
         BranchViewModel selectedBranch;
         RepositoryViewModel selectedRepository;
         bool fake = false;
-        public RootViewModel RootViewModel { get { return this.GetParentViewModel<RootViewModel>(); } }
-        public Config Config { get { return RootViewModel?.Config ?? ConfigSerializer.GetConfig(); } }
+        public RootViewModel RootViewModel => this.GetParentViewModel<RootViewModel>();
+        public Config Config => RootViewModel?.Config ?? ConfigSerializer.GetConfig();
         public RepoConfigsReader RepoConfigs { get; private set; }
         public IEnumerable<BranchViewModel> Branches {
             get { return GetProperty(() => Branches); }

@@ -335,6 +335,7 @@
     <Compile Include="Services\FolderBrowserCustomDialogService.cs" />
     <Compile Include="UIStartupOptions.cs" />
     <Compile Include="ViewModels\ConfigsReader.cs" />
+    <Compile Include="ViewModels\EditBranchViewModel.cs" />
     <Compile Include="ViewModels\EditTrackRepository.cs" />
     <Compile Include="ViewModels\LoggingViewModel.cs" />
     <Compile Include="ViewModels\UriDownloaderViewModel.cs" />
@@ -370,6 +371,9 @@
     </Compile>
     <Compile Include="Views\LoggingUserControl.xaml.cs">
       <DependentUpon>LoggingUserControl.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\BranchControl.xaml.cs">
+      <DependentUpon>BranchControl.xaml</DependentUpon>
     </Compile>
     <Compile Include="Views\RepositoriesControl.xaml.cs">
       <DependentUpon>RepositoriesControl.xaml</DependentUpon>
@@ -418,6 +422,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Views\LoggingUserControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\BranchControl.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -574,7 +582,9 @@
   <ItemGroup>
     <Resource Include="Images\admin.png" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <Folder Include="Selectors\" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>

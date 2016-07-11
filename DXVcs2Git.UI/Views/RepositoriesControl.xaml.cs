@@ -7,15 +7,8 @@ namespace DXVcs2Git.UI {
     /// Interaction logic for RepositoriesControl.xaml
     /// </summary>
     public partial class RepositoriesControl : UserControl {
-        public EditRepositoriesViewModel EditRepositories { get { return (EditRepositoriesViewModel)DataContext; } }
-
         public RepositoriesControl() {
             InitializeComponent();
-            Messenger.Default.Register<Message>(this, OnMessage);
-        }
-
-        void OnMessage(Message msg) {
-            EditRepositories.Refresh();
         }
     }
 }
