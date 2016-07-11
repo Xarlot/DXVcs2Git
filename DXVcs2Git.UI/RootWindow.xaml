@@ -12,6 +12,7 @@
         xmlns:dx="http://schemas.devexpress.com/winfx/2008/xaml/core"
         xmlns:views="clr-namespace:DXVcs2Git.UI.Views"
         xmlns:behaviors="clr-namespace:DXVcs2Git.UI.Behaviors"
+        xmlns:extensions="clr-namespace:DXVcs2Git.UI.Extensions"
         mc:Ignorable="d"
         ShowActivated="True"
         Title="{Binding Version}" 
@@ -19,6 +20,9 @@
         UseLayoutRounding="True"                  
         MinHeight="600" MinWidth="800"
         Icon="Icon.ico">
+    <dxr:DXRibbonWindow.DataContext>
+        <extensions:IoC TargetType="{x:Type viewModels:RootViewModel}"/>
+    </dxr:DXRibbonWindow.DataContext>
     <dxr:DXRibbonWindow.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
@@ -27,10 +31,8 @@
             <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"></BooleanToVisibilityConverter>
         </ResourceDictionary>
     </dxr:DXRibbonWindow.Resources>
-    <dxr:DXRibbonWindow.DataContext>
-        <viewModels:RootViewModel/>
-    </dxr:DXRibbonWindow.DataContext>
     <dxmvvm:Interaction.Behaviors>
+        <dxmvvm:EventToCommand Event="Loaded" Command="{Binding Path=InitializeCommand}"/>
         <dxmvvm:NotificationService x:Name="notificationService" />
         <dx:DialogService x:Name="downloaderDialogService">
             <dx:DialogService.DialogStyle>

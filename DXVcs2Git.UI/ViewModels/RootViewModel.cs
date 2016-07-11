@@ -3,10 +3,11 @@ using System.Windows.Input;
 using System.Windows.Threading;
 using DevExpress.Mvvm;
 using DevExpress.Mvvm.Native;
-using DevExpress.Xpf.Core;
 using DXVcs2Git.Core;
 using DXVcs2Git.UI.Farm;
 using DXVcs2Git.Core.Configuration;
+using Microsoft.Practices.ServiceLocation;
+using static DevExpress.Xpf.Core.ThemeManager;
 
 namespace DXVcs2Git.UI.ViewModels {
     public class RootViewModel : ViewModelBase {
@@ -15,9 +16,10 @@ namespace DXVcs2Git.UI.ViewModels {
         public ICommand SettingsCommand { get; private set; }
         public ICommand ShowLogCommand { get; private set; }
         public ICommand DownloadNewVersionCommand { get; private set; }
-        public INotificationService NotificationService { get { return GetService<INotificationService>("notificationService"); } }
-        public IDialogService SettingsDialogService { get { return GetService<IDialogService>("settingsDialogService"); } }
-        public IDialogService DownloaderDialogService { get { return GetService<IDialogService>("downloaderDialogService"); } }
+        public ICommand InitializeCommand { get; private set; }
+        public INotificationService NotificationService => GetService<INotificationService>("notificationService");
+        public IDialogService SettingsDialogService => GetService<IDialogService>("settingsDialogService");
+        public IDialogService DownloaderDialogService => GetService<IDialogService>("downloaderDialogService");
         public Config Config { get; private set; }
         public string Version { get; private set; }
         public LoggingViewModel LogViewModel { get; private set; }
@@ -26,19 +28,24 @@ namespace DXVcs2Git.UI.ViewModels {
             set { SetProperty(() => ShowLog, value, ShowLogChanged); }
         }
         public RootViewModel() {
-            Repositories = new RepositoriesViewModel();
-            ISupportParentViewModel supportParent = Repositories;
-            supportParent.ParentViewModel = this;
-            Dispatcher.CurrentDispatcher.BeginInvoke(DispatcherPriority.ContextIdle, new Action(Initialize));
+            Config = ConfigSerializer.GetConfig();
+            UpdateDefaultTheme();
+
             FarmIntegrator.Start(Dispatcher.CurrentDispatcher, FarmRefreshed);
             AtomFeed.FeedWorker.Initialize();
+
             SettingsCommand = DelegateCommandFactory.Create(ShowSettings, CanShowSettings);
             ShowLogCommand = DelegateCommandFactory.Create(PerformShowLog);
             DownloadNewVersionCommand = DelegateCommandFactory.Create(DownloadNewVersion, CanDownloadNewVersion);
-            Config = ConfigSerializer.GetConfig();
-            UpdateDefaultTheme();
+            InitializeCommand = DelegateCommandFactory.Create( PerformInitialize, CanPerformInitialize);
             LogViewModel = new LoggingViewModel();
             Version = $"Git tools {VersionInfo.Version}";
+        }
+        bool CanPerformInitialize() {
+            return true;
+        }
+        void PerformInitialize() {
+            Initialize();
         }
         void PerformShowLog() {
         }
@@ -65,11 +72,12 @@ namespace DXVcs2Git.UI.ViewModels {
             Repositories.RefreshFarm();
         }
         public void Initialize() {
-            Repositories.Update();
-            UpdateDefaultTheme();
+            Repositories = ServiceLocator.Current.GetInstance<RepositoriesViewModel>();
+            Update();
         }
-        void UpdateDefaultTheme() {
-            ThemeManager.ApplicationThemeName = Config?.DefaultTheme ?? DefaultThemeName;
+        void UpdateDefaultTheme() => ApplicationThemeName = Config?.DefaultTheme ?? DefaultThemeName;
+        public void Update() {
+            Repositories.Update();
         }
         public void Refresh() {
             Repositories.Refresh();

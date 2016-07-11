@@ -45,17 +45,12 @@ namespace DXVcs2Git.UI.ViewModels {
         }
 
         public RepositoriesViewModel() {
-            Refresh();
-        }
-        public RepositoriesViewModel(bool fake) {
-            this.fake = fake;
         }
 
         public void Update() {
             IsInitialized = false;
             RepoConfigs = new RepoConfigsReader();
             Repositories = Config.Repositories.With(x => x.Where(IsValidConfig).Select(repo => new RepositoryViewModel(repo.Name, repo, this))).With(x => x.ToList());
-            SelectedRepository = Repositories.With(x => x.FirstOrDefault());
             Refresh();
             IsInitialized = true;
             SendUpdateMessage();
@@ -69,7 +64,7 @@ namespace DXVcs2Git.UI.ViewModels {
             CommandManager.InvalidateRequerySuggested();
             ConfigSerializer.SaveConfig(Config);            
             return Task.Run(() => {
-                RepositoriesViewModel rvm = new RepositoriesViewModel(true);
+                RepositoriesViewModel rvm = new RepositoriesViewModel();
                 rvm.Update();
                 return rvm;
             }).ContinueWith(_ => {

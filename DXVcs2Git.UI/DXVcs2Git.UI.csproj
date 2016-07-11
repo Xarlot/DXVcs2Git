@@ -319,6 +319,8 @@
     <Compile Include="Behaviors\RibbonWindowButtonsInjectionBehavior.cs" />
     <Compile Include="Behaviors\TaskBarIconBehavior.cs" />
     <Compile Include="Behaviors\ValidateEditConfigBehavior.cs" />
+    <Compile Include="DefaultInitializer.cs" />
+    <Compile Include="Extensions\IoCExtension.cs" />
     <Compile Include="NativeMethods\AdministratorMethods.cs" />
     <Compile Include="Farm\DXCCTrayHelpers.cs" />
     <Compile Include="NativeMethods\EntryPoint.cs" />
@@ -572,6 +574,7 @@
   <ItemGroup>
     <Resource Include="Images\admin.png" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>

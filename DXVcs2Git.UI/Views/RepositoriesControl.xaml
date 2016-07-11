@@ -12,10 +12,11 @@
              xmlns:dxmvvm="http://schemas.devexpress.com/winfx/2008/xaml/mvvm"
              xmlns:viewModels="clr-namespace:DXVcs2Git.UI.ViewModels"
              xmlns:behaviors="clr-namespace:DXVcs2Git.UI.Behaviors"
+             xmlns:extensions="clr-namespace:DXVcs2Git.UI.Extensions"
              mc:Ignorable="d" 
              d:DesignHeight="300" d:DesignWidth="300">
     <UserControl.DataContext>
-        <viewModels:EditRepositoriesViewModel/>
+        <extensions:IoC TargetType="{x:Type viewModels:EditRepositoriesViewModel}"/>
     </UserControl.DataContext>
     <Grid>
         <dxr:RibbonControl >
@@ -40,11 +41,10 @@
             </dxmvvm:Interaction.Behaviors>
             <dxg:GridControl.Columns>
                 <dxg:GridColumn FieldName="Name"></dxg:GridColumn>
-                <dxg:GridColumn FieldName="FarmStatus.BuildStatus" Header="Build status"/>
-                <dxg:GridColumn FieldName="FarmStatus.ActivityMessage" Header="Activity"/>
             </dxg:GridControl.Columns>
             <dxg:GridControl.View>
                 <dxg:TreeListView 
+                    ShowColumnHeaders="False"
                     AutoExpandAllNodes="True" 
                     TreeDerivationMode="ChildNodesSelector" 
                     ChildNodesPath="Branches" 

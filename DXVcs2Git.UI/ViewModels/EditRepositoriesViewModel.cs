@@ -1,13 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Windows.Input;
 using DevExpress.Mvvm;
 using DevExpress.Mvvm.Native;
+using Microsoft.Practices.ServiceLocation;
 
 namespace DXVcs2Git.UI.ViewModels {
     public class EditRepositoriesViewModel : ViewModelBase {
         public ICommand UpdateCommand { get; private set; }
-        new RepositoriesViewModel Parameter { get { return (RepositoriesViewModel)base.Parameter; } }
+        RepositoriesViewModel RepositoriesViewModel => ServiceLocator.Current.GetInstance<RepositoriesViewModel>();
         public RepositoryViewModel SelectedRepository {
             get { return GetProperty(() => SelectedRepository); }
             set { SetProperty(() => SelectedRepository, value, SelectedRepositoryChanged); }
@@ -23,7 +23,11 @@ namespace DXVcs2Git.UI.ViewModels {
 
         public EditRepositoriesViewModel() {
             UpdateCommand = DelegateCommandFactory.Create(PerformUpdate, CanUpdate);
-            Messenger.Default.Register<Message>(this, new Action<Message>(OnMessageReceived));
+            Messenger.Default.Register<Message>(this, OnMessageReceived);
+
+            Initialize();
+        }
+        void Initialize() {
         }
 
         void OnMessageReceived(Message message) {

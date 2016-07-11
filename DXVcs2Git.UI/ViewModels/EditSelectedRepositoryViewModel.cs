@@ -50,17 +50,17 @@ namespace DXVcs2Git.UI.ViewModels {
             CloseMergeRequestCommand = DelegateCommandFactory.Create(CloseMergeRequest, CanCloseMergeRequest);
         }
         bool CanCloseMergeRequest() {
-            return Parameter.IsInitialized && IsInitialized && SelectedBranch != null && HasMergeRequest && IsMyMergeRequest;
+            return (Parameter?.IsInitialized ?? false) && IsInitialized && SelectedBranch != null && HasMergeRequest && IsMyMergeRequest;
         }
         bool CanEditMergeRequest() {
-            return Parameter.IsInitialized && IsInitialized && SelectedBranch != null && HasMergeRequest && IsMyMergeRequest && HasChanged;
+            return (Parameter?.IsInitialized ?? false) && IsInitialized && SelectedBranch != null && HasMergeRequest && IsMyMergeRequest && HasChanged;
         }
         void ProcessEditMergeRequest() {
             HasEditableMergeRequest = true;
             Parameter.Refresh();
         }
         bool CanCreateMergeRequest() {
-            return Parameter.IsInitialized && IsInitialized && SelectedBranch != null && !HasMergeRequest;
+            return (Parameter?.IsInitialized ?? false) && IsInitialized && SelectedBranch != null && !HasMergeRequest;
         }
         public void CreateMergeRequest() {
             Parameter.Refresh();

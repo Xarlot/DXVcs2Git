@@ -7,6 +7,7 @@ using System;
 using DevExpress.Xpf.Core;
 using DevExpress.Mvvm.UI.Native;
 using System.Collections;
+using System.Collections.Generic;
 using System.Windows;
 
 namespace DXVcs2Git.UI.Behaviors {
@@ -18,8 +19,6 @@ namespace DXVcs2Git.UI.Behaviors {
         }
 
         void OnItemsSourceChanged(IEnumerable oldValue, IEnumerable newValue) {
-            if (AssociatedObject == null)
-                return;
             if (AssociatedObject == null)
                 return;
             var focusedHandle = AssociatedObject?.View.FocusedRowHandle ?? 0;
