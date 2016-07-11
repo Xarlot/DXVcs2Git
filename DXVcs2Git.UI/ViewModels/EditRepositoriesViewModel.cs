@@ -1,8 +1,7 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
-using System.Windows.Input;
 using DevExpress.Mvvm;
-using DevExpress.Mvvm.Native;
 using Microsoft.Practices.ServiceLocation;
 
 namespace DXVcs2Git.UI.ViewModels {
@@ -21,9 +20,8 @@ namespace DXVcs2Git.UI.ViewModels {
 
         public EditRepositoryItem SelectedItem {
             get { return GetProperty(() => SelectedItem); }
-            set { SetProperty(() => SelectedItem, value); }
+            set { SetProperty(() => SelectedItem, value, SelectedItemChanged); }
         }
-
         public EditRepositoriesViewModel() {
             Messenger.Default.Register<Message>(this, OnMessageReceived);
             Initialize();
@@ -42,6 +40,7 @@ namespace DXVcs2Git.UI.ViewModels {
         void Update() {
             PerformUpdate();
             IsInitialized = true;
+            UpdateSelectedItem();
         }
         void BeforeUpdate() {
             IsInitialized = false;
@@ -66,6 +65,32 @@ namespace DXVcs2Git.UI.ViewModels {
         }
         public void Refresh() {
         }
+        void SelectedItemChanged() {
+            if (IsInitialized)
+                UpdateSelectedItem();
+        }
+        void UpdateSelectedItem() {
+            if (SelectedItem == null || SelectedItem.ItemType == EditRepositoryItemType.Root) {
+                RepositoriesViewModel.SelectedRepository = null;
+                RepositoriesViewModel.SelectedBranch = null;
+                return;
+            }
+            if (SelectedItem.ItemType == EditRepositoryItemType.Repository) {
+                var repositoryItem = (RepositoryItem)SelectedItem;
+                var repositoryViewModel = repositoryItem.Item;
+                RepositoriesViewModel.SelectedRepository = repositoryViewModel;
+                RepositoriesViewModel.SelectedBranch = repositoryViewModel.Branches.FirstOrDefault();
+                return;
+            }
+            if (SelectedItem.ItemType == EditRepositoryItemType.Branch) {
+                var branchItem = (BranchRepositoryItem)SelectedItem;
+                var branchViewModel = branchItem.Item;
+                RepositoriesViewModel.SelectedRepository = branchViewModel.Repository;
+                RepositoriesViewModel.SelectedBranch = branchViewModel;
+                return;
+            }
+            throw new ArgumentException("SelectedItem");
+        }
     }
 
     public enum EditRepositoryItemType {
@@ -75,6 +100,8 @@ namespace DXVcs2Git.UI.ViewModels {
     }
 
     public abstract class EditRepositoryItem {
+        public EditRepositoryItemType ItemType { get; }
+
         protected bool Equals(EditRepositoryItem other) {
             return item.Equals(other.item);
         }
@@ -91,18 +118,17 @@ namespace DXVcs2Git.UI.ViewModels {
             return item.GetHashCode();
         }
         readonly object item;
-        protected EditRepositoryItem(object item) {
+        protected EditRepositoryItem(EditRepositoryItemType itemType, object item) {
+            ItemType = itemType;
             this.item = item;
         }
     }
     public abstract class EditRepositoryItem<T, U> : EditRepositoryItem {
-        public EditRepositoryItemType ItemType { get; }
         public abstract string Name { get; }
         public T Item { get; }
         public IEnumerable<U> Children { get; }
 
-        protected EditRepositoryItem(EditRepositoryItemType itemType, T item, IEnumerable<U> children) : base(item){
-            ItemType = itemType;
+        protected EditRepositoryItem(EditRepositoryItemType itemType, T item, IEnumerable<U> children) : base(itemType, item){
             Item = item;
             Children = children;
         }
