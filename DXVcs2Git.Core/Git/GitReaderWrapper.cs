@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using LibGit2Sharp;
+using System;
 
 namespace DXVcs2Git.Core.Git {
     public class GitReaderWrapper {
@@ -10,12 +11,15 @@ namespace DXVcs2Git.Core.Git {
             this.localRepoPath = repoPath;
             this.repo = new Repository(repoPath);
         }
+        Remote GetRemoteByName(string name) {
+            return repo.Network.Remotes.FirstOrDefault(x => string.Equals(x.Name, name, StringComparison.InvariantCultureIgnoreCase));
+        }
         public string GetOriginRepoPath() {
-            var remote = this.repo.Network.Remotes.FirstOrDefault();
+            var remote = GetRemoteByName("origin") ?? repo.Network.Remotes.FirstOrDefault();
             return remote?.PushUrl;
         }
         public string GetUpstreamRepoPath() {
-            var remote = this.repo.Network.Remotes.LastOrDefault();
+            var remote = GetRemoteByName("upstream") ?? repo.Network.Remotes.LastOrDefault();
             return remote?.PushUrl;
         }
         public Branch GetCheckoutBranch() {
