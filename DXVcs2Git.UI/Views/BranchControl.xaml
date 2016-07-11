@@ -84,7 +84,16 @@
             <dxlc:LayoutGroup Orientation="Horizontal" dxlc:DockLayoutControl.Dock="Client" Margin="0">
                 <dx:DXTabControl>
                     <dx:DXTabItem Header="Merge request settings">
-                        <local:EditMergeRequestControl/>
+                        <dxlc:LayoutControl>
+                            <dxlc:LayoutGroup Orientation="Horizontal">
+                                <dxlc:LayoutItem>
+                                    <local:EditMergeRequestControl/>
+                                </dxlc:LayoutItem>
+                                <dxlc:LayoutItem>
+                                    <local:MergeRequestTestsControl/>
+                                </dxlc:LayoutItem>
+                            </dxlc:LayoutGroup>
+                        </dxlc:LayoutControl>
                     </dx:DXTabItem>
                     <dx:DXTabItem Header="Merge request change set">
                         <local:BranchChangesControl />

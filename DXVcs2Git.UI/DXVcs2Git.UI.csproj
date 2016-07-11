@@ -379,6 +379,9 @@
     <Compile Include="Views\BranchControl.xaml.cs">
       <DependentUpon>BranchControl.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Views\MergeRequestTestsControl.xaml.cs">
+      <DependentUpon>MergeRequestTestsControl.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Views\RepositoriesControl.xaml.cs">
       <DependentUpon>RepositoriesControl.xaml</DependentUpon>
     </Compile>
@@ -434,6 +437,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Views\BranchControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\MergeRequestTestsControl.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
