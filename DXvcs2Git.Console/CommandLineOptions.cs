@@ -5,6 +5,7 @@ namespace DXVcs2Git.Console {
     public enum WorkMode {
         listener,
         synchronizer,
+        patch,
     }
 
     public class CommandLineOptions {
@@ -28,9 +29,9 @@ namespace DXVcs2Git.Console {
         public string Tracker { get; set; }
         [Option('m', "mode", Required = false, Default = WorkMode.synchronizer, HelpText = "Work mode")]
         public WorkMode WorkMode { get; set; }
-        [Option('f', "from", Required = false, HelpText = "Timestamp for history generation")]
-        public DateTime From { get; set; }
         [Option('i', "interval", Required = false, Default = 30, HelpText = "Duration in minutes")]
         public int Timeout { get; set; }
+        [Option("mergerequest", Required = false, HelpText = "Merge request id for patch generation")]
+        public int MergeRequestId { get; set; }
     }
 }
