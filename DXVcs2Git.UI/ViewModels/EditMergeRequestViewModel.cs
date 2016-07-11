@@ -64,15 +64,15 @@ namespace DXVcs2Git.UI.ViewModels {
             IsModified = false;
         }
         public void Refresh() {
-            this.comment = Parameter?.MergeRequest?.Title ?? Parameter?.Branch?.Commit?.Message;
-            string assignee = Parameter?.MergeRequest?.Assignee;
-            if (string.IsNullOrEmpty(assignee)) {
-                this.assignedToService = false;
-            }
-            else {
-                this.assignedToService = AssignedToService;
-            }
-            RaisePropertyChanged(null);
+            //this.comment = Parameter?.MergeRequest?.Title ?? Parameter?.Branch?.Commit?.Message;
+            //string assignee = Parameter?.MergeRequest?.Assignee;
+            //if (string.IsNullOrEmpty(assignee)) {
+            //    this.assignedToService = false;
+            //}
+            //else {
+            //    this.assignedToService = AssignedToService;
+            //}
+            //RaisePropertyChanged(null);
         }
     }
 }

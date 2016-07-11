@@ -67,7 +67,7 @@ namespace DXVcs2Git.UI.ViewModels {
             if (!CanCreateMergeRequest())
                 return;
 
-            var message = SelectedBranch.Branch.Commit.Message;
+            string message = "test";
             string title = CalcMergeRequestTitle(message);
             string description = CalcMergeRequestDescription(message);
             string targetBranch = CalcTargetBranch(SelectedBranch.Name);

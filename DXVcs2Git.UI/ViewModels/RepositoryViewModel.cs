@@ -53,12 +53,11 @@ namespace DXVcs2Git.UI.ViewModels {
                 return;
             }
 
-            var mergeRequests = this.GitLabWrapper.GetMergeRequests(Origin);
             var branches = this.GitLabWrapper.GetBranches(Origin).ToList();
             var localBranches = GitReader.GetLocalBranches();
 
             Branches = branches.Where(x => !x.Protected && localBranches.Any(local => local.FriendlyName == x.Name))
-                .Select(x => new BranchViewModel(GitLabWrapper, GitReader, Repositories, this, mergeRequests.FirstOrDefault(mr => mr.SourceBranch == x.Name), x)).ToList();
+                .Select(x => new BranchViewModel(GitLabWrapper, this, x.Name)).ToList();
         }
         public void Refresh() {
             if (Branches == null)

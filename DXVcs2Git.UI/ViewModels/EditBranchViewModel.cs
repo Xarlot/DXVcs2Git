@@ -1,10 +1,66 @@
-﻿using DevExpress.Mvvm;
+﻿using System;
+using System.Linq;
+using System.Text;
+using System.Windows;
+using System.Windows.Input;
+using DevExpress.Mvvm;
+using DevExpress.Mvvm.Native;
+using DXVcs2Git.Core.Git;
+using Microsoft.Practices.ServiceLocation;
 
 namespace DXVcs2Git.UI.ViewModels {
     public class EditBranchViewModel : ViewModelBase {
+        public ICommand CreateMergeRequestCommand { get; }
+        RepositoriesViewModel RepositoriesViewModel => ServiceLocator.Current.GetInstance<RepositoriesViewModel>();
+        BranchViewModel BranchViewModel => RepositoriesViewModel.SelectedBranch;
+        IDialogService EditMergeRequestService => GetService<IDialogService>("editMergeRequestService");
+        IMessageBoxService MessageBoxService => GetService<IMessageBoxService>();
+
         public EditBranchViewModel() {
             Messenger.Default.Register<Message>(this, OnMessageReceived);
+
+            CreateMergeRequestCommand = DelegateCommandFactory.Create(PerformCreateMergeRequest, CanPerformCreateMergeRequest);
         }
+        bool CanPerformCreateMergeRequest() {
+            return BranchViewModel != null && BranchViewModel.MergeRequest == null;
+        }
+        void PerformCreateMergeRequest() {
+            var branchInfo = BranchViewModel.CalcBranchInfo();
+            var createMergeRequestViewModel = new CreateMergeRequestViewModel() {
+                Description = branchInfo.Commit.Message,
+            };
+            var dialogResult = EditMergeRequestService.ShowDialog(MessageButton.OKCancel, "Merge request", createMergeRequestViewModel);
+            if (dialogResult == MessageResult.OK) {
+                string message = createMergeRequestViewModel.Description;
+                string title = CalcMergeRequestTitle(message);
+                string description = CalcMergeRequestDescription(message);
+                string targetBranch = CalcTargetBranch(BranchViewModel.Name);
+                if (targetBranch == null) {
+                    MessageBoxService.Show("Can`t create merge request. Target branch not found.", "Create merge request error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    return;
+                }
+                BranchViewModel.CreateMergeRequest(title, description, null, BranchViewModel.Name, targetBranch);
+            }
+        }
+        string CalcMergeRequestDescription(string message) {
+            var changes = message.Split(new[] { "\r\n" }, StringSplitOptions.RemoveEmptyEntries);
+            StringBuilder sb = new StringBuilder();
+            changes.Skip(1).ForEach(x => sb.AppendLine(x.ToString()));
+            return sb.ToString();
+        }
+        string CalcMergeRequestTitle(string message) {
+            var changes = message.Split(new[] { "\r\n" }, StringSplitOptions.RemoveEmptyEntries);
+            var title = changes.FirstOrDefault();
+            return title;
+        }
+        string CalcTargetBranch(string name) {
+            var repository = BranchViewModel.Repository;
+            GitRepoConfig repoConfig = repository.RepoConfig;
+            if (repoConfig != null)
+                return repoConfig.TargetBranch;
+            return null;
+        }
+
         void OnMessageReceived(Message msg) {
 
         }

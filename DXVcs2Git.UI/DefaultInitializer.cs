@@ -22,6 +22,7 @@ namespace DXVcs2Git.UI {
             WorkHorseContainer = RootContainer.CreateChildContainer();
 
             WorkHorseContainer.RegisterType<EditRepositoriesViewModel>(new PerResolveLifetimeManager());
+            WorkHorseContainer.RegisterType<EditBranchViewModel>(new PerResolveLifetimeManager());
             ServiceLocator.SetLocatorProvider(() => new UnityServiceLocator(WorkHorseContainer));
         }
         public static void Initialize() {

@@ -6,12 +6,74 @@
              xmlns:local="clr-namespace:DXVcs2Git.UI.Views"
              xmlns:extensions="clr-namespace:DXVcs2Git.UI.Extensions"
              xmlns:viewModels="clr-namespace:DXVcs2Git.UI.ViewModels"
+             xmlns:dxmvvm="http://schemas.devexpress.com/winfx/2008/xaml/mvvm"
+             xmlns:dx="http://schemas.devexpress.com/winfx/2008/xaml/core"
+             xmlns:dxr="http://schemas.devexpress.com/winfx/2008/xaml/ribbon"
+             xmlns:dxb="http://schemas.devexpress.com/winfx/2008/xaml/bars"
              mc:Ignorable="d" 
              d:DesignHeight="300" d:DesignWidth="300">
     <UserControl.DataContext>
         <extensions:IoC TargetType="{x:Type viewModels:EditBranchViewModel}"/>
     </UserControl.DataContext>
+    <dxmvvm:Interaction.Behaviors>
+        <dx:DialogService x:Name="editMergeRequestService">
+            <dx:DialogService.DialogStyle>
+                <Style TargetType="{x:Type dx:DXDialogWindow}">
+                    <Style.Setters>
+                        <Setter Property="UseLayoutRounding" Value="True"/>
+                        <Setter Property="SizeToContent" Value="WidthAndHeight"/>
+                        <Setter Property="WindowStyle" Value="ToolWindow"/>
+                    </Style.Setters>
+                </Style>
+            </dx:DialogService.DialogStyle>
+            <dx:DialogService.ViewTemplate>
+                <DataTemplate>
+                    <local:CreateMergeRequestControl/>
+                </DataTemplate>
+            </dx:DialogService.ViewTemplate>
+        </dx:DialogService>
+    </dxmvvm:Interaction.Behaviors>
     <Grid>
-
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+        <dxr:RibbonControl >
+            <dxr:RibbonDefaultPageCategory>
+                <dxr:RibbonPage Caption="Main">
+                    <dxr:RibbonPageGroup Caption="Merge Requests">
+                        <dxb:BarButtonItem
+                            RibbonStyle="Large" 
+                            GlyphSize="Large" 
+                            Content="Create"
+                            Command="{Binding Path=CreateMergeRequestCommand}"
+                            LargeGlyph="{dx:DXImageOffice2013 Image=NewTask_32x32.png}">
+                        </dxb:BarButtonItem>
+                        <dxb:BarButtonItem
+                            RibbonStyle="Large" 
+                            GlyphSize="Large" 
+                            Content="Edit"
+                            Command="{Binding Path=EditMergeRequestCommand}"
+                            LargeGlyph="{dx:DXImageOffice2013 Image=EditTask_32x32.png}">
+                        </dxb:BarButtonItem>
+                        <dxb:BarButtonItem
+                            RibbonStyle="Large" 
+                            GlyphSize="Large" 
+                            Content="Close"
+                            Command="{Binding Path=CloseMergeRequestCommand}"
+                            LargeGlyph="{dx:DXImageOffice2013 Image=Close_32x32.png}">
+                        </dxb:BarButtonItem>
+                        <dxb:BarItemSeparator/>
+                        <dxb:BarButtonItem
+                            RibbonStyle="Large" 
+                            GlyphSize="Large" 
+                            Content="Sync"
+                            Command="{Binding Path=SelectedBranch.ForceBuildCommand}"
+                            LargeGlyph="{dx:DXImageOffice2013 Image=Convert_32x32.png}">
+                        </dxb:BarButtonItem>
+                    </dxr:RibbonPageGroup>
+                </dxr:RibbonPage>
+            </dxr:RibbonDefaultPageCategory>
+        </dxr:RibbonControl>
     </Grid>
 </UserControl>

@@ -1,36 +1,30 @@
 ﻿using System;
 using System.Linq;
-using System.Text;
-using System.Windows;
 using System.Windows.Input;
 using DevExpress.Mvvm;
 using DevExpress.Mvvm.Native;
-using DevExpress.Xpf.Core;
-using DXVcs2Git.Core.Git;
 using DXVcs2Git.Git;
 using DXVcs2Git.UI.Farm;
+using Microsoft.Practices.ServiceLocation;
 using NGitLab.Models;
-using User = NGitLab.Models.User;
 using ThoughtWorks.CruiseControl.Remote;
 
 namespace DXVcs2Git.UI.ViewModels {
     public class BranchViewModel : BindableBase {
         readonly GitLabWrapper gitLabWrapper;
-        readonly GitReaderWrapper gitReader;
-        public Branch Branch { get; }
-        public RepositoriesViewModel Repositories { get; }
+        public RepositoriesViewModel Repositories => ServiceLocator.Current.GetInstance<RepositoriesViewModel>();
         public RepositoryViewModel Repository { get; }
         public string Name { get; }
         public event EventHandler MergeRequestChanged = (_, __) => { };
         FarmStatus oldFarmStatus;
         public FarmStatus FarmStatus {
             get { return GetProperty(() => FarmStatus); }
-            private set { SetProperty(() => FarmStatus, value, new Action(OnFarmStatusChanged)); }
+            private set { SetProperty(() => FarmStatus, value, OnFarmStatusChanged); }
         }        
         public ICommand ForceBuildCommand { get; private set; }
         public MergeRequestViewModel MergeRequest {
             get { return GetProperty(() => MergeRequest); }
-            private set { SetProperty(() => MergeRequest, value, new Action(OnMergeRequestChanged)); }
+            private set { SetProperty(() => MergeRequest, value, OnMergeRequestChanged); }
         }        
         public bool IsInEditingMergeRequest {
             get { return GetProperty(() => IsInEditingMergeRequest); }
@@ -39,19 +33,15 @@ namespace DXVcs2Git.UI.ViewModels {
         public bool HasChanges {
             get { return MergeRequest.Return(x => x.Changes.Any(), () => false); }
         }
-        public BranchViewModel(GitLabWrapper gitLabWrapper, GitReaderWrapper gitReader, RepositoriesViewModel repositories, RepositoryViewModel repository, MergeRequest mergeRequest, Branch branch) {
+        public BranchViewModel(GitLabWrapper gitLabWrapper, RepositoryViewModel repository, string branch) {
             this.gitLabWrapper = gitLabWrapper;
-            this.gitReader = gitReader;
             Repository = repository;
-            Branch = branch;
-            Name = branch.Name;
-            Repositories = repositories;
+            Name = branch;
             oldFarmStatus = new FarmStatus();
             FarmStatus = oldFarmStatus;
-            MergeRequest = mergeRequest.With(x => new MergeRequestViewModel(gitLabWrapper, mergeRequest));
             ForceBuildCommand = DelegateCommandFactory.Create(ForceBuild, CanForceBuild);
+            Refresh();
         }
-
         bool CanForceBuild() {
             return Repositories.IsInitialized && (FarmStatus.ActivityStatus == ActivityStatus.Sleeping || FarmStatus.ActivityStatus == ActivityStatus.Pending);
         }
@@ -60,6 +50,9 @@ namespace DXVcs2Git.UI.ViewModels {
         }
         public void Refresh() {
             RefreshFarm();
+        }
+        public Branch CalcBranchInfo() {
+            return gitLabWrapper.GetBranch(Repository.Upstream, Name);
         }
         public void CreateMergeRequest(string title, string description, string user, string sourceBranch, string targetBranch) {
             var mergeRequest = this.gitLabWrapper.CreateMergeRequest(Repository.Origin, Repository.Upstream, title, description, user, sourceBranch, targetBranch);
