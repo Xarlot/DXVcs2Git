@@ -68,6 +68,7 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
+    <None Include="app.config" />
     <None Include="app.manifest" />
     <Content Include="..\Lib\AtomFeed\AtomfeedCore.exe">
       <Link>AtomfeedCore.exe</Link>

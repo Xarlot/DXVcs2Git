@@ -25,7 +25,7 @@ namespace DXVcs2Git.UI {
         }
 
         void RunWindow() {
-            MainWindow = new MainWindow();
+            MainWindow = new RootWindow();
             MainWindow.WindowState = StartupOptions.State;
             if (StartupOptions.Hidden)
                 return;
