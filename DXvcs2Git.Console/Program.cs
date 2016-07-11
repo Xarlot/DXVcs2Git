@@ -108,23 +108,37 @@ namespace DXVcs2Git.Console {
             if (gitWrapper == null)
                 return 1;
 
-            var changes = gitLabWrapper.GetMergeRequestChanges(mergeRequest).ToList();
-            
+            var changes = gitLabWrapper.GetMergeRequestChanges(mergeRequest).Select(x => new PatchItem() {
+                SyncAction = CalcSyncAction(x),
+                OldPath = x.OldPath,
+                NewPath = x.NewPath,
+            }).ToList();
+
+            var patch = new PatchInfo() {TimeStamp = DateTime.Now.Ticks, Items = changes};
+
             using (Package zip = Package.Open(Path.Combine(localGitDir, "patch.zip"), FileMode.CreateNew)) {
-                foreach (var path in CalcFilesForPatch(localGitDir, changes)) {
-                    AddPart(zip, path);
+                foreach (var path in CalcFilesForPatch(localGitDir, patch)) {
+                    AddPart(zip, localGitDir, path);
                 }
             }
             return 0;
         }
-        static void AddPart(Package zip, string path) {
-            string destFilename = ".\\" + Path.GetFileName(path);
-            Uri uri = PackUriHelper.CreatePartUri(new Uri(destFilename, UriKind.Relative));
+        static SyncAction CalcSyncAction(MergeRequestFileData fileData) {
+            if (fileData.IsDeleted)
+                return SyncAction.Delete;
+            if (fileData.IsNew)
+                return SyncAction.New;
+            if (fileData.IsRenamed)
+                return SyncAction.Move;
+            return SyncAction.Modify;
+        }
+        static void AddPart(Package zip, string root, string path) {
+            Uri uri = PackUriHelper.CreatePartUri(new Uri(path, UriKind.Relative));
             if (zip.PartExists(uri)) {
                 zip.DeletePart(uri);
             }
             PackagePart part = zip.CreatePart(uri, "", CompressionOption.Normal);
-            using (FileStream fileStream = new FileStream(path, FileMode.Open, FileAccess.Read)) {
+            using (FileStream fileStream = new FileStream(Path.Combine(root, path), FileMode.Open, FileAccess.Read)) {
                 using (Stream dest = part.GetStream()) {
                     CopyStream(fileStream, dest);
                 }
@@ -140,14 +154,18 @@ namespace DXVcs2Git.Console {
                 bytesWritten += bufferSize;
             }
         }
-        static IEnumerable<string> CalcFilesForPatch(string rootPath, List<MergeRequestFileData> changes) {
-            Serializer.Serialize(Path.Combine(rootPath, "patch.info"), changes);
-            yield return Path.Combine(rootPath, "patch.info");
+        static IEnumerable<string> CalcFilesForPatch(string rootPath, PatchInfo patch) {
+            var changes = patch.Items;
+            yield return SavePatchInfo(rootPath, patch);
             foreach (var change in changes) {
-                if (change.IsDeleted)
+                if (change.SyncAction == SyncAction.Delete)
                     yield break;
-                yield return Path.Combine(rootPath, change.IsRenamed ? change.NewPath : change.OldPath);
+                yield return change.SyncAction == SyncAction.Move ? change.NewPath : change.OldPath;
             }
+        }
+        static string SavePatchInfo(string rootPath, PatchInfo patch) {
+            Serializer.Serialize(Path.Combine(rootPath, "patch.info"), patch);
+            return "patch.info";
         }
 
         static int DoListenerWork(CommandLineOptions clo) {
@@ -703,5 +721,16 @@ namespace DXVcs2Git.Console {
         NoChanges,
         Error,
         HasChanges,
+    }
+
+    public class PatchItem {
+        public SyncAction SyncAction { get; set; }
+        public string OldPath { get; set; }
+        public string NewPath { get; set; }
+    }
+
+    public class PatchInfo {
+        public long TimeStamp { get; set; }
+        public List<PatchItem> Items { get; set; }
     }
 }
