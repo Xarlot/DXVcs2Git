@@ -59,13 +59,6 @@
                         <dxb:BarButtonItem
                             RibbonStyle="Large" 
                             GlyphSize="Large" 
-                            Content="Edit"
-                            Command="{Binding Path=EditMergeRequestCommand}"
-                            LargeGlyph="{dx:DXImageOffice2013 Image=EditTask_32x32.png}">
-                        </dxb:BarButtonItem>
-                        <dxb:BarButtonItem
-                            RibbonStyle="Large" 
-                            GlyphSize="Large" 
                             Content="Close"
                             Command="{Binding Path=CloseMergeRequestCommand}"
                             LargeGlyph="{dx:DXImageOffice2013 Image=Close_32x32.png}">
@@ -85,15 +78,18 @@
         <dxlc:DockLayoutControl Grid.Row="1" Margin="10" Visibility="{Binding Path=HasMergeRequest, Converter={StaticResource BooleanToVisibilityConverter}}">
             <dxlc:LayoutGroup dxlc:DockLayoutControl.Dock="Top">
                 <dxlc:LayoutItem>
-                    <local:BranchDescriptionControl>
-                    </local:BranchDescriptionControl>
+                    <local:BranchDescriptionControl/>
                 </dxlc:LayoutItem>
             </dxlc:LayoutGroup>
             <dxlc:LayoutGroup Orientation="Horizontal" dxlc:DockLayoutControl.Dock="Client" Margin="0">
-                <local:BranchChangesControl 
-                    dxmvvm:ViewModelExtensions.Parameter="{Binding Path=DataContext.SelectedBranch, ElementName=LayoutRoot}"
-                    dxmvvm:ViewModelExtensions.ParentViewModel="{Binding DataContext, ElementName=LayoutRoot}">
-                </local:BranchChangesControl>
+                <dx:DXTabControl>
+                    <dx:DXTabItem Header="Merge request settings">
+                        <local:EditMergeRequestControl/>
+                    </dx:DXTabItem>
+                    <dx:DXTabItem Header="Merge request change set">
+                        <local:BranchChangesControl />
+                    </dx:DXTabItem>
+                </dx:DXTabControl>
             </dxlc:LayoutGroup>
         </dxlc:DockLayoutControl>
     </Grid>

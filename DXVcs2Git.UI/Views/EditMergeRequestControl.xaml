@@ -6,16 +6,13 @@
              xmlns:dxlc="http://schemas.devexpress.com/winfx/2008/xaml/layoutcontrol"
              xmlns:dxe="http://schemas.devexpress.com/winfx/2008/xaml/editors"
              xmlns:viewModels="clr-namespace:DXVcs2Git.UI.ViewModels"
-             xmlns:dxmvvm="http://schemas.devexpress.com/winfx/2008/xaml/mvvm"
+             xmlns:extensions="clr-namespace:DXVcs2Git.UI.Extensions"
              mc:Ignorable="d" 
              d:DesignHeight="300" d:DesignWidth="300"
              KeyboardNavigation.TabNavigation="Cycle">
     <UserControl.DataContext>
-        <viewModels:EditMergeRequestViewModel/>
+        <extensions:IoC TargetType="{x:Type viewModels:EditMergeRequestViewModel}"/>
     </UserControl.DataContext>
-    <dxmvvm:Interaction.Behaviors>
-        <dxmvvm:EventToCommand Event="Loaded" Command="{Binding ResetCommand}"/>
-    </dxmvvm:Interaction.Behaviors>
     <Grid>
         <dxlc:LayoutControl>
             <dxlc:LayoutGroup Orientation="Vertical">
@@ -24,7 +21,7 @@
                         VerticalContentAlignment="Top"
                         VerticalScrollBarVisibility="Auto"
                         ValidateOnTextInput="False" 
-                        EditValue="{Binding Path=Comment, UpdateSourceTrigger=PropertyChanged}"
+                        EditValue="{Binding Path=Comment, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}"
                         AcceptsReturn="True">
                     </dxe:TextEdit>
                 </dxlc:LayoutItem>
@@ -39,15 +36,12 @@
                         </dxe:ComboBoxEdit>
                     </dxlc:LayoutItem>
                     <dxlc:LayoutItem>
-                        <dxe:CheckEdit Content="Assigned to service" EditValue="{Binding Path=AssignedToService, Mode=TwoWay}"/>
+                        <dxe:CheckEdit Content="Assigned to service" EditValue="{Binding Path=AssignedToService, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
                     </dxlc:LayoutItem>
                 </dxlc:LayoutGroup>
                 <dxlc:LayoutGroup Orientation="Horizontal">
                     <dxlc:LayoutItem>
-                        <Button Content="Apply" Command="{Binding Path=ApplyMergeRequestCommand}"/>
-                    </dxlc:LayoutItem>
-                    <dxlc:LayoutItem>
-                        <Button Content="Cancel" Command="{Binding Path=CancelMergeRequestCommand}"/>
+                        <Button Content="Apply" Command="{Binding Path=ApplyCommand}"/>
                     </dxlc:LayoutItem>
                 </dxlc:LayoutGroup>
             </dxlc:LayoutGroup>

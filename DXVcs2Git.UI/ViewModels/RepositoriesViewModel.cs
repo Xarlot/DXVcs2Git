@@ -11,6 +11,11 @@ using DXVcs2Git.Core;
 
 namespace DXVcs2Git.UI.ViewModels {
     public class RepositoriesViewModel : ViewModelBase {
+        public static void RaiseRefreshSelectedBranch() {
+            Messenger.Default.Send(new Message(MessageType.RefreshSelectedBranch));
+            CommandManager.InvalidateRequerySuggested();
+        }
+
         BranchViewModel selectedBranch;
         RepositoryViewModel selectedRepository;
         bool fake = false;
@@ -31,7 +36,8 @@ namespace DXVcs2Git.UI.ViewModels {
             set { SetProperty(ref this.selectedBranch, value, () => SelectedBranch, SelectedBranchChanged); }
         }
         void SelectedBranchChanged() {
-            Messenger.Default.Send(new Message(MessageType.RefreshSelectedBranch));
+            SelectedBranch?.RefreshMergeRequest();
+            RaiseRefreshSelectedBranch();
         }
         public bool IsInitialized { get; private set; }
 

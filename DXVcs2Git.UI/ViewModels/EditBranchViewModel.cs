@@ -11,6 +11,7 @@ using Microsoft.Practices.ServiceLocation;
 namespace DXVcs2Git.UI.ViewModels {
     public class EditBranchViewModel : ViewModelBase {
         public ICommand CreateMergeRequestCommand { get; }
+        public ICommand CloseMergeRequestCommand { get; }
         RepositoriesViewModel RepositoriesViewModel => ServiceLocator.Current.GetInstance<RepositoriesViewModel>();
         IDialogService EditMergeRequestService => GetService<IDialogService>("editMergeRequestService");
         IMessageBoxService MessageBoxService => GetService<IMessageBoxService>();
@@ -31,6 +32,13 @@ namespace DXVcs2Git.UI.ViewModels {
             Messenger.Default.Register<Message>(this, OnMessageReceived);
 
             CreateMergeRequestCommand = DelegateCommandFactory.Create(PerformCreateMergeRequest, CanPerformCreateMergeRequest);
+            CloseMergeRequestCommand = DelegateCommandFactory.Create(PerformCloseMergeRequest, CanPerformCloseMergeRequest);
+        }
+        bool CanPerformCloseMergeRequest() {
+            return Branch != null && Branch.MergeRequest != null;
+        }
+        void PerformCloseMergeRequest() {
+            Branch.CloseMergeRequest();
         }
         bool CanPerformCreateMergeRequest() {
             return Branch != null && MergeRequest == null;
@@ -73,10 +81,8 @@ namespace DXVcs2Git.UI.ViewModels {
         void OnMessageReceived(Message msg) {
             if (msg.MessageType == MessageType.RefreshSelectedBranch) {
                 Branch = RepositoriesViewModel.SelectedBranch;
-                Branch?.RefreshMergeRequest();
                 MergeRequest = Branch?.MergeRequest;
                 HasMergeRequest = MergeRequest != null;
-                CommandManager.InvalidateRequerySuggested();
             }
         }
     }

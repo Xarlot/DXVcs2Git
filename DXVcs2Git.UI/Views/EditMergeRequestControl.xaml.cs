@@ -7,13 +7,8 @@ namespace DXVcs2Git.UI.Views {
     /// Interaction logic for EditMergeRequestControl.xaml
     /// </summary>
     public partial class EditMergeRequestControl : UserControl {
-        public EditMergeRequestViewModel EditableMergeRequest { get { return (EditMergeRequestViewModel)DataContext; } }
         public EditMergeRequestControl() {
             InitializeComponent();
-            Messenger.Default.Register<Message>(this, OnMessage);
-        }
-        void OnMessage(Message msg) {
-            EditableMergeRequest.Refresh();
         }
     }
 }

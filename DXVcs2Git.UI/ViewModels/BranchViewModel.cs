@@ -68,6 +68,7 @@ namespace DXVcs2Git.UI.ViewModels {
         public void CloseMergeRequest() {
             this.gitLabWrapper.CloseMergeRequest(MergeRequest.MergeRequest);
             MergeRequest = null;
+            RepositoriesViewModel.RaiseRefreshSelectedBranch();
         }
         public void UpdateMergeRequest(string title, string description, string assignee) {
             var mergeRequest = this.gitLabWrapper.UpdateMergeRequestTitleAndDescription(MergeRequest.MergeRequest, title, description);

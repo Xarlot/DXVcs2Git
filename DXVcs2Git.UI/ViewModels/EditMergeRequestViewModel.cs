@@ -1,78 +1,97 @@
-﻿using System.Windows.Input;
+﻿using System;
+using System.Linq;
+using System.Text;
+using System.Windows;
+using System.Windows.Input;
 using DevExpress.Mvvm;
 using DevExpress.Mvvm.Native;
-using DevExpress.Mvvm.POCO;
 using DXVcs2Git.Core.GitLab;
+using Microsoft.Practices.ServiceLocation;
 
 namespace DXVcs2Git.UI.ViewModels {
     public class EditMergeRequestViewModel : ViewModelBase {
-        new BranchViewModel Parameter { get { return (BranchViewModel)base.Parameter; } }
-        EditBranchChangesViewModel Parent { get { return this.GetParentViewModel<EditBranchChangesViewModel>(); } }
+        RepositoriesViewModel RepositoriesViewModel => ServiceLocator.Current.GetInstance<RepositoriesViewModel>();
+
+        IMessageBoxService MessageBoxService => GetService<IMessageBoxService>();
 
         string comment;
         bool assignedToService;
 
-        public ICommand ApplyMergeRequestCommand { get; private set; }
-        public ICommand CancelMergeRequestCommand { get; private set; }
-        public ICommand ResetCommand { get; private set; }
-
-        public IMessageBoxService MessageBoxService { get { return GetService<IMessageBoxService>("MessageBoxService", ServiceSearchMode.PreferLocal); } }
-
         public string Comment {
-            get { return this.comment; }
-            set { SetProperty(ref this.comment, value, () => Comment, Invalidate); }
+            get { return comment; }
+            set { SetProperty(ref comment, value, () => Comment, CommentChanged); }
         }
         public bool AssignedToService {
-            get { return this.assignedToService; }
-            set { SetProperty(ref this.assignedToService, value, () => AssignedToService, Invalidate); }
+            get { return assignedToService; }
+            set { SetProperty(ref assignedToService, value, () => AssignedToService, AssignedToServiceChanged); }
+        }
+        public bool IsModified {
+            get { return GetProperty(() => IsModified); }
+            private set { SetProperty(() => IsModified, value); }
+        }
+        public ICommand ApplyCommand { get; }
+        BranchViewModel Branch { get; set; }
+        void AssignedToServiceChanged() {
+            IsModified = true;
+        }
+        void CommentChanged() {
+            IsModified = true;
         }
 
         public EditMergeRequestViewModel() {
-            ApplyMergeRequestCommand = DelegateCommandFactory.Create(PerformApplyMergeRequest, CanApplyMergeRequest);
-            CancelMergeRequestCommand = DelegateCommandFactory.Create(PerformCancelMergeRequest, CanCancelMergeRequest);
-            ResetCommand = DelegateCommandFactory.Create(Reset);
-        }
-        void Invalidate() {
-            IsModified = true;
-            CommandManager.InvalidateRequerySuggested();
-        }
-        bool CanCancelMergeRequest() {
-            return true;
-        }
-        void PerformCancelMergeRequest() {
-            Parent.CancelMergeRequestChanges();
-        }
-        void PerformApplyMergeRequest() {
-            Parent.ApplyMergeRequestChanges(new EditMergeRequestData() { Comment = Comment, AssignToService = AssignedToService, Options = CreateMergeRequestOptions()});
-        }
-        MergeRequestOptions CreateMergeRequestOptions() {
-            return new MergeRequestOptions(new MergeRequestSyncAction(Parameter.Repository.RepoConfig.FarmTaskName, Parameter.Repository.RepoConfig.FarmSyncTaskName));
-        }
-        bool CanApplyMergeRequest() {
-            return IsModified;
-        }
-        public bool IsModified { get; private set; }
+            Messenger.Default.Register<Message>(this, OnMessageReceived);
 
-        protected override void OnParameterChanged(object parameter) {
-            base.OnParameterChanged(parameter);
-            Refresh();
+            ApplyCommand = DelegateCommandFactory.Create(PerformApply, CanPerformApply);
         }
-        public void Reset() {
-            this.assignedToService = false;
-            this.comment = string.Empty;
-            assignedToService = false;
-            IsModified = false;
+        bool CanPerformApply() {
+            return Branch != null && IsModified;
         }
-        public void Refresh() {
-            //this.comment = Parameter?.MergeRequest?.Title ?? Parameter?.Branch?.Commit?.Message;
-            //string assignee = Parameter?.MergeRequest?.Assignee;
-            //if (string.IsNullOrEmpty(assignee)) {
-            //    this.assignedToService = false;
-            //}
-            //else {
-            //    this.assignedToService = AssignedToService;
-            //}
-            //RaisePropertyChanged(null);
+        void PerformApply() {
+            var mergeRequestAction = new MergeRequestSyncAction(Branch.Repository.RepoConfig.FarmTaskName, Branch.Repository.RepoConfig.FarmSyncTaskName);
+            var mergeRequestOptions = new MergeRequestOptions(mergeRequestAction);
+            if (RepositoriesViewModel.Config.AlwaysSure || MessageBoxService.Show("Are you sure?", "Update merge request", MessageBoxButton.OKCancel) == MessageBoxResult.OK) {
+                Branch.UpdateMergeRequest(CalcMergeRequestTitle(Comment), CalcMergeRequestDescription(Comment), AssignedToService ? CalcServiceName() : Branch.MergeRequest.Assignee);
+                Branch.UpdateMergeRequest(CalcOptionsComment(mergeRequestOptions));
+                IsModified = false;
+            }
+        }
+        string CalcOptionsComment(MergeRequestOptions options) {
+            return MergeRequestOptions.ConvertToString(options);
+        }
+        string CalcServiceName() {
+            return Branch.Repository.RepoConfig.DefaultServiceName;
+        }
+        string CalcMergeRequestDescription(string message) {
+            var changes = message.Split(new[] { "\r\n" }, StringSplitOptions.RemoveEmptyEntries);
+            StringBuilder sb = new StringBuilder();
+            changes.Skip(1).ForEach(x => sb.AppendLine(x.ToString()));
+            return sb.ToString();
+        }
+        string CalcMergeRequestTitle(string message) {
+            var changes = message.Split(new[] { "\r\n" }, StringSplitOptions.RemoveEmptyEntries);
+            var title = changes.FirstOrDefault();
+            return title;
+        }
+
+        void OnMessageReceived(Message msg) {
+            if (msg.MessageType == MessageType.RefreshSelectedBranch) {
+                RefreshSelectedBranch();
+            }
+        }
+        void RefreshSelectedBranch() {
+            var branch = RepositoriesViewModel?.SelectedBranch;
+            var mergeRequest = branch?.MergeRequest;
+            if (mergeRequest == null) {
+                comment = null;
+                assignedToService = false;
+                IsModified = false;
+            }
+            else {
+                comment = mergeRequest.Title;
+                assignedToService = mergeRequest.Assignee == branch.Repository.DefaultServiceName;
+                IsModified = false;
+                RaisePropertyChanged(null);
+            }
         }
     }
 }
