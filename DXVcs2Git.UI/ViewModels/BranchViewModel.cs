@@ -51,6 +51,13 @@ namespace DXVcs2Git.UI.ViewModels {
         public void Refresh() {
             RefreshFarm();
         }
+        public void RefreshMergeRequest() {
+            var mergeRequest = gitLabWrapper.GetMergeRequests(Repository.Upstream, x => x.SourceProjectId == Repository.Origin.Id && x.SourceBranch == Name).FirstOrDefault();
+            if (mergeRequest != null)
+                MergeRequest = new MergeRequestViewModel(gitLabWrapper, mergeRequest);
+            else
+                MergeRequest = null;
+        }
         public Branch CalcBranchInfo() {
             return gitLabWrapper.GetBranch(Repository.Origin, Name);
         }
@@ -78,8 +85,8 @@ namespace DXVcs2Git.UI.ViewModels {
                 if (oldFarmStatus.BuildStatus == IntegrationStatus.Unknown)
                     return;
                 if (oldFarmStatus.ActivityStatus != FarmStatus.ActivityStatus && FarmStatus.ActivityStatus == ActivityStatus.Sleeping) {
-                    if (MergeRequest != null)
-                        Repositories.BeginUpdate();
+                    //if (MergeRequest != null)
+                        //Repositories.Update();
                 }                    
             } finally {
                 oldFarmStatus = FarmStatus;

@@ -33,7 +33,7 @@ namespace DXVcs2Git.UI.ViewModels {
             CreateMergeRequestCommand = DelegateCommandFactory.Create(PerformCreateMergeRequest, CanPerformCreateMergeRequest);
         }
         bool CanPerformCreateMergeRequest() {
-            return Branch != null && Branch.MergeRequest == null;
+            return Branch != null && MergeRequest == null;
         }
         void PerformCreateMergeRequest() {
             var branchInfo = Branch.CalcBranchInfo();
@@ -73,6 +73,7 @@ namespace DXVcs2Git.UI.ViewModels {
         void OnMessageReceived(Message msg) {
             if (msg.MessageType == MessageType.RefreshSelectedBranch) {
                 Branch = RepositoriesViewModel.SelectedBranch;
+                Branch?.RefreshMergeRequest();
                 MergeRequest = Branch?.MergeRequest;
                 HasMergeRequest = MergeRequest != null;
                 CommandManager.InvalidateRequerySuggested();

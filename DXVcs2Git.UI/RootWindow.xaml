@@ -120,6 +120,7 @@
             <dxdo:LayoutGroup x:Name="root" Orientation="Vertical">
                 <dxdo:LayoutGroup ItemHeight="4*">
                     <dxdo:LayoutPanel 
+                        Caption="Repositories"
                         dxb:MergingProperties.ElementMergingBehavior="InternalWithExternal"
                         ItemWidth="*"
                         AutoHideExpandState="Expanded"
@@ -127,6 +128,7 @@
                         <local:RepositoriesControl/>
                     </dxdo:LayoutPanel>
                     <dxdo:LayoutPanel
+                        Caption="Selected branch"
                         dxb:MergingProperties.ElementMergingBehavior="InternalWithExternal"
                         ItemWidth="2*">
                         <views:BranchControl/>
@@ -134,6 +136,7 @@
                 </dxdo:LayoutGroup>
                 <dxdo:LayoutGroup ItemHeight="*" Visibility="{Binding Path=ShowLog, Converter={StaticResource BooleanToVisibilityConverter}}">
                     <dxdo:LayoutPanel 
+                        Caption="Log"
                         dxb:MergingProperties.ElementMergingBehavior="InternalWithExternal">
                         <views:LoggingUserControl DataContext="{Binding Path=LogViewModel}"/>
                     </dxdo:LayoutPanel>

@@ -67,25 +67,25 @@ namespace DXVcs2Git.UI.ViewModels {
                 Messenger.Default.Send(new Message(MessageType.Update));
         }
 
-        public Task BeginUpdate() {
-            Log.Message("Repositories update started");
-            IsInitialized = false;
-            CommandManager.InvalidateRequerySuggested();
-            ConfigSerializer.SaveConfig(Config);
-            return Task.Run(() => {
-                RepositoriesViewModel rvm = new RepositoriesViewModel();
-                rvm.Update();
-                return rvm;
-            }).ContinueWith(_ => {
-                RepoConfigs = _.Result.RepoConfigs;
-                Repositories = _.Result.Repositories;
-                SelectedRepository = _.Result.SelectedRepository;
-                IsInitialized = true;
-                Log.Message("Repositories update completed");
-                SendUpdateMessage();
-                CommandManager.InvalidateRequerySuggested();
-            }, TaskScheduler.FromCurrentSynchronizationContext());
-        }
+        //public Task BeginUpdate() {
+        //    Log.Message("Repositories update started");
+        //    IsInitialized = false;
+        //    CommandManager.InvalidateRequerySuggested();
+        //    ConfigSerializer.SaveConfig(Config);
+        //    return Task.Run(() => {
+        //        RepositoriesViewModel rvm = new RepositoriesViewModel();
+        //        rvm.Update();
+        //        return rvm;
+        //    }).ContinueWith(_ => {
+        //        RepoConfigs = _.Result.RepoConfigs;
+        //        Repositories = _.Result.Repositories;
+        //        SelectedRepository = _.Result.SelectedRepository;
+        //        IsInitialized = true;
+        //        Log.Message("Repositories update completed");
+        //        SendUpdateMessage();
+        //        CommandManager.InvalidateRequerySuggested();
+        //    }, TaskScheduler.FromCurrentSynchronizationContext());
+        //}
         bool IsValidConfig(TrackRepository repo) {
             if (string.IsNullOrEmpty(repo.Name))
                 return false;

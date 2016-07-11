@@ -13,6 +13,7 @@
              xmlns:viewModels="clr-namespace:DXVcs2Git.UI.ViewModels"
              xmlns:behaviors="clr-namespace:DXVcs2Git.UI.Behaviors"
              xmlns:extensions="clr-namespace:DXVcs2Git.UI.Extensions"
+             xmlns:ui="clr-namespace:DXVcs2Git.UI"
              mc:Ignorable="d" 
              d:DesignHeight="300" d:DesignWidth="300">
     <UserControl.DataContext>
@@ -21,7 +22,7 @@
     <Grid>
         <dxg:GridControl ShowBorder="False" ItemsSource="{Binding Path=Items}" SelectedItem="{Binding Path=SelectedItem, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}">
             <dxg:GridControl.Columns>
-                <dxg:GridColumn FieldName="Name"></dxg:GridColumn>
+                <dxg:GridColumn FieldName="Name" Width="*"></dxg:GridColumn>
             </dxg:GridControl.Columns>
             <dxg:GridControl.View>
                 <dxg:TreeListView 
@@ -29,8 +30,7 @@
                     AutoExpandAllNodes="True" 
                     TreeDerivationMode="ChildNodesSelector" 
                     ChildNodesPath="Children" 
-                    NavigationStyle="Row"
-                    AutoWidth="True"/>
+                    NavigationStyle="Row"/>
             </dxg:GridControl.View>
         </dxg:GridControl>
         <dxr:RibbonStatusBarControl>
