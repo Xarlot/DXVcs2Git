@@ -4,6 +4,7 @@
         Update,
         BeforeRefresh,
         Refresh,
+        SelectedBranchChanged,
     }
 
     public class Message {

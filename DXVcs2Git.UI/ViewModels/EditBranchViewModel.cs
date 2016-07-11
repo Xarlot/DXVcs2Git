@@ -12,9 +12,13 @@ namespace DXVcs2Git.UI.ViewModels {
     public class EditBranchViewModel : ViewModelBase {
         public ICommand CreateMergeRequestCommand { get; }
         RepositoriesViewModel RepositoriesViewModel => ServiceLocator.Current.GetInstance<RepositoriesViewModel>();
-        BranchViewModel BranchViewModel => RepositoriesViewModel.SelectedBranch;
         IDialogService EditMergeRequestService => GetService<IDialogService>("editMergeRequestService");
         IMessageBoxService MessageBoxService => GetService<IMessageBoxService>();
+
+        public BranchViewModel Branch {
+            get { return GetProperty(() => Branch); }
+            private set { SetProperty(() => Branch, value); }
+        }
 
         public EditBranchViewModel() {
             Messenger.Default.Register<Message>(this, OnMessageReceived);
@@ -22,10 +26,10 @@ namespace DXVcs2Git.UI.ViewModels {
             CreateMergeRequestCommand = DelegateCommandFactory.Create(PerformCreateMergeRequest, CanPerformCreateMergeRequest);
         }
         bool CanPerformCreateMergeRequest() {
-            return BranchViewModel != null && BranchViewModel.MergeRequest == null;
+            return Branch != null && Branch.MergeRequest == null;
         }
         void PerformCreateMergeRequest() {
-            var branchInfo = BranchViewModel.CalcBranchInfo();
+            var branchInfo = Branch.CalcBranchInfo();
             var createMergeRequestViewModel = new CreateMergeRequestViewModel() {
                 Description = branchInfo.Commit.Message,
             };
@@ -34,12 +38,12 @@ namespace DXVcs2Git.UI.ViewModels {
                 string message = createMergeRequestViewModel.Description;
                 string title = CalcMergeRequestTitle(message);
                 string description = CalcMergeRequestDescription(message);
-                string targetBranch = CalcTargetBranch(BranchViewModel.Name);
+                string targetBranch = CalcTargetBranch();
                 if (targetBranch == null) {
                     MessageBoxService.Show("Can`t create merge request. Target branch not found.", "Create merge request error", MessageBoxButton.OK, MessageBoxImage.Error);
                     return;
                 }
-                BranchViewModel.CreateMergeRequest(title, description, null, BranchViewModel.Name, targetBranch);
+                Branch.CreateMergeRequest(title, description, null, Branch.Name, targetBranch);
             }
         }
         string CalcMergeRequestDescription(string message) {
@@ -53,16 +57,17 @@ namespace DXVcs2Git.UI.ViewModels {
             var title = changes.FirstOrDefault();
             return title;
         }
-        string CalcTargetBranch(string name) {
-            var repository = BranchViewModel.Repository;
+        string CalcTargetBranch() {
+            var repository = Branch.Repository;
             GitRepoConfig repoConfig = repository.RepoConfig;
-            if (repoConfig != null)
-                return repoConfig.TargetBranch;
-            return null;
+            return repoConfig?.TargetBranch;
         }
 
         void OnMessageReceived(Message msg) {
-
+            if (msg.MessageType == MessageType.SelectedBranchChanged) {
+                Branch = RepositoriesViewModel.SelectedBranch;
+                CommandManager.InvalidateRequerySuggested();
+            }
         }
     }
 }
