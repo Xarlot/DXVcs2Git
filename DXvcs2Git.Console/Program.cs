@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.IO.Packaging;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
@@ -17,11 +18,11 @@ using DXVcs2Git.Core.Serialization;
 using DXVcs2Git.DXVcs;
 using DXVcs2Git.Git;
 using DXVcs2Git.UI.Farm;
-using LibGit2Sharp;
 using NGitLab;
 using NGitLab.Models;
 using ProjectHookType = DXVcs2Git.Core.GitLab.ProjectHookType;
 using User = DXVcs2Git.Core.User;
+using Ionic.Zip;
 
 namespace DXVcs2Git.Console {
     internal class Program {
@@ -58,7 +59,113 @@ namespace DXVcs2Git.Console {
             if (workMode == WorkMode.synchronizer) {
                 return DoSyncWork(clo);
             }
+            if (workMode == WorkMode.patch) {
+                return DoPatchWork(clo);
+            }
             return 1;
+        }
+        static int DoPatchWork(CommandLineOptions clo) {
+            string localGitDir = clo.LocalFolder != null && Path.IsPathRooted(clo.LocalFolder) ? clo.LocalFolder : Path.Combine(Environment.CurrentDirectory, clo.LocalFolder ?? repoPath);
+            EnsureGitDir(localGitDir);
+
+            string gitRepoPath = clo.Repo;
+            string username = clo.Login;
+            string password = clo.Password;
+            string gitlabauthtoken = clo.AuthToken;
+            string branchName = clo.Branch;
+            string trackerPath = clo.Tracker;
+            string gitServer = clo.Server;
+            int mergeRequestId = clo.MergeRequestId;
+
+            DXVcsWrapper vcsWrapper = new DXVcsWrapper(vcsServer, username, password);
+
+            TrackBranch branch = FindBranch(branchName, trackerPath, vcsWrapper);
+            if (branch == null)
+                return 1;
+
+            string historyPath = GetVcsSyncHistory(vcsWrapper, branch.HistoryPath);
+            if (historyPath == null)
+                return 1;
+            SyncHistory history = SyncHistory.Deserialize(historyPath);
+            if (history == null)
+                return 1;
+
+            SyncHistoryWrapper syncHistory = new SyncHistoryWrapper(history, vcsWrapper, branch.HistoryPath, historyPath);
+            var head = syncHistory.GetHistoryHead();
+            if (head == null)
+                return 1;
+
+            GitLabWrapper gitLabWrapper = new GitLabWrapper(gitServer, gitlabauthtoken);
+
+            Project project = gitLabWrapper.FindProject(gitRepoPath);
+            MergeRequest mergeRequest = gitLabWrapper.GetMergeRequests(project, x => x.Id == mergeRequestId).FirstOrDefault();
+            if (mergeRequest == null) {
+                Log.Error($"Can`t find merge request with id = {mergeRequestId}");
+                return 1;
+            }
+
+            GitWrapper gitWrapper = CreateGitWrapper(gitRepoPath, localGitDir, branch, username, password);
+            if (gitWrapper == null)
+                return 1;
+
+            var changes = gitLabWrapper.GetMergeRequestChanges(mergeRequest).Select(x => new PatchItem() {
+                SyncAction = CalcSyncAction(x),
+                OldPath = x.OldPath,
+                NewPath = x.NewPath,
+            }).ToList();
+
+            var patch = new PatchInfo() {TimeStamp = DateTime.Now.Ticks, Items = changes};
+
+            using (Package zip = Package.Open(Path.Combine(localGitDir, "patch.zip"), FileMode.CreateNew)) {
+                foreach (var path in CalcFilesForPatch(localGitDir, patch)) {
+                    AddPart(zip, localGitDir, path);
+                }
+            }
+            return 0;
+        }
+        static SyncAction CalcSyncAction(MergeRequestFileData fileData) {
+            if (fileData.IsDeleted)
+                return SyncAction.Delete;
+            if (fileData.IsNew)
+                return SyncAction.New;
+            if (fileData.IsRenamed)
+                return SyncAction.Move;
+            return SyncAction.Modify;
+        }
+        static void AddPart(Package zip, string root, string path) {
+            Uri uri = PackUriHelper.CreatePartUri(new Uri(path, UriKind.Relative));
+            if (zip.PartExists(uri)) {
+                zip.DeletePart(uri);
+            }
+            PackagePart part = zip.CreatePart(uri, "", CompressionOption.Normal);
+            using (FileStream fileStream = new FileStream(Path.Combine(root, path), FileMode.Open, FileAccess.Read)) {
+                using (Stream dest = part.GetStream()) {
+                    CopyStream(fileStream, dest);
+                }
+            }
+        }
+        static void CopyStream(System.IO.FileStream inputStream, System.IO.Stream outputStream) {
+            long bufferSize = inputStream.Length < Int16.MaxValue ? inputStream.Length : Int16.MaxValue;
+            byte[] buffer = new byte[bufferSize];
+            int bytesRead = 0;
+            long bytesWritten = 0;
+            while ((bytesRead = inputStream.Read(buffer, 0, buffer.Length)) != 0) {
+                outputStream.Write(buffer, 0, bytesRead);
+                bytesWritten += bufferSize;
+            }
+        }
+        static IEnumerable<string> CalcFilesForPatch(string rootPath, PatchInfo patch) {
+            var changes = patch.Items;
+            yield return SavePatchInfo(rootPath, patch);
+            foreach (var change in changes) {
+                if (change.SyncAction == SyncAction.Delete)
+                    yield break;
+                yield return change.SyncAction == SyncAction.Move ? change.NewPath : change.OldPath;
+            }
+        }
+        static string SavePatchInfo(string rootPath, PatchInfo patch) {
+            Serializer.Serialize(Path.Combine(rootPath, "patch.info"), patch);
+            return "patch.info";
         }
 
         static int DoListenerWork(CommandLineOptions clo) {
@@ -346,7 +453,7 @@ namespace DXVcs2Git.Console {
 
             Log.ResetErrorsAccumulator();
             var changes = gitLabWrapper.GetMergeRequestChanges(mergeRequest).ToList();
-            if(changes.Count >= MaxChangesCount) {
+            if (changes.Count >= MaxChangesCount) {
                 Log.Error($"Merge request contains more than {MaxChangesCount} changes and cannot be processed. Split it into smaller merge requests");
                 AssignBackConflictedMergeRequest(gitLabWrapper, users, mergeRequest, CalcCommentForFailedCheckoutMergeRequest(null));
                 return MergeRequestResult.Failed;
@@ -391,7 +498,7 @@ namespace DXVcs2Git.Console {
                     return mergeRequestResult;
                 }
                 Log.Error("Merge request checkin failed.");
-                if (gitCommit == null) 
+                if (gitCommit == null)
                     Log.Error($"Can`t find git commit with token {autoSyncToken}");
                 var failedHistory = vcsWrapper.GenerateHistory(branch, new DateTime(timeStamp));
                 var lastFailedCommit = failedHistory.OrderBy(x => x.ActionDate).LastOrDefault();
@@ -428,7 +535,7 @@ namespace DXVcs2Git.Console {
             if (!CheckFilesList.Contains(Path.GetExtension(diff.OldPath)))
                 return true;
             var fixeol = diff.Diff.Replace("\n\\ No newline at end of file\n", Environment.NewLine);
-            var chunks = fixeol.Split(new[] {'\n'}, StringSplitOptions.RemoveEmptyEntries);
+            var chunks = fixeol.Split(new[] { '\n' }, StringSplitOptions.RemoveEmptyEntries);
             return chunks.Where(x => NewlinePattern.IsMatch(x)).Select(chunk => chunk.ToCharArray()).All(charArray => charArray.LastOrDefault() == '\r');
         }
         static string CalcCommentForFailedCheckoutMergeRequest(List<SyncItem> genericChange) {
@@ -469,7 +576,7 @@ namespace DXVcs2Git.Console {
             return Path.Combine(localGitDir, path);
         }
         static string CalcVcsPath(string vcsRoot, TrackBranch branch, string path) {
-            var root = path.Split(new[] {@"\", @"/"}, StringSplitOptions.RemoveEmptyEntries).FirstOrDefault();
+            var root = path.Split(new[] { @"\", @"/" }, StringSplitOptions.RemoveEmptyEntries).FirstOrDefault();
             var trackItem = branch.TrackItems.First(x => root == x.ProjectPath);
             var resultPath = path.Remove(0, trackItem.ProjectPath.Length).TrimStart(@"\/".ToCharArray());
             string trackPath = branch.GetTrackRoot(trackItem);
@@ -604,7 +711,7 @@ namespace DXVcs2Git.Console {
             comment.Author = author;
             comment.Branch = item.Track.Branch;
             comment.Token = token;
-            if (item.Items.Any(x => !string.IsNullOrEmpty(x.Comment) && CommentWrapper.IsAutoSyncComment(x.Comment))) 
+            if (item.Items.Any(x => !string.IsNullOrEmpty(x.Comment) && CommentWrapper.IsAutoSyncComment(x.Comment)))
                 comment.Comment = item.Items.Select(x => CommentWrapper.Parse(x.Comment ?? x.Message).Comment).FirstOrDefault(x => !string.IsNullOrEmpty(x));
             else
                 comment.Comment = item.Items.FirstOrDefault(x => !string.IsNullOrEmpty(x.Comment))?.Comment;
@@ -629,5 +736,16 @@ namespace DXVcs2Git.Console {
         NoChanges,
         Error,
         HasChanges,
+    }
+
+    public class PatchItem {
+        public SyncAction SyncAction { get; set; }
+        public string OldPath { get; set; }
+        public string NewPath { get; set; }
+    }
+
+    public class PatchInfo {
+        public long TimeStamp { get; set; }
+        public List<PatchItem> Items { get; set; }
     }
 }
