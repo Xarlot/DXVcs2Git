@@ -19,6 +19,14 @@ namespace DXVcs2Git.UI.ViewModels {
             get { return GetProperty(() => Branch); }
             private set { SetProperty(() => Branch, value); }
         }
+        public MergeRequestViewModel MergeRequest {
+            get { return GetProperty(() => MergeRequest); }
+            private set { SetProperty(() => MergeRequest, value); }
+        }
+        public bool HasMergeRequest {
+            get { return GetProperty(() => HasMergeRequest); }
+            private set { SetProperty(() => HasMergeRequest, value); }
+        }
         public EditBranchViewModel() {
             Messenger.Default.Register<Message>(this, OnMessageReceived);
 
@@ -63,8 +71,10 @@ namespace DXVcs2Git.UI.ViewModels {
         }
 
         void OnMessageReceived(Message msg) {
-            if (msg.MessageType == MessageType.SelectedBranchChanged) {
+            if (msg.MessageType == MessageType.RefreshSelectedBranch) {
                 Branch = RepositoriesViewModel.SelectedBranch;
+                MergeRequest = Branch?.MergeRequest;
+                HasMergeRequest = MergeRequest != null;
                 CommandManager.InvalidateRequerySuggested();
             }
         }

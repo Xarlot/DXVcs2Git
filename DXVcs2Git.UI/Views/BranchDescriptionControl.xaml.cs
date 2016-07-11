@@ -7,14 +7,10 @@ namespace DXVcs2Git.UI.Views {
     /// Interaction logic for BranchDescriptionControl.xaml
     /// </summary>
     public partial class BranchDescriptionControl : UserControl {
-        EditBranchDescriptionViewModel BranchDescription { get { return (EditBranchDescriptionViewModel)DataContext; } }
-
         public BranchDescriptionControl() {
             InitializeComponent();
-            Messenger.Default.Register<Message>(this, OnMessage);
         }
         void OnMessage(Message msg) {
-            BranchDescription.Refresh();
         }
     }
 }

@@ -52,7 +52,7 @@ namespace DXVcs2Git.UI.ViewModels {
             RefreshFarm();
         }
         public Branch CalcBranchInfo() {
-            return gitLabWrapper.GetBranch(Repository.Upstream, Name);
+            return gitLabWrapper.GetBranch(Repository.Origin, Name);
         }
         public void CreateMergeRequest(string title, string description, string user, string sourceBranch, string targetBranch) {
             var mergeRequest = this.gitLabWrapper.CreateMergeRequest(Repository.Origin, Repository.Upstream, title, description, user, sourceBranch, targetBranch);

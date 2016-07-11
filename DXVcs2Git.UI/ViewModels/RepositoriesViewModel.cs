@@ -31,7 +31,7 @@ namespace DXVcs2Git.UI.ViewModels {
             set { SetProperty(ref this.selectedBranch, value, () => SelectedBranch, SelectedBranchChanged); }
         }
         void SelectedBranchChanged() {
-            Messenger.Default.Send(new Message(MessageType.SelectedBranchChanged));
+            Messenger.Default.Send(new Message(MessageType.RefreshSelectedBranch));
         }
         public bool IsInitialized { get; private set; }
 

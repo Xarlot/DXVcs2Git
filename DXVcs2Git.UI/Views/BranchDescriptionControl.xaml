@@ -7,10 +7,11 @@
              xmlns:dxlc="http://schemas.devexpress.com/winfx/2008/xaml/layoutcontrol"
              xmlns:viewModels="clr-namespace:DXVcs2Git.UI.ViewModels"
              xmlns:dxe="http://schemas.devexpress.com/winfx/2008/xaml/editors"
+             xmlns:extensions="clr-namespace:DXVcs2Git.UI.Extensions"
              mc:Ignorable="d" 
              d:DesignHeight="300" d:DesignWidth="300">
     <UserControl.DataContext>
-        <viewModels:EditBranchDescriptionViewModel/>
+        <extensions:IoC TargetType="{x:Type viewModels:EditBranchDescriptionViewModel}"/>
     </UserControl.DataContext>
     <UserControl.Resources>
         <ResourceDictionary>

@@ -10,11 +10,17 @@
              xmlns:dx="http://schemas.devexpress.com/winfx/2008/xaml/core"
              xmlns:dxr="http://schemas.devexpress.com/winfx/2008/xaml/ribbon"
              xmlns:dxb="http://schemas.devexpress.com/winfx/2008/xaml/bars"
+             xmlns:dxlc="http://schemas.devexpress.com/winfx/2008/xaml/layoutcontrol"
              mc:Ignorable="d" 
              d:DesignHeight="300" d:DesignWidth="300">
     <UserControl.DataContext>
         <extensions:IoC TargetType="{x:Type viewModels:EditBranchViewModel}"/>
     </UserControl.DataContext>
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <dx:BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"></dx:BooleanToVisibilityConverter>
+        </ResourceDictionary>
+    </UserControl.Resources>
     <dxmvvm:Interaction.Behaviors>
         <dx:DialogService x:Name="editMergeRequestService">
             <dx:DialogService.DialogStyle>
@@ -75,5 +81,19 @@
                 </dxr:RibbonPage>
             </dxr:RibbonDefaultPageCategory>
         </dxr:RibbonControl>
+        <dxlc:DockLayoutControl Grid.Row="1" Margin="10" Visibility="{Binding Path=HasMergeRequest, Converter={StaticResource BooleanToVisibilityConverter}}">
+            <dxlc:LayoutGroup dxlc:DockLayoutControl.Dock="Top">
+                <dxlc:LayoutItem>
+                    <local:BranchDescriptionControl>
+                    </local:BranchDescriptionControl>
+                </dxlc:LayoutItem>
+            </dxlc:LayoutGroup>
+            <dxlc:LayoutGroup Orientation="Horizontal" dxlc:DockLayoutControl.Dock="Client" Margin="0">
+                <local:BranchChangesControl 
+                    dxmvvm:ViewModelExtensions.Parameter="{Binding Path=DataContext.SelectedBranch, ElementName=LayoutRoot}"
+                    dxmvvm:ViewModelExtensions.ParentViewModel="{Binding DataContext, ElementName=LayoutRoot}">
+                </local:BranchChangesControl>
+            </dxlc:LayoutGroup>
+        </dxlc:DockLayoutControl>
     </Grid>
 </UserControl>

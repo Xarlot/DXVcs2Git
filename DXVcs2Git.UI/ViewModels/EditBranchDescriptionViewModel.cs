@@ -1,9 +1,12 @@
 ﻿using DevExpress.Mvvm;
+using Microsoft.Practices.ServiceLocation;
 
 namespace DXVcs2Git.UI.ViewModels {
-    public class EditBranchDescriptionViewModel : ViewModelBase {
-        new BranchViewModel Parameter { get { return (BranchViewModel)base.Parameter; } }
+    public class EditBranchDescriptionViewModel : BindableBase {
+        RepositoriesViewModel RepositoriesViewModel => ServiceLocator.Current.GetInstance<RepositoriesViewModel>();
+        BranchViewModel BranchViewModel => RepositoriesViewModel.SelectedBranch;
         public EditBranchDescriptionViewModel() {
+            Messenger.Default.Register<Message>(this, OnMessageReceived);
         }
 
         public string RepositoryName {
@@ -26,12 +29,9 @@ namespace DXVcs2Git.UI.ViewModels {
             get { return GetProperty(() => MergeRequestAssignee); }
             private set { SetProperty(() => MergeRequestAssignee, value); }
         }
-        protected override void OnParameterChanged(object parameter) {
-            base.OnParameterChanged(parameter);
-            Refresh();
-        }
         public void Refresh() {
-            if (Parameter == null) {
+            var parameter = BranchViewModel;
+            if (parameter == null) {
                 RepositoryName = string.Empty;
                 BranchName = string.Empty;
                 MergeRequestAuthor = string.Empty;
@@ -39,12 +39,16 @@ namespace DXVcs2Git.UI.ViewModels {
                 MergeRequestAssignee = string.Empty;
             }
             else {
-                RepositoryName = Parameter.Repository.Name;
-                BranchName = Parameter.Name;
-                MergeRequestAuthor = Parameter.MergeRequest?.Author;
-                MergeRequestTitle = Parameter.MergeRequest?.Title;
-                MergeRequestAssignee = Parameter.MergeRequest?.Assignee;
+                RepositoryName = parameter.Repository.Name;
+                BranchName = parameter.Name;
+                MergeRequestAuthor = parameter.MergeRequest?.Author;
+                MergeRequestTitle = parameter.MergeRequest?.Title;
+                MergeRequestAssignee = parameter.MergeRequest?.Assignee;
             }
+        }
+        void OnMessageReceived(Message msg) {
+            if (msg.MessageType == MessageType.RefreshSelectedBranch)
+                Refresh();
         }
     }
 }
