@@ -19,7 +19,6 @@ namespace DXVcs2Git.UI.ViewModels {
             get { return GetProperty(() => Branch); }
             private set { SetProperty(() => Branch, value); }
         }
-
         public EditBranchViewModel() {
             Messenger.Default.Register<Message>(this, OnMessageReceived);
 
