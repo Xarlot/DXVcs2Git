@@ -49,20 +49,26 @@ namespace DXVcs2Git.UI.ViewModels {
 
         public void Update() {
             IsInitialized = false;
+            SendBeforeUpdateMessage();
             RepoConfigs = new RepoConfigsReader();
             Repositories = Config.Repositories.With(x => x.Where(IsValidConfig).Select(repo => new RepositoryViewModel(repo.Name, repo, this))).With(x => x.ToList());
             Refresh();
             IsInitialized = true;
             SendUpdateMessage();
         }
+        void SendBeforeUpdateMessage() {
+            Messenger.Default.Send(new Message(MessageType.BeforeUpdate));
+        }
+        void SendUpdateMessage() {
+            if (!fake)
+                Messenger.Default.Send(new Message(MessageType.Update));
+        }
 
-        void SendUpdateMessage() { if (!fake) Messenger.Default.Send(new Message(MessageType.Update)); }
-
-        public Task BeginUpdate() {            
+        public Task BeginUpdate() {
             Log.Message("Repositories update started");
             IsInitialized = false;
             CommandManager.InvalidateRequerySuggested();
-            ConfigSerializer.SaveConfig(Config);            
+            ConfigSerializer.SaveConfig(Config);
             return Task.Run(() => {
                 RepositoriesViewModel rvm = new RepositoriesViewModel();
                 rvm.Update();
@@ -74,7 +80,7 @@ namespace DXVcs2Git.UI.ViewModels {
                 IsInitialized = true;
                 Log.Message("Repositories update completed");
                 SendUpdateMessage();
-                CommandManager.InvalidateRequerySuggested();                
+                CommandManager.InvalidateRequerySuggested();
             }, TaskScheduler.FromCurrentSynchronizationContext());
         }
         bool IsValidConfig(TrackRepository repo) {
@@ -97,7 +103,7 @@ namespace DXVcs2Git.UI.ViewModels {
             if (!fake) {
                 CommandManager.InvalidateRequerySuggested();
                 Messenger.Default.Send(new Message(MessageType.Refresh));
-            }            
+            }
         }
         public void RefreshFarm() {
             if (Repositories == null)

@@ -16,7 +16,7 @@ namespace DXVcs2Git.UI {
         }
         static void BuildRootConfiguration() {
             RootContainer.RegisterInstance(RootViewModel);
-            RootContainer.RegisterType<RepositoriesViewModel>();
+            RootContainer.RegisterType<RepositoriesViewModel>(new ContainerControlledLifetimeManager());
         }
         static void BuildWorkHorseConfiguration() {
             WorkHorseContainer = RootContainer.CreateChildContainer();

@@ -1,6 +1,8 @@
 ﻿namespace DXVcs2Git.UI.ViewModels {
     public enum MessageType {
+        BeforeUpdate,
         Update,
+        BeforeRefresh,
         Refresh,
     }
 

@@ -17,6 +17,7 @@ namespace DXVcs2Git.UI.ViewModels {
         public ICommand ShowLogCommand { get; private set; }
         public ICommand DownloadNewVersionCommand { get; private set; }
         public ICommand InitializeCommand { get; private set; }
+        public ICommand UpdateCommand { get; private set; }
         public INotificationService NotificationService => GetService<INotificationService>("notificationService");
         public IDialogService SettingsDialogService => GetService<IDialogService>("settingsDialogService");
         public IDialogService DownloaderDialogService => GetService<IDialogService>("downloaderDialogService");
@@ -34,12 +35,19 @@ namespace DXVcs2Git.UI.ViewModels {
             FarmIntegrator.Start(Dispatcher.CurrentDispatcher, FarmRefreshed);
             AtomFeed.FeedWorker.Initialize();
 
+            UpdateCommand = DelegateCommandFactory.Create(PerformUpdate, CanPerformUpdate);
             SettingsCommand = DelegateCommandFactory.Create(ShowSettings, CanShowSettings);
             ShowLogCommand = DelegateCommandFactory.Create(PerformShowLog);
             DownloadNewVersionCommand = DelegateCommandFactory.Create(DownloadNewVersion, CanDownloadNewVersion);
             InitializeCommand = DelegateCommandFactory.Create( PerformInitialize, CanPerformInitialize);
             LogViewModel = new LoggingViewModel();
             Version = $"Git tools {VersionInfo.Version}";
+        }
+        bool CanPerformUpdate() {
+            return true;
+        }
+        void PerformUpdate() {
+            Update();
         }
         bool CanPerformInitialize() {
             return true;
