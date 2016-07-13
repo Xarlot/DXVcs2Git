@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using DevExpress.Mvvm;
+using DevExpress.Mvvm.Native;
+using DevExpress.XtraPrinting.Native;
 using Microsoft.Practices.ServiceLocation;
 
 namespace DXVcs2Git.UI.ViewModels {
@@ -36,11 +38,21 @@ namespace DXVcs2Git.UI.ViewModels {
                 BeforeUpdate();
             if (message.MessageType == MessageType.Update)
                 Update();
+            if (message.MessageType == MessageType.RefreshSelectedBranch)
+                RefreshSelectedBranch();
+        }
+        void RefreshSelectedBranch() {
+            SelectedItem?.Refresh();
         }
         void Update() {
             PerformUpdate();
             IsInitialized = true;
             UpdateSelectedItem();
+            RefreshBranches();
+        }
+        void RefreshBranches() {
+            foreach (var item in Items)
+                item.Refresh();
         }
         void BeforeUpdate() {
             IsInitialized = false;
@@ -99,7 +111,8 @@ namespace DXVcs2Git.UI.ViewModels {
         Branch,
     }
 
-    public abstract class EditRepositoryItem {
+    public abstract class EditRepositoryItem : BindableBase {
+        public abstract bool HasMergeRequest { get; }
         public EditRepositoryItemType ItemType { get; }
 
         protected bool Equals(EditRepositoryItem other) {
@@ -122,34 +135,46 @@ namespace DXVcs2Git.UI.ViewModels {
             ItemType = itemType;
             this.item = item;
         }
+        protected internal virtual void Refresh() {
+            RaisePropertyChanged("HasMergeRequest");
+        }
     }
-    public abstract class EditRepositoryItem<T, U> : EditRepositoryItem {
+    public abstract class EditRepositoryItem<T, U> : EditRepositoryItem where U : EditRepositoryItem {
         public abstract string Name { get; }
         public T Item { get; }
         public IEnumerable<U> Children { get; }
 
-        protected EditRepositoryItem(EditRepositoryItemType itemType, T item, IEnumerable<U> children) : base(itemType, item){
+        protected EditRepositoryItem(EditRepositoryItemType itemType, T item, IEnumerable<U> children) : base(itemType, item) {
             Item = item;
             Children = children;
+        }
+        protected internal override void Refresh() {
+            base.Refresh();
+            if (Children == null)
+                return;
+            foreach (U child in Children)
+                child.Refresh();
         }
     }
 
     public class RootRepositoryItem : EditRepositoryItem<RepositoriesViewModel, RepositoryItem> {
         public override string Name => "Root";
+        public override bool HasMergeRequest => false;
         public RootRepositoryItem(RepositoriesViewModel item, IEnumerable<RepositoryItem> children) : base(EditRepositoryItemType.Root, item, children) {
         }
     }
 
     public class RepositoryItem : EditRepositoryItem<RepositoryViewModel, BranchRepositoryItem> {
         public override string Name => Item.Name;
+        public override bool HasMergeRequest => false;
         public RepositoryItem(RepositoryViewModel item, IEnumerable<BranchRepositoryItem> children) : base(EditRepositoryItemType.Repository, item, children) {
         }
     }
 
-    public class BranchRepositoryItem : EditRepositoryItem<BranchViewModel, object> {
+    public class BranchRepositoryItem : EditRepositoryItem<BranchViewModel, BranchRepositoryItem> {
         public override string Name => Item.Name;
-        public BranchRepositoryItem(BranchViewModel item) : base(EditRepositoryItemType.Branch, item, Enumerable.Empty<object>()) {
-            
+        public override bool HasMergeRequest => Item.MergeRequest != null;
+        public BranchRepositoryItem(BranchViewModel item) : base(EditRepositoryItemType.Branch, item, Enumerable.Empty<BranchRepositoryItem>()) {
         }
     }
 }

@@ -333,6 +333,7 @@
       <DependentUpon>RootWindow.xaml</DependentUpon>
     </Compile>
     <Compile Include="Selectors\MergeRequestTestsControlSelector.cs" />
+    <Compile Include="Selectors\RepositoriesControlImageSelector.cs" />
     <Compile Include="Services\FolderBrowserCustomDialogService.cs" />
     <Compile Include="UIStartupOptions.cs" />
     <Compile Include="ViewModels\ConfigsReader.cs" />
@@ -582,7 +583,15 @@
   <ItemGroup>
     <Resource Include="Images\admin.png" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <Resource Include="Images\black.png" />
+    <Resource Include="Images\green.png" />
+    <Resource Include="Images\grey.png" />
+    <Resource Include="Images\info.png" />
+    <Resource Include="Images\orange.png" />
+    <Resource Include="Images\red.png" />
+    <Resource Include="Images\yellow.png" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>
