@@ -49,21 +49,15 @@ namespace DXVcs2Git.UI.ViewModels {
         }
         void PerformCreateMergeRequest() {
             var branchInfo = Branch.CalcBranchInfo();
-            var createMergeRequestViewModel = new CreateMergeRequestViewModel() {
-                Description = branchInfo.Commit.Message,
-            };
-            var dialogResult = EditMergeRequestService.ShowDialog(MessageButton.OKCancel, "Merge request", createMergeRequestViewModel);
-            if (dialogResult == MessageResult.OK) {
-                string message = createMergeRequestViewModel.Description;
-                string title = CalcMergeRequestTitle(message);
-                string description = CalcMergeRequestDescription(message);
-                string targetBranch = CalcTargetBranch();
-                if (targetBranch == null) {
-                    MessageBoxService.Show("Can`t create merge request. Target branch not found.", "Create merge request error", MessageBoxButton.OK, MessageBoxImage.Error);
-                    return;
-                }
-                Branch.CreateMergeRequest(title, description, null, Branch.Name, targetBranch);
+            string message = branchInfo.Commit.Message;
+            string title = CalcMergeRequestTitle(message);
+            string description = CalcMergeRequestDescription(message);
+            string targetBranch = CalcTargetBranch();
+            if (targetBranch == null) {
+                MessageBoxService.Show("Can`t create merge request. Target branch not found.", "Create merge request error", MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
             }
+            Branch.CreateMergeRequest(title, description, null, Branch.Name, targetBranch);
         }
         string CalcMergeRequestDescription(string message) {
             var changes = message.Split(new[] { "\r\n" }, StringSplitOptions.RemoveEmptyEntries);
