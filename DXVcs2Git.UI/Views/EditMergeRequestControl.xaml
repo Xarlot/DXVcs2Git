@@ -7,43 +7,35 @@
              xmlns:dxe="http://schemas.devexpress.com/winfx/2008/xaml/editors"
              xmlns:viewModels="clr-namespace:DXVcs2Git.UI.ViewModels"
              xmlns:extensions="clr-namespace:DXVcs2Git.UI.Extensions"
+             xmlns:dxmvvm="http://schemas.devexpress.com/winfx/2008/xaml/mvvm"
+             xmlns:dx="http://schemas.devexpress.com/winfx/2008/xaml/core"
              mc:Ignorable="d" 
              d:DesignHeight="300" d:DesignWidth="300"
              KeyboardNavigation.TabNavigation="Cycle">
     <UserControl.DataContext>
         <extensions:IoC TargetType="{x:Type viewModels:EditMergeRequestViewModel}"/>
     </UserControl.DataContext>
+    <dxmvvm:Interaction.Behaviors>
+        <dx:DXMessageBoxService/>
+    </dxmvvm:Interaction.Behaviors>
     <Grid>
-        <dxlc:LayoutControl>
-            <dxlc:LayoutGroup Orientation="Vertical">
-                <dxlc:LayoutItem Label="Description: " Height="100">
+        <dxlc:LayoutControl Margin="0" Padding="0">
+            <dxlc:LayoutGroup Orientation="Vertical" View="GroupBox" Header="Description" VerticalAlignment="Stretch">
+                <dxlc:LayoutItem Height="100">
                     <dxe:TextEdit 
                         VerticalContentAlignment="Top"
                         VerticalScrollBarVisibility="Auto"
-                        ValidateOnTextInput="False" 
+                        ValidateOnTextInput="True" 
                         EditValue="{Binding Path=Comment, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}"
                         AcceptsReturn="True">
                     </dxe:TextEdit>
                 </dxlc:LayoutItem>
-                <dxlc:LayoutGroup>
-                    <dxlc:LayoutItem Label="Assign to: " Visibility="Hidden">
-                        <dxe:ComboBoxEdit 
-                            ShowCustomItems="True"
-                            AutoComplete="True" 
-                            IsTextEditable="False"
-                            DisplayMember="Name"
-                            AllowItemHighlighting="False">
-                        </dxe:ComboBoxEdit>
-                    </dxlc:LayoutItem>
-                    <dxlc:LayoutItem>
-                        <dxe:CheckEdit Content="Assigned to service" EditValue="{Binding Path=AssignedToService, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
-                    </dxlc:LayoutItem>
-                </dxlc:LayoutGroup>
-                <dxlc:LayoutGroup Orientation="Horizontal">
-                    <dxlc:LayoutItem>
-                        <Button Content="Apply" Command="{Binding Path=ApplyCommand}"/>
-                    </dxlc:LayoutItem>
-                </dxlc:LayoutGroup>
+                <dxlc:LayoutItem>
+                    <dxe:CheckEdit Content="Assigned to service" EditValue="{Binding Path=AssignedToService, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                </dxlc:LayoutItem>
+                <dxlc:LayoutItem>
+                    <Button Content="Apply" Command="{Binding Path=ApplyCommand}"/>
+                </dxlc:LayoutItem>
             </dxlc:LayoutGroup>
         </dxlc:LayoutControl>
     </Grid>

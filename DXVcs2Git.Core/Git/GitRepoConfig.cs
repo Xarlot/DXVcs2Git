@@ -6,5 +6,6 @@
         public string DefaultServiceName { get; set; }
         public string TargetBranch { get; set; }
         public string Server { get; set; }
+        public bool SupportsTesting { get; set; }
     }
 }

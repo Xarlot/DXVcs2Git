@@ -44,7 +44,7 @@ namespace DXVcs2Git.UI.ViewModels {
             ApplyCommand = DelegateCommandFactory.Create(PerformApply, CanPerformApply);
         }
         bool CanPerformApply() {
-            return Branch != null && IsModified;
+            return Branch?.MergeRequest != null && IsModified;
         }
         void PerformApply() {
             var mergeRequestAction = new MergeRequestSyncAction(Branch.Repository.RepoConfig.FarmTaskName, Branch.Repository.RepoConfig.FarmSyncTaskName);
@@ -79,8 +79,8 @@ namespace DXVcs2Git.UI.ViewModels {
             }
         }
         void RefreshSelectedBranch() {
-            var branch = RepositoriesViewModel?.SelectedBranch;
-            var mergeRequest = branch?.MergeRequest;
+            Branch = RepositoriesViewModel?.SelectedBranch;
+            var mergeRequest = Branch?.MergeRequest;
             if (mergeRequest == null) {
                 comment = null;
                 assignedToService = false;
@@ -88,10 +88,10 @@ namespace DXVcs2Git.UI.ViewModels {
             }
             else {
                 comment = mergeRequest.Title;
-                assignedToService = mergeRequest.Assignee == branch.Repository.DefaultServiceName;
+                assignedToService = mergeRequest.Assignee == Branch.Repository.DefaultServiceName;
                 IsModified = false;
-                RaisePropertyChanged(null);
             }
+            RaisePropertyChanged(null);
         }
     }
 }

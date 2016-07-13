@@ -12,6 +12,7 @@
     xmlns:dxr="http://schemas.devexpress.com/winfx/2008/xaml/ribbon"
     xmlns:dxb="http://schemas.devexpress.com/winfx/2008/xaml/bars"
     xmlns:dxlc="http://schemas.devexpress.com/winfx/2008/xaml/layoutcontrol"
+    xmlns:selectors="clr-namespace:DXVcs2Git.UI.Selectors"
     mc:Ignorable="d" 
     d:DesignHeight="300" d:DesignWidth="300">
     <UserControl.DataContext>
@@ -20,6 +21,19 @@
     <UserControl.Resources>
         <ResourceDictionary>
             <dx:BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"></dx:BooleanToVisibilityConverter>
+            <selectors:MergeRequestTestsControlSelector x:Key="testsSelector"/>
+            <DataTemplate x:Key="mergeRequestTestsControl">
+                <local:MergeRequestTestsControl/>
+            </DataTemplate>
+            <DataTemplate x:Key="emptyMergeRequestTestsControl">
+                <dxlc:LayoutControl Margin="0" Padding="0">
+                    <dxlc:LayoutGroup Header="Testing" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" View="GroupBox">
+                        <dxlc:LayoutItem HorizontalAlignment="Center" VerticalAlignment="Center">
+                            <TextBlock Text="This repo doesn`t support test running." />
+                        </dxlc:LayoutItem>
+                    </dxlc:LayoutGroup>
+                </dxlc:LayoutControl>
+            </DataTemplate>
         </ResourceDictionary>
     </UserControl.Resources>
     <dxmvvm:Interaction.Behaviors>
@@ -81,16 +95,16 @@
                     <local:BranchDescriptionControl/>
                 </dxlc:LayoutItem>
             </dxlc:LayoutGroup>
-            <dxlc:LayoutGroup Orientation="Horizontal" dxlc:DockLayoutControl.Dock="Client" Margin="0">
+            <dxlc:LayoutGroup Orientation="Horizontal" dxlc:DockLayoutControl.Dock="Client" Margin="0" Padding="0">
                 <dx:DXTabControl>
                     <dx:DXTabItem Header="Merge request settings">
-                        <dxlc:LayoutControl>
+                        <dxlc:LayoutControl Margin="0" Padding="0">
                             <dxlc:LayoutGroup Orientation="Horizontal">
-                                <dxlc:LayoutItem>
+                                <dxlc:LayoutItem VerticalAlignment="Stretch">
                                     <local:EditMergeRequestControl/>
                                 </dxlc:LayoutItem>
-                                <dxlc:LayoutItem>
-                                    <local:MergeRequestTestsControl/>
+                                <dxlc:LayoutItem VerticalAlignment="Stretch">
+                                    <ContentControl Content="{Binding}" ContentTemplateSelector="{StaticResource testsSelector}"/>
                                 </dxlc:LayoutItem>
                             </dxlc:LayoutGroup>
                         </dxlc:LayoutControl>

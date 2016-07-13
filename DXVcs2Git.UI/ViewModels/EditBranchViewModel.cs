@@ -28,6 +28,10 @@ namespace DXVcs2Git.UI.ViewModels {
             get { return GetProperty(() => HasMergeRequest); }
             private set { SetProperty(() => HasMergeRequest, value); }
         }
+        public bool SupportsTesting {
+            get { return GetProperty(() => SupportsTesting); }
+            private set { SetProperty(() => SupportsTesting, value); }
+        }
         public EditBranchViewModel() {
             Messenger.Default.Register<Message>(this, OnMessageReceived);
 
@@ -83,6 +87,7 @@ namespace DXVcs2Git.UI.ViewModels {
                 Branch = RepositoriesViewModel.SelectedBranch;
                 MergeRequest = Branch?.MergeRequest;
                 HasMergeRequest = MergeRequest != null;
+                SupportsTesting = Branch?.Repository.RepoConfig.SupportsTesting ?? false;
             }
         }
     }

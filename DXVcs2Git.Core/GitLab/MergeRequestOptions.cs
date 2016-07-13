@@ -55,11 +55,19 @@ namespace DXVcs2Git.Core.GitLab {
                 }
             }
         }
-        public MergeRequestActionType ActionType { get; private set; }
-        public MergeRequestActionBase Action { get; private set; }
+        MergeRequestActionBase action;
+        public MergeRequestActionType ActionType { get; set; }
+        public MergeRequestActionBase Action {
+            get { return action; }
+            set {
+                if (action == value)
+                    return;
+                action = value;
+                ActionType = value?.ActionType ?? MergeRequestActionType.sync;
+            }
+        }
 
-        public MergeRequestOptions(MergeRequestActionBase action) {
-            ActionType = action.ActionType;
+        public MergeRequestOptions(MergeRequestActionBase action = null) {
             Action = action;
         }
     }

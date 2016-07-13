@@ -22,12 +22,11 @@ using NGitLab;
 using NGitLab.Models;
 using ProjectHookType = DXVcs2Git.Core.GitLab.ProjectHookType;
 using User = DXVcs2Git.Core.User;
-using Ionic.Zip;
 
 namespace DXVcs2Git.Console {
     internal class Program {
         static IPAddress ipAddress;
-        static IPAddress IP { get { return ipAddress ?? (ipAddress = DetectMyIP()); } }
+        static IPAddress IP => ipAddress ?? (ipAddress = DetectMyIP());
         static IPAddress DetectMyIP() {
             return Dns.GetHostEntry(Dns.GetHostName()).AddressList.FirstOrDefault(ip => ip.AddressFamily == AddressFamily.InterNetwork);
         }
