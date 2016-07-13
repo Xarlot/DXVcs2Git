@@ -10,7 +10,5 @@ namespace DXVcs2Git.UI.Views {
         public BranchDescriptionControl() {
             InitializeComponent();
         }
-        void OnMessage(Message msg) {
-        }
     }
 }

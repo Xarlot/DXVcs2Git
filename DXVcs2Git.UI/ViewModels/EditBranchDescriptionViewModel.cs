@@ -1,4 +1,5 @@
 ﻿using DevExpress.Mvvm;
+using DXVcs2Git.UI.Farm;
 using Microsoft.Practices.ServiceLocation;
 
 namespace DXVcs2Git.UI.ViewModels {
@@ -7,6 +8,7 @@ namespace DXVcs2Git.UI.ViewModels {
         BranchViewModel BranchViewModel => RepositoriesViewModel.SelectedBranch;
         public EditBranchDescriptionViewModel() {
             Messenger.Default.Register<Message>(this, OnMessageReceived);
+            Refresh();
         }
 
         public string RepositoryName {
@@ -29,9 +31,15 @@ namespace DXVcs2Git.UI.ViewModels {
             get { return GetProperty(() => MergeRequestAssignee); }
             private set { SetProperty(() => MergeRequestAssignee, value); }
         }
-        public void Refresh() {
-            var parameter = BranchViewModel;
-            if (parameter == null) {
+        public FarmStatus FarmStatus {
+            get { return GetProperty(() => FarmStatus); }
+            private set { SetProperty(() => FarmStatus, value); }
+        }
+
+        void OnFarmStatusChanged() {
+        }
+        void Refresh() {
+            if (BranchViewModel == null) {
                 RepositoryName = string.Empty;
                 BranchName = string.Empty;
                 MergeRequestAuthor = string.Empty;
@@ -39,16 +47,26 @@ namespace DXVcs2Git.UI.ViewModels {
                 MergeRequestAssignee = string.Empty;
             }
             else {
-                RepositoryName = parameter.Repository.Name;
-                BranchName = parameter.Name;
-                MergeRequestAuthor = parameter.MergeRequest?.Author;
-                MergeRequestTitle = parameter.MergeRequest?.Title;
-                MergeRequestAssignee = parameter.MergeRequest?.Assignee;
+                RepositoryName = BranchViewModel.Repository.Name;
+                BranchName = BranchViewModel.Name;
+                MergeRequestAuthor = BranchViewModel.MergeRequest?.Author;
+                MergeRequestTitle = BranchViewModel.MergeRequest?.Title;
+                MergeRequestAssignee = BranchViewModel.MergeRequest?.Assignee;
             }
+            RefreshFarmStatus();
         }
         void OnMessageReceived(Message msg) {
             if (msg.MessageType == MessageType.RefreshSelectedBranch)
                 Refresh();
+            if (msg.MessageType == MessageType.BeforeUpdate)
+                Refresh();
+            if (msg.MessageType == MessageType.Update)
+                Refresh();
+            if (msg.MessageType == MessageType.RefreshFarm)
+                RefreshFarmStatus();
+        }
+        void RefreshFarmStatus() {
+            FarmStatus = BranchViewModel?.FarmStatus ?? new FarmStatus();
         }
     }
 }

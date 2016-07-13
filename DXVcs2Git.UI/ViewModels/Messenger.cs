@@ -2,9 +2,8 @@
     public enum MessageType {
         BeforeUpdate,
         Update,
-        BeforeRefresh,
-        Refresh,
         RefreshSelectedBranch,
+        RefreshFarm
     }
 
     public class Message {

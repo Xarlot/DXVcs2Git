@@ -6,14 +6,15 @@ using System.Windows.Input;
 using DevExpress.Mvvm;
 using DevExpress.Mvvm.Native;
 using DXVcs2Git.Core.Git;
+using DXVcs2Git.UI.Farm;
 using Microsoft.Practices.ServiceLocation;
 
 namespace DXVcs2Git.UI.ViewModels {
     public class EditBranchViewModel : ViewModelBase {
         public ICommand CreateMergeRequestCommand { get; }
         public ICommand CloseMergeRequestCommand { get; }
+        public ICommand ForceBuildCommand { get; }
         RepositoriesViewModel RepositoriesViewModel => ServiceLocator.Current.GetInstance<RepositoriesViewModel>();
-        IDialogService EditMergeRequestService => GetService<IDialogService>("editMergeRequestService");
         IMessageBoxService MessageBoxService => GetService<IMessageBoxService>();
 
         public BranchViewModel Branch {
@@ -32,14 +33,25 @@ namespace DXVcs2Git.UI.ViewModels {
             get { return GetProperty(() => SupportsTesting); }
             private set { SetProperty(() => SupportsTesting, value); }
         }
+        public FarmStatus FarmStatus {
+            get { return GetProperty(() => FarmStatus); }
+            private set { SetProperty(() => FarmStatus, value); }
+        }
         public EditBranchViewModel() {
             Messenger.Default.Register<Message>(this, OnMessageReceived);
 
             CreateMergeRequestCommand = DelegateCommandFactory.Create(PerformCreateMergeRequest, CanPerformCreateMergeRequest);
             CloseMergeRequestCommand = DelegateCommandFactory.Create(PerformCloseMergeRequest, CanPerformCloseMergeRequest);
+            ForceBuildCommand = DelegateCommandFactory.Create(PerformForceBuild, CanPerformForceBuild);
+        }
+        bool CanPerformForceBuild() {
+            return Branch?.MergeRequest != null && (FarmStatus.ActivityStatus == ActivityStatus.Sleeping || FarmStatus.ActivityStatus == ActivityStatus.Pending);
+        }
+        void PerformForceBuild() {
+            FarmIntegrator.ForceBuild(Branch.Repository.RepoConfig.FarmSyncTaskName);
         }
         bool CanPerformCloseMergeRequest() {
-            return Branch != null && Branch.MergeRequest != null;
+            return Branch?.MergeRequest != null;
         }
         void PerformCloseMergeRequest() {
             Branch.CloseMergeRequest();
@@ -83,6 +95,10 @@ namespace DXVcs2Git.UI.ViewModels {
                 HasMergeRequest = MergeRequest != null;
                 SupportsTesting = Branch?.Repository.RepoConfig.SupportsTesting ?? false;
             }
+            RefreshFarm();
+        }
+        void RefreshFarm() {
+            FarmStatus = Branch?.FarmStatus ?? new FarmStatus();
         }
     }
 }

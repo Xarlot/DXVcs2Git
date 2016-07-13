@@ -77,7 +77,8 @@ namespace DXVcs2Git.UI.ViewModels {
             LogViewModel.Text = Log.GetLog();
         }
         void FarmRefreshed() {
-            Repositories.RefreshFarm();
+            Repositories.Repositories.ForEach(x => x.RefreshFarm());
+            Messenger.Default.Send(new Message(MessageType.RefreshFarm));
         }
         public void Initialize() {
             Repositories = ServiceLocator.Current.GetInstance<RepositoriesViewModel>();
@@ -88,7 +89,6 @@ namespace DXVcs2Git.UI.ViewModels {
             Repositories.Update();
         }
         public void Refresh() {
-            Repositories.Refresh();
         }
         void ShowSettings() {
             var viewModel = new EditConfigViewModel(Config);

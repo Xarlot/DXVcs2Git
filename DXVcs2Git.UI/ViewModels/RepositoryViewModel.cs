@@ -19,10 +19,6 @@ namespace DXVcs2Git.UI.ViewModels {
             private set { SetProperty(() => Branches, value); }
         }
         public string Name { get; }
-        public FarmStatus FarmStatus {
-            get { return GetProperty(() => FarmStatus); }
-            private set { SetProperty(() => FarmStatus, value); }
-        }
         public Project Origin { get; }
         public Project Upstream { get; }
         RepositoriesViewModel Repositories { get; }
@@ -43,8 +39,6 @@ namespace DXVcs2Git.UI.ViewModels {
             Origin = GitLabWrapper.FindProject(GitReader.GetOriginRepoPath());
             Upstream = GitLabWrapper.FindProject(GitReader.GetUpstreamRepoPath());
             Name = name;
-            FarmStatus = new FarmStatus();
-
             Update();
         }
         public void Update() {
@@ -59,12 +53,6 @@ namespace DXVcs2Git.UI.ViewModels {
             Branches = branches.Where(x => !x.Protected && localBranches.Any(local => local.FriendlyName == x.Name))
                 .Select(x => new BranchViewModel(GitLabWrapper, this, x.Name)).ToList();
         }
-        public void Refresh() {
-            if (Branches == null)
-                return;
-            RefreshFarm();
-            Branches.ForEach(x => x.Refresh());
-        }
         public void ForceBuild() {
             FarmIntegrator.ForceBuild(RepoConfig.FarmSyncTaskName);
         }
@@ -72,11 +60,6 @@ namespace DXVcs2Git.UI.ViewModels {
             return GitLabWrapper.CreateMergeRequest(Origin, Upstream, title, description, user, sourceBranch, targetBranch);
         }
         public void RefreshFarm() {
-            if (Branches == null) {
-                FarmStatus = null;
-                return;
-            }
-            FarmStatus = FarmIntegrator.GetTaskStatus(RepoConfig?.FarmTaskName);
             Branches.ForEach(x => x.RefreshFarm());
         }
     }

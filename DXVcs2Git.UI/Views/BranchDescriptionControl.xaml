@@ -33,6 +33,9 @@
                     <dxlc:LayoutItem Label="Merge request: " LabelVerticalAlignment="Top">
                         <dxe:TextEdit ShowBorder="False" TextWrapping="WrapWithOverflow" AcceptsReturn="True" IsReadOnly="True" Text="{Binding Path=MergeRequestTitle, Mode=OneWay, Converter={StaticResource MergeRequestTitleConverter}}"/>
                     </dxlc:LayoutItem>
+                    <dxlc:LayoutItem Label="Farm status: ">
+                        <TextBlock Text="{Binding Path=FarmStatus.ActivityStatus}" FontWeight="Bold"/>
+                    </dxlc:LayoutItem>
                 </dxlc:LayoutGroup>
                 <dxlc:LayoutGroup Orientation="Vertical">
                     <dxlc:LayoutItem Label="Merge request author: ">

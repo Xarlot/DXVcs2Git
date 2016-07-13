@@ -348,7 +348,6 @@
     <Compile Include="ViewModels\EditMergeRequestData.cs" />
     <Compile Include="ViewModels\EditRepositoriesViewModel.cs" />
     <Compile Include="ViewModels\EditMergeRequestViewModel.cs" />
-    <Compile Include="ViewModels\EditSelectedRepositoryViewModel.cs" />
     <Compile Include="ViewModels\Messenger.cs" />
     <Compile Include="ViewModels\RepositoryViewModel.cs" />
     <Compile Include="Behaviors\AvalonEditTextToDocumentBehavior.cs" />

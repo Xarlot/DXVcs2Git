@@ -22,11 +22,6 @@ namespace DXVcs2Git.UI.ViewModels {
         public RootViewModel RootViewModel => this.GetParentViewModel<RootViewModel>();
         public Config Config => RootViewModel?.Config ?? ConfigSerializer.GetConfig();
         public RepoConfigsReader RepoConfigs { get; private set; }
-        public IEnumerable<BranchViewModel> Branches {
-            get { return GetProperty(() => Branches); }
-            set { SetProperty(() => Branches, value); }
-        }
-        public IEnumerable<Branch> ProtectedBranches { get; set; }
         public bool HasEditableMergeRequest {
             get { return GetProperty(() => HasEditableMergeRequest); }
             private set { SetProperty(() => HasEditableMergeRequest, value); }
@@ -47,10 +42,7 @@ namespace DXVcs2Git.UI.ViewModels {
         }
         public RepositoryViewModel SelectedRepository {
             get { return this.selectedRepository; }
-            set { SetProperty(ref this.selectedRepository, value, () => SelectedRepository, SelectedRepositoryChanged); }
-        }
-        void SelectedRepositoryChanged() {
-            Refresh();
+            set { SetProperty(ref this.selectedRepository, value, () => SelectedRepository); }
         }
 
         public RepositoriesViewModel() {
@@ -61,7 +53,6 @@ namespace DXVcs2Git.UI.ViewModels {
             SendBeforeUpdateMessage();
             RepoConfigs = new RepoConfigsReader();
             Repositories = Config.Repositories.With(x => x.Where(IsValidConfig).Select(repo => new RepositoryViewModel(repo.Name, repo, this))).With(x => x.ToList());
-            Refresh();
             IsInitialized = true;
             SendUpdateMessage();
         }
@@ -104,20 +95,6 @@ namespace DXVcs2Git.UI.ViewModels {
             if (string.IsNullOrEmpty(repo.Token))
                 return false;
             return DirectoryHelper.IsGitDir(repo.LocalPath);
-        }
-        public void Refresh() {
-            if (Repositories == null)
-                return;
-            Repositories.ForEach(x => x.Refresh());
-            if (!fake) {
-                CommandManager.InvalidateRequerySuggested();
-                Messenger.Default.Send(new Message(MessageType.Refresh));
-            }
-        }
-        public void RefreshFarm() {
-            if (Repositories == null)
-                return;
-            Repositories.ForEach(x => x.RefreshFarm());
         }
     }
 }
