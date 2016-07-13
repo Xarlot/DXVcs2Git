@@ -62,13 +62,13 @@ namespace DXVcs2Git.UI.ViewModels {
             return Branch.Repository.RepoConfig.DefaultServiceName;
         }
         string CalcMergeRequestDescription(string message) {
-            var changes = message.Split(new[] { "\r\n" }, StringSplitOptions.RemoveEmptyEntries);
+            var changes = message.Split(new[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries);
             StringBuilder sb = new StringBuilder();
             changes.Skip(1).ForEach(x => sb.AppendLine(x.ToString()));
             return sb.ToString();
         }
         string CalcMergeRequestTitle(string message) {
-            var changes = message.Split(new[] { "\r\n" }, StringSplitOptions.RemoveEmptyEntries);
+            var changes = message.Split(new[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries);
             var title = changes.FirstOrDefault();
             return title;
         }

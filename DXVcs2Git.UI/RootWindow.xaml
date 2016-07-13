@@ -130,7 +130,7 @@
                     <dxdo:LayoutPanel
                         Caption="Selected branch"
                         dxb:MergingProperties.ElementMergingBehavior="InternalWithExternal"
-                        ItemWidth="2*">
+                        ItemWidth="4*">
                         <views:BranchControl/>
                     </dxdo:LayoutPanel>
                 </dxdo:LayoutGroup>
