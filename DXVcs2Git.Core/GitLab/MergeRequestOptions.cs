@@ -11,8 +11,10 @@ namespace DXVcs2Git.Core.GitLab {
     }
 
     public class MergeRequestSyncAction : MergeRequestActionBase {
-        public string WatckTask { get; }
-        public string SyncTask { get; }
+        public string WatckTask { get; set; }
+        public string SyncTask { get; set; }
+        public MergeRequestSyncAction() {
+        }
         public MergeRequestSyncAction(string watchTask, string syncTask) {
             WatckTask = watchTask;
             SyncTask = syncTask;

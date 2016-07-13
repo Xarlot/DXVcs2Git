@@ -40,8 +40,8 @@ namespace DXVcs2Git.UI.ViewModels {
 
         public EditMergeRequestViewModel() {
             Messenger.Default.Register<Message>(this, OnMessageReceived);
-
             ApplyCommand = DelegateCommandFactory.Create(PerformApply, CanPerformApply);
+            RefreshSelectedBranch();
         }
         bool CanPerformApply() {
             return Branch?.MergeRequest != null && IsModified;

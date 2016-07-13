@@ -106,19 +106,19 @@
                                             <local:EditMergeRequestControl/>
                                         </dxlc:LayoutItem>
                                         <dxlc:LayoutItem VerticalAlignment="Stretch">
-                                            <ContentControl Content="{Binding}" ContentTemplateSelector="{StaticResource testsSelector}"/>
+                                            <ContentControl Focusable="False" Content="{Binding}" ContentTemplateSelector="{StaticResource testsSelector}"/>
                                         </dxlc:LayoutItem>
                                     </dxlc:LayoutGroup>
                                 </dxlc:LayoutControl>
                             </DataTemplate>
                         </dx:DXTabItem.ContentTemplate>
                     </dx:DXTabItem>
-                    <dx:DXTabItem Header="Merge request change set">
-                        <dx:DXTabItem>
+                    <dx:DXTabItem Header="Merge request changes">
+                        <dx:DXTabItem.ContentTemplate>
                             <DataTemplate>
                                 <local:BranchChangesControl />
                             </DataTemplate>
-                        </dx:DXTabItem>
+                        </dx:DXTabItem.ContentTemplate>
                     </dx:DXTabItem>
                 </dx:DXTabControl>
             </dxlc:LayoutGroup>

@@ -14,7 +14,7 @@ namespace DXVcs2Git.UI.ViewModels {
         public string SourceBranch { get; }
         public string TargetBranch { get; }
         public string Assignee { get; }
-        public int MergeRequestId { get { return MergeRequest.Id; } }
+        public int MergeRequestId => MergeRequest.Id;
         public MergeRequestViewModel(GitLabWrapper gitLabWrapper, MergeRequest mergeRequest) {
             this.gitLabWrapper = gitLabWrapper;
             MergeRequest = mergeRequest;

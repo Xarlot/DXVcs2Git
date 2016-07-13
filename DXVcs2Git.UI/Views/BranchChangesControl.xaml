@@ -10,10 +10,11 @@
              xmlns:avalonedit="http://icsharpcode.net/sharpdevelop/avalonedit"
              xmlns:viewModels="clr-namespace:DXVcs2Git.UI.ViewModels"
              xmlns:behaviors="clr-namespace:DXVcs2Git.UI.Behaviors"
+             xmlns:extensions="clr-namespace:DXVcs2Git.UI.Extensions"
              mc:Ignorable="d" 
              d:DesignHeight="300" d:DesignWidth="300">
     <UserControl.DataContext>
-        <viewModels:EditBranchChangesViewModel/>
+        <extensions:IoC TargetType="{x:Type viewModels:EditBranchChangesViewModel}"/>
     </UserControl.DataContext>
     <UserControl.Resources>
         <ResourceDictionary>
@@ -25,7 +26,7 @@
             <dxlc:LayoutGroup Orientation="Horizontal">
                 <dxlc:LayoutGroup Orientation="Vertical">
                     <dxlc:LayoutItem HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
-                        <dxg:GridControl x:Name="grid" ItemsSource="{Binding Path=MergeRequest.Changes}" MaxHeight="2000">
+                        <dxg:GridControl x:Name="grid" ItemsSource="{Binding Path=Changes}" MaxHeight="2000">
                             <dxg:GridControl.Columns>
                                 <dxg:GridColumn FieldName="ChangeMode" FixedWidth="True" Width="70">
                                 </dxg:GridColumn>
@@ -40,12 +41,6 @@
                                 </dxg:TableView>
                             </dxg:GridControl.View>
                         </dxg:GridControl>
-                    </dxlc:LayoutItem>
-                    <dxlc:LayoutItem VerticalAlignment="Bottom" HorizontalAlignment="Stretch" Visibility="{Binding Path=HasEditableMergeRequest, Converter={StaticResource BooleanToVisibilityConverter}}">
-                        <local:EditMergeRequestControl 
-                            dxmvvm:ViewModelExtensions.Parameter="{Binding Path=DataContext.Branch, ElementName=LayoutRoot}"
-                            dxmvvm:ViewModelExtensions.ParentViewModel="{Binding DataContext, ElementName=LayoutRoot}">
-                        </local:EditMergeRequestControl>
                     </dxlc:LayoutItem>
                 </dxlc:LayoutGroup>
                 <dxlc:LayoutGroup>
