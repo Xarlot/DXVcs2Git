@@ -1,5 +1,4 @@
 ﻿using DevExpress.Mvvm;
-using ICSharpCode.AvalonEdit.Document;
 using NGitLab.Models;
 
 namespace DXVcs2Git.UI.ViewModels {

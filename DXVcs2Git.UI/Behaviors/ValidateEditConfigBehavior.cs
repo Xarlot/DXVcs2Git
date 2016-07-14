@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.ObjectModel;
-using System.Linq;
-using System.Windows;
+﻿using System.Windows;
 using DevExpress.Mvvm.UI.Interactivity;
 using DevExpress.Xpf.Grid;
 using DevExpress.XtraEditors.DXErrorProvider;

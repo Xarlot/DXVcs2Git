@@ -1,5 +1,4 @@
-﻿using System.Drawing;
-using DXVcs2Git.Core.GitLab;
+﻿using DXVcs2Git.Core.GitLab;
 
 namespace DXVcs2Git.UI.ViewModels {
     public class EditMergeRequestData {

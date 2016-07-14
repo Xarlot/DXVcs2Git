@@ -1,7 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using DXVCS;
 using DXVcsTools.Data;
 
 namespace DXVcs2Git.DXVcs {

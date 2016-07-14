@@ -1,7 +1,4 @@
-﻿using System.Windows;
-using System.Windows.Controls;
-using DevExpress.Mvvm;
-using DXVcs2Git.UI.ViewModels;
+﻿using System.Windows.Controls;
 
 namespace DXVcs2Git.UI {
     /// <summary>

@@ -1,13 +1,7 @@
 ﻿using DevExpress.Mvvm.UI.Interactivity;
 using DevExpress.Xpf.Editors;
-using DevExpress.Xpf.Editors.Helpers;
 using DXVcs2Git.Core.Configuration;
 using DXVcs2Git.UI.NativeMethods;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Input;
 
 namespace DXVcs2Git.UI.Behaviors {

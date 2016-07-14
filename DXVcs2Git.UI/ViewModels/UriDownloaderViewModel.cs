@@ -2,17 +2,13 @@
 using DevExpress.Mvvm.Native;
 using DXVcs2Git.Core.Configuration;
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net;
 using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
-using System.Xml;
 using System.Xml.Linq;
 
 namespace DXVcs2Git.UI.ViewModels {

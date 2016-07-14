@@ -1,6 +1,4 @@
-﻿using System.Windows.Threading;
-using DevExpress.Mvvm;
-using DXVcs2Git.Core;
+﻿using DevExpress.Mvvm;
 
 namespace DXVcs2Git.UI.ViewModels {
     public class LoggingViewModel : BindableBase {

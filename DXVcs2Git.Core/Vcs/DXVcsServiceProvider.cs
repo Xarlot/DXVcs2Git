@@ -1,8 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Net;
 using System.ServiceModel;
-using System.ServiceModel.Description;
 using DXVCS;
 
 namespace DXVcs2Git.DXVcs {

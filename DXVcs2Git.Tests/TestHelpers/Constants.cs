@@ -1,12 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
-using System.Reflection;
 using System.Security;
-using System.Text;
-using System.Threading.Tasks;
 using LibGit2Sharp;
 
 namespace DXVcs2Git.Tests.TestHelpers {

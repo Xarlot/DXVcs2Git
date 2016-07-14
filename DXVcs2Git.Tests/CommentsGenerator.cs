@@ -1,7 +1,4 @@
-﻿using System;
-using System.Text;
-using DXVcs2Git.Core;
-using DXVcs2Git.DXVcs;
+﻿using DXVcs2Git.Core;
 using NUnit.Framework;
 
 namespace DXVcs2Git.Tests {

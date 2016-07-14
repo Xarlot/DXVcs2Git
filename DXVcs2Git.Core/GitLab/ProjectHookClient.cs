@@ -1,6 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
-using System.Net;
-using System.Runtime.Serialization;
+﻿using System.Runtime.Serialization;
 
 namespace DXVcs2Git.Core.GitLab {
     [DataContract]

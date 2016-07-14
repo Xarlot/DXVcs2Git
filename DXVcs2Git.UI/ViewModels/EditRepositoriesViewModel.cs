@@ -2,8 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using DevExpress.Mvvm;
-using DevExpress.Mvvm.Native;
-using DevExpress.XtraPrinting.Native;
 using Microsoft.Practices.ServiceLocation;
 
 namespace DXVcs2Git.UI.ViewModels {

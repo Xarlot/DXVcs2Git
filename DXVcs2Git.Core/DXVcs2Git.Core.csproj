@@ -135,6 +135,7 @@
     <Compile Include="GitLab\MergeRequestOptions.cs" />
     <Compile Include="GitLab\MergeRequestUser.cs" />
     <Compile Include="GitLab\PushHookClient.cs" />
+    <Compile Include="Git\TestConfigsReader.cs" />
     <Compile Include="Git\RepoConfigsReader.cs" />
     <Compile Include="Git\GitReaderWrapper.cs" />
     <Compile Include="Git\RepoConfig.cs" />

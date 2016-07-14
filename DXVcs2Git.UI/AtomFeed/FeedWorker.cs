@@ -1,15 +1,11 @@
 ﻿using DXVcs2Git.Core;
 using DXVcs2Git.Core.Configuration;
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
 using System.Reflection;
 using System.ServiceModel.Syndication;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows;
 using System.Windows.Threading;
 using System.Xml;
 

@@ -2,8 +2,6 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using DXVcs2Git.Core;
 using DXVcs2Git.Tests.TestHelpers;
 

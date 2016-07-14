@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Diagnostics;
 
 namespace DXVcs2Git.Core {
     public enum SyncHistoryStatus {

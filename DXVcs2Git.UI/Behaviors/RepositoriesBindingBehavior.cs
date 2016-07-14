@@ -1,14 +1,5 @@
-﻿using System.Linq;
-using DevExpress.Mvvm.UI.Interactivity;
+﻿using DevExpress.Mvvm.UI.Interactivity;
 using DevExpress.Xpf.Grid;
-using DXVcs2Git.UI.ViewModels;
-using DevExpress.Mvvm;
-using System;
-using DevExpress.Xpf.Core;
-using DevExpress.Mvvm.UI.Native;
-using System.Collections;
-using System.Collections.Generic;
-using System.Windows;
 
 namespace DXVcs2Git.UI.Behaviors {
     public class RepositoriesBindingBehavior : Behavior<GridControl> {

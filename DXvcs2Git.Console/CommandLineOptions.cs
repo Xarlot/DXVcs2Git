@@ -1,5 +1,4 @@
-﻿using System;
-using CommandLine;
+﻿using CommandLine;
 
 namespace DXVcs2Git.Console {
     public enum WorkMode {

@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Text;
-using DevExpress.DXCCTray;
 using ThoughtWorks.CruiseControl.Remote;
 
 namespace DXVcs2Git.UI.Farm {

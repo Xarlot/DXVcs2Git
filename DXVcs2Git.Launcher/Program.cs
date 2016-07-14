@@ -1,12 +1,8 @@
 ﻿using CommandLine;
 using DXVcs2Git.Core.Configuration;
-using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace DXVcs2Git.Launcher {
     enum ExitCodes : int {

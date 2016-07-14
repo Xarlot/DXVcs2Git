@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.DirectoryServices.ActiveDirectory;
 using System.IO;
 using System.Linq;
 using DXVcs2Git.Core;
