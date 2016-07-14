@@ -1,4 +1,5 @@
 ﻿using System.IO;
+using DXVcs2Git.Core.Git;
 
 namespace DXVcs2Git.Core.GitLab {
     public enum MergeRequestActionType {
@@ -22,11 +23,14 @@ namespace DXVcs2Git.Core.GitLab {
         protected internal override MergeRequestActionType ActionType => MergeRequestActionType.sync;
     }
 
-    public class MergeRequestTestBuildTask : MergeRequestActionBase {
+    public class MergeRequestTestBuildAction : MergeRequestActionBase {
         public string Sha { get; }
 
-        public MergeRequestTestBuildTask(string sha) {
+        public TestConfig TestConfig { get; set; }
+        public MergeRequestTestBuildAction() { }
+        public MergeRequestTestBuildAction(string sha, TestConfig testConfig) {
             Sha = sha;
+            TestConfig = testConfig;
         }
 
         protected internal override MergeRequestActionType ActionType => MergeRequestActionType.testbuild;

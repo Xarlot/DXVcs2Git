@@ -338,6 +338,7 @@
     <Compile Include="UIStartupOptions.cs" />
     <Compile Include="ViewModels\CreateMergeRequestViewModel.cs" />
     <Compile Include="ViewModels\EditBranchViewModel.cs" />
+    <Compile Include="ViewModels\EditMergeRequestTestsViewModel.cs" />
     <Compile Include="ViewModels\EditTrackRepository.cs" />
     <Compile Include="ViewModels\LoggingViewModel.cs" />
     <Compile Include="ViewModels\UriDownloaderViewModel.cs" />

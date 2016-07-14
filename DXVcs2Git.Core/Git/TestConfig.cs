@@ -2,6 +2,6 @@
     public class TestConfig {
         public string Name { get; set; }
         public string DisplayName { get; set; }
-        public string FarmTestConfig { get; set; }
+        public string FarmRepoConfig { get; set; }
     }
 }
