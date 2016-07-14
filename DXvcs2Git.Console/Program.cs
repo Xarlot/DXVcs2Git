@@ -170,6 +170,7 @@ namespace DXVcs2Git.Console {
         static int DoListenerWork(CommandLineOptions clo) {
             string gitServer = clo.Server;
             string gitlabauthtoken = clo.AuthToken;
+            string sharedWebHookPath = clo.WebHook;
             Stopwatch sw = Stopwatch.StartNew();
 
             GitLabWrapper gitLabWrapper = new GitLabWrapper(gitServer, gitlabauthtoken);
@@ -179,7 +180,7 @@ namespace DXVcs2Git.Console {
             foreach (Project project in projects) {
                 var hooks = gitLabWrapper.GetHooks(project);
                 foreach (ProjectHook hook in hooks) {
-                    if (WebHookHelper.IsSameHost(hook.Url, IP) || !WebHookHelper.IsSharedHook(hook.Url))
+                    if (WebHookHelper.IsSameHost(hook.Url, IP) || !WebHookHelper.IsSharedHook(sharedWebHookPath, hook.Url))
                         continue;
                     Uri url = WebHookHelper.Replace(hook.Url, IP);
                     gitLabWrapper.UpdateProjectHook(project, hook, url);
@@ -187,7 +188,7 @@ namespace DXVcs2Git.Console {
                 }
             }
 
-            WebServer server = new WebServer(WebHookHelper.GetSharedHookUrl(IP));
+            WebServer server = new WebServer(WebHookHelper.GetSharedHookUrl(IP, sharedWebHookPath));
             server.Start();
             while (sw.Elapsed.Minutes < clo.Timeout) {
                 Thread.Sleep(10);
@@ -236,7 +237,16 @@ namespace DXVcs2Git.Console {
             throw new NotImplementedException();
         }
         static bool ShouldTestMergeRequest(GitLabWrapper gitLabWrapper, MergeRequestHookClient hook) {
-            throw new NotImplementedException();
+            var project = gitLabWrapper.GetProject(hook.Attributes.TargetProjectId);
+            var mergeRequest = gitLabWrapper.GetMergeRequest(project, hook.Attributes.Id);
+            var assignee = mergeRequest.Assignee;
+            if (assignee == null || !assignee.Name.StartsWith("dxvcs2git")) {
+                Log.Message("Force sync rejected because assignee is not set or not sync task.");
+                return false;
+            }
+
+            Log.Message("Force sync rejected because merge request can`t be merged automatically.");
+            return false;
         }
         static void ForceSyncBuild(GitLabWrapper gitLabWrapper, MergeRequestHookClient hook) {
             var project = gitLabWrapper.GetProject(hook.Attributes.TargetProjectId);

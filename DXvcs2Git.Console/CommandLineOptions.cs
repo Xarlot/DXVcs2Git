@@ -32,5 +32,7 @@ namespace DXVcs2Git.Console {
         public int Timeout { get; set; }
         [Option("mergerequest", Required = false, HelpText = "Merge request id for patch generation")]
         public int MergeRequestId { get; set; }
+        [Option("webhook", Default = "sharedwebhook", HelpText = "Webhook name on gitlab server")]
+        public string WebHook { get; set; }
     }
 }

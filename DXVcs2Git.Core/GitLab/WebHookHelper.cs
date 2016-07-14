@@ -3,8 +3,8 @@ using System.Net;
 
 namespace DXVcs2Git.Core {
     public static class WebHookHelper {
-        static readonly string SharedWebHook = "/sharedwebhook/";
-        static readonly string WebhookFormat = @"http://{0}:8080" + SharedWebHook;
+        static readonly string SharedWebHook = "/{0}/";
+        static readonly string WebhookFormat = @"http://{0}:8080";
 
         public static Uri Replace(Uri url, IPAddress ip) {
             var newUriBuilder = new UriBuilder(url);
@@ -16,14 +16,14 @@ namespace DXVcs2Git.Core {
             var newUriBuilder = new UriBuilder(url);
             return newUriBuilder.Host == ip.ToString();
         }
-        public static bool IsSharedHook(Uri url) {
+        public static bool IsSharedHook(string sharedwebhookPath, Uri url) {
             var newUriBuilder = new UriBuilder(url);
-            if (newUriBuilder.Path == SharedWebHook)
+            if (newUriBuilder.Path == string.Format(SharedWebHook, sharedwebhookPath))
                 return true;
             return false;
         }
-        public static string GetSharedHookUrl(IPAddress ip) {
-            return string.Format(WebhookFormat, ip);
+        public static string GetSharedHookUrl(IPAddress ip, string sharedWebHookPath) {
+            return string.Format(WebhookFormat, ip) + string.Format(SharedWebHook, sharedWebHookPath);
         }
     }
 }
