@@ -28,7 +28,7 @@ namespace DXVcs2Git.Console {
         static IPAddress ipAddress;
         static IPAddress IP => ipAddress ?? (ipAddress = DetectMyIP());
         static IPAddress DetectMyIP() {
-            return Dns.GetHostEntry(Dns.GetHostName()).AddressList.FirstOrDefault(ip => ip.AddressFamily == AddressFamily.InterNetwork);
+            return Dns.GetHostEntry(Dns.GetHostName()).AddressList.LastOrDefault(ip => ip.AddressFamily == AddressFamily.InterNetwork);
         }
 
         const string repoPath = "repo";
