@@ -17,14 +17,10 @@ namespace DXVcs2Git.UI.ViewModels {
 
         BranchViewModel selectedBranch;
         RepositoryViewModel selectedRepository;
-        bool fake = false;
         public RootViewModel RootViewModel => this.GetParentViewModel<RootViewModel>();
         public Config Config => RootViewModel?.Config ?? ConfigSerializer.GetConfig();
         public RepoConfigsReader RepoConfigs { get; private set; }
-        public bool HasEditableMergeRequest {
-            get { return GetProperty(() => HasEditableMergeRequest); }
-            private set { SetProperty(() => HasEditableMergeRequest, value); }
-        }
+        public TestConfigsReader TestConfigs { get; private set; }
         public BranchViewModel SelectedBranch {
             get { return this.selectedBranch; }
             set { SetProperty(ref this.selectedBranch, value, () => SelectedBranch, SelectedBranchChanged); }
@@ -51,6 +47,7 @@ namespace DXVcs2Git.UI.ViewModels {
             IsInitialized = false;
             SendBeforeUpdateMessage();
             RepoConfigs = new RepoConfigsReader();
+            TestConfigs = new TestConfigsReader();
             Repositories = Config.Repositories.With(x => x.Where(IsValidConfig).Select(repo => new RepositoryViewModel(repo.Name, repo, this))).With(x => x.ToList());
             IsInitialized = true;
             SendUpdateMessage();
@@ -59,29 +56,8 @@ namespace DXVcs2Git.UI.ViewModels {
             Messenger.Default.Send(new Message(MessageType.BeforeUpdate));
         }
         void SendUpdateMessage() {
-            if (!fake)
-                Messenger.Default.Send(new Message(MessageType.Update));
+            Messenger.Default.Send(new Message(MessageType.Update));
         }
-
-        //public Task BeginUpdate() {
-        //    Log.Message("Repositories update started");
-        //    IsInitialized = false;
-        //    CommandManager.InvalidateRequerySuggested();
-        //    ConfigSerializer.SaveConfig(Config);
-        //    return Task.Run(() => {
-        //        RepositoriesViewModel rvm = new RepositoriesViewModel();
-        //        rvm.Update();
-        //        return rvm;
-        //    }).ContinueWith(_ => {
-        //        RepoConfigs = _.Result.RepoConfigs;
-        //        Repositories = _.Result.Repositories;
-        //        SelectedRepository = _.Result.SelectedRepository;
-        //        IsInitialized = true;
-        //        Log.Message("Repositories update completed");
-        //        SendUpdateMessage();
-        //        CommandManager.InvalidateRequerySuggested();
-        //    }, TaskScheduler.FromCurrentSynchronizationContext());
-        //}
         bool IsValidConfig(TrackRepository repo) {
             if (string.IsNullOrEmpty(repo.Name))
                 return false;
