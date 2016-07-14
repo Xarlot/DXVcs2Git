@@ -11,7 +11,7 @@ namespace DXVcs2Git.UI.ViewModels {
             get { return GetProperty(() => ConfigName); }
             set { SetProperty(() => ConfigName, value); }
         }
-        public GitRepoConfig RepoConfig {
+        public RepoConfig RepoConfig {
             get { return GetProperty(() => RepoConfig); }
             set { SetProperty(() => RepoConfig, value); }
         }

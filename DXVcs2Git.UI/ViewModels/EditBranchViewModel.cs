@@ -84,7 +84,7 @@ namespace DXVcs2Git.UI.ViewModels {
         }
         string CalcTargetBranch() {
             var repository = Branch.Repository;
-            GitRepoConfig repoConfig = repository.RepoConfig;
+            RepoConfig repoConfig = repository.RepoConfig;
             return repoConfig?.TargetBranch;
         }
 

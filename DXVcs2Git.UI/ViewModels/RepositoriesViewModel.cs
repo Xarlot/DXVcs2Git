@@ -8,6 +8,7 @@ using NGitLab.Models;
 using DXVcs2Git.Core.Configuration;
 using System.Threading.Tasks;
 using DXVcs2Git.Core;
+using DXVcs2Git.Core.Git;
 
 namespace DXVcs2Git.UI.ViewModels {
     public class RepositoriesViewModel : ViewModelBase {

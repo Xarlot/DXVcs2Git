@@ -336,7 +336,6 @@
     <Compile Include="Selectors\RepositoriesControlImageSelector.cs" />
     <Compile Include="Services\FolderBrowserCustomDialogService.cs" />
     <Compile Include="UIStartupOptions.cs" />
-    <Compile Include="ViewModels\ConfigsReader.cs" />
     <Compile Include="ViewModels\CreateMergeRequestViewModel.cs" />
     <Compile Include="ViewModels\EditBranchViewModel.cs" />
     <Compile Include="ViewModels\EditTrackRepository.cs" />
@@ -553,6 +552,15 @@
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
     </None>
     <AppDesigner Include="Properties\" />
+    <None Include="TestConfigs\XPF\XPF_2016.1_All.config">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="TestConfigs\XPF\XPF_2016.1_Grid.config">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="TestConfigs\XPF\XPF_2016.1_Core.config">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config">
@@ -592,6 +600,7 @@
     <Resource Include="Images\red.png" />
     <Resource Include="Images\yellow.png" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>

@@ -85,7 +85,7 @@ namespace DXVcs2Git.UI.ViewModels {
             return ev?.Contains(value) ?? false;
         }
 
-        public IEnumerable<GitRepoConfig> Configs { get; }
+        public IEnumerable<RepoConfig> Configs { get; }
         public ICommand RefreshUpdateCommand { get; private set; }
         public bool HasUIValidationErrors {
             get { return GetProperty(() => HasUIValidationErrors); }
@@ -178,7 +178,7 @@ namespace DXVcs2Git.UI.ViewModels {
             var userConfigs = Repositories.Return(x => new ObservableCollection<string>(x.Select(repo => repo.ConfigName).Distinct()), () => new ObservableCollection<string>());
             AvailableConfigs = new ObservableCollection<string>(this.configsReader.RegisteredConfigs.Select(config => config.Name).Except(userConfigs));
         }
-        public GitRepoConfig GetConfig(string name) {
+        public RepoConfig GetConfig(string name) {
             return this.configsReader[name];
         }
     }

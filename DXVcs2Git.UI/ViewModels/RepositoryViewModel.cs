@@ -22,7 +22,7 @@ namespace DXVcs2Git.UI.ViewModels {
         public Project Origin { get; }
         public Project Upstream { get; }
         RepositoriesViewModel Repositories { get; }
-        public GitRepoConfig RepoConfig { get; }
+        public RepoConfig RepoConfig { get; }
         public TrackRepository TrackRepository { get; }
         public string DefaultServiceName => RepoConfig?.DefaultServiceName;
 
