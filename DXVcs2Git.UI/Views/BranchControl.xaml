@@ -95,9 +95,9 @@
                     <local:BranchDescriptionControl/>
                 </dxlc:LayoutItem>
             </dxlc:LayoutGroup>
-            <dxlc:LayoutGroup Orientation="Horizontal" dxlc:DockLayoutControl.Dock="Client" Margin="0" Padding="0">
-                <dx:DXTabControl>
-                    <dx:DXTabItem Header="Merge request settings">
+            <dxlc:LayoutGroup Orientation="Horizontal" dxlc:DockLayoutControl.Dock="Client" Margin="0" Padding="0" >
+                <dx:DXTabControl dxb:MergingProperties.ElementMergingBehavior="InternalWithExternal">
+                    <dx:DXTabItem Header="Merge request settings" Content="{Binding}">
                         <dx:DXTabItem.ContentTemplate>
                             <DataTemplate>
                                 <dxlc:LayoutControl Margin="0" Padding="0">
@@ -106,7 +106,7 @@
                                             <local:EditMergeRequestControl/>
                                         </dxlc:LayoutItem>
                                         <dxlc:LayoutItem VerticalAlignment="Stretch">
-                                            <ContentControl Focusable="False" Content="{Binding}" ContentTemplateSelector="{StaticResource testsSelector}"/>
+                                            <ContentControl Focusable="False" Content="{Binding Path=SupportsTesting}" ContentTemplateSelector="{StaticResource testsSelector}"/>
                                         </dxlc:LayoutItem>
                                     </dxlc:LayoutGroup>
                                 </dxlc:LayoutControl>

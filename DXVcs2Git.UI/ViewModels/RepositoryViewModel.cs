@@ -21,7 +21,8 @@ namespace DXVcs2Git.UI.ViewModels {
         public Project Origin { get; }
         public Project Upstream { get; }
         RepositoriesViewModel Repositories { get; }
-        public RepoConfig RepoConfig { get; }
+        public RepoConfig RepoConfig { get; private set; }
+        public IEnumerable<TestConfig> TestConfigs { get; private set; }
         public TrackRepository TrackRepository { get; }
         public string DefaultServiceName => RepoConfig?.DefaultServiceName;
 
@@ -33,12 +34,16 @@ namespace DXVcs2Git.UI.ViewModels {
             TrackRepository = trackRepository;
             GitLabWrapper = new GitLabWrapper(TrackRepository.Server, TrackRepository.Token);
             GitReader = new GitReaderWrapper(trackRepository.LocalPath);
-            RepoConfig = repositories.RepoConfigs[trackRepository.ConfigName];
+            UpdateConfigs(trackRepository, repositories);
             Repositories = repositories;
             Origin = GitLabWrapper.FindProject(GitReader.GetOriginRepoPath());
             Upstream = GitLabWrapper.FindProject(GitReader.GetUpstreamRepoPath());
             Name = name;
             Update();
+        }
+        void UpdateConfigs(TrackRepository trackRepository, RepositoriesViewModel repositories) {
+            RepoConfig = repositories.RepoConfigs[trackRepository.ConfigName];
+            TestConfigs = RepoConfig.SupportsTesting ? RepoConfig.TestConfigs.Select(x => repositories.TestConfigs[x]).ToList() : Enumerable.Empty<TestConfig>();
         }
         public void Update() {
             if (Origin == null) {

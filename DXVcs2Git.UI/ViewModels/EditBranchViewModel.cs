@@ -43,6 +43,7 @@ namespace DXVcs2Git.UI.ViewModels {
             CreateMergeRequestCommand = DelegateCommandFactory.Create(PerformCreateMergeRequest, CanPerformCreateMergeRequest);
             CloseMergeRequestCommand = DelegateCommandFactory.Create(PerformCloseMergeRequest, CanPerformCloseMergeRequest);
             ForceBuildCommand = DelegateCommandFactory.Create(PerformForceBuild, CanPerformForceBuild);
+            RefreshSelectedBranch();
         }
         bool CanPerformForceBuild() {
             return Branch?.MergeRequest != null && (FarmStatus.ActivityStatus == ActivityStatus.Sleeping || FarmStatus.ActivityStatus == ActivityStatus.Pending);
@@ -89,13 +90,15 @@ namespace DXVcs2Git.UI.ViewModels {
         }
 
         void OnMessageReceived(Message msg) {
-            if (msg.MessageType == MessageType.RefreshSelectedBranch) {
-                Branch = RepositoriesViewModel.SelectedBranch;
-                MergeRequest = Branch?.MergeRequest;
-                HasMergeRequest = MergeRequest != null;
-                SupportsTesting = Branch?.Repository.RepoConfig.SupportsTesting ?? false;
-            }
+            if (msg.MessageType == MessageType.RefreshSelectedBranch) 
+                RefreshSelectedBranch();
             RefreshFarm();
+        }
+        void RefreshSelectedBranch() {
+            Branch = RepositoriesViewModel.SelectedBranch;
+            MergeRequest = Branch?.MergeRequest;
+            HasMergeRequest = MergeRequest != null;
+            SupportsTesting = Branch?.Repository.RepoConfig.SupportsTesting ?? false;
         }
         void RefreshFarm() {
             FarmStatus = Branch?.FarmStatus ?? new FarmStatus();

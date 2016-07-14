@@ -6,12 +6,51 @@
              xmlns:local="clr-namespace:DXVcs2Git.UI.Views"
              xmlns:dxg="http://schemas.devexpress.com/winfx/2008/xaml/grid"
              xmlns:extensions="clr-namespace:DXVcs2Git.UI.Extensions"
+             xmlns:viewModels="clr-namespace:DXVcs2Git.UI.ViewModels"
+             xmlns:dxr="http://schemas.devexpress.com/winfx/2008/xaml/ribbon"
+             xmlns:dxb="http://schemas.devexpress.com/winfx/2008/xaml/bars"
+             xmlns:dx="http://schemas.devexpress.com/winfx/2008/xaml/core"
              mc:Ignorable="d" 
              d:DesignHeight="300" d:DesignWidth="300">
     <UserControl.DataContext>
-        <extensions:IoC TargetType="{x:Type }"/>
+        <extensions:IoC TargetType="{x:Type viewModels:EditMergeRequestTestsViewModel}"/>
     </UserControl.DataContext>
     <Grid>
-        <dxg:GridControl/>    
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+        <dxr:RibbonControl >
+            <dxr:RibbonDefaultPageCategory>
+                <dxr:RibbonPage Caption="Main">
+                    <dxr:RibbonPageGroup Caption="Tests">
+                        <dxb:BarButtonItem
+                            RibbonStyle="Large" 
+                            GlyphSize="Large" 
+                            Content="Create"
+                            Command="{Binding Path=RunTestsCommand}"
+                            LargeGlyph="{dx:DXImageOffice2013 Image=NewTask_32x32.png}">
+                        </dxb:BarButtonItem>
+                        <dxb:BarButtonItem
+                            RibbonStyle="Large" 
+                            GlyphSize="Large" 
+                            Content="Close"
+                            Command="{Binding Path=CancelTestsCommand}"
+                            LargeGlyph="{dx:DXImageOffice2013 Image=Close_32x32.png}">
+                        </dxb:BarButtonItem>
+                        <dxb:BarItemSeparator/>
+                    </dxr:RibbonPageGroup>
+                </dxr:RibbonPage>
+            </dxr:RibbonDefaultPageCategory>
+        </dxr:RibbonControl>
+        <dxg:GridControl Grid.Row="1" ItemsSource="{Binding Path=Tests}" SelectionMode="MultipleRow">
+            <dxg:GridControl.Columns>
+                <dxg:GridColumn FieldName="RunTest" IsSmart="True"/>
+                <dxg:GridColumn FieldName="DisplayName"/>
+            </dxg:GridControl.Columns>
+            <dxg:GridControl.View>
+                <dxg:TableView />
+            </dxg:GridControl.View>
+        </dxg:GridControl>
     </Grid>
 </UserControl>

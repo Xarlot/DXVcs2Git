@@ -24,13 +24,13 @@ namespace DXVcs2Git.Core.GitLab {
     }
 
     public class MergeRequestTestBuildAction : MergeRequestActionBase {
-        public string Sha { get; }
+        public int MergeRequestId { get; }
 
-        public TestConfig TestConfig { get; set; }
+        public TestConfig[] TestConfigs { get; set; }
         public MergeRequestTestBuildAction() { }
-        public MergeRequestTestBuildAction(string sha, TestConfig testConfig) {
-            Sha = sha;
-            TestConfig = testConfig;
+        public MergeRequestTestBuildAction(int mergeRequestId, TestConfig[] testConfigs) {
+            MergeRequestId = mergeRequestId;
+            TestConfigs = testConfigs;
         }
 
         protected internal override MergeRequestActionType ActionType => MergeRequestActionType.testbuild;
