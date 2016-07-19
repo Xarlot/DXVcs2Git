@@ -23,5 +23,9 @@ namespace DXVcs2Git.UI.ViewModels {
             get { return GetProperty(() => LocalPath); }
             set { SetProperty(() => LocalPath, value); }
         }
+
+        public override string ToString() {
+            return Name;
+        }
     }
 }
