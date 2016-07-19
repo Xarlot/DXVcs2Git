@@ -111,6 +111,8 @@ namespace DXVcs2Git.Console {
                 SyncAction = CalcSyncAction(x),
                 OldPath = x.OldPath,
                 NewPath = x.NewPath,
+                OldVcsPath = CalcVcsPath(branch, x.OldPath),
+                NewVcsPath = CalcVcsPath(branch, x.NewPath),
             }).ToList();
 
             var patch = new PatchInfo() {TimeStamp = DateTime.Now.Ticks, Items = changes};
@@ -559,24 +561,24 @@ namespace DXVcs2Git.Console {
             if (fileData.IsNew) {
                 syncItem.SyncAction = SyncAction.New;
                 syncItem.LocalPath = CalcLocalPath(localGitDir, branch, fileData.OldPath);
-                syncItem.VcsPath = CalcVcsPath(vcsRoot, branch, fileData.OldPath);
+                syncItem.VcsPath = CalcVcsPath(branch, fileData.OldPath);
             }
             else if (fileData.IsDeleted) {
                 syncItem.SyncAction = SyncAction.Delete;
                 syncItem.LocalPath = CalcLocalPath(localGitDir, branch, fileData.OldPath);
-                syncItem.VcsPath = CalcVcsPath(vcsRoot, branch, fileData.OldPath);
+                syncItem.VcsPath = CalcVcsPath(branch, fileData.OldPath);
             }
             else if (fileData.IsRenamed) {
                 syncItem.SyncAction = SyncAction.Move;
                 syncItem.LocalPath = CalcLocalPath(localGitDir, branch, fileData.OldPath);
                 syncItem.NewLocalPath = CalcLocalPath(localGitDir, branch, fileData.NewPath);
-                syncItem.VcsPath = CalcVcsPath(vcsRoot, branch, fileData.OldPath);
-                syncItem.NewVcsPath = CalcVcsPath(vcsRoot, branch, fileData.NewPath);
+                syncItem.VcsPath = CalcVcsPath(branch, fileData.OldPath);
+                syncItem.NewVcsPath = CalcVcsPath(branch, fileData.NewPath);
             }
             else {
                 syncItem.SyncAction = SyncAction.Modify;
                 syncItem.LocalPath = CalcLocalPath(localGitDir, branch, fileData.OldPath);
-                syncItem.VcsPath = CalcVcsPath(vcsRoot, branch, fileData.OldPath);
+                syncItem.VcsPath = CalcVcsPath(branch, fileData.OldPath);
             }
             syncItem.Comment = CalcComment(mergeRequest, branch, token);
             return syncItem;
@@ -584,7 +586,7 @@ namespace DXVcs2Git.Console {
         static string CalcLocalPath(string localGitDir, TrackBranch branch, string path) {
             return Path.Combine(localGitDir, path);
         }
-        static string CalcVcsPath(string vcsRoot, TrackBranch branch, string path) {
+        static string CalcVcsPath(TrackBranch branch, string path) {
             var root = path.Split(new[] { @"\", @"/" }, StringSplitOptions.RemoveEmptyEntries).FirstOrDefault();
             var trackItem = branch.TrackItems.First(x => root == x.ProjectPath);
             var resultPath = path.Remove(0, trackItem.ProjectPath.Length).TrimStart(@"\/".ToCharArray());
@@ -751,6 +753,8 @@ namespace DXVcs2Git.Console {
         public SyncAction SyncAction { get; set; }
         public string OldPath { get; set; }
         public string NewPath { get; set; }
+        public string OldVcsPath { get; set; }
+        public string NewVcsPath { get; set; }
     }
 
     public class PatchInfo {
