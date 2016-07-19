@@ -35,6 +35,7 @@
                     ShowColumnHeaders="False"
                     AutoExpandAllNodes="True" 
                     TreeDerivationMode="ChildNodesSelector" 
+                    ShowIndicator="False"
                     ChildNodesPath="Children" 
                     NavigationStyle="Row"/>
             </dxg:GridControl.View>
