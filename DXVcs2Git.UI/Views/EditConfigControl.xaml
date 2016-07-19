@@ -117,6 +117,8 @@
                             AutoWidth="True" 
                             EditorButtonShowMode="ShowAlways" 
                             ShowDataNavigator="True" 
+                            ShowGroupPanel="False"
+                            AllowGrouping="False"
                             EditorShowMode="MouseUp">
                             <dxmvvm:Interaction.Behaviors>
                                 <behaviors:ValidateEditConfigBehavior/>
