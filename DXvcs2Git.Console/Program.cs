@@ -65,7 +65,10 @@ namespace DXVcs2Git.Console {
         }
         static int DoPatchWork(CommandLineOptions clo) {
             string localGitDir = clo.LocalFolder != null && Path.IsPathRooted(clo.LocalFolder) ? clo.LocalFolder : Path.Combine(Environment.CurrentDirectory, clo.LocalFolder ?? repoPath);
-            EnsureGitDir(localGitDir);
+
+            bool cleanGitDir = clo.CleanGitDir;
+            if (cleanGitDir)
+                EnsureGitDir(localGitDir);
 
             string gitRepoPath = clo.Repo;
             string username = clo.Login;
@@ -74,7 +77,9 @@ namespace DXVcs2Git.Console {
             string branchName = clo.Branch;
             string trackerPath = clo.Tracker;
             string gitServer = clo.Server;
-            int mergeRequestId = clo.MergeRequestId;
+            string commitSha = clo.Sha;
+            string sourceBranchName = clo.SourceBranch;
+            string patchdir = clo.PatchDir ?? localGitDir;
 
             DXVcsWrapper vcsWrapper = new DXVcsWrapper(vcsServer, username, password);
 
@@ -97,9 +102,21 @@ namespace DXVcs2Git.Console {
             GitLabWrapper gitLabWrapper = new GitLabWrapper(gitServer, gitlabauthtoken);
 
             Project project = gitLabWrapper.FindProject(gitRepoPath);
-            MergeRequest mergeRequest = gitLabWrapper.GetMergeRequests(project, x => x.Id == mergeRequestId).FirstOrDefault();
+
+            var sourceBranch = gitLabWrapper.GetBranch(project, sourceBranchName);
+            if (sourceBranch == null) {
+                Log.Error($"Source branch {sourceBranchName} was not found.");
+                return 1;
+            }
+
+            MergeRequest mergeRequest = gitLabWrapper.GetMergeRequests(project, x => x.SourceBranch == sourceBranchName && x.TargetBranch == branchName).FirstOrDefault();
             if (mergeRequest == null) {
-                Log.Error($"Can`t find merge request with id = {mergeRequestId}");
+                Log.Error($"Can`t find merge request.");
+                return 1;
+            }
+
+            if (mergeRequest.Assignee.Name != username) {
+                Log.Error($"Merge request is not assigned to service user {username}.");
                 return 1;
             }
 
@@ -115,9 +132,11 @@ namespace DXVcs2Git.Console {
                 NewVcsPath = CalcVcsPath(branch, x.NewPath),
             }).ToList();
 
-            var patch = new PatchInfo() {TimeStamp = DateTime.Now.Ticks, Items = changes};
+            var patch = new PatchInfo() { TimeStamp = DateTime.Now.Ticks, Items = changes };
 
-            using (Package zip = Package.Open(Path.Combine(localGitDir, "patch.zip"), FileMode.CreateNew)) {
+            using (Package zip = Package.Open(Path.Combine(patchdir, "patch.zip"), FileMode.CreateNew)) {
+                SavePatchInfo(patchdir, patch);
+                AddPart(zip, patchdir, "patch.info");
                 foreach (var path in CalcFilesForPatch(localGitDir, patch)) {
                     AddPart(zip, localGitDir, path);
                 }
@@ -157,7 +176,6 @@ namespace DXVcs2Git.Console {
         }
         static IEnumerable<string> CalcFilesForPatch(string rootPath, PatchInfo patch) {
             var changes = patch.Items;
-            yield return SavePatchInfo(rootPath, patch);
             foreach (var change in changes) {
                 if (change.SyncAction == SyncAction.Delete)
                     yield break;
@@ -296,7 +314,9 @@ namespace DXVcs2Git.Console {
         }
         static int DoSyncWork(CommandLineOptions clo) {
             string localGitDir = clo.LocalFolder != null && Path.IsPathRooted(clo.LocalFolder) ? clo.LocalFolder : Path.Combine(Environment.CurrentDirectory, clo.LocalFolder ?? repoPath);
-            EnsureGitDir(localGitDir);
+            bool cleanGitDir = clo.CleanGitDir;
+            if (cleanGitDir)
+                EnsureGitDir(localGitDir);
 
             string gitRepoPath = clo.Repo;
             string username = clo.Login;
@@ -403,8 +423,14 @@ namespace DXVcs2Git.Console {
             }
         }
         static TrackBranch FindBranch(string branchName, string trackerPath, DXVcsWrapper vcsWrapper) {
-            string localPath = Path.GetDirectoryName(Assembly.GetEntryAssembly().Location);
-            string configPath = Path.Combine(localPath, trackerPath);
+            string configPath;
+            if (Path.IsPathRooted(trackerPath))
+                configPath = trackerPath;
+            else {
+                string localPath = Path.GetDirectoryName(Assembly.GetEntryAssembly().Location);
+                configPath = Path.Combine(localPath, trackerPath);
+            }
+
             var branch = GetBranch(branchName, configPath, vcsWrapper);
             if (branch == null) {
                 Log.Error($"Specified branch {branchName} not found in track file.");
