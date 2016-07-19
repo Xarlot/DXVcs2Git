@@ -7,6 +7,7 @@ using DXVcs2Git.UI.Farm;
 using DXVcs2Git.Core.Configuration;
 using Microsoft.Practices.ServiceLocation;
 using static DevExpress.Xpf.Core.ThemeManager;
+using DevExpress.Xpf.Core;
 
 namespace DXVcs2Git.UI.ViewModels {
     public class RootViewModel : ViewModelBase {
@@ -82,8 +83,9 @@ namespace DXVcs2Git.UI.ViewModels {
         public void Initialize() {
             Repositories = ServiceLocator.Current.GetInstance<RepositoriesViewModel>();
             Update();
+            UpdateDefaultTheme();
         }
-        void UpdateDefaultTheme() => ApplicationThemeName = Config?.DefaultTheme ?? DefaultThemeName;
+        void UpdateDefaultTheme() => ApplicationThemeHelper.ApplicationThemeName = Config?.DefaultTheme ?? DefaultThemeName;
         public void Update() {
             Repositories.Update();
         }
