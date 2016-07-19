@@ -83,7 +83,6 @@ namespace DXVcs2Git.UI.ViewModels {
         public void Initialize() {
             Repositories = ServiceLocator.Current.GetInstance<RepositoriesViewModel>();
             Update();
-            UpdateDefaultTheme();
         }
         void UpdateDefaultTheme() => ApplicationThemeHelper.ApplicationThemeName = Config?.DefaultTheme ?? DefaultThemeName;
         public void Update() {
@@ -97,6 +96,7 @@ namespace DXVcs2Git.UI.ViewModels {
                 viewModel.UpdateConfig();
                 ConfigSerializer.SaveConfig(Config);
                 Initialize();
+                UpdateDefaultTheme();
             }
         }
         bool CanShowSettings() {
