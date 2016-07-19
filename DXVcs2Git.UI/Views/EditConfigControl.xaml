@@ -70,13 +70,7 @@
             <dx:DXTabItem Header="Repositories">
                 <dxg:GridControl ItemsSource="{Binding Path=Repositories}" SelectionMode="Row">
                     <dxmvvm:Interaction.Behaviors>
-                        <dxg:GridDragDropManager>
-                            <dxg:GridDragDropManager.DragElementTemplate>
-                                <DataTemplate>
-                                    <TextBlock Text="{Binding Path=Name}"/>
-                                </DataTemplate>
-                            </dxg:GridDragDropManager.DragElementTemplate>
-                        </dxg:GridDragDropManager>
+                        <dxg:GridDragDropManager/>
                     </dxmvvm:Interaction.Behaviors>
                     <dxg:GridControl.Columns>
                         <dxg:GridColumn FieldName="Name"/>
