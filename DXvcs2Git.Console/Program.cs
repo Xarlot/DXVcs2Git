@@ -173,8 +173,8 @@ namespace DXVcs2Git.Console {
             Log.Message($"Patch.info generated at {patchPath}");
             return 0;
         }
-        static readonly Regex SimpleHttpGitRegex = new Regex(@"http://[\w\._]+/\w+/\w+.git", RegexOptions.Compiled);
-        static readonly Regex GitlabciCheckRegex = new Regex(@"http://gitlab-ci-token:\w+@(?<server>\w+)/(?<nspace>\w+)/(?<name>\w+).git", RegexOptions.Compiled);
+        static readonly Regex SimpleHttpGitRegex = new Regex(@"http://[\w\._-]+/[\w\._-]+/[\w\._-]+.git", RegexOptions.Compiled);
+        static readonly Regex GitlabciCheckRegex = new Regex(@"http://gitlab-ci-token:\w+@(?<server>[\w\._-]+)/(?<nspace>[\w\._-]+)/(?<name>[\w\._-]+).git", RegexOptions.Compiled);
         static string GetSimpleGitHttpPath(string gitRepoPath) {
             if (string.IsNullOrEmpty(gitRepoPath)) {
                 Log.Error("Git repo path is null or empty");
