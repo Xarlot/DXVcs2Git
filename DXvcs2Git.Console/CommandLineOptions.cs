@@ -32,13 +32,13 @@ namespace DXVcs2Git.Console {
         public int Timeout { get; set; }
         [Option("sha", Required = false, HelpText = "Commit sha")]
         public string Sha { get; set; }
+        [Option("sourcerepo", Required = false, HelpText = "Source repo for searching merge request")]
+        public string SourceRepo { get; set; }
         [Option("sourcebranch", Required = false, HelpText = "Source branch for searching merge request")]
         public string SourceBranch { get; set; }
         [Option("patchdir", Required = false, HelpText = "Location of patch.info generated in patch mode")]
         public string PatchDir { get; set; }
         [Option("webhook", Default = "sharedwebhook", HelpText = "Webhook name on gitlab server")]
         public string WebHook { get; set; }
-        [Option("clean", Required =  false, Default = true, HelpText = "Cleanup git dir")]
-        public bool CleanGitDir { get; set; }
     }
 }

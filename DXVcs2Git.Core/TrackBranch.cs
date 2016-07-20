@@ -8,6 +8,10 @@ using Polenter.Serialization;
 namespace DXVcs2Git.Core {
     public class TrackBranch {
         public static IList<TrackBranch> Deserialize(string path, DXVcsWrapper vcsWrapper) {
+            if (!File.Exists(path)) {
+                Log.Error($"Track branch config with path {path} was not found.");
+                return new List<TrackBranch>();
+            }
             SharpSerializer serializer = new SharpSerializer();
             var branches = (IList<TrackBranch>)serializer.Deserialize(path);
             ProcessTrackItems(branches, vcsWrapper);

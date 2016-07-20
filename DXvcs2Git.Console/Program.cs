@@ -66,15 +66,23 @@ namespace DXVcs2Git.Console {
         static int DoPatchWork(CommandLineOptions clo) {
             string localGitDir = clo.LocalFolder != null && Path.IsPathRooted(clo.LocalFolder) ? clo.LocalFolder : Path.Combine(Environment.CurrentDirectory, clo.LocalFolder ?? repoPath);
 
-            bool cleanGitDir = clo.CleanGitDir;
-            if (cleanGitDir)
-                EnsureGitDir(localGitDir);
+            string targetRepoPath = GetSimpleGitHttpPath(clo.Repo);
 
-            string gitRepoPath = clo.Repo;
+            if (string.IsNullOrEmpty(targetRepoPath)) {
+                Log.Error($"Can`t parse repo path {clo.Repo}");
+                return 1;
+            }
+
+            string sourceRepoPath = GetSimpleGitHttpPath(clo.SourceRepo);
+            if (string.IsNullOrEmpty(sourceRepoPath)) {
+                Log.Error($"Can`t parse source repo path {clo.SourceRepo}");
+                return 1;
+            }
+
             string username = clo.Login;
             string password = clo.Password;
             string gitlabauthtoken = clo.AuthToken;
-            string branchName = clo.Branch;
+            string targetBranchName = clo.Branch;
             string trackerPath = clo.Tracker;
             string gitServer = clo.Server;
             string commitSha = clo.Sha;
@@ -83,33 +91,49 @@ namespace DXVcs2Git.Console {
 
             DXVcsWrapper vcsWrapper = new DXVcsWrapper(vcsServer, username, password);
 
-            TrackBranch branch = FindBranch(branchName, trackerPath, vcsWrapper);
-            if (branch == null)
+            TrackBranch trackBranch = FindBranch(targetBranchName, trackerPath, vcsWrapper);
+            if (trackBranch == null) {
                 return 1;
+            }
 
-            string historyPath = GetVcsSyncHistory(vcsWrapper, branch.HistoryPath);
+            string historyPath = GetVcsSyncHistory(vcsWrapper, trackBranch.HistoryPath);
             if (historyPath == null)
                 return 1;
             SyncHistory history = SyncHistory.Deserialize(historyPath);
             if (history == null)
                 return 1;
 
-            SyncHistoryWrapper syncHistory = new SyncHistoryWrapper(history, vcsWrapper, branch.HistoryPath, historyPath);
+            SyncHistoryWrapper syncHistory = new SyncHistoryWrapper(history, vcsWrapper, trackBranch.HistoryPath, historyPath);
             var head = syncHistory.GetHistoryHead();
             if (head == null)
                 return 1;
 
             GitLabWrapper gitLabWrapper = new GitLabWrapper(gitServer, gitlabauthtoken);
 
-            Project project = gitLabWrapper.FindProject(gitRepoPath);
+            Project targetProject = gitLabWrapper.FindProject(targetRepoPath);
+            if (targetProject == null) {
+                Log.Error($"Can`t find target project {targetRepoPath}.");
+                return 1;
+            }
+            Branch targetBranch = gitLabWrapper.GetBranch(targetProject, targetBranchName);
+            if (targetBranch == null) {
+                Log.Error($"Can`t find targetBranch branch {targetBranchName}");
+                return 1;
+            }
 
-            var sourceBranch = gitLabWrapper.GetBranch(project, sourceBranchName);
+            var sourceProject = gitLabWrapper.FindProject(sourceRepoPath);
+            if (sourceProject == null) {
+                Log.Error($"Can`t find source project {sourceRepoPath}");
+                return 1;
+            }
+
+            var sourceBranch = gitLabWrapper.GetBranch(sourceProject, sourceBranchName);
             if (sourceBranch == null) {
                 Log.Error($"Source branch {sourceBranchName} was not found.");
                 return 1;
             }
 
-            MergeRequest mergeRequest = gitLabWrapper.GetMergeRequests(project, x => x.SourceBranch == sourceBranchName && x.TargetBranch == branchName).FirstOrDefault();
+            MergeRequest mergeRequest = gitLabWrapper.GetMergeRequests(targetProject, x => x.SourceBranch == sourceBranchName && x.TargetBranch == targetBranchName).FirstOrDefault();
             if (mergeRequest == null) {
                 Log.Error($"Can`t find merge request.");
                 return 1;
@@ -120,21 +144,24 @@ namespace DXVcs2Git.Console {
                 return 1;
             }
 
-            GitWrapper gitWrapper = CreateGitWrapper(gitRepoPath, localGitDir, branch, username, password);
+            GitWrapper gitWrapper = CreateGitWrapper(targetRepoPath, localGitDir, trackBranch, username, password);
             if (gitWrapper == null)
                 return 1;
 
-            var changes = gitLabWrapper.GetMergeRequestChanges(mergeRequest).Select(x => new PatchItem() {
-                SyncAction = CalcSyncAction(x),
-                OldPath = x.OldPath,
-                NewPath = x.NewPath,
-                OldVcsPath = CalcVcsPath(branch, x.OldPath),
-                NewVcsPath = CalcVcsPath(branch, x.NewPath),
-            }).ToList();
+            var changes = gitLabWrapper
+                .GetMergeRequestChanges(mergeRequest)
+                .Where(x => trackBranch.TrackItems.FirstOrDefault(track => CheckItemForChangeSet(x, track)) != null)
+                .Select(x => new PatchItem() {
+                    SyncAction = CalcSyncAction(x),
+                    OldPath = x.OldPath,
+                    NewPath = x.NewPath,
+                    OldVcsPath = CalcVcsPath(trackBranch, x.OldPath),
+                    NewVcsPath = CalcVcsPath(trackBranch, x.NewPath),
+                }).ToList();
 
             var patch = new PatchInfo() { TimeStamp = DateTime.Now.Ticks, Items = changes };
 
-            using (Package zip = Package.Open(Path.Combine(patchdir, "patch.zip"), FileMode.CreateNew)) {
+            using (Package zip = Package.Open(Path.Combine(patchdir, "patch.zip"), FileMode.Create)) {
                 SavePatchInfo(patchdir, patch);
                 AddPart(zip, patchdir, "patch.info");
                 foreach (var path in CalcFilesForPatch(localGitDir, patch)) {
@@ -142,6 +169,21 @@ namespace DXVcs2Git.Console {
                 }
             }
             return 0;
+        }
+        static readonly Regex SimpleHttpGitRegex = new Regex(@"http://[\w\._]+/\w+/\w+.git", RegexOptions.Compiled);
+        static readonly Regex GitlabciCheckRegex = new Regex(@"http://gitlab-ci-token:\w+@(?<server>\w+)/(?<nspace>\w+)/(?<name>\w+).git", RegexOptions.Compiled);
+        static string GetSimpleGitHttpPath(string gitRepoPath) {
+            if (string.IsNullOrEmpty(gitRepoPath))
+                return gitRepoPath;
+            if (SimpleHttpGitRegex.IsMatch(gitRepoPath))
+                return gitRepoPath;
+            var match = GitlabciCheckRegex.Match(gitRepoPath);
+            if (!match.Success)
+                return null;
+            string server = match.Groups["server"].Value;
+            string nspace = match.Groups["nspace"].Value;
+            string name = match.Groups["name"].Value;
+            return $"http://{server}/{nspace}/{name}.git";
         }
         static SyncAction CalcSyncAction(MergeRequestFileData fileData) {
             if (fileData.IsDeleted)
@@ -314,9 +356,7 @@ namespace DXVcs2Git.Console {
         }
         static int DoSyncWork(CommandLineOptions clo) {
             string localGitDir = clo.LocalFolder != null && Path.IsPathRooted(clo.LocalFolder) ? clo.LocalFolder : Path.Combine(Environment.CurrentDirectory, clo.LocalFolder ?? repoPath);
-            bool cleanGitDir = clo.CleanGitDir;
-            if (cleanGitDir)
-                EnsureGitDir(localGitDir);
+            EnsureGitDir(localGitDir);
 
             string gitRepoPath = clo.Repo;
             string username = clo.Login;
@@ -433,7 +473,7 @@ namespace DXVcs2Git.Console {
 
             var branch = GetBranch(branchName, configPath, vcsWrapper);
             if (branch == null) {
-                Log.Error($"Specified branch {branchName} not found in track file.");
+                Log.Error($"Specified branch {branchName} not found.");
                 return null;
             }
             return branch;
@@ -496,10 +536,7 @@ namespace DXVcs2Git.Console {
                 return MergeRequestResult.Failed;
             }
             var genericChange = changes
-                .Where(x => branch.TrackItems.FirstOrDefault(track => {
-                    var root = x.OldPath.Split(new[] { @"\", @"/" }, StringSplitOptions.RemoveEmptyEntries).FirstOrDefault();
-                    return root == track.ProjectPath;
-                }) != null)
+                .Where(x => branch.TrackItems.FirstOrDefault(track => CheckItemForChangeSet(x, track)) != null)
                 .Select(x => ProcessMergeRequestChanges(mergeRequest, x, localGitDir, branch, autoSyncToken)).ToList();
             bool ignoreValidation = gitLabWrapper.ShouldIgnoreSharedFiles(mergeRequest);
 
@@ -548,6 +585,10 @@ namespace DXVcs2Git.Console {
             AssignBackConflictedMergeRequest(gitLabWrapper, users, mergeRequest, CalcCommentForFailedCheckoutMergeRequest(genericChange));
 
             return MergeRequestResult.Conflicts;
+        }
+        static bool CheckItemForChangeSet(MergeRequestFileData x, TrackItem track) {
+            var root = x.OldPath.Split(new[] { @"\", @"/" }, StringSplitOptions.RemoveEmptyEntries).FirstOrDefault();
+            return root == track.ProjectPath;
         }
         static bool ValidateChangeSet(List<SyncItem> genericChangeSet) {
             return !genericChangeSet.Any(x => x.SharedFile);
@@ -714,7 +755,7 @@ namespace DXVcs2Git.Console {
         static TrackBranch GetBranch(string branchName, string configPath, DXVcsWrapper vcsWrapper) {
             try {
                 var branches = TrackBranch.Deserialize(configPath, vcsWrapper);
-                return branches.First(x => x.Name == branchName);
+                return branches.FirstOrDefault(x => x.Name == branchName);
             }
             catch (Exception ex) {
                 Log.Error("Loading items for track failed", ex);
