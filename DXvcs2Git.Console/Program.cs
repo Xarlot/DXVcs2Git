@@ -35,18 +35,24 @@ namespace DXVcs2Git.Console {
         const string vcsServer = @"net.tcp://vcsservice.devexpress.devx:9091/DXVCSService";
         const int MaxChangesCount = 1000;
         static void Main(string[] args) {
+            var result = Parser.Default.ParseArguments<CommandLineOptions, ApplyPatchOptions>(args);
+            try {
+                var exitCode = result.MapResult(
+                    (ApplyPatchOptions applypatch) => DoApplyPatchWork(applypatch),
+                    err => DoErrors(args));
+                Environment.Exit(exitCode);
+            }
+            catch (Exception ex) {
+                Log.Error("Application crashed with exception", ex);
+                Environment.Exit(1);
+            }
+        }
+        static int DoErrors(string[] args) {
             var result = Parser.Default.ParseArguments<CommandLineOptions>(args);
-            var exitCode = result.MapResult(clo => {
-                try {
-                    return DoWork(clo);
-                }
-                catch (Exception ex) {
-                    Log.Error("Application crashed with exception", ex);
-                    return 1;
-                }
-            },
-            errors => 1);
-            Environment.Exit(exitCode);
+            return result.MapResult(DoWork, err => 1);
+        }
+        static int DoApplyPatchWork(ApplyPatchOptions applypatch) {
+            throw new NotImplementedException();
         }
 
         static int DoWork(CommandLineOptions clo) {

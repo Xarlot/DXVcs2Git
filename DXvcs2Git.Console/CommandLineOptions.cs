@@ -7,6 +7,28 @@ namespace DXVcs2Git.Console {
         patch,
     }
 
+    public abstract class GeneralOptions {
+        [Option('s', "server", Required = true, HelpText = "GitLab server url")]
+        public string Server { get; }
+        protected GeneralOptions(string server) {
+            this.Server = server;
+        }
+    }
+
+    [Verb("applypatch", HelpText = "Apply specified patch to sources")]
+    public class ApplyPatchOptions : GeneralOptions {
+        [Option('p', "patch", Required = true, HelpText = "Path to patch.zip")]
+        public string Patch { get; }
+
+        [Option('d', "dir", HelpText = "Path to local git repo")]
+        public string LocalFolder { get; set; }
+
+        public ApplyPatchOptions(string server, string patch, string localFolder) : base(server) {
+            Patch = patch;
+            LocalFolder = localFolder;
+        }
+    }
+
     public class CommandLineOptions {
         [Option('s', "server", Required = true, HelpText = "GitLab server url")]
         public string Server { get; set; }
