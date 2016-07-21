@@ -32,6 +32,8 @@ namespace DXVcs2Git.Console {
         }
 
         const string repoPath = "repo";
+        const string patchZip = "patch.zip";
+        const string patchInfoName = "patch.info";
         const string vcsServer = @"net.tcp://vcsservice.devexpress.devx:9091/DXVCSService";
         const int MaxChangesCount = 1000;
         static void Main(string[] args) {
@@ -52,9 +54,66 @@ namespace DXVcs2Git.Console {
             return result.MapResult(DoWork, err => 1);
         }
         static int DoApplyPatchWork(ApplyPatchOptions applypatch) {
-            throw new NotImplementedException();
-        }
+            string localDir = applypatch.LocalFolder != null && Path.IsPathRooted(applypatch.LocalFolder) ? applypatch.LocalFolder : Path.Combine(Environment.CurrentDirectory, applypatch.LocalFolder ?? repoPath);
+            if (!Directory.Exists(localDir)) {
+                Log.Error($"Sources directory {localDir} was not found.");
+                return 1;
+            }
 
+            string patchPath = applypatch.Patch != null && Path.IsPathRooted(applypatch.Patch) ? applypatch.Patch : Path.Combine(Environment.CurrentDirectory, applypatch.Patch ?? patchZip);
+            if (!File.Exists(patchPath)) {
+                Log.Error($"{patchZip} was not found at {patchPath} location.");
+                return 1;
+            }
+
+            using (Package zip = Package.Open(patchPath, FileMode.Open)) {
+                var patchInfoUri = PackUriHelper.CreatePartUri(new Uri(patchInfoName, UriKind.Relative));
+                PatchInfo patchInfo = null;
+                try {
+                    var patchInfoPart = zip.GetPart(patchInfoUri);
+                    patchInfo = Serializer.Deserialize<PatchInfo>(patchInfoPart.GetStream());
+                }
+                catch (Exception ex) {
+                    Log.Error("Patch.info doesn`t found.", ex);
+                    return 1;
+                }
+                foreach (var patchItem in patchInfo.Items) {
+                    if (patchItem.SyncAction == SyncAction.Delete) {
+                        DeleteFile(localDir, patchItem);
+                        continue;
+                    }
+                    if (patchItem.SyncAction == SyncAction.Modify) {
+                        RewriteFile(patchItem, localDir, zip);
+                        continue;
+                    }
+                    if (patchItem.SyncAction == SyncAction.Move) {
+                        DeleteFile(localDir, patchItem);                        
+                        RewriteFile(patchItem, localDir, zip);
+                    }
+                    if (patchItem.SyncAction == SyncAction.New) {
+                        RewriteFile(patchItem, localDir, zip);
+                        continue;
+                    }
+                    throw new Exception("syncAction");
+                }
+
+            }
+            return 0;
+        }
+        static void RewriteFile(PatchItem patchItem, string localDir, Package zip) {
+            var uri = PackUriHelper.CreatePartUri(new Uri(patchItem.OldPath, UriKind.Relative));
+            string path = Path.Combine(localDir, patchItem.OldPath);
+            var patchItemPart = zip.GetPart(uri);
+            using (var fileStream = File.OpenWrite(path)) {
+                using (StreamWriter sw = new StreamWriter(fileStream)) {
+                    sw.Write(patchItemPart.GetStream());
+                }
+            }
+        }
+        static void DeleteFile(string localDir, PatchItem patchItem) {
+            string path = Path.Combine(localDir, patchItem.OldPath);
+            File.Delete(path);
+        }
         static int DoWork(CommandLineOptions clo) {
             WorkMode workMode = clo.WorkMode;
 
@@ -167,11 +226,11 @@ namespace DXVcs2Git.Console {
 
             var patch = new PatchInfo() { TimeStamp = DateTime.Now.Ticks, Items = changes };
 
-            var patchPath = Path.Combine(patchdir, "patch.zip");
+            var patchPath = Path.Combine(patchdir, patchZip);
             using (Package zip = Package.Open(patchPath, FileMode.Create)) {
                 SavePatchInfo(patchdir, patch);
                 AddPart(zip, patchdir, "patch.info");
-                foreach (var path in CalcFilesForPatch(localGitDir, patch)) {
+                foreach (var path in CalcFilesForPatch(patch)) {
                     AddPart(zip, localGitDir, path);
                 }
             }
@@ -227,7 +286,7 @@ namespace DXVcs2Git.Console {
                 bytesWritten += bufferSize;
             }
         }
-        static IEnumerable<string> CalcFilesForPatch(string rootPath, PatchInfo patch) {
+        static IEnumerable<string> CalcFilesForPatch(PatchInfo patch) {
             var changes = patch.Items;
             foreach (var change in changes) {
                 if (change.SyncAction == SyncAction.Delete)
