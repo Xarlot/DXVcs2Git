@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Input;
 using DevExpress.Mvvm;
@@ -47,7 +48,13 @@ namespace DXVcs2Git.UI.ViewModels {
         }
         void RefreshSelectedBranch() {
             BranchViewModel = RepositoriesViewModel.SelectedBranch;
-            Commits = BranchViewModel?.GetCommits(BranchViewModel.MergeRequest.MergeRequest).Select(x => new CommitViewModel(x)).ToList() ?? Enumerable.Empty<CommitViewModel>();
+            if (BranchViewModel?.MergeRequest == null) {
+                Commits = Enumerable.Empty<CommitViewModel>();
+                return;
+            }
+            var mergeRequest = BranchViewModel.MergeRequest;
+            Commits = BranchViewModel.GetCommits(mergeRequest.MergeRequest).Select(x => new CommitViewModel(x)).ToList();
+            Commits.ForEach(x => x.UpdateBuilds(sha => BranchViewModel.GetBuilds(mergeRequest.MergeRequest, sha)));
         }
         void RefreshFarmStatus() {
         }
@@ -63,15 +70,31 @@ namespace DXVcs2Git.UI.ViewModels {
     }
 
     public class CommitViewModel : BindableBase {
-        public Sha1 Id { get; }
+        readonly Commit commit;
+        public string Id { get; }
         public string Title {
             get { return GetProperty(() => Title); }
             private set { SetProperty(() => Title, value); }
         }
-        public CommitViewModel(Commit commit) {
-            Title = commit.Title;
-            Id = commit.Id;
+        public BuildViewModel Build {
+            get { return GetProperty(() => Build); }
+            private set { SetProperty(() => Build, value); }
         }
+        public CommitViewModel(Commit commit) {
+            this.commit = commit;
+            Title = commit.Title;
+            Id = commit.ShortId;
+        }
+        public void UpdateBuilds(Func<Sha1, IEnumerable<Build>> getBuilds) {
+            var builds = getBuilds(commit.Id);
+            Build = builds.Select(x => new BuildViewModel(x)).FirstOrDefault();
+        }
+    }
 
+    public class BuildViewModel : BindableBase {
+        public int Id { get; }
+        public BuildViewModel(Build build) {
+            Id = build.Id;
+        }
     }
 }

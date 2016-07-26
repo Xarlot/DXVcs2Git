@@ -156,5 +156,9 @@ namespace DXVcs2Git.Git {
             var changes = mergeRequestsClient.Changes(mergeRequest.Id);
             return changes.Changes.Files;
         }
+        public IEnumerable<Build> GetBuilds(MergeRequest mergeRequest, Sha1 sha) {
+            var projectClient = client.GetRepository(mergeRequest.SourceProjectId);
+            return projectClient.Builds.GetBuildsForCommit(sha);
+        }
     }
 }
