@@ -1,13 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Input;
 using DevExpress.Mvvm;
 using DevExpress.Mvvm.Native;
-using DXVcs2Git.Core.Git;
-using DXVcs2Git.Core.GitLab;
-using DXVcs2Git.UI.Farm;
 using Microsoft.Practices.ServiceLocation;
+using NGitLab;
+using NGitLab.Models;
 
 namespace DXVcs2Git.UI.ViewModels {
     public class EditMergeRequestTestsViewModel : ViewModelBase {
@@ -15,6 +13,11 @@ namespace DXVcs2Git.UI.ViewModels {
 
         public ICommand RunTestsCommand { get; }
         public ICommand CancelTestsCommand { get; }
+
+        public IEnumerable<CommitViewModel> Commits {
+            get { return GetProperty(() => Commits); }
+            private set { SetProperty(() => Commits, value); }
+        }
 
         public EditMergeRequestTestsViewModel() {
             Messenger.Default.Register<Message>(this, OnMessageReceived);
@@ -35,50 +38,40 @@ namespace DXVcs2Git.UI.ViewModels {
             private set { SetProperty(() => IsTestsRunning, value); }
         }
         void OnMessageReceived(Message msg) {
-            if (msg.MessageType == MessageType.RefreshFarm)
+            if (msg.MessageType == MessageType.RefreshFarm) {
                 RefreshFarmStatus();
-        }
-        void RefreshFarmStatus() {
-            foreach (var testViewModel in Tests) {
-                testViewModel.RefreshFarmStatus();
-            }
-        }
-        void Initialize() {
-            BranchViewModel = RepositoriesViewModel.SelectedBranch;
-            if (BranchViewModel == null) {
-                Tests = Enumerable.Empty<TestViewModel>();
                 return;
             }
-            Tests = BranchViewModel.Repository.TestConfigs.Select(x => new TestViewModel() {Name = x.Name, DisplayName = x.DisplayName, TestConfig = x}).ToList();
+            if (msg.MessageType == MessageType.RefreshSelectedBranch)
+                RefreshSelectedBranch();
+        }
+        void RefreshSelectedBranch() {
+            BranchViewModel = RepositoriesViewModel.SelectedBranch;
+            Commits = BranchViewModel?.GetCommits(BranchViewModel.MergeRequest.MergeRequest).Select(x => new CommitViewModel(x)).ToList() ?? Enumerable.Empty<CommitViewModel>();
+        }
+        void RefreshFarmStatus() {
+        }
+        void Initialize() {
+            RefreshSelectedBranch();
+            RefreshFarmStatus();
         }
         bool CanPerformRunTests() {
-            return BranchViewModel?.MergeRequest != null && Tests.Any(x => x.RunTest);
+            return BranchViewModel?.MergeRequest != null;
         }
         void PerformRunTests() {
-            IsTestsRunning = true;
-
-            var mergeRequest = BranchViewModel.MergeRequest;
-            var action = new MergeRequestTestBuildAction(mergeRequest.MergeRequestId, Tests.Where(x => x.RunTest).Select(x => x.TestConfig).ToArray());
-            MergeRequestOptions options = new MergeRequestOptions(action);
-            BranchViewModel.UpdateMergeRequest(MergeRequestOptions.ConvertToString(options));
-        }
-        public IEnumerable<TestViewModel> Tests {
-            get { return GetProperty(() => Tests); }
-            private set { SetProperty(() => Tests, value); }
         }
     }
 
-    public class TestViewModel : BindableBase {
-        public bool RunTest {
-            get { return GetProperty(() => RunTest); }
-            set { SetProperty(() => RunTest, value); }
+    public class CommitViewModel : BindableBase {
+        public Sha1 Id { get; }
+        public string Title {
+            get { return GetProperty(() => Title); }
+            private set { SetProperty(() => Title, value); }
         }
-        public string Name { get; set; }
-        public string DisplayName { get; set; }
-        public FarmStatus FarmStatus { get; set; }
-        public TestConfig TestConfig { get; set; }
-        public void RefreshFarmStatus() {
+        public CommitViewModel(Commit commit) {
+            Title = commit.Title;
+            Id = commit.Id;
+        }
 
-        }
     }
 }

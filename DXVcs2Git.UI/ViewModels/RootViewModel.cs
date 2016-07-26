@@ -6,7 +6,6 @@ using DXVcs2Git.Core;
 using DXVcs2Git.UI.Farm;
 using DXVcs2Git.Core.Configuration;
 using Microsoft.Practices.ServiceLocation;
-using static DevExpress.Xpf.Core.ThemeManager;
 using DevExpress.Xpf.Core;
 
 namespace DXVcs2Git.UI.ViewModels {

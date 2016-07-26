@@ -22,7 +22,6 @@ namespace DXVcs2Git.UI.ViewModels {
         public Project Upstream { get; }
         RepositoriesViewModel Repositories { get; }
         public RepoConfig RepoConfig { get; private set; }
-        public IEnumerable<TestConfig> TestConfigs { get; private set; }
         public TrackRepository TrackRepository { get; }
         public string DefaultServiceName => RepoConfig?.DefaultServiceName;
 
@@ -43,7 +42,6 @@ namespace DXVcs2Git.UI.ViewModels {
         }
         void UpdateConfigs(TrackRepository trackRepository, RepositoriesViewModel repositories) {
             RepoConfig = repositories.RepoConfigs[trackRepository.ConfigName];
-            TestConfigs = RepoConfig.SupportsTesting ? RepoConfig.TestConfigs.Select(x => repositories.TestConfigs[x]).ToList() : Enumerable.Empty<TestConfig>();
         }
         public void Update() {
             if (Origin == null) {

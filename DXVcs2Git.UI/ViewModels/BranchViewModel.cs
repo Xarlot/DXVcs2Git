@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System.Collections.Generic;
+using System.Linq;
 using System.Windows.Input;
 using DevExpress.Mvvm;
 using DevExpress.Mvvm.Native;
@@ -56,6 +57,9 @@ namespace DXVcs2Git.UI.ViewModels {
             this.gitLabWrapper.CloseMergeRequest(MergeRequest.MergeRequest);
             MergeRequest = null;
             RepositoriesViewModel.RaiseRefreshSelectedBranch();
+        }
+        public IEnumerable<Commit> GetCommits(MergeRequest mergeRequest) {
+            return gitLabWrapper.GetMergeRequestCommits(mergeRequest);
         }
         public void UpdateMergeRequest(string title, string description, string assignee) {
             var mergeRequest = this.gitLabWrapper.UpdateMergeRequestTitleAndDescription(MergeRequest.MergeRequest, title, description);
