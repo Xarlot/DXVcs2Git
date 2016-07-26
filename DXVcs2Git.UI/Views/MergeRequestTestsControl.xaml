@@ -43,13 +43,14 @@
                 </dxr:RibbonPage>
             </dxr:RibbonDefaultPageCategory>
         </dxr:RibbonControl>
-        <dxg:GridControl Grid.Row="1" ItemsSource="{Binding Path=Tests}" SelectionMode="MultipleRow">
+        <dxg:GridControl Grid.Row="1" ItemsSource="{Binding Path=Commits}">
             <dxg:GridControl.Columns>
-                <dxg:GridColumn FieldName="RunTest" IsSmart="True"/>
-                <dxg:GridColumn FieldName="DisplayName"/>
+                <dxg:GridColumn Width="60" Header="BuildStatus"  FieldName="Build.BuildStatus" IsSmart="True"/>
+                <dxg:GridColumn Width="*" FieldName="Title" IsSmart="true" />
+                <dxg:GridColumn Width="90" Header="Duration"  FieldName="Build.Duration" IsSmart="True"/>
             </dxg:GridControl.Columns>
             <dxg:GridControl.View>
-                <dxg:TableView />
+                <dxg:TableView/>
             </dxg:GridControl.View>
         </dxg:GridControl>
     </Grid>

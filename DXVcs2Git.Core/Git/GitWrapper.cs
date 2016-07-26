@@ -84,7 +84,7 @@ namespace DXVcs2Git {
             try {
                 var args = new[] {
                     "commit",
-                    "-m", Escape(comment),
+                    "-m", Escape(EscapeDoubleQuotes(comment)),
                     "--author", Escape(author),
                 };
                 Environment.SetEnvironmentVariable("GIT_AUTHOR_DATE", date);
@@ -95,6 +95,11 @@ namespace DXVcs2Git {
             }
             catch {
             }
+        }
+        string EscapeDoubleQuotes(string comment) {
+            if (string.IsNullOrEmpty(comment))
+                return comment;
+            return comment.Replace("\"", "\\\"");
         }
 
         public void ResetHard(string repoPath) {

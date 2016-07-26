@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using Polenter.Serialization;
 
 namespace DXVcs2Git.Core {
@@ -25,11 +26,16 @@ namespace DXVcs2Git.Core {
             return (T)serializer.Deserialize(path);
         }
         public static T Deserialize<T>(Stream stream) {
-            SharpSerializerXmlSettings settings = new SharpSerializerXmlSettings();
-            settings.IncludeAssemblyVersionInTypeName = false;
-            settings.IncludePublicKeyTokenInTypeName = false;
-            SharpSerializer serializer = new SharpSerializer(settings);
-            return (T)serializer.Deserialize(stream);
+            try {
+                SharpSerializerXmlSettings settings = new SharpSerializerXmlSettings();
+                settings.IncludeAssemblyVersionInTypeName = false;
+                settings.IncludePublicKeyTokenInTypeName = false;
+                SharpSerializer serializer = new SharpSerializer(settings);
+                return (T)serializer.Deserialize(stream);
+            }
+            catch (Exception ex) {
+                return default(T);
+            }
         }
     }
 }

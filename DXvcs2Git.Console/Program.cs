@@ -37,10 +37,13 @@ namespace DXVcs2Git.Console {
         const string vcsServer = @"net.tcp://vcsservice.devexpress.devx:9091/DXVCSService";
         const int MaxChangesCount = 1000;
         static void Main(string[] args) {
-            var result = Parser.Default.ParseArguments<CommandLineOptions, ApplyPatchOptions>(args);
+            var result = Parser.Default.ParseArguments<SyncOptions, PatchOptions, ApplyPatchOptions, ListenerOptions>(args);
             try {
                 var exitCode = result.MapResult(
+                    (SyncOptions syncOptions) => DoSyncWork(syncOptions),
+                    (PatchOptions patchOptions) => DoPatchWork(patchOptions), 
                     (ApplyPatchOptions applypatch) => DoApplyPatchWork(applypatch),
+                    (ListenerOptions listenerOptions) => DoListenerWork(listenerOptions),
                     err => DoErrors(args));
                 Environment.Exit(exitCode);
             }
@@ -50,8 +53,7 @@ namespace DXVcs2Git.Console {
             }
         }
         static int DoErrors(string[] args) {
-            var result = Parser.Default.ParseArguments<CommandLineOptions>(args);
-            return result.MapResult(DoWork, err => 1);
+            return 1;
         }
         static int DoApplyPatchWork(ApplyPatchOptions applypatch) {
             string localDir = applypatch.LocalFolder != null && Path.IsPathRooted(applypatch.LocalFolder) ? applypatch.LocalFolder : Path.Combine(Environment.CurrentDirectory, applypatch.LocalFolder ?? repoPath);
@@ -114,21 +116,7 @@ namespace DXVcs2Git.Console {
             string path = Path.Combine(localDir, patchItem.OldPath);
             File.Delete(path);
         }
-        static int DoWork(CommandLineOptions clo) {
-            WorkMode workMode = clo.WorkMode;
-
-            if (workMode == WorkMode.listener) {
-                return DoListenerWork(clo);
-            }
-            if (workMode == WorkMode.synchronizer) {
-                return DoSyncWork(clo);
-            }
-            if (workMode == WorkMode.patch) {
-                return DoPatchWork(clo);
-            }
-            return 1;
-        }
-        static int DoPatchWork(CommandLineOptions clo) {
+        static int DoPatchWork(PatchOptions clo) {
             string localGitDir = clo.LocalFolder != null && Path.IsPathRooted(clo.LocalFolder) ? clo.LocalFolder : Path.Combine(Environment.CurrentDirectory, clo.LocalFolder ?? repoPath);
 
             string targetRepoPath = GetSimpleGitHttpPath(clo.Repo);
@@ -150,7 +138,6 @@ namespace DXVcs2Git.Console {
             string targetBranchName = clo.Branch;
             string trackerPath = clo.Tracker;
             string gitServer = clo.Server;
-            string commitSha = clo.Sha;
             string sourceBranchName = clo.SourceBranch;
             string patchdir = clo.PatchDir ?? localGitDir;
 
@@ -186,7 +173,7 @@ namespace DXVcs2Git.Console {
                 return 1;
             }
 
-            var sourceProject = gitLabWrapper.FindProject(sourceRepoPath);
+            var sourceProject = gitLabWrapper.FindProjectFromAll(sourceRepoPath);
             if (sourceProject == null) {
                 Log.Error($"Can`t find source project {sourceRepoPath}");
                 return 1;
@@ -204,8 +191,14 @@ namespace DXVcs2Git.Console {
                 return 1;
             }
 
-            if (mergeRequest.Assignee.Name != username) {
-                Log.Error($"Merge request is not assigned to service user {username}.");
+            var comments = gitLabWrapper.GetComments(mergeRequest);
+            var mergeRequestSyncOptions = comments.Where(x => IsXml(x.Note)).Where(x => {
+                var mr = MergeRequestOptions.ConvertFromString(x.Note);
+                return mr?.ActionType == MergeRequestActionType.sync;
+            }).Select(x => (MergeRequestSyncAction)MergeRequestOptions.ConvertFromString(x.Note).Action).LastOrDefault();
+
+            if (mergeRequest.Assignee.Name != username || (!mergeRequestSyncOptions?.PerformTesting ?? false)) {
+                Log.Error($"Merge request is not assigned to service user {username} or doesn`t require testing.");
                 return 1;
             }
 
@@ -299,7 +292,7 @@ namespace DXVcs2Git.Console {
             return "patch.info";
         }
 
-        static int DoListenerWork(CommandLineOptions clo) {
+        static int DoListenerWork(ListenerOptions clo) {
             string gitServer = clo.Server;
             string gitlabauthtoken = clo.AuthToken;
             string sharedWebHookPath = clo.WebHook;
@@ -424,7 +417,7 @@ namespace DXVcs2Git.Console {
         }
         static void ProcessPushHook(PushHookClient hook) {
         }
-        static int DoSyncWork(CommandLineOptions clo) {
+        static int DoSyncWork(SyncOptions clo) {
             string localGitDir = clo.LocalFolder != null && Path.IsPathRooted(clo.LocalFolder) ? clo.LocalFolder : Path.Combine(Environment.CurrentDirectory, clo.LocalFolder ?? repoPath);
             EnsureGitDir(localGitDir);
 

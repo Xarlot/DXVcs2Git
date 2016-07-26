@@ -20,6 +20,9 @@ namespace DXVcs2Git.Git {
             return this.client.Projects[id];
         }
         public Project FindProject(string project) {
+            return client.Projects.Accessible.FirstOrDefault(x => string.Compare(x.HttpUrl, project, StringComparison.InvariantCultureIgnoreCase) == 0);
+        }
+        public Project FindProjectFromAll(string project) {
             return client.Projects.All.FirstOrDefault(x => string.Compare(x.HttpUrl, project, StringComparison.InvariantCultureIgnoreCase) == 0);
         }
         public IEnumerable<MergeRequest> GetMergeRequests(Project project, Func<MergeRequest, bool> mergeRequestsHandler = null) {
@@ -35,6 +38,10 @@ namespace DXVcs2Git.Git {
             var mergeRequestsClient = client.GetMergeRequest(mergeRequest.ProjectId);
             var changesClient = mergeRequestsClient.Changes(mergeRequest.Id);
             return changesClient.Changes.Files;
+        }
+        public IEnumerable<Commit> GetMergeRequestCommits(MergeRequest mergeRequest) {
+            var mergeRequestsClient = client.GetMergeRequest(mergeRequest.ProjectId);
+            return mergeRequestsClient.Commits(mergeRequest.Id).All;
         }
         public MergeRequest ProcessMergeRequest(MergeRequest mergeRequest, string comment) {
             var mergeRequestsClient = client.GetMergeRequest(mergeRequest.ProjectId);
@@ -148,6 +155,10 @@ namespace DXVcs2Git.Git {
             var mergeRequestsClient = client.GetMergeRequest(mergeRequest.ProjectId);
             var changes = mergeRequestsClient.Changes(mergeRequest.Id);
             return changes.Changes.Files;
+        }
+        public IEnumerable<Build> GetBuilds(MergeRequest mergeRequest, Sha1 sha) {
+            var projectClient = client.GetRepository(mergeRequest.SourceProjectId);
+            return projectClient.Builds.GetBuildsForCommit(sha);
         }
     }
 }

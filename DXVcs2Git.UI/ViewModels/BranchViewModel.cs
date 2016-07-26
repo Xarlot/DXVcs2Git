@@ -1,10 +1,12 @@
-﻿using System.Linq;
+﻿using System.Collections.Generic;
+using System.Linq;
 using System.Windows.Input;
 using DevExpress.Mvvm;
 using DevExpress.Mvvm.Native;
 using DXVcs2Git.Git;
 using DXVcs2Git.UI.Farm;
 using Microsoft.Practices.ServiceLocation;
+using NGitLab;
 using NGitLab.Models;
 
 namespace DXVcs2Git.UI.ViewModels {
@@ -21,7 +23,7 @@ namespace DXVcs2Git.UI.ViewModels {
         public MergeRequestViewModel MergeRequest {
             get { return GetProperty(() => MergeRequest); }
             private set { SetProperty(() => MergeRequest, value); }
-        }        
+        }
         public bool HasChanges {
             get { return MergeRequest.Return(x => x.Changes.Any(), () => false); }
         }
@@ -56,6 +58,12 @@ namespace DXVcs2Git.UI.ViewModels {
             this.gitLabWrapper.CloseMergeRequest(MergeRequest.MergeRequest);
             MergeRequest = null;
             RepositoriesViewModel.RaiseRefreshSelectedBranch();
+        }
+        public IEnumerable<Commit> GetCommits(MergeRequest mergeRequest) {
+            return gitLabWrapper.GetMergeRequestCommits(mergeRequest);
+        }
+        public IEnumerable<Build> GetBuilds(MergeRequest mergeRequest, Sha1 sha) {
+            return gitLabWrapper.GetBuilds(mergeRequest, sha);
         }
         public void UpdateMergeRequest(string title, string description, string assignee) {
             var mergeRequest = this.gitLabWrapper.UpdateMergeRequestTitleAndDescription(MergeRequest.MergeRequest, title, description);

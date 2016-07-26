@@ -1,6 +1,8 @@
 -l dxvcs2git.xpf -b 2014.2 -r http://gitserver/XPF/XPF.git -m synchronizer -c 15 -d z:\repo -t trackconfig_total_2014.2.config -p dJ3l_dSA -a EenHhBCFJJHNeHyBLJ1P -s http:\\gitserver
 -s http://gitserver -l dxvcs2git.tester -b 2016.1 -r http://gitserver/XPF/XPF.git -m patch -c 150 -d z:/repo -t trackconfig_XPF_2016.1.config -p  E4kDAk3j -a vPbfpJSzGRyPi6g249GP --sourcebranch test_branch --sourcerepo http://gitserver/Litvinov/XPF.git
 
--s http://gitserver -l dxvcs2git.dataaccess -b 2016.1 -r http://gitserver/DataAccess/DataAccess.git -m synchronizer -c 150 -d repo -t trackconfig_DataAccess_2016.1.config -p DG8_SfAg -a y2w1vpk8vaKxsvb47qRA
+sync -s http://gitserver -l dxvcs2git.common -b 2016.1 -r http://gitserver/XPF/Common.git -c 150 -d z:\repo -t trackconfig_Common_2016.1.config -p s7As_QsT -a FZ8YxktKW95wsxybykxs
 
--s http://gitserver -l dxvcs2git.xpf -r http://gitserver/XPF/XPF.git  -m listener -c 150 -d repo -p DG8_SfAg -a vPbfpJSzGRyPi6g249GP --webhook testwebhook
+listen -s http://gitserver -l dxvcs2git.xpf -r http://gitserver/XPF/XPF.git  -c 150 -d repo -p DG8_SfAg -a vPbfpJSzGRyPi6g249GP --webhook testwebhook
+
+patch -s http://gitserver -l dxvcs2git.tester -b 2016.1 -r http://gitserver/XPF/XPF.git -c 150 -d z:/repo -t trackconfig_XPF_2016.1.config -p  E4kDAk3j -a vPbfpJSzGRyPi6g249GP --sourcebranch test_branch --sourcerepo http://gitserver/Litvinov/XPF.git

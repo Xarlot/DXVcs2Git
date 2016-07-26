@@ -25,7 +25,6 @@ namespace DXVcs2Git.Tests {
                 FarmSyncTaskName = taskName,
                 DefaultServiceName = defaultService,
                 SupportsTesting = allowTesting,
-                TestConfigs = testConfigs,
             };
             SharpSerializerXmlSettings settings = new SharpSerializerXmlSettings();
             settings.IncludeAssemblyVersionInTypeName = false;

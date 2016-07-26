@@ -16,10 +16,15 @@ namespace DXVcs2Git.UI.ViewModels {
 
         string comment;
         bool assignedToService;
+        bool performTesting;
 
         public string Comment {
             get { return comment; }
             set { SetProperty(ref comment, value, () => Comment, CommentChanged); }
+        }
+        public bool PerformTesting {
+            get { return performTesting; }
+            set { SetProperty(ref performTesting, value, () => PerformTesting, PerformTestingChanged); }
         }
         public bool AssignedToService {
             get { return assignedToService; }
@@ -31,6 +36,9 @@ namespace DXVcs2Git.UI.ViewModels {
         }
         public ICommand ApplyCommand { get; }
         BranchViewModel Branch { get; set; }
+        void PerformTestingChanged() {
+            IsModified = true;
+        }
         void AssignedToServiceChanged() {
             IsModified = true;
         }
@@ -47,7 +55,7 @@ namespace DXVcs2Git.UI.ViewModels {
             return Branch?.MergeRequest != null && IsModified;
         }
         void PerformApply() {
-            var mergeRequestAction = new MergeRequestSyncAction(Branch.Repository.RepoConfig.FarmTaskName, Branch.Repository.RepoConfig.FarmSyncTaskName);
+            var mergeRequestAction = new MergeRequestSyncAction(Branch.Repository.RepoConfig.FarmTaskName, Branch.Repository.RepoConfig.FarmSyncTaskName, PerformTesting);
             var mergeRequestOptions = new MergeRequestOptions(mergeRequestAction);
             if (RepositoriesViewModel.Config.AlwaysSure || MessageBoxService.Show("Are you sure?", "Update merge request", MessageBoxButton.OKCancel) == MessageBoxResult.OK) {
                 Branch.UpdateMergeRequest(CalcMergeRequestTitle(Comment), CalcMergeRequestDescription(Comment), AssignedToService ? CalcServiceName() : Branch.MergeRequest.Assignee);

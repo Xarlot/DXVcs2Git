@@ -14,11 +14,13 @@ namespace DXVcs2Git.Core.GitLab {
     public class MergeRequestSyncAction : MergeRequestActionBase {
         public string WatckTask { get; set; }
         public string SyncTask { get; set; }
+        public bool PerformTesting { get; set; }
         public MergeRequestSyncAction() {
         }
-        public MergeRequestSyncAction(string watchTask, string syncTask) {
+        public MergeRequestSyncAction(string watchTask, string syncTask, bool performTesting) {
             WatckTask = watchTask;
             SyncTask = syncTask;
+            PerformTesting = performTesting;
         }
         protected internal override MergeRequestActionType ActionType => MergeRequestActionType.sync;
     }
@@ -73,7 +75,9 @@ namespace DXVcs2Git.Core.GitLab {
             }
         }
 
-        public MergeRequestOptions(MergeRequestActionBase action = null) {
+        public MergeRequestOptions() {
+        }
+        public MergeRequestOptions(MergeRequestActionBase action) {
             Action = action;
         }
     }
