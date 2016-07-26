@@ -191,8 +191,14 @@ namespace DXVcs2Git.Console {
                 return 1;
             }
 
-            if (mergeRequest.Assignee.Name != username) {
-                Log.Error($"Merge request is not assigned to service user {username}.");
+            var comments = gitLabWrapper.GetComments(mergeRequest);
+            var mergeRequestSyncOptions = comments.Where(x => IsXml(x.Note)).Where(x => {
+                var mr = MergeRequestOptions.ConvertFromString(x.Note);
+                return mr?.ActionType == MergeRequestActionType.sync;
+            }).Select(x => (MergeRequestSyncAction)MergeRequestOptions.ConvertFromString(x.Note).Action).LastOrDefault();
+
+            if (mergeRequest.Assignee.Name != username || (!mergeRequestSyncOptions?.PerformTesting ?? false)) {
+                Log.Error($"Merge request is not assigned to service user {username} or doesn`t require testing.");
                 return 1;
             }
 

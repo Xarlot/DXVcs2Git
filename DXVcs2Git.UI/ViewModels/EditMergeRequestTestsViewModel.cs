@@ -93,8 +93,17 @@ namespace DXVcs2Git.UI.ViewModels {
 
     public class BuildViewModel : BindableBase {
         public int Id { get; }
+        public BuildStatus BuildStatus { get; }
+        public string Duration { get; }
         public BuildViewModel(Build build) {
             Id = build.Id;
+            BuildStatus = build.Status ?? BuildStatus.undefined;
+            if (build.StartedAt != null && (BuildStatus == BuildStatus.success || BuildStatus == BuildStatus.failed)) {
+                Duration = ((build.FinishedAt ?? DateTime.Now) - build.StartedAt.Value).ToString("g");
+            }
+            else
+                Duration = string.Empty;
+
         }
     }
 }
