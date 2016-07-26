@@ -92,9 +92,11 @@ namespace DXVcs2Git.UI.ViewModels {
             if (mergeRequest == null) {
                 comment = null;
                 assignedToService = false;
+                performTesting = false;
                 IsModified = false;
             }
             else {
+                performTesting = Branch.ShouldPerformTesting(mergeRequest.MergeRequest);
                 comment = mergeRequest.Title;
                 assignedToService = mergeRequest.Assignee == Branch.Repository.DefaultServiceName;
                 IsModified = false;

@@ -3,6 +3,7 @@ using System.Linq;
 using System.Windows.Input;
 using DevExpress.Mvvm;
 using DevExpress.Mvvm.Native;
+using DXVcs2Git.Core.GitLab;
 using DXVcs2Git.Git;
 using DXVcs2Git.UI.Farm;
 using Microsoft.Practices.ServiceLocation;
@@ -75,6 +76,17 @@ namespace DXVcs2Git.UI.ViewModels {
         }
         public void RefreshFarm() {
             FarmStatus = FarmIntegrator.GetTaskStatus(Repository.RepoConfig.FarmSyncTaskName);
+        }
+        public bool ShouldPerformTesting(MergeRequest mergeRequest) {
+            var comments = gitLabWrapper.GetComments(mergeRequest);
+            var mergeRequestSyncOptions = comments.Where(x => IsXml(x.Note)).Where(x => {
+                var mr = MergeRequestOptions.ConvertFromString(x.Note);
+                return mr?.ActionType == MergeRequestActionType.sync;
+            }).Select(x => (MergeRequestSyncAction)MergeRequestOptions.ConvertFromString(x.Note).Action).LastOrDefault();
+            return mergeRequestSyncOptions?.PerformTesting ?? false;
+        }
+        static bool IsXml(string xml) {
+            return !string.IsNullOrEmpty(xml) && xml.StartsWith("<");
         }
     }
 }
