@@ -58,12 +58,18 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
+    <Reference Include="ConfigureAwait">
+      <HintPath>..\..\GitLab.NET\GitLab.NET\bin\Debug\ConfigureAwait.dll</HintPath>
+    </Reference>
     <Reference Include="DXVCS, Version=1.0.0.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\Lib\DXVcs\DXVCS.dll</HintPath>
     </Reference>
     <Reference Include="DXVCSCore">
       <HintPath>..\Lib\DXVcs\DXVCSCore.dll</HintPath>
+    </Reference>
+    <Reference Include="GitLab.NET">
+      <HintPath>..\..\GitLab.NET\GitLab.NET\bin\Debug\GitLab.NET.dll</HintPath>
     </Reference>
     <Reference Include="LibGit2Sharp">
       <HintPath>..\packages\LibGit2Sharp.0.22.0-pre20150716071016\lib\net40\LibGit2Sharp.dll</HintPath>
@@ -96,6 +102,9 @@
     <Reference Include="ReactiveGit">
       <HintPath>..\packages\ReactiveGit.0.0.4\lib\net45\ReactiveGit.dll</HintPath>
       <Private>True</Private>
+    </Reference>
+    <Reference Include="RestSharp">
+      <HintPath>..\..\GitLab.NET\GitLab.NET\bin\Debug\RestSharp.dll</HintPath>
     </Reference>
     <Reference Include="System">
       <HintPath>..\..\..\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.6\System.dll</HintPath>
