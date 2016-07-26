@@ -20,11 +20,16 @@ namespace DXVcs2Git.Git {
         public async Task<RequestResult<Project>> GetProject(uint id) {
             return await client.Projects.Find(id);
         }
-        public Project FindProject(string project) {//need full path now (with server address)
-            var projectsTask = client.Projects.GetAll();
-            projectsTask.RunSynchronously();
-            return projectsTask.Result.Data.FirstOrDefault(x => x.HttpUrlToRepo.EndsWith(project, StringComparison.InvariantCultureIgnoreCase));
+        public async Task<Project> FindProject(string project) {//need full path now (with server address)
+            var projects = await client.Projects.Accessible();
+            return projects.Data.FirstOrDefault(x => x.HttpUrlToRepo.EndsWith(project, StringComparison.InvariantCultureIgnoreCase));
         }
+        public async Task<Project> FindProjectFromAll(string project) {//need full path now (with server address)
+            var projects = await client.Projects.GetAll();
+            return projects.Data.FirstOrDefault(x => x.HttpUrlToRepo.EndsWith(project, StringComparison.InvariantCultureIgnoreCase));
+        }
+
+
         public async Task<PaginatedResult<MergeRequest>> GetMergeRequests(Project project, Func<MergeRequest, bool> mergeRequestsHandler = null) {
             mergeRequestsHandler = mergeRequestsHandler ?? (x => true);
             return await client.MergeRequests.GetAll(project.Id, MergeRequestState.Opened);
@@ -36,6 +41,11 @@ namespace DXVcs2Git.Git {
             if(mergeRequest.ProjectId == null || mergeRequest.Id == null)
                 return await Task.FromResult<RequestResult<MergeRequest>>(null);
             return await client.MergeRequests.GetChanges(mergeRequest.ProjectId.Value, mergeRequest.Id.Value);
+        }
+        public async Task<RequestResult<List<Commit>>> GetMergeRequestCommits(MergeRequest mergeRequest) {
+            if(mergeRequest.ProjectId == null || mergeRequest.Id == null)
+                return await Task.FromResult<RequestResult<List<Commit>>>(null);
+            return await client.MergeRequests.GetCommits(mergeRequest.ProjectId.Value, mergeRequest.Id.Value);
         }
         public async Task<RequestResult<MergeRequest>> ProcessMergeRequest(MergeRequest mergeRequest, string comment) {
             if(mergeRequest.ProjectId == null || mergeRequest.Id == null)
@@ -126,6 +136,11 @@ namespace DXVcs2Git.Git {
             if(mergeRequest.ProjectId == null || mergeRequest.Id == null)
                 return await Task.FromResult<RequestResult<MergeRequest>>(null);
             return await client.MergeRequests.GetChanges(mergeRequest.ProjectId.Value, mergeRequest.Id.Value);
+        }
+        public async Task<PaginatedResult<Build>> GetBuilds(MergeRequest mergeRequest, string sha) {
+            if(mergeRequest.ProjectId == null)
+                return await Task.FromResult<PaginatedResult<Build>>(null);
+            return await client.Builds.GetByCommit(mergeRequest.ProjectId.Value, sha);
         }
     }
 }
