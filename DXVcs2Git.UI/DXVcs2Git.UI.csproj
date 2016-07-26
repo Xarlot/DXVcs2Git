@@ -513,6 +513,7 @@
     </None>
     <None Include="Configs\XPF_2015.1.config">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <SubType>Designer</SubType>
     </None>
     <None Include="Configs\DataAccess_2015.1.config">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>

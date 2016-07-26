@@ -73,7 +73,9 @@ namespace DXVcs2Git.Core.GitLab {
             }
         }
 
-        public MergeRequestOptions(MergeRequestActionBase action = null) {
+        public MergeRequestOptions() {
+        }
+        public MergeRequestOptions(MergeRequestActionBase action) {
             Action = action;
         }
     }
