@@ -50,7 +50,7 @@
                 <dxg:GridColumn Width="90" Header="Duration"  FieldName="Build.Duration" IsSmart="True"/>
             </dxg:GridControl.Columns>
             <dxg:GridControl.View>
-                <dxg:TableView/>
+                <dxg:TableView NavigationStyle="Row"/>
             </dxg:GridControl.View>
         </dxg:GridControl>
     </Grid>
