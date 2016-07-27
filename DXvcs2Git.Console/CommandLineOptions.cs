@@ -83,15 +83,15 @@ namespace DXVcs2Git.Console {
     }
     [Verb("patch", HelpText = "Generate patch for branch")]
     public class PatchOptions : GeneralOptions {
-        [Option('b', "branch", Required = false, HelpText = "Local git branch name")]
+        [Option('b', "branch", Required = true, HelpText = "Local git branch name")]
         public string Branch { get; }
-        [Option('t', "tracker", Required = false, HelpText = "Path to config with items to track")]
+        [Option('t', "tracker", Required = true, HelpText = "Path to config with items to track")]
         public string Tracker { get; }
-        [Option("sourcerepo", Required = false, HelpText = "Source repo for searching merge request")]
+        [Option("sourcerepo", Required = true, HelpText = "Source repo for searching merge request")]
         public string SourceRepo { get; }
-        [Option("sourcebranch", Required = false, HelpText = "Source branch for searching merge request")]
+        [Option("sourcebranch", Required = true, HelpText = "Source branch for searching merge request")]
         public string SourceBranch { get; }
-        [Option('d', "dir", HelpText = "Path to local git repo")]
+        [Option('d', "dir", Required = true, HelpText = "Path to local git repo")]
         public string LocalFolder { get; }
         [Option("patchdir", Required = true, HelpText = "Location of patch.info generated in patch mode")]
         public string PatchDir { get; }
