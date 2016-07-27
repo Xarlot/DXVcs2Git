@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Windows.Input;
 using DevExpress.Mvvm;
@@ -87,6 +88,9 @@ namespace DXVcs2Git.UI.ViewModels {
         }
         static bool IsXml(string xml) {
             return !string.IsNullOrEmpty(xml) && xml.StartsWith("<");
+        }
+        public Stream DownloadArtifacts(MergeRequest mergeRequest, Build build) {
+            return gitLabWrapper.DownloadArtifacts(mergeRequest, build);
         }
     }
 }

@@ -1,0 +1,20 @@
+﻿<UserControl x:Class="DXVcs2Git.UI.Views.BuildLogsControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:extensions="clr-namespace:DXVcs2Git.UI.Extensions"
+             xmlns:viewModels="clr-namespace:DXVcs2Git.UI.ViewModels"
+             xmlns:dx="http://schemas.devexpress.com/winfx/2008/xaml/core"
+             mc:Ignorable="d" 
+             d:DesignHeight="300" d:DesignWidth="300">
+    <UserControl.DataContext>
+        <extensions:IoC TargetType="{x:Type viewModels:EditBuildLogsViewModel }"/>
+    </UserControl.DataContext>
+    <Grid>
+        <Button Content="123"/>
+        <!--<dx:DXTabControl>
+            
+        </dx:DXTabControl>-->
+    </Grid>
+</UserControl>

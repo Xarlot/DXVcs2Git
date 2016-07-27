@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Windows.Controls;
 using System.Windows.Input;
 using DevExpress.Mvvm;
 using DevExpress.Mvvm.Native;
@@ -14,6 +16,9 @@ namespace DXVcs2Git.UI.ViewModels {
 
         public ICommand RunTestsCommand { get; }
         public ICommand CancelTestsCommand { get; }
+        public ICommand ShowLogCommand { get; }
+
+        IWindowService ShowLogsService => GetService<IWindowService>();
 
         public IEnumerable<CommitViewModel> Commits {
             get { return GetProperty(() => Commits); }
@@ -24,8 +29,18 @@ namespace DXVcs2Git.UI.ViewModels {
             Messenger.Default.Register<Message>(this, OnMessageReceived);
             RunTestsCommand = DelegateCommandFactory.Create(PerformRunTests, CanPerformRunTests);
             CancelTestsCommand = DelegateCommandFactory.Create(PerformCancelTests, CanPerformCancelTests);
+            ShowLogCommand = DelegateCommandFactory.Create<CommitViewModel>(PerformShowLogs, CanPerformShowLogs);
 
             Initialize();
+        }
+        bool CanPerformShowLogs(CommitViewModel model) {
+            if (model == null)
+                return false;
+            var buildStatus = model.Build?.BuildStatus;
+            return buildStatus == BuildStatus.failed || buildStatus == BuildStatus.success;
+        }
+        void PerformShowLogs(CommitViewModel model) {
+            ShowLogsService.Show(model);
         }
         bool CanPerformCancelTests() {
             return false;
@@ -33,11 +48,6 @@ namespace DXVcs2Git.UI.ViewModels {
         void PerformCancelTests() {
         }
         BranchViewModel BranchViewModel { get; set; }
-
-        public bool IsTestsRunning {
-            get { return GetProperty(() => IsTestsRunning); }
-            private set { SetProperty(() => IsTestsRunning, value); }
-        }
         void OnMessageReceived(Message msg) {
             if (msg.MessageType == MessageType.RefreshFarm) {
                 RefreshFarmStatus();
@@ -53,8 +63,10 @@ namespace DXVcs2Git.UI.ViewModels {
                 return;
             }
             var mergeRequest = BranchViewModel.MergeRequest;
-            Commits = BranchViewModel.GetCommits(mergeRequest.MergeRequest).Select(x => new CommitViewModel(x)).ToList();
-            Commits.ForEach(x => x.UpdateBuilds(sha => BranchViewModel.GetBuilds(mergeRequest.MergeRequest, sha)));
+            Commits = BranchViewModel.GetCommits(mergeRequest.MergeRequest)
+                .Select(commit => new CommitViewModel(commit, sha => BranchViewModel.GetBuilds(mergeRequest.MergeRequest, sha), x=> BranchViewModel.DownloadArtifacts(mergeRequest.MergeRequest, x)))
+                .ToList();
+            Commits.ForEach(x => x.UpdateBuilds());
         }
         void RefreshFarmStatus() {
         }
@@ -71,6 +83,8 @@ namespace DXVcs2Git.UI.ViewModels {
 
     public class CommitViewModel : BindableBase {
         readonly Commit commit;
+        readonly Func<Build, Stream> downloadArtifactsHandler;
+        readonly Func<Sha1, IEnumerable<Build>> getBuildsHandler;
         public string Id { get; }
         public string Title {
             get { return GetProperty(() => Title); }
@@ -80,30 +94,39 @@ namespace DXVcs2Git.UI.ViewModels {
             get { return GetProperty(() => Build); }
             private set { SetProperty(() => Build, value); }
         }
-        public CommitViewModel(Commit commit) {
+        public CommitViewModel(Commit commit, Func<Sha1, IEnumerable<Build>> getBuildsHandler, Func<Build, Stream> downloadArtifactsHandler) {
             this.commit = commit;
+            this.downloadArtifactsHandler = downloadArtifactsHandler;
+            this.getBuildsHandler = getBuildsHandler;
             Title = commit.Title;
             Id = commit.ShortId;
         }
-        public void UpdateBuilds(Func<Sha1, IEnumerable<Build>> getBuilds) {
-            var builds = getBuilds(commit.Id);
+        public void UpdateBuilds() {
+            var builds = getBuildsHandler(commit.Id);
             Build = builds.Select(x => new BuildViewModel(x)).FirstOrDefault();
+        }
+        public ArtifactsViewModel DownloadArtifacts() {
+            if (Build == null)
+                return null;
+            Stream stream = downloadArtifactsHandler(Build.Build);
+            return new ArtifactsViewModel();
         }
     }
 
     public class BuildViewModel : BindableBase {
-        public int Id { get; }
+        public int Id => Build.Id;
         public BuildStatus BuildStatus { get; }
         public string Duration { get; }
+        public ArtifactsFile Artifacts => Build.ArtifactsFile;
+        public Build Build { get; }
         public BuildViewModel(Build build) {
-            Id = build.Id;
+            Build = build;
             BuildStatus = build.Status ?? BuildStatus.undefined;
             if (build.StartedAt != null && (BuildStatus == BuildStatus.success || BuildStatus == BuildStatus.failed)) {
                 Duration = ((build.FinishedAt ?? DateTime.Now) - build.StartedAt.Value).ToString("g");
             }
             else
                 Duration = string.Empty;
-
         }
     }
 }

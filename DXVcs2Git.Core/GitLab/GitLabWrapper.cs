@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using DXVcs2Git.Core;
 using NGitLab;
@@ -159,6 +160,9 @@ namespace DXVcs2Git.Git {
         public IEnumerable<Build> GetBuilds(MergeRequest mergeRequest, Sha1 sha) {
             var projectClient = client.GetRepository(mergeRequest.SourceProjectId);
             return projectClient.Builds.GetBuildsForCommit(sha);
+        }
+        public Stream DownloadArtifacts(MergeRequest mergeRequest, Build build) {
+            return null;
         }
     }
 }

@@ -336,8 +336,10 @@
     <Compile Include="Selectors\RepositoriesControlImageSelector.cs" />
     <Compile Include="Services\FolderBrowserCustomDialogService.cs" />
     <Compile Include="UIStartupOptions.cs" />
+    <Compile Include="ViewModels\ArtifactsViewModel.cs" />
     <Compile Include="ViewModels\CreateMergeRequestViewModel.cs" />
     <Compile Include="ViewModels\EditBranchViewModel.cs" />
+    <Compile Include="ViewModels\EditBuildLogsViewModel.cs" />
     <Compile Include="ViewModels\EditMergeRequestTestsViewModel.cs" />
     <Compile Include="ViewModels\EditTrackRepository.cs" />
     <Compile Include="ViewModels\LoggingViewModel.cs" />
@@ -360,6 +362,9 @@
     </Compile>
     <Compile Include="Views\BranchDescriptionControl.xaml.cs">
       <DependentUpon>BranchDescriptionControl.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\BuildLogsControl.xaml.cs">
+      <DependentUpon>BuildLogsControl.xaml</DependentUpon>
     </Compile>
     <Compile Include="Views\CreateMergeRequestControl.xaml.cs">
       <DependentUpon>CreateMergeRequestControl.xaml</DependentUpon>
@@ -406,6 +411,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Views\BranchDescriptionControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\BuildLogsControl.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
