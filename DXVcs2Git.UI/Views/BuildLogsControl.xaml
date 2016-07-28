@@ -6,15 +6,35 @@
              xmlns:extensions="clr-namespace:DXVcs2Git.UI.Extensions"
              xmlns:viewModels="clr-namespace:DXVcs2Git.UI.ViewModels"
              xmlns:dx="http://schemas.devexpress.com/winfx/2008/xaml/core"
+             xmlns:avalonedit="http://icsharpcode.net/sharpdevelop/avalonedit"
+             xmlns:dxmvvm="http://schemas.devexpress.com/winfx/2008/xaml/mvvm"
+             xmlns:behaviors="clr-namespace:DXVcs2Git.UI.Behaviors"
              mc:Ignorable="d" 
              d:DesignHeight="300" d:DesignWidth="300">
     <UserControl.DataContext>
         <extensions:IoC TargetType="{x:Type viewModels:EditBuildLogsViewModel }"/>
     </UserControl.DataContext>
     <Grid>
-        <Button Content="123"/>
-        <!--<dx:DXTabControl>
-            
-        </dx:DXTabControl>-->
+        <dx:DXTabControl>
+            <dx:DXTabItem Header="Build log" Content="{Binding Path=Build}">
+                <dx:DXTabItem.ContentTemplate>
+                    <DataTemplate>
+                        <avalonedit:TextEditor 
+                            FontFamily="Consolas" 
+                            IsReadOnly="True">
+                            <dxmvvm:Interaction.Behaviors>
+                                <behaviors:AvalonEditTextBindingBehavior Text="{Binding Path=Text}"/>
+                            </dxmvvm:Interaction.Behaviors>
+                        </avalonedit:TextEditor>
+                    </DataTemplate>
+                </dx:DXTabItem.ContentTemplate>
+            </dx:DXTabItem>
+            <dx:DXTabItem Header="Tests" Content="{Binding Path=Tests}">
+                <dx:DXTabItem.ContentTemplate>
+                    <DataTemplate>
+                    </DataTemplate>
+                </dx:DXTabItem.ContentTemplate>
+            </dx:DXTabItem>
+        </dx:DXTabControl>
     </Grid>
 </UserControl>
