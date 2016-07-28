@@ -28,18 +28,18 @@ namespace DXVcs2Git.UI.ViewModels {
                 return;
             using (var stream = new MemoryStream(fileContent)) {
                 using (ZipFile zipFile = ZipFile.Read(stream)) {
-                    BuildLog = GetPartContent(zipFile, buildlogpath);
+                    BuildLog = GetPartContent(zipFile, buildlogpath).Replace("&gt;", ">");
                     TestLog = GetPartContent(zipFile, testlogpath);
                     Modifications = GetPartContent(zipFile, modificationspath);
                 }
             }
         }
         string GetPartContent(ZipFile zip, string partPath) {
-            //var partUri = PackUriHelper.CreatePartUri(new Uri(partPath, UriKind.Relative));
             var part = zip[partPath];
             using (var memoryStream = new MemoryStream()) {
                 part.Extract(memoryStream);
-                return Encoding.UTF8.GetString(memoryStream.ToArray());
+                var str =  Encoding.UTF8.GetString(memoryStream.ToArray());
+                return str;
             }
         }
     }

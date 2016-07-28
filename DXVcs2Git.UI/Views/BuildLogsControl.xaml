@@ -9,6 +9,9 @@
              xmlns:avalonedit="http://icsharpcode.net/sharpdevelop/avalonedit"
              xmlns:dxmvvm="http://schemas.devexpress.com/winfx/2008/xaml/mvvm"
              xmlns:behaviors="clr-namespace:DXVcs2Git.UI.Behaviors"
+             xmlns:dxg="http://schemas.devexpress.com/winfx/2008/xaml/grid"
+             xmlns:dxgt="http://schemas.devexpress.com/winfx/2008/xaml/grid/themekeys"
+             xmlns:system="clr-namespace:System;assembly=mscorlib"
              mc:Ignorable="d" 
              d:DesignHeight="300" d:DesignWidth="300">
     <UserControl.DataContext>
@@ -20,6 +23,7 @@
                 <dx:DXTabItem.ContentTemplate>
                     <DataTemplate>
                         <avalonedit:TextEditor 
+                            SyntaxHighlighting="XML"
                             FontFamily="Consolas" 
                             IsReadOnly="True">
                             <dxmvvm:Interaction.Behaviors>
@@ -33,6 +37,7 @@
                 <dx:DXTabItem.ContentTemplate>
                     <DataTemplate>
                         <avalonedit:TextEditor 
+                            SyntaxHighlighting="XML"
                             FontFamily="Consolas" 
                             IsReadOnly="True">
                             <dxmvvm:Interaction.Behaviors>
@@ -45,7 +50,69 @@
             <dx:DXTabItem Header="Tests" Content="{Binding Path=Tests}">
                 <dx:DXTabItem.ContentTemplate>
                     <DataTemplate>
-                        <Button Content="jdfsdkjsdk"/>
+                        <dxg:GridControl ItemsSource="{Binding Path=Tests}" GroupCount="3" IsRecursiveExpand="True">
+                            <dxg:GridControl.Resources>
+                                <ResourceDictionary>
+                                    <dxmvvm:ObjectToObjectConverter x:Key="highlightConverter">
+                                        <dxmvvm:ObjectToObjectConverter.DefaultTarget>
+                                            <system:Boolean>True</system:Boolean>
+                                        </dxmvvm:ObjectToObjectConverter.DefaultTarget>
+                                        <dxmvvm:ObjectToObjectConverter.Map>
+                                            <dxmvvm:MapItem>
+                                                <dxmvvm:MapItem.Source>
+                                                    <system:Int32>0</system:Int32>
+                                                </dxmvvm:MapItem.Source>
+                                                <dxmvvm:MapItem.Target>
+                                                    <system:Boolean>false</system:Boolean>
+                                                </dxmvvm:MapItem.Target>
+                                            </dxmvvm:MapItem>
+                                        </dxmvvm:ObjectToObjectConverter.Map>
+                                    </dxmvvm:ObjectToObjectConverter>
+                                    <Style TargetType="{x:Type dxg:GroupRowControl}">
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding Path=GroupSummaryData[2].SummaryValue, Converter={StaticResource highlightConverter}}" Value="True">
+                                                <Setter Property="Foreground" Value="Red"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </ResourceDictionary>
+                            </dxg:GridControl.Resources>
+                            <dxg:GridControl.Columns>
+                                <dxg:GridColumn Width="*" FieldName="Project"/>
+                                <dxg:GridColumn Width="*" FieldName="Name" Header="Test Name"/>
+                                <dxg:GridColumn Width="80" FieldName="Time" Header="Test Time"/>
+                                <dxg:GridColumn Width="*" FieldName="ClassName"/>
+                                <dxg:GridColumn Width="*" FieldName="NamespaceName"/>
+                                <dxg:GridColumn Width="80" FieldName="Executed" Visible="False"/>
+                                <dxg:GridColumn Width="80" FieldName="Failed"/>
+                            </dxg:GridControl.Columns>
+                            <dxg:GridControl.View>
+                                <dxg:TableView NavigationStyle="Row" UseAnimationWhenExpanding="False" ShowGroupedColumns="False">
+                                    <dxg:TableView.FormatConditions>
+                                        <dxg:FormatCondition Expression="[Executed] = Null">
+                                            <dxg:FormatCondition.Format>
+                                                <dx:Format Foreground="Red"/>
+                                            </dxg:FormatCondition.Format>
+                                        </dxg:FormatCondition>
+                                        <dxg:FormatCondition Expression="[Executed] = False">
+                                            <dxg:FormatCondition.Format>
+                                                <dx:Format Foreground="DarkOrange"/>
+                                            </dxg:FormatCondition.Format>
+                                        </dxg:FormatCondition>
+                                    </dxg:TableView.FormatConditions>
+                                </dxg:TableView>
+                            </dxg:GridControl.View>
+                            <dxg:GridControl.SortInfo>
+                                <dxg:GridSortInfo FieldName="Project"/>
+                                <dxg:GridSortInfo FieldName="NamespaceName"/>
+                                <dxg:GridSortInfo FieldName="ClassName"/>
+                            </dxg:GridControl.SortInfo>
+                            <dxg:GridControl.GroupSummary>
+                                <dxg:GridSummaryItem FieldName="Failed" SummaryType="Count" DisplayFormat="Count: {0}"/>
+                                <dxg:GridSummaryItem FieldName="Executed" SummaryType="Sum" DisplayFormat="Total time: {0}"/>
+                                <dxg:GridSummaryItem FieldName="Failed" SummaryType="Sum" DisplayFormat="Failed: {0}"/>
+                            </dxg:GridControl.GroupSummary>
+                        </dxg:GridControl>
                     </DataTemplate>
                 </dx:DXTabItem.ContentTemplate>
             </dx:DXTabItem>
