@@ -16,6 +16,19 @@
     </UserControl.DataContext>
     <Grid>
         <dx:DXTabControl>
+            <dx:DXTabItem Header="Modifications" Content="{Binding Path=Modifications}">
+                <dx:DXTabItem.ContentTemplate>
+                    <DataTemplate>
+                        <avalonedit:TextEditor 
+                            FontFamily="Consolas" 
+                            IsReadOnly="True">
+                            <dxmvvm:Interaction.Behaviors>
+                                <behaviors:AvalonEditTextBindingBehavior Text="{Binding Path=Text}"/>
+                            </dxmvvm:Interaction.Behaviors>
+                        </avalonedit:TextEditor>
+                    </DataTemplate>
+                </dx:DXTabItem.ContentTemplate>
+            </dx:DXTabItem>
             <dx:DXTabItem Header="Build log" Content="{Binding Path=Build}">
                 <dx:DXTabItem.ContentTemplate>
                     <DataTemplate>
@@ -32,6 +45,7 @@
             <dx:DXTabItem Header="Tests" Content="{Binding Path=Tests}">
                 <dx:DXTabItem.ContentTemplate>
                     <DataTemplate>
+                        <Button Content="jdfsdkjsdk"/>
                     </DataTemplate>
                 </dx:DXTabItem.ContentTemplate>
             </dx:DXTabItem>

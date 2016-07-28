@@ -344,6 +344,8 @@
     <Compile Include="ViewModels\EditMergeRequestTestsViewModel.cs" />
     <Compile Include="ViewModels\EditTrackRepository.cs" />
     <Compile Include="ViewModels\LoggingViewModel.cs" />
+    <Compile Include="ViewModels\ModificationsViewModel.cs" />
+    <Compile Include="ViewModels\TestLogViewModel.cs" />
     <Compile Include="ViewModels\UriDownloaderViewModel.cs" />
     <Compile Include="ViewModels\BranchViewModel.cs" />
     <Compile Include="ViewModels\EditBranchChangesViewModel.cs" />

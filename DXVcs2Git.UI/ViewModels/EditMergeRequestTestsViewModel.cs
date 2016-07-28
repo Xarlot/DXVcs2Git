@@ -64,7 +64,7 @@ namespace DXVcs2Git.UI.ViewModels {
             }
             var mergeRequest = BranchViewModel.MergeRequest;
             Commits = BranchViewModel.GetCommits(mergeRequest.MergeRequest)
-                .Select(commit => new CommitViewModel(commit, sha => BranchViewModel.GetBuilds(mergeRequest.MergeRequest, sha), x=> BranchViewModel.DownloadArtifacts(mergeRequest.MergeRequest, x)))
+                .Select(commit => new CommitViewModel(commit, sha => BranchViewModel.GetBuilds(mergeRequest.MergeRequest, sha), x => BranchViewModel.DownloadArtifacts(mergeRequest.MergeRequest, x)))
                 .ToList();
             Commits.ForEach(x => x.UpdateBuilds());
         }
@@ -83,7 +83,7 @@ namespace DXVcs2Git.UI.ViewModels {
 
     public class CommitViewModel : BindableBase {
         readonly Commit commit;
-        readonly Func<Build, Stream> downloadArtifactsHandler;
+        readonly Func<Build, byte[]> downloadArtifactsHandler;
         readonly Func<Sha1, IEnumerable<Build>> getBuildsHandler;
         public string Id { get; }
         public string Title {
@@ -94,7 +94,7 @@ namespace DXVcs2Git.UI.ViewModels {
             get { return GetProperty(() => Build); }
             private set { SetProperty(() => Build, value); }
         }
-        public CommitViewModel(Commit commit, Func<Sha1, IEnumerable<Build>> getBuildsHandler, Func<Build, Stream> downloadArtifactsHandler) {
+        public CommitViewModel(Commit commit, Func<Sha1, IEnumerable<Build>> getBuildsHandler, Func<Build, byte[]> downloadArtifactsHandler) {
             this.commit = commit;
             this.downloadArtifactsHandler = downloadArtifactsHandler;
             this.getBuildsHandler = getBuildsHandler;
@@ -108,8 +108,7 @@ namespace DXVcs2Git.UI.ViewModels {
         public ArtifactsViewModel DownloadArtifacts() {
             if (Build == null)
                 return null;
-            Stream stream = downloadArtifactsHandler(Build.Build);
-            return new ArtifactsViewModel();
+            return new ArtifactsViewModel(Build.Artifacts, downloadArtifactsHandler(Build.Build));
         }
     }
 
