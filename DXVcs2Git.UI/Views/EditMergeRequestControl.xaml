@@ -12,6 +12,11 @@
              mc:Ignorable="d" 
              d:DesignHeight="300" d:DesignWidth="300"
              KeyboardNavigation.TabNavigation="Cycle">
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
+        </ResourceDictionary>
+    </UserControl.Resources>
     <UserControl.DataContext>
         <extensions:IoC TargetType="{x:Type viewModels:EditMergeRequestViewModel}"/>
     </UserControl.DataContext>
@@ -30,7 +35,7 @@
                         AcceptsReturn="True">
                     </dxe:TextEdit>
                 </dxlc:LayoutItem>
-                <dxlc:LayoutItem>
+                <dxlc:LayoutItem Visibility="{Binding Path=SupportsTesting, Converter={StaticResource BooleanToVisibilityConverter}}">
                     <dxe:CheckEdit Content="Perform testing on farm" EditValue="{Binding Path=PerformTesting, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
                 </dxlc:LayoutItem>
                 <dxlc:LayoutItem>

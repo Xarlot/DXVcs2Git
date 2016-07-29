@@ -18,6 +18,10 @@ namespace DXVcs2Git.UI.ViewModels {
         bool assignedToService;
         bool performTesting;
 
+        public bool SupportsTesting {
+            get { return GetProperty(() => SupportsTesting); }
+            private set { SetProperty(() => SupportsTesting, value); }
+        }
         public string Comment {
             get { return comment; }
             set { SetProperty(ref comment, value, () => Comment, CommentChanged); }
@@ -101,6 +105,7 @@ namespace DXVcs2Git.UI.ViewModels {
                 assignedToService = mergeRequest.Assignee == Branch.Repository.DefaultServiceName;
                 IsModified = false;
             }
+            SupportsTesting = Branch?.Repository.RepoConfig.SupportsTesting ?? false;
             RaisePropertyChanged(null);
         }
     }
