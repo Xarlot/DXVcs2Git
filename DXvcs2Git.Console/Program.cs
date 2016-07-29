@@ -41,7 +41,7 @@ namespace DXVcs2Git.Console {
             try {
                 var exitCode = result.MapResult(
                     (SyncOptions syncOptions) => DoSyncWork(syncOptions),
-                    (PatchOptions patchOptions) => DoPatchWork(patchOptions), 
+                    (PatchOptions patchOptions) => DoPatchWork(patchOptions),
                     (ApplyPatchOptions applypatch) => DoApplyPatchWork(applypatch),
                     (ListenerOptions listenerOptions) => DoListenerWork(listenerOptions),
                     err => DoErrors(args));
@@ -89,7 +89,7 @@ namespace DXVcs2Git.Console {
                         continue;
                     }
                     if (patchItem.SyncAction == SyncAction.Move) {
-                        DeleteFile(localDir, patchItem);                        
+                        DeleteFile(localDir, patchItem);
                         RewriteFile(patchItem, localDir, zip);
                     }
                     if (patchItem.SyncAction == SyncAction.New) {
@@ -116,6 +116,98 @@ namespace DXVcs2Git.Console {
             string path = Path.Combine(localDir, patchItem.OldPath);
             File.Delete(path);
         }
+        static int DoProcessTestResultsWork(ProcessTestsOptions clo) {
+            string targetRepoPath = GetSimpleGitHttpPath(clo.Repo);
+
+            if (string.IsNullOrEmpty(targetRepoPath)) {
+                Log.Error($"Can`t parse repo path {clo.Repo}");
+                return 1;
+            }
+
+            string sourceRepoPath = GetSimpleGitHttpPath(clo.SourceRepo);
+            if (string.IsNullOrEmpty(sourceRepoPath)) {
+                Log.Error($"Can`t parse source repo path {clo.SourceRepo}");
+                return 1;
+            }
+
+            string gitlabauthtoken = clo.AuthToken;
+            string targetBranchName = clo.Branch;
+            string gitServer = clo.Server;
+            string sourceBranchName = clo.SourceBranch;
+
+            GitLabWrapper gitLabWrapper = new GitLabWrapper(gitServer, gitlabauthtoken);
+
+            Project targetProject = gitLabWrapper.FindProject(targetRepoPath);
+            if (targetProject == null) {
+                Log.Error($"Can`t find target project {targetRepoPath}.");
+                return 1;
+            }
+            Branch targetBranch = gitLabWrapper.GetBranch(targetProject, targetBranchName);
+            if (targetBranch == null) {
+                Log.Error($"Can`t find targetBranch branch {targetBranchName}");
+                return 1;
+            }
+
+            var sourceProject = gitLabWrapper.FindProjectFromAll(sourceRepoPath);
+            if (sourceProject == null) {
+                Log.Error($"Can`t find source project {sourceRepoPath}");
+                return 1;
+            }
+
+            var sourceBranch = gitLabWrapper.GetBranch(sourceProject, sourceBranchName);
+            if (sourceBranch == null) {
+                Log.Error($"Source branch {sourceBranchName} was not found.");
+                return 1;
+            }
+
+            MergeRequest mergeRequest = gitLabWrapper.GetMergeRequests(targetProject, x => x.SourceBranch == sourceBranchName && x.TargetBranch == targetBranchName).FirstOrDefault();
+            if (mergeRequest == null) {
+                Log.Error($"Can`t find merge request.");
+                return 1;
+            }
+
+            var comments = gitLabWrapper.GetComments(mergeRequest);
+            var mergeRequestSyncOptions = comments?.Where(x => IsXml(x.Note)).Where(x => {
+                var mr = MergeRequestOptions.ConvertFromString(x.Note);
+                return mr?.ActionType == MergeRequestActionType.sync;
+            }).Select(x => (MergeRequestSyncAction)MergeRequestOptions.ConvertFromString(x.Note).Action).LastOrDefault();
+
+            if (mergeRequestSyncOptions == null) {
+                Log.Message("Merge request sync options not found. Nothing to do.");
+                return 0;
+            }
+
+            if (!mergeRequestSyncOptions.PerformTesting) {
+                Log.Message("Testing is disable by config.");
+                return 0;
+            }
+
+            var commit = gitLabWrapper.GetMergeRequestCommits(mergeRequest).FirstOrDefault();
+            if (commit == null) {
+                Log.Message("Merge request has no commits.");
+                return 0;
+            }
+
+            var mergeRequestBuild = gitLabWrapper.GetBuilds(mergeRequest, commit.Id).FirstOrDefault();
+            if (mergeRequestBuild == null) {
+                Log.Message("Merge request has no build.");
+                return 0;
+            }
+
+            if (mergeRequestBuild.Status == BuildStatus.success) {
+                if (mergeRequestSyncOptions.AssignToSyncService) {
+                    gitLabWrapper.UpdateMergeRequestAssignee(mergeRequest, mergeRequestSyncOptions.SyncTask);
+                    Log.Message($"Success tests. Assigning to sync service {mergeRequestSyncOptions.SyncTask}");
+                    return 0;
+                }
+            }
+            if (mergeRequestBuild.Status == BuildStatus.failed) {
+                Log.Message($"Failed tests.");
+                return 0;
+            }
+            return 0;
+        }
+
         static int DoPatchWork(PatchOptions clo) {
             string localGitDir = clo.LocalFolder != null && Path.IsPathRooted(clo.LocalFolder) ? clo.LocalFolder : Path.Combine(Environment.CurrentDirectory, clo.LocalFolder ?? repoPath);
 
@@ -359,7 +451,7 @@ namespace DXVcs2Git.Console {
             }
         }
         static void ForceTestMergeRequest(GitLabWrapper gitLabWrapper, MergeRequestHookClient hook) {
-            throw new NotImplementedException();
+            Log.Error("Force test merge request is not implemented yet.");
         }
         static bool ShouldTestMergeRequest(GitLabWrapper gitLabWrapper, MergeRequestHookClient hook) {
             var project = gitLabWrapper.GetProject(hook.Attributes.TargetProjectId);
@@ -380,6 +472,16 @@ namespace DXVcs2Git.Console {
             var options = xmlComments.Select(x => MergeRequestOptions.ConvertFromString(x.Note)).FirstOrDefault();
             if (options != null && options.ActionType == MergeRequestActionType.sync) {
                 var action = (MergeRequestSyncAction)options.Action;
+                if (action.PerformTesting) {
+                    Log.Message("Check build status before force build.");
+                    var commit = gitLabWrapper.GetMergeRequestCommits(mergeRequest).FirstOrDefault();
+                    var build = commit != null ? gitLabWrapper.GetBuilds(mergeRequest, commit.Id).FirstOrDefault() : null;
+                    var buildStatus = build?.Status ?? BuildStatus.undefined;
+                    Log.Message($"Build status = {buildStatus}.");
+                    if (buildStatus == BuildStatus.success) 
+                        ForceBuild(action.SyncTask);
+                    return;
+                }
                 ForceBuild(action.SyncTask);
             }
             else

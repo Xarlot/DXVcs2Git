@@ -12,7 +12,7 @@ namespace DXVcs2Git.Console {
         public string Server { get; }
         [Option('l', "login", Required = true, HelpText = "Login to git master account")]
         public string Login { get; }
-        [Option('r', "repo", Required = true, HelpText = "Http git repo path")]
+        [Option('r', "repo", Required = false, HelpText = "Http git repo path")]
         public string Repo { get; }
         [Option('p', "password", Required = true, HelpText = "Password")]
         public string Password { get; }
@@ -48,6 +48,18 @@ namespace DXVcs2Git.Console {
             SourceBranch = sourceBranch;
             SourceRepo = sourceRepo;
             LocalFolder = localFolder;
+        }
+    }
+    [Verb("processtests", HelpText = "Process test results")]
+    public class ProcessTestsOptions : GeneralOptions {
+        [Option('b', "branch", Required = true, HelpText = "Local git branch name")]
+        public string Branch { get; }
+        [Option("sourcerepo", Required = true, HelpText = "Source repo for searching merge request")]
+        public string SourceRepo { get; }
+        [Option("sourcebranch", Required = true, HelpText = "Source branch for searching merge request")]
+        public string SourceBranch { get; }
+
+        public ProcessTestsOptions(string server, string login, string repo, string password, string authToken) : base(server, login, repo, password, authToken) {
         }
     }
     [Verb("sync", HelpText = "Sync changes between dxvcs and git")]
