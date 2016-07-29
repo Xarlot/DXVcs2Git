@@ -37,13 +37,14 @@ namespace DXVcs2Git.Console {
         const string vcsServer = @"net.tcp://vcsservice.devexpress.devx:9091/DXVCSService";
         const int MaxChangesCount = 1000;
         static void Main(string[] args) {
-            var result = Parser.Default.ParseArguments<SyncOptions, PatchOptions, ApplyPatchOptions, ListenerOptions>(args);
+            var result = Parser.Default.ParseArguments<SyncOptions, PatchOptions, ApplyPatchOptions, ListenerOptions, ProcessTestsOptions>(args);
             try {
                 var exitCode = result.MapResult(
                     (SyncOptions syncOptions) => DoSyncWork(syncOptions),
                     (PatchOptions patchOptions) => DoPatchWork(patchOptions),
                     (ApplyPatchOptions applypatch) => DoApplyPatchWork(applypatch),
                     (ListenerOptions listenerOptions) => DoListenerWork(listenerOptions),
+                    (ProcessTestsOptions testOptions) => DoProcessTestResultsWork(testOptions),
                     err => DoErrors(args));
                 Environment.Exit(exitCode);
             }

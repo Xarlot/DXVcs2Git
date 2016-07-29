@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Windows.Input;
@@ -95,6 +96,9 @@ namespace DXVcs2Git.UI.ViewModels {
         }
         public byte[] DownloadArtifacts(MergeRequest mergeRequest, Build build) {
             return gitLabWrapper.DownloadArtifacts(mergeRequest, build);
+        }
+        public void ForceBuild(MergeRequest mergeRequest) {
+            gitLabWrapper.ForceBuild(mergeRequest);
         }
     }
 }
