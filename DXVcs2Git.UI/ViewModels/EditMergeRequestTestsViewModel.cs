@@ -14,7 +14,6 @@ namespace DXVcs2Git.UI.ViewModels {
     public class EditMergeRequestTestsViewModel : ViewModelBase {
         RepositoriesViewModel RepositoriesViewModel => ServiceLocator.Current.GetInstance<RepositoriesViewModel>();
 
-        public ICommand RunTestsCommand { get; }
         public ICommand CancelTestsCommand { get; }
         public ICommand ShowLogCommand { get; }
 
@@ -27,7 +26,6 @@ namespace DXVcs2Git.UI.ViewModels {
 
         public EditMergeRequestTestsViewModel() {
             Messenger.Default.Register<Message>(this, OnMessageReceived);
-            RunTestsCommand = DelegateCommandFactory.Create(PerformRunTests, CanPerformRunTests);
             CancelTestsCommand = DelegateCommandFactory.Create(PerformCancelTests, CanPerformCancelTests);
             ShowLogCommand = DelegateCommandFactory.Create<CommitViewModel>(PerformShowLogs, CanPerformShowLogs);
 

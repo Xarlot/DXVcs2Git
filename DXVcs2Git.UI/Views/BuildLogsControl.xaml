@@ -79,10 +79,10 @@
                             </dxg:GridControl.Resources>
                             <dxg:GridControl.Columns>
                                 <dxg:GridColumn Width="*" FieldName="Project"/>
-                                <dxg:GridColumn Width="*" FieldName="Name" Header="Test Name"/>
-                                <dxg:GridColumn Width="80" FieldName="Time" Header="Test Time"/>
-                                <dxg:GridColumn Width="*" FieldName="ClassName"/>
-                                <dxg:GridColumn Width="*" FieldName="NamespaceName"/>
+                                <dxg:GridColumn Width="*" FieldName="Name" Header="Test"/>
+                                <dxg:GridColumn Width="80" FieldName="Time"/>
+                                <dxg:GridColumn Width="*" Header="Class" FieldName="ClassName"/>
+                                <dxg:GridColumn Width="*" Header="Namespace"  FieldName="NamespaceName"/>
                                 <dxg:GridColumn Width="80" FieldName="Executed" Visible="False"/>
                                 <dxg:GridColumn Width="80" FieldName="Failed"/>
                             </dxg:GridControl.Columns>
@@ -109,7 +109,7 @@
                             </dxg:GridControl.SortInfo>
                             <dxg:GridControl.GroupSummary>
                                 <dxg:GridSummaryItem FieldName="Failed" SummaryType="Count" DisplayFormat="Count: {0}"/>
-                                <dxg:GridSummaryItem FieldName="Executed" SummaryType="Sum" DisplayFormat="Total time: {0}"/>
+                                <dxg:GridSummaryItem FieldName="Time" SummaryType="Sum" DisplayFormat="Total time: {0}"/>
                                 <dxg:GridSummaryItem FieldName="Failed" SummaryType="Sum" DisplayFormat="Failed: {0}"/>
                             </dxg:GridControl.GroupSummary>
                         </dxg:GridControl>

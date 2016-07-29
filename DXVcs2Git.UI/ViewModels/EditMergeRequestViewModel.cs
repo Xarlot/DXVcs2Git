@@ -59,7 +59,7 @@ namespace DXVcs2Git.UI.ViewModels {
             return Branch?.MergeRequest != null && IsModified;
         }
         void PerformApply() {
-            var mergeRequestAction = new MergeRequestSyncAction(Branch.Repository.RepoConfig.FarmTaskName, Branch.Repository.RepoConfig.FarmSyncTaskName, PerformTesting);
+            var mergeRequestAction = new MergeRequestSyncAction(Branch.SyncTaskName, Branch.SyncServiceName, Branch.TestServiceName, PerformTesting, AssignedToService);
             var mergeRequestOptions = new MergeRequestOptions(mergeRequestAction);
             if (RepositoriesViewModel.Config.AlwaysSure || MessageBoxService.Show("Are you sure?", "Update merge request", MessageBoxButton.OKCancel) == MessageBoxResult.OK) {
                 Branch.UpdateMergeRequest(CalcMergeRequestTitle(Comment), CalcMergeRequestDescription(Comment), AssignedToService ? CalcServiceName() : Branch.MergeRequest.Assignee);
@@ -71,7 +71,7 @@ namespace DXVcs2Git.UI.ViewModels {
             return MergeRequestOptions.ConvertToString(options);
         }
         string CalcServiceName() {
-            return Branch.Repository.RepoConfig.DefaultServiceName;
+            return PerformTesting ? Branch.TestServiceName : Branch.SyncServiceName;
         }
         string CalcMergeRequestDescription(string message) {
             var changes = message.Split(new[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries);
@@ -105,7 +105,7 @@ namespace DXVcs2Git.UI.ViewModels {
                 assignedToService = mergeRequest.Assignee == Branch.Repository.DefaultServiceName;
                 IsModified = false;
             }
-            SupportsTesting = Branch?.Repository.RepoConfig.SupportsTesting ?? false;
+            SupportsTesting = Branch?.SupportsTesting ?? false;
             RaisePropertyChanged(null);
         }
     }

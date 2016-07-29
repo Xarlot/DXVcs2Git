@@ -26,6 +26,10 @@ namespace DXVcs2Git.UI.ViewModels {
             get { return GetProperty(() => MergeRequest); }
             private set { SetProperty(() => MergeRequest, value); }
         }
+        public bool SupportsTesting => Repositories.Config.SupportsTesting && Repository.RepoConfig.SupportsTesting;
+        public string SyncTaskName => Repository.RepoConfig.FarmSyncTaskName;
+        public string SyncServiceName => Repository.RepoConfig.DefaultServiceName;
+        public string TestServiceName => Repository.RepoConfig.TestServiceName ?? SyncServiceName;
         public bool HasChanges {
             get { return MergeRequest.Return(x => x.Changes.Any(), () => false); }
         }

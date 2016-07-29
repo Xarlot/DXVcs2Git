@@ -39,15 +39,17 @@
                         <dxb:BarButtonItem
                             RibbonStyle="Large" 
                             GlyphSize="Large" 
-                            Content="Create"
-                            Command="{Binding Path=RunTestsCommand}"
-                            LargeGlyph="{dx:DXImageOffice2013 Image=NewTask_32x32.png}">
+                            Content="Show test logs"
+                            Command="{Binding Path=ShowLogCommand}"
+                            CommandParameter="{Binding Path=CurrentItem, ElementName=grid, UpdateSourceTrigger=PropertyChanged}"
+                            LargeGlyph="{dx:DXImageOffice2013 Image=AlignCenter_32x32.png}">
                         </dxb:BarButtonItem>
                         <dxb:BarButtonItem
                             RibbonStyle="Large" 
                             GlyphSize="Large" 
-                            Content="Close"
+                            Content="Cancel tests"
                             Command="{Binding Path=CancelTestsCommand}"
+                            CommandParameter="{Binding Path=CurrentItem, ElementName=grid, UpdateSourceTrigger=PropertyChanged}"
                             LargeGlyph="{dx:DXImageOffice2013 Image=Close_32x32.png}">
                         </dxb:BarButtonItem>
                         <dxb:BarItemSeparator/>
@@ -71,7 +73,7 @@
             <dxg:GridControl.View>
                 <dxg:TableView NavigationStyle="Row">
                     <dxg:TableView.RowCellMenuCustomizations>
-                        <dxb:BarButtonItem Content="Show logs  " Command="{Binding Path=DataContext.ShowLogCommand, ElementName=grid}" CommandParameter="{Binding Path=CurrentItem, ElementName=grid, UpdateSourceTrigger=PropertyChanged}"/>
+                        <dxb:BarButtonItem Content="Show test logs " Command="{Binding Path=DataContext.ShowLogCommand, ElementName=grid}" CommandParameter="{Binding Path=CurrentItem, ElementName=grid, UpdateSourceTrigger=PropertyChanged}"/>
                     </dxg:TableView.RowCellMenuCustomizations>
                 </dxg:TableView>
             </dxg:GridControl.View>
