@@ -118,6 +118,7 @@ namespace DXVcs2Git.Console {
             File.Delete(path);
         }
         static int DoProcessTestResultsWork(ProcessTestsOptions clo) {
+            Log.Message("process test results.");
             string targetRepoPath = GetSimpleGitHttpPath(clo.Repo);
 
             if (string.IsNullOrEmpty(targetRepoPath)) {
@@ -179,10 +180,11 @@ namespace DXVcs2Git.Console {
             }
 
             if (!mergeRequestSyncOptions.PerformTesting) {
-                Log.Message("Testing is disable by config.");
+                Log.Message("Testing is disabled in config.");
                 return 0;
             }
 
+            Log.Message("Testing is enabled in config.");
             var commit = gitLabWrapper.GetMergeRequestCommits(mergeRequest).FirstOrDefault();
             if (commit == null) {
                 Log.Message("Merge request has no commits.");
@@ -195,10 +197,17 @@ namespace DXVcs2Git.Console {
                 return 0;
             }
 
+            Log.Message($"Build has {mergeRequestBuild.Status} status.");
+
             if (mergeRequestBuild.Status == BuildStatus.success) {
                 if (mergeRequestSyncOptions.AssignToSyncService) {
                     gitLabWrapper.UpdateMergeRequestAssignee(mergeRequest, mergeRequestSyncOptions.SyncTask);
                     Log.Message($"Success tests. Assigning to sync service {mergeRequestSyncOptions.SyncTask}");
+                    return 0;
+                }
+                else {
+                    gitLabWrapper.UpdateMergeRequestAssignee(mergeRequest, mergeRequest.Author.Username);
+                    Log.Message($"Success tests. Assigning to back to author {mergeRequest.Author.Username}");
                     return 0;
                 }
             }
@@ -206,6 +215,7 @@ namespace DXVcs2Git.Console {
                 Log.Message($"Failed tests.");
                 return 0;
             }
+            Log.Message("Nothing happens.");
             return 0;
         }
 
