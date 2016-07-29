@@ -482,6 +482,7 @@ namespace DXVcs2Git.Console {
                         ForceBuild(action.SyncTask);
                     return;
                 }
+                Log.Message("Build forces without checking tests status.");
                 ForceBuild(action.SyncTask);
             }
             else
