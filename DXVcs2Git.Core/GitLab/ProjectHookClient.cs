@@ -17,6 +17,8 @@ namespace DXVcs2Git.Core.GitLab {
                 return HttpRequestParser.Parse<PushHookClient>(hookType.Json);
             if (hookType.HookType == ProjectHookType.merge_request)
                 return HttpRequestParser.Parse<MergeRequestHookClient>(hookType.Json);
+            if (hookType.HookType == ProjectHookType.build)
+                return HttpRequestParser.Parse<BuildHookClient>(hookType.Json);
             return null;
         }
     }

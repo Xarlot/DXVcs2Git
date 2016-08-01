@@ -8,5 +8,6 @@
         public string Server { get; set; }
         public bool SupportsTesting { get; set; }
         public string TestServiceName { get; set; }
+        public string WebHook { get; set; }
     }
 }

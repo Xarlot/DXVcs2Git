@@ -17,6 +17,9 @@ namespace DXVcs2Git.Git {
         public IEnumerable<Project> GetProjects() {
             return client.Projects.Accessible;
         }
+        public IEnumerable<Project> GetAllProjects() {
+            return client.Projects.All;
+        }
         public Project GetProject(int id) {
             return this.client.Projects[id];
         }

@@ -404,7 +404,7 @@ namespace DXVcs2Git.Console {
             GitLabWrapper gitLabWrapper = new GitLabWrapper(gitServer, gitlabauthtoken);
             FarmIntegrator.Start(Dispatcher.CurrentDispatcher, null);
 
-            var projects = gitLabWrapper.GetProjects();
+            var projects = gitLabWrapper.GetAllProjects();
             foreach (Project project in projects) {
                 var hooks = gitLabWrapper.GetHooks(project);
                 foreach (ProjectHook hook in hooks) {
@@ -439,6 +439,62 @@ namespace DXVcs2Git.Console {
                 ProcessPushHook((PushHookClient)hook);
             else if (hook.HookType == ProjectHookType.merge_request)
                 ProcessMergeRequestHook(gitLabWrapper, (MergeRequestHookClient)hook);
+            else if (hook.HookType == ProjectHookType.build)
+                ProcessBuildHook(gitLabWrapper, (BuildHookClient)hook);
+        }
+        static void ProcessBuildHook(GitLabWrapper gitLabWrapper, BuildHookClient hook) {
+            Log.Message($"Build hook title: {hook.BuildName}");
+            Log.Message($"Build hook status: {hook.Status}");
+
+            if (hook.Status == BuildStatus.success) {
+                Project project = gitLabWrapper.GetProject(hook.ProjectId);
+                if (project == null) {
+                    Log.Message($"Can`t find project {hook.ProjectName}.");
+                    return;
+                }
+                var mergeRequest = CalcMergeRequest(gitLabWrapper, hook, project);
+                if (mergeRequest == null) {
+                    Log.Message("Can`t find merge request.");
+                    return;
+                }
+                if (mergeRequest.State == "opened" || mergeRequest.State == "reopened") {
+                    var latestCommit = gitLabWrapper.GetMergeRequestCommits(mergeRequest).FirstOrDefault();
+                    if (latestCommit == null) {
+                        Log.Message("Wrong merge request found.");
+                        return;
+                    }
+                    if (!latestCommit.Id.Equals(hook.Commit.Id)) {
+                        Log.Message("Additional commits has been added.");
+                        return;
+                    }
+
+                    var xmlComments = gitLabWrapper.GetComments(mergeRequest).Where(x => IsXml(x.Note));
+                    var options = xmlComments.Select(x => MergeRequestOptions.ConvertFromString(x.Note)).FirstOrDefault();
+                    if (options?.ActionType == MergeRequestActionType.sync) {
+                        Log.Message("Sync options found.");
+                        var syncOptions = (MergeRequestSyncAction)options.Action;
+                        Log.Message($"Sync options perform testing is {syncOptions.PerformTesting}");
+                        Log.Message($"Sync options assign to service is {syncOptions.AssignToSyncService}");
+                        Log.Message($"Sync options sync task is {syncOptions.SyncTask}");
+                        Log.Message($"Sync options sync service is {syncOptions.SyncService}");
+                        if (syncOptions.PerformTesting && syncOptions.AssignToSyncService) {
+                            gitLabWrapper.UpdateMergeRequestAssignee(mergeRequest, syncOptions.SyncService);
+                            ForceBuild(syncOptions.SyncTask);
+                        }
+                        return;
+                    }
+                    Log.Message("Sync options not found.");
+                }
+            }
+        }
+        static MergeRequest CalcMergeRequest(GitLabWrapper gitLabWrapper, BuildHookClient hook, Project project) {
+            foreach (var checkProject in gitLabWrapper.GetProjects()) {
+                var mergeRequests = gitLabWrapper.GetMergeRequests(checkProject, x => x.SourceProjectId == project.Id);
+                var mergeRequest = mergeRequests.FirstOrDefault(x => x.SourceBranch == hook.Branch);
+                if (mergeRequest != null)
+                    return mergeRequest;
+            }
+            return null;
         }
         static void ProcessMergeRequestHook(GitLabWrapper gitLabWrapper, MergeRequestHookClient hook) {
             Log.Message($"Merge hook title: {hook.Attributes.Description}");

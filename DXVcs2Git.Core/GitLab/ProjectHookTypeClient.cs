@@ -17,13 +17,7 @@ namespace DXVcs2Git.Core.GitLab {
         tag_push,
         issue,
         note,
-        merge_request
+        merge_request,
+        build,
     }
-    //                        using (var reader = new StreamReader(errorResponse.GetResponseStream()))
-    //                    {
-    //                        string jsonString = reader.ReadToEnd();
-    //                        var jsonError = SimpleJson.DeserializeObject<JsonError>(jsonString);
-    //                        throw new Exception(string.Format("The remote server returned an error ({0}): {1}", errorResponse.StatusCode, jsonError.Message));
-    //                    }
-
 }
