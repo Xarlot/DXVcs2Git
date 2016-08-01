@@ -315,6 +315,7 @@
     </ApplicationDefinition>
     <Compile Include="AtomFeed\FeedWorker.cs" />
     <Compile Include="AtomFeed\VsixElementExtension.cs" />
+    <Compile Include="Behaviors\AvalonEditInstallSearchPanelBehavior.cs" />
     <Compile Include="Behaviors\HotKeyEditorBehavior.cs" />
     <Compile Include="Behaviors\RibbonWindowButtonsInjectionBehavior.cs" />
     <Compile Include="Behaviors\TaskBarIconBehavior.cs" />

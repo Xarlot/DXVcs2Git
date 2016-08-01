@@ -66,6 +66,6 @@ namespace DXVcs2Git.Core.GitLab {
     [DataContract]
     public class BuildHookCommit {
         [DataMember(Name = "sha")]
-        public long Id;
+        public string Id;
     }
 }

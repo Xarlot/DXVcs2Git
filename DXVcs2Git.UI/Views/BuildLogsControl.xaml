@@ -28,6 +28,7 @@
                             IsReadOnly="True">
                             <dxmvvm:Interaction.Behaviors>
                                 <behaviors:AvalonEditTextBindingBehavior Text="{Binding Path=Text}"/>
+                                <behaviors:AvalonEditInstallSearchPanelBehavior/>
                             </dxmvvm:Interaction.Behaviors>
                         </avalonedit:TextEditor>
                     </DataTemplate>
@@ -42,6 +43,7 @@
                             IsReadOnly="True">
                             <dxmvvm:Interaction.Behaviors>
                                 <behaviors:AvalonEditTextBindingBehavior Text="{Binding Path=Text}"/>
+                                <behaviors:AvalonEditInstallSearchPanelBehavior/>
                             </dxmvvm:Interaction.Behaviors>
                         </avalonedit:TextEditor>
                     </DataTemplate>
