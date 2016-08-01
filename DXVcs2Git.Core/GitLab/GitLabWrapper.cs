@@ -50,7 +50,7 @@ namespace DXVcs2Git.Git {
         public MergeRequest ProcessMergeRequest(MergeRequest mergeRequest, string comment) {
             var mergeRequestsClient = client.GetMergeRequest(mergeRequest.ProjectId);
             try {
-                return mergeRequestsClient.Accept(mergeRequest.Id, new MergeCommitMessage() {Message = comment});
+                return mergeRequestsClient.Accept(mergeRequest.Id, new MergeCommitMessage() { Message = comment });
             }
             catch (Exception ex) {
                 Log.Error("Merging has thrown exception", ex);
@@ -94,7 +94,7 @@ namespace DXVcs2Git.Git {
         public void RegisterUser(string userName, string displayName, string email) {
             try {
                 var userClient = this.client.Users;
-                var userUpsert = new UserUpsert() {Username = userName, Name = displayName, Email = email, Password = new Guid().ToString()};
+                var userUpsert = new UserUpsert() { Username = userName, Name = displayName, Email = email, Password = new Guid().ToString() };
                 userClient.Create(userUpsert);
             }
             catch (Exception ex) {
@@ -127,22 +127,32 @@ namespace DXVcs2Git.Git {
             var userInfo = GetUsers().FirstOrDefault(x => x.Username == user);
             if (mergeRequest.Assignee?.Username != userInfo?.Username) {
                 var mergeRequestsClient = client.GetMergeRequest(mergeRequest.ProjectId);
-                return mergeRequestsClient.Update(mergeRequest.Id, new MergeRequestUpdate() {AssigneeId = userInfo?.Id});
+                return mergeRequestsClient.Update(mergeRequest.Id, new MergeRequestUpdate() { AssigneeId = userInfo?.Id });
             }
             return mergeRequest;
         }
         public Comment AddCommentToMergeRequest(MergeRequest mergeRequest, string comment) {
             var mergeRequestsClient = client.GetMergeRequest(mergeRequest.ProjectId);
             var commentsClient = mergeRequestsClient.Comments(mergeRequest.Id);
-            return commentsClient.Add(new MergeRequestComment() {Note = comment});
+            return commentsClient.Add(new MergeRequestComment() { Note = comment });
         }
-        public IEnumerable<ProjectHook> GetHooks(Project project) {
+        public IEnumerable<ProjectHook> GetProjectHooks(Project project) {
             var repository = this.client.GetRepository(project.Id);
             return repository.ProjectHooks.All;
         }
-        public ProjectHook UpdateProjectHook(Project project, ProjectHook hook, Uri uri) {
+        public ProjectHook FindProjectHook(Project project, Func<ProjectHook, bool> projectHookHandler) {
+            var projectClient = client.GetRepository(project.Id);
+            var projectHooks = projectClient.ProjectHooks;
+            return projectHooks.All.FirstOrDefault(projectHookHandler);
+        }
+        public ProjectHook CreateProjectHook(Project project, Uri url, bool mergeRequestEvents, bool pushEvents, bool buildEvents) {
+            var projectClient = client.GetRepository(project.Id);
+            var projectHooks = projectClient.ProjectHooks;
+            return projectHooks.Create(new ProjectHookUpsert() { MergeRequestsEvents = mergeRequestEvents, PushEvents = pushEvents, BuildEvents = buildEvents, Url = url, EnableSSLVerification = false});
+        }
+        public ProjectHook UpdateProjectHook(Project project, ProjectHook hook, Uri uri, bool mergeRequestEvents, bool pushEvents, bool buildEvents) {
             var repository = this.client.GetRepository(project.Id);
-            return repository.ProjectHooks.Update(hook.Id, new ProjectHookUpsert() {Url = uri, MergeRequestsEvents = true, PushEvents = true});
+            return repository.ProjectHooks.Update(hook.Id, new ProjectHookUpsert() { Url = uri, MergeRequestsEvents = mergeRequestEvents, PushEvents = pushEvents, BuildEvents = buildEvents, EnableSSLVerification = false});
         }
         public IEnumerable<Comment> GetComments(MergeRequest mergeRequest) {
             var mergeRequestsClient = client.GetMergeRequest(mergeRequest.ProjectId);

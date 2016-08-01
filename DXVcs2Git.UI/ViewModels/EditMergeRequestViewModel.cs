@@ -64,6 +64,7 @@ namespace DXVcs2Git.UI.ViewModels {
             if (Repositories.Config.AlwaysSure || MessageBoxService.Show("Are you sure?", "Update merge request", MessageBoxButton.OKCancel) == MessageBoxResult.OK) {
                 Branch.UpdateMergeRequest(CalcMergeRequestTitle(Comment), CalcMergeRequestDescription(Comment), CalcServiceName());
                 Branch.UpdateMergeRequest(CalcOptionsComment(mergeRequestOptions));
+                Branch.UpdateWebHook();
                 if (PerformTesting)
                     Branch.ForceBuild(Branch.MergeRequest.MergeRequest);
                 IsModified = false;

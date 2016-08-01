@@ -406,12 +406,12 @@ namespace DXVcs2Git.Console {
 
             var projects = gitLabWrapper.GetAllProjects();
             foreach (Project project in projects) {
-                var hooks = gitLabWrapper.GetHooks(project);
+                var hooks = gitLabWrapper.GetProjectHooks(project);
                 foreach (ProjectHook hook in hooks) {
                     if (WebHookHelper.IsSameHost(hook.Url, IP) || !WebHookHelper.IsSharedHook(sharedWebHookPath, hook.Url))
                         continue;
                     Uri url = WebHookHelper.Replace(hook.Url, IP);
-                    gitLabWrapper.UpdateProjectHook(project, hook, url);
+                    gitLabWrapper.UpdateProjectHook(project, hook, url, true, true, true);
                     Log.Message($"WebHook registered for project {project.Name} at {url}");
                 }
             }

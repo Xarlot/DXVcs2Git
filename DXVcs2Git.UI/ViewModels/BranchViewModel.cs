@@ -2,9 +2,11 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Windows.Input;
 using DevExpress.Mvvm;
 using DevExpress.Mvvm.Native;
+using DXVcs2Git.Core;
 using DXVcs2Git.Core.GitLab;
 using DXVcs2Git.Git;
 using DXVcs2Git.UI.Farm;
@@ -31,6 +33,8 @@ namespace DXVcs2Git.UI.ViewModels {
         public string SyncTaskName => Repository.RepoConfig.FarmSyncTaskName;
         public string SyncServiceName => Repository.RepoConfig.DefaultServiceName;
         public string TestServiceName => Repository.RepoConfig.TestServiceName ?? SyncServiceName;
+        public string WebHookTask => Repository.RepoConfig.WebHookTask;
+        public string WebHook => Repository.RepoConfig.WebHook;
         public bool HasChanges {
             get { return MergeRequest.Return(x => x.Changes.Any(), () => false); }
         }
@@ -99,6 +103,27 @@ namespace DXVcs2Git.UI.ViewModels {
         }
         public void ForceBuild(MergeRequest mergeRequest) {
             gitLabWrapper.ForceBuild(mergeRequest);
+        }
+        public void UpdateWebHook() {
+            if (!SupportsTesting)
+                return;
+            var sourceProject = gitLabWrapper.GetProject(MergeRequest.MergeRequest.SourceProjectId);
+            var webHook = gitLabWrapper.FindProjectHook(sourceProject, x => WebHookHelper.IsSharedHook(WebHook, x.Url));
+            if (webHook != null && WebHookHelper.EnsureWebHook(webHook)) 
+                return;
+
+            var webHookTask = WebHookTask;
+            var webHookPath = WebHook;
+            if (string.IsNullOrEmpty(webHookTask) || string.IsNullOrEmpty(webHookPath))
+                return;
+            var farmStatus = FarmIntegrator.GetExtendedTaskStatus(webHookTask);
+            if (farmStatus == null)
+                return;
+            var url = new Uri(WebHookHelper.GetSharedHookUrl(IPAddress.Parse(farmStatus.HyperHost), webHookPath));
+            if (webHook == null)
+                gitLabWrapper.CreateProjectHook(sourceProject, url, true, true, true);
+            else
+                gitLabWrapper.UpdateProjectHook(sourceProject, webHook, url, true, true, true);
         }
     }
 }

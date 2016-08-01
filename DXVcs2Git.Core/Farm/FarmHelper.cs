@@ -4,6 +4,7 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
+using System.Runtime.Remoting.Messaging;
 using System.Text;
 using System.Windows.Threading;
 using DevExpress.CCNetSmart.Lib;
@@ -22,7 +23,7 @@ namespace DXVcs2Git.UI.Farm {
         }
         public static void Start(Dispatcher dispatcher, Action invalidateCallback) {
             Dispatcher = dispatcher;
-            InvalidateCallback = invalidateCallback ?? (() => {});
+            InvalidateCallback = invalidateCallback ?? (() => { });
             Instance.Refreshed += InstanceOnRefreshed;
             Instance.StartIntegrator();
         }
@@ -44,7 +45,9 @@ namespace DXVcs2Git.UI.Farm {
         public static FarmStatus GetTaskStatus(string task) {
             return Instance.GetTaskStatus(task);
         }
-
+        public static FarmExtendedStatus GetExtendedTaskStatus(string task) {
+            return Instance.GetExtendedTaskStatus(task);
+        }
     }
 
     public enum ActivityStatus {
@@ -54,6 +57,11 @@ namespace DXVcs2Git.UI.Farm {
         Pending,
         Building,
         Checking
+    }
+
+    public class FarmExtendedStatus {
+        public string HyperName { get; set; }
+        public string HyperHost { get; set; }
     }
 
     public class FarmStatus {
@@ -94,6 +102,21 @@ namespace DXVcs2Git.UI.Farm {
             lock (this.syncLocker) {
                 return CalcTaskStatus(task);
             }
+        }
+        public FarmExtendedStatus GetExtendedTaskStatus(string task) {
+            lock (this.syncLocker) {
+                return CalcExtendedTaskStatus(task);
+            }
+        }
+        FarmExtendedStatus CalcExtendedTaskStatus(string task) {
+            var farmStatus = new FarmExtendedStatus();
+            ProjectTagI tag = FindTask(task);
+            if (tag == null)
+                return farmStatus;
+            var server = FindServer(tag.farm, tag.server);
+            farmStatus.HyperName = server.HyperName;
+            farmStatus.HyperHost = server.Host;
+            return farmStatus;
         }
         FarmStatus CalcTaskStatus(string task) {
             var farmStatus = new FarmStatus() {
@@ -238,6 +261,12 @@ namespace DXVcs2Git.UI.Farm {
 
         ProjectTagI FindTask(string task) {
             return this.projectTagTable.FirstOrDefault(x => x.name == task);
+        }
+        ServerI FindServer(string farm, string project) {
+            ServerI server;
+            if (serverDict.TryGetValue(new ProjectKey() {Farm = farm, Project = project}, out server))
+                return server;
+            return this.serverTable.FirstOrDefault(x => string.Compare(x.HyperName, project, StringComparison.InvariantCultureIgnoreCase) == 0);
         }
 
         #region inner farm shit
