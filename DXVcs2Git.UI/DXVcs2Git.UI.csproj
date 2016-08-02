@@ -320,6 +320,7 @@
     <Compile Include="Behaviors\RibbonWindowButtonsInjectionBehavior.cs" />
     <Compile Include="Behaviors\TaskBarIconBehavior.cs" />
     <Compile Include="Behaviors\ValidateEditConfigBehavior.cs" />
+    <Compile Include="Converters\ShowAssignedToServiceMessageConverter.cs" />
     <Compile Include="DefaultInitializer.cs" />
     <Compile Include="Extensions\IoCExtension.cs" />
     <Compile Include="NativeMethods\AdministratorMethods.cs" />

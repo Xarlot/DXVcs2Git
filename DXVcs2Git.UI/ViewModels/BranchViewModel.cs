@@ -53,7 +53,7 @@ namespace DXVcs2Git.UI.ViewModels {
         public void RefreshMergeRequest() {
             var mergeRequest = gitLabWrapper.GetMergeRequests(Repository.Upstream, x => x.SourceProjectId == Repository.Origin.Id && x.SourceBranch == Name).FirstOrDefault();
             if (mergeRequest != null)
-                MergeRequest = new MergeRequestViewModel(gitLabWrapper, mergeRequest);
+                MergeRequest = new MergeRequestViewModel(this, mergeRequest);
             else
                 MergeRequest = null;
         }
@@ -62,7 +62,7 @@ namespace DXVcs2Git.UI.ViewModels {
         }
         public void CreateMergeRequest(string title, string description, string user, string sourceBranch, string targetBranch) {
             var mergeRequest = this.gitLabWrapper.CreateMergeRequest(Repository.Origin, Repository.Upstream, title, description, user, sourceBranch, targetBranch);
-            MergeRequest = new MergeRequestViewModel(this.gitLabWrapper, mergeRequest);
+            MergeRequest = new MergeRequestViewModel(this, mergeRequest);
             RepositoriesViewModel.RaiseRefreshSelectedBranch();
         }
         public void CloseMergeRequest() {
@@ -79,7 +79,7 @@ namespace DXVcs2Git.UI.ViewModels {
         public void UpdateMergeRequest(string title, string description, string assignee) {
             var mergeRequest = this.gitLabWrapper.UpdateMergeRequestTitleAndDescription(MergeRequest.MergeRequest, title, description);
             mergeRequest = this.gitLabWrapper.UpdateMergeRequestAssignee(mergeRequest, assignee);
-            MergeRequest = new MergeRequestViewModel(this.gitLabWrapper, mergeRequest);
+            MergeRequest = new MergeRequestViewModel(this, mergeRequest);
         }
         public void UpdateMergeRequest(string comment) {
             this.gitLabWrapper.AddCommentToMergeRequest(MergeRequest.MergeRequest, comment);
@@ -109,7 +109,7 @@ namespace DXVcs2Git.UI.ViewModels {
                 return;
             var sourceProject = gitLabWrapper.GetProject(MergeRequest.MergeRequest.SourceProjectId);
             var webHook = gitLabWrapper.FindProjectHook(sourceProject, x => WebHookHelper.IsSharedHook(WebHook, x.Url));
-            if (webHook != null && WebHookHelper.EnsureWebHook(webHook)) 
+            if (webHook != null && WebHookHelper.EnsureWebHook(webHook))
                 return;
 
             var webHookTask = WebHookTask;
@@ -124,6 +124,9 @@ namespace DXVcs2Git.UI.ViewModels {
                 gitLabWrapper.CreateProjectHook(sourceProject, url, true, true, true);
             else
                 gitLabWrapper.UpdateProjectHook(sourceProject, webHook, url, true, true, true);
+        }
+        public IEnumerable<MergeRequestFileData> GetMergeRequestChanges(MergeRequest mergeRequest) {
+            return gitLabWrapper.GetMergeRequestChanges(mergeRequest);
         }
     }
 }

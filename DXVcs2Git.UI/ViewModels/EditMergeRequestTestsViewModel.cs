@@ -61,9 +61,7 @@ namespace DXVcs2Git.UI.ViewModels {
                 return;
             }
             var mergeRequest = BranchViewModel.MergeRequest;
-            Commits = BranchViewModel.GetCommits(mergeRequest.MergeRequest)
-                .Select(commit => new CommitViewModel(commit, sha => BranchViewModel.GetBuilds(mergeRequest.MergeRequest, sha), x => BranchViewModel.DownloadArtifacts(mergeRequest.MergeRequest, x)))
-                .ToList();
+            Commits = mergeRequest.Commits;
             Commits.ForEach(x => x.UpdateBuilds());
         }
         void RefreshFarmStatus() {
