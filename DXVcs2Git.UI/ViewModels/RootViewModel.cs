@@ -1,4 +1,6 @@
-﻿using System.Windows.Input;
+﻿using System;
+using System.Reflection;
+using System.Windows.Input;
 using System.Windows.Threading;
 using DevExpress.Mvvm;
 using DevExpress.Mvvm.Native;
@@ -7,6 +9,7 @@ using DXVcs2Git.UI.Farm;
 using DXVcs2Git.Core.Configuration;
 using Microsoft.Practices.ServiceLocation;
 using DevExpress.Xpf.Core;
+using DXVcs2Git.Core.Slack;
 
 namespace DXVcs2Git.UI.ViewModels {
     public class RootViewModel : ViewModelBase {
@@ -34,6 +37,8 @@ namespace DXVcs2Git.UI.ViewModels {
             FarmIntegrator.Start(Dispatcher.CurrentDispatcher, FarmRefreshed);
             AtomFeed.FeedWorker.Initialize();
 
+            SlackBotWrapper botWrapper = new SlackBotWrapper(@"xoxb-65328298770-WkYtaLly2M4EXsBoF1cAlyKE");
+
             UpdateCommand = DelegateCommandFactory.Create(PerformUpdate, CanPerformUpdate);
             SettingsCommand = DelegateCommandFactory.Create(ShowSettings, CanShowSettings);
             ShowLogCommand = DelegateCommandFactory.Create(PerformShowLog);
@@ -41,6 +46,12 @@ namespace DXVcs2Git.UI.ViewModels {
             InitializeCommand = DelegateCommandFactory.Create( PerformInitialize, CanPerformInitialize);
             LogViewModel = new LoggingViewModel();
             Version = $"Git tools {VersionInfo.Version}";
+        }
+        Assembly CurrentDomainOnTypeResolve(object sender, ResolveEventArgs args) {
+            return args.RequestingAssembly;
+        }
+        Assembly CurrentDomainOnAssemblyResolve(object sender, ResolveEventArgs args) {
+            return args.RequestingAssembly;
         }
         bool CanPerformUpdate() {
             return true;
