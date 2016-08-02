@@ -110,9 +110,10 @@ namespace DXVcs2Git.UI.ViewModels {
                 IsModified = false;
             }
             else {
-                performTesting = Branch.ShouldPerformTesting(mergeRequest.MergeRequest);
+                var syncOptions = Branch.GetSyncOptions(mergeRequest.MergeRequest);
+                performTesting = syncOptions?.PerformTesting ?? false;
                 comment = mergeRequest.Title;
-                assignedToService = mergeRequest.Assignee == Branch.Repository.DefaultServiceName;
+                assignedToService = ((syncOptions?.AssignToSyncService ?? false) && IsServiceUser(Branch.TestServiceName)) || mergeRequest.Assignee == Branch.SyncServiceName;
                 IsModified = false;
             }
             SupportsTesting = Branch?.SupportsTesting ?? false;

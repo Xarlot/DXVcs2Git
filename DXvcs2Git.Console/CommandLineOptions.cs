@@ -90,7 +90,6 @@ namespace DXVcs2Git.Console {
         [Option('i', "interval", Required = false, Default = 30, HelpText = "Duration in minutes")]
         public int Timeout { get; }
 
-
         public ListenerOptions(string webHook, int timeout, string server, string login, string repo, string password, string authToken) : base(server, login, repo, password, authToken) {
             WebHook = webHook;
             Timeout = timeout;

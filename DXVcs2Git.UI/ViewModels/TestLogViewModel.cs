@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using System.Xml;
 using DevExpress.CCNetSmart.Lib;
 using DevExpress.Mvvm;
+using DXVcs2Git.Core;
 
 namespace DXVcs2Git.UI.ViewModels {
     public class TestLogViewModel : BindableBase {
@@ -22,22 +23,28 @@ namespace DXVcs2Git.UI.ViewModels {
             Tests = GetTests(model.TestLog);
         }
         List<TestCaseViewModel> GetTests(string buildLog) {
+            if (string.IsNullOrEmpty(buildLog))
+                return new List<TestCaseViewModel>();
             List<TestCaseViewModel> result = new List<TestCaseViewModel>();
-            XmlReader reader = XmlReader.Create(new MemoryStream(Encoding.UTF8.GetBytes(buildLog)));
-            while (true) {
-                if (!reader.ReadToFollowing("test-suite")) {
-                    break;
+            try {
+                XmlReader reader = XmlReader.Create(new MemoryStream(Encoding.UTF8.GetBytes(buildLog)));
+                while (true) {
+                    if (!reader.ReadToFollowing("test-suite")) {
+                        break;
+                    }
+                    string name = reader.GetAttribute("name");
+                    if (!string.IsNullOrEmpty(name) && (name.EndsWith(".dll") || name.EndsWith(".xap") || name.EndsWith(".exe"))) {
+                        XmlReader subReader = reader.ReadSubtree();
+                        result.AddRange(GetTests(subReader));
+                        subReader.Close();
+                        reader.Skip();
+                    }
+                    reader.Close();
                 }
-                string name = reader.GetAttribute("name");
-                if (!string.IsNullOrEmpty(name) && (name.EndsWith(".dll") || name.EndsWith(".xap") || name.EndsWith(".exe"))) {
-                    XmlReader subReader = reader.ReadSubtree();
-                    result.AddRange(GetTests(subReader));
-                    subReader.Close();
-                    reader.Skip();
-                }
-
             }
-            reader.Close();
+            catch (Exception ex) {
+                Log.Error("Error during parsing build log", ex);
+            }
             return result;
         }
         List<TestCaseViewModel> GetTests(XmlReader projectReader) {

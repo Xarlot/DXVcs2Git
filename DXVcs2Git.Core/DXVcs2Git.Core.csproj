@@ -166,6 +166,7 @@
     <Compile Include="Serialization\SyncHistory.cs" />
     <Compile Include="Serialization\SyncHistoryItem.cs" />
     <Compile Include="Slack\SlackBotWrapper.cs" />
+    <Compile Include="Slack\SlackIntegrator.cs" />
     <Compile Include="SyncItem.cs" />
     <Compile Include="TrackBranch.cs" />
     <Compile Include="TrackItem.cs" />

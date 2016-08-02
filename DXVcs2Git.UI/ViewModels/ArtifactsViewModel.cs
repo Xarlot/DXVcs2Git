@@ -28,7 +28,7 @@ namespace DXVcs2Git.UI.ViewModels {
                 return;
             using (var stream = new MemoryStream(fileContent)) {
                 using (ZipFile zipFile = ZipFile.Read(stream)) {
-                    BuildLog = GetPartContent(zipFile, buildlogpath).Replace("&gt;", ">");
+                    BuildLog = GetPartContent(zipFile, buildlogpath);
                     TestLog = GetPartContent(zipFile, testlogpath);
                     Modifications = GetPartContent(zipFile, modificationspath);
                 }
@@ -36,6 +36,8 @@ namespace DXVcs2Git.UI.ViewModels {
         }
         string GetPartContent(ZipFile zip, string partPath) {
             var part = zip[partPath];
+            if (part == null)
+                return null;
             using (var memoryStream = new MemoryStream()) {
                 part.Extract(memoryStream);
                 var str =  Encoding.UTF8.GetString(memoryStream.ToArray());

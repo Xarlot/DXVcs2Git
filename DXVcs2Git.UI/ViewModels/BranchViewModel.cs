@@ -87,13 +87,13 @@ namespace DXVcs2Git.UI.ViewModels {
         public void RefreshFarm() {
             FarmStatus = FarmIntegrator.GetTaskStatus(Repository.RepoConfig.FarmSyncTaskName);
         }
-        public bool ShouldPerformTesting(MergeRequest mergeRequest) {
+        public MergeRequestSyncAction GetSyncOptions(MergeRequest mergeRequest) {
             var comments = gitLabWrapper.GetComments(mergeRequest);
             var mergeRequestSyncOptions = comments.Where(x => IsXml(x.Note)).Where(x => {
                 var mr = MergeRequestOptions.ConvertFromString(x.Note);
                 return mr?.ActionType == MergeRequestActionType.sync;
             }).Select(x => (MergeRequestSyncAction)MergeRequestOptions.ConvertFromString(x.Note).Action).LastOrDefault();
-            return mergeRequestSyncOptions?.PerformTesting ?? false;
+            return mergeRequestSyncOptions;
         }
         static bool IsXml(string xml) {
             return !string.IsNullOrEmpty(xml) && xml.StartsWith("<");
