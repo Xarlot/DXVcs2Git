@@ -83,6 +83,9 @@ namespace DXVcs2Git.UI.ViewModels {
         bool IsServiceUser(string assignee) {
             return !string.IsNullOrEmpty(assignee) && assignee.StartsWith("dxvcs2git.");
         }
+        bool IsTestUser(string assignee) {
+            return !string.IsNullOrEmpty(assignee) && assignee == Branch?.TestServiceName;
+        }
         string CalcMergeRequestDescription(string message) {
             var changes = message.Split(new[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries);
             StringBuilder sb = new StringBuilder();
@@ -113,7 +116,7 @@ namespace DXVcs2Git.UI.ViewModels {
                 var syncOptions = Branch.GetSyncOptions(mergeRequest.MergeRequest);
                 performTesting = syncOptions?.PerformTesting ?? false;
                 comment = mergeRequest.Title;
-                assignedToService = ((syncOptions?.AssignToSyncService ?? false) && IsServiceUser(Branch.TestServiceName)) || mergeRequest.Assignee == Branch.SyncServiceName;
+                assignedToService = ((syncOptions?.AssignToSyncService ?? false) && IsTestUser(mergeRequest.Assignee)) || mergeRequest.Assignee == Branch.SyncServiceName;
                 IsModified = false;
             }
             SupportsTesting = Branch?.SupportsTesting ?? false;

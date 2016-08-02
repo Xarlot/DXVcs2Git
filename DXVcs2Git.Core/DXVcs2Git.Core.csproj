@@ -87,10 +87,6 @@
       <HintPath>..\packages\RestSharp.105.2.3\lib\net46\RestSharp.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="SlackConnector, Version=3.0.6043.39508, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\SlackConnector.3.0.6043.39508\lib\net45\SlackConnector.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
     <Reference Include="System" />
     <Reference Include="System.ComponentModel.DataAnnotations" />
     <Reference Include="System.Core" />
@@ -165,8 +161,6 @@
     <Compile Include="Serialization\Serializer.cs" />
     <Compile Include="Serialization\SyncHistory.cs" />
     <Compile Include="Serialization\SyncHistoryItem.cs" />
-    <Compile Include="Slack\SlackBotWrapper.cs" />
-    <Compile Include="Slack\SlackIntegrator.cs" />
     <Compile Include="SyncItem.cs" />
     <Compile Include="TrackBranch.cs" />
     <Compile Include="TrackItem.cs" />

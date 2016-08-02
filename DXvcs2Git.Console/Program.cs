@@ -15,7 +15,6 @@ using CommandLine;
 using DXVcs2Git.Core;
 using DXVcs2Git.Core.GitLab;
 using DXVcs2Git.Core.Serialization;
-using DXVcs2Git.Core.Slack;
 using DXVcs2Git.DXVcs;
 using DXVcs2Git.Git;
 using DXVcs2Git.UI.Farm;
@@ -404,8 +403,7 @@ namespace DXVcs2Git.Console {
 
             GitLabWrapper gitLabWrapper = new GitLabWrapper(gitServer, gitlabauthtoken);
             FarmIntegrator.Start(Dispatcher.CurrentDispatcher, null);
-            SlackIntegrator.Start(@"xoxb-65328298770-p8hGLUcFJHVKjGWFxUbCW8PN", Dispatcher.CurrentDispatcher, null);
-
+            
             var projects = gitLabWrapper.GetAllProjects();
             foreach (Project project in projects) {
                 var hooks = gitLabWrapper.GetProjectHooks(project);
@@ -447,8 +445,6 @@ namespace DXVcs2Git.Console {
         static void ProcessBuildHook(GitLabWrapper gitLabWrapper, BuildHookClient hook) {
             Log.Message($"Build hook title: {hook.BuildName}");
             Log.Message($"Build hook status: {hook.Status}");
-
-            SlackIntegrator.SendMessage(hook.Json);
 
             if (hook.Status == BuildStatus.success) {
                 Project project = gitLabWrapper.GetProject(hook.ProjectId);
@@ -512,8 +508,6 @@ namespace DXVcs2Git.Console {
             Log.Message($"Merge hook author: {gitLabWrapper.GetUser(hook.Attributes.AuthorId).Name}.");
             Log.Message($"Merge hook target branch: {hook.Attributes.TargetBranch}.");
             Log.Message($"Merge hook sourceBranch branch: {hook.Attributes.SourceBranch}.");
-
-            SlackIntegrator.SendMessage(hook.Json);
 
             if (ShouldForceSyncTask(gitLabWrapper, hook)) {
                 ForceSyncBuild(gitLabWrapper, hook);
