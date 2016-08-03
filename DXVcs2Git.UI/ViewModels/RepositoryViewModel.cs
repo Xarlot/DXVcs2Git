@@ -11,6 +11,21 @@ using NGitLab.Models;
 
 namespace DXVcs2Git.UI.ViewModels {
     public class RepositoryViewModel : BindableBase {
+        protected bool Equals(RepositoryViewModel other) {
+            return this.Origin.Id == other.Origin.Id && this.Upstream.Id == other.Upstream.Id;
+        }
+        public override bool Equals(object obj) {
+            if (ReferenceEquals(null, obj))
+                return false;
+            if (ReferenceEquals(this, obj))
+                return true;
+            if (obj.GetType() != this.GetType())
+                return false;
+            return Equals((RepositoryViewModel)obj);
+        }
+        public override int GetHashCode() {
+            return 0;
+        }
         GitLabWrapper GitLabWrapper { get; }
         GitReaderWrapper GitReader { get; }
         public IEnumerable<BranchViewModel> Branches {

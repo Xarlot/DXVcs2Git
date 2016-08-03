@@ -1,4 +1,7 @@
-﻿using DevExpress.Xpf.Ribbon;
+﻿using System;
+using DevExpress.Xpf.CodeView;
+using DevExpress.Xpf.Ribbon;
+using DXVcs2Git.UI.ViewModels;
 
 namespace DXVcs2Git.UI {
     /// <summary>
@@ -7,6 +10,11 @@ namespace DXVcs2Git.UI {
     public partial class RootWindow : DXRibbonWindow {
         public RootWindow() {
             InitializeComponent();
+            Activated += OnActivated;
+        }
+        void OnActivated(object sender, EventArgs eventArgs) {
+            var root = (RootViewModel)DataContext;
+            root?.ActivateCommand.TryExecute();
         }
     }
 }

@@ -89,10 +89,13 @@ namespace DXVcs2Git.Console {
         public string WebHook { get; }
         [Option('i', "interval", Required = false, Default = 30, HelpText = "Duration in minutes")]
         public int Timeout { get; }
+        [Option('t', "task", Required = false, HelpText = "Farm task name")]
+        public string FarmTaskName { get; }
 
-        public ListenerOptions(string webHook, int timeout, string server, string login, string repo, string password, string authToken) : base(server, login, repo, password, authToken) {
+        public ListenerOptions(string webHook, int timeout, string farmTaskName, string server, string login, string repo, string password, string authToken) : base(server, login, repo, password, authToken) {
             WebHook = webHook;
             Timeout = timeout;
+            FarmTaskName = farmTaskName;
         }
     }
     [Verb("patch", HelpText = "Generate patch for branch")]

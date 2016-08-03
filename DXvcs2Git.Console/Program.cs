@@ -399,11 +399,15 @@ namespace DXVcs2Git.Console {
             string gitServer = clo.Server;
             string gitlabauthtoken = clo.AuthToken;
             string sharedWebHookPath = clo.WebHook;
+            string taskName = clo.FarmTaskName;
+            bool supportsSendingMessages = string.IsNullOrEmpty(taskName);
             Stopwatch sw = Stopwatch.StartNew();
 
             GitLabWrapper gitLabWrapper = new GitLabWrapper(gitServer, gitlabauthtoken);
+            DXVcsWrapper vcsWrapper = new DXVcsWrapper(vcsServer);
             FarmIntegrator.Start(Dispatcher.CurrentDispatcher, null);
-            
+            RegisteredUsers users = new RegisteredUsers(gitLabWrapper, vcsWrapper);
+
             var projects = gitLabWrapper.GetAllProjects();
             foreach (Project project in projects) {
                 var hooks = gitLabWrapper.GetProjectHooks(project);
@@ -423,12 +427,12 @@ namespace DXVcs2Git.Console {
                 var request = server.GetRequest();
                 if (request == null)
                     continue;
-                ProcessWebHook(gitLabWrapper, request);
+                ProcessWebHook(gitLabWrapper, users, request, supportsSendingMessages, taskName);
             }
 
             return 0;
         }
-        static void ProcessWebHook(GitLabWrapper gitLabWrapper, WebHookRequest request) {
+        static void ProcessWebHook(GitLabWrapper gitLabWrapper, RegisteredUsers users, WebHookRequest request, bool supportSendingMessages, string farmTaskName) {
             var hookType = ProjectHookClient.ParseHookType(request);
             if (hookType == null)
                 return;
@@ -438,7 +442,7 @@ namespace DXVcs2Git.Console {
             if (hook.HookType == ProjectHookType.push)
                 ProcessPushHook((PushHookClient)hook);
             else if (hook.HookType == ProjectHookType.merge_request)
-                ProcessMergeRequestHook(gitLabWrapper, (MergeRequestHookClient)hook);
+                ProcessMergeRequestHook(gitLabWrapper, users, (MergeRequestHookClient)hook, supportSendingMessages, farmTaskName);
             else if (hook.HookType == ProjectHookType.build)
                 ProcessBuildHook(gitLabWrapper, (BuildHookClient)hook);
         }
@@ -496,9 +500,16 @@ namespace DXVcs2Git.Console {
             }
             return null;
         }
-        static void ProcessMergeRequestHook(GitLabWrapper gitLabWrapper, MergeRequestHookClient hook) {
+        static void ProcessMergeRequestHook(GitLabWrapper gitLabWrapper, RegisteredUsers users, MergeRequestHookClient hook, bool supportSendingMessages, string farmTaskName) {
             Log.Message($"Merge hook title: {hook.Attributes.Description}");
             Log.Message($"Merge hook state: {hook.Attributes.State}");
+
+            var project = gitLabWrapper.GetProject(hook.Attributes.TargetProjectId);
+            var mergeRequest = gitLabWrapper.GetMergeRequest(project, hook.Attributes.Id);
+            var commits = gitLabWrapper.GetMergeRequestCommits(mergeRequest);
+            var commitAuthors = commits.Select(x => users.TryGetUser(x.AuthorName)).Distinct().ToList();
+            if (supportSendingMessages)
+                SendMessage(commitAuthors, hook.Json, farmTaskName);
 
             if (!IsOpenedState(hook))
                 return;
@@ -509,12 +520,17 @@ namespace DXVcs2Git.Console {
             Log.Message($"Merge hook target branch: {hook.Attributes.TargetBranch}.");
             Log.Message($"Merge hook sourceBranch branch: {hook.Attributes.SourceBranch}.");
 
-            if (ShouldForceSyncTask(gitLabWrapper, hook)) {
-                ForceSyncBuild(gitLabWrapper, hook);
+            if (ShouldForceSyncTask(mergeRequest, hook)) {
+                ForceSyncBuild(gitLabWrapper, mergeRequest, hook);
                 return;
             }
-            if (ShouldTestMergeRequest(gitLabWrapper, hook)) {
-                ForceTestMergeRequest(gitLabWrapper, hook);
+        }
+        static void SendMessage(IEnumerable<User> users, string json, string farmTaskName) {
+            var bytes = Encoding.UTF8.GetBytes(json);
+            string message = Convert.ToBase64String(bytes);
+
+            foreach (var user in users) {
+                FarmIntegrator.SendNotification(farmTaskName, user.UserName, message);
             }
         }
         static void ForceTestMergeRequest(GitLabWrapper gitLabWrapper, MergeRequestHookClient hook) {
@@ -532,9 +548,7 @@ namespace DXVcs2Git.Console {
             Log.Message("Force sync rejected because merge request can`t be merged automatically.");
             return false;
         }
-        static void ForceSyncBuild(GitLabWrapper gitLabWrapper, MergeRequestHookClient hook) {
-            var project = gitLabWrapper.GetProject(hook.Attributes.TargetProjectId);
-            var mergeRequest = gitLabWrapper.GetMergeRequest(project, hook.Attributes.Id);
+        static void ForceSyncBuild(GitLabWrapper gitLabWrapper, MergeRequest mergeRequest, MergeRequestHookClient hook) {
             var xmlComments = gitLabWrapper.GetComments(mergeRequest).Where(x => IsXml(x.Note));
             var options = xmlComments.Select(x => MergeRequestOptions.ConvertFromString(x.Note)).FirstOrDefault();
             if (options != null && options.ActionType == MergeRequestActionType.sync) {
@@ -556,9 +570,7 @@ namespace DXVcs2Git.Console {
                 Log.Message("Merge request can`t be merged because merge request notes has no farm config.");
             Log.Message("");
         }
-        static bool ShouldForceSyncTask(GitLabWrapper gitLabWrapper, MergeRequestHookClient hook) {
-            var project = gitLabWrapper.GetProject(hook.Attributes.TargetProjectId);
-            var mergeRequest = gitLabWrapper.GetMergeRequest(project, hook.Attributes.Id);
+        static bool ShouldForceSyncTask(MergeRequest mergeRequest, MergeRequestHookClient hook) {
             var assignee = mergeRequest.Assignee;
             if (assignee == null || !assignee.Name.StartsWith("dxvcs2git")) {
                 Log.Message("Force sync rejected because assignee is not set or not sync task.");

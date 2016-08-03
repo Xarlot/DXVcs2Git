@@ -48,6 +48,13 @@ namespace DXVcs2Git.Core {
             user = FindAndRegisterUser(name);
             return user ?? new User(name, DefaultMail, name);
         }
+        public User TryGetUser(string name) {
+            User user;
+            if (Users.TryGetValue(name, out user))
+                return user;
+            user = FindAndRegisterUser(name);
+            return user;
+        }
         string GetEmail(string userName) {
             User user;
             if (ADUsers.TryGetValue(userName, out user))

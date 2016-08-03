@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Reflection;
 using System.Windows.Input;
 using System.Windows.Threading;
@@ -21,6 +22,7 @@ namespace DXVcs2Git.UI.ViewModels {
         public ICommand DownloadNewVersionCommand { get; private set; }
         public ICommand InitializeCommand { get; private set; }
         public ICommand UpdateCommand { get; private set; }
+        public ICommand ActivateCommand { get; private set; }
         public INotificationService NotificationService => GetService<INotificationService>("notificationService");
         public IDialogService SettingsDialogService => GetService<IDialogService>("settingsDialogService");
         public IDialogService DownloaderDialogService => GetService<IDialogService>("downloaderDialogService");
@@ -42,8 +44,23 @@ namespace DXVcs2Git.UI.ViewModels {
             ShowLogCommand = DelegateCommandFactory.Create(PerformShowLog);
             DownloadNewVersionCommand = DelegateCommandFactory.Create(DownloadNewVersion, CanDownloadNewVersion);
             InitializeCommand = DelegateCommandFactory.Create(PerformInitialize, CanPerformInitialize);
+            ActivateCommand = DelegateCommandFactory.Create(PerformActivate, CanPerformActivate);
             LogViewModel = new LoggingViewModel();
             Version = $"Git tools {VersionInfo.Version}";
+        }
+        Stopwatch sw = Stopwatch.StartNew();
+        void PerformActivate() {
+            var selectedBranch = Repositories.SelectedBranch;
+            if (selectedBranch == null)
+                return;
+            if (sw.ElapsedMilliseconds < 5000)
+                return;
+            selectedBranch.RefreshMergeRequest();
+            RepositoriesViewModel.RaiseRefreshSelectedBranch();
+            sw.Restart();
+        }
+        bool CanPerformActivate() {
+            return (Repositories?.IsInitialized ?? false) && Repositories.SelectedBranch != null;
         }
         void SlackRefreshed(string message) {
             var hookType = ProjectHookClient.ParseHookType(message);
@@ -57,11 +74,11 @@ namespace DXVcs2Git.UI.ViewModels {
                 return;
             }
             var hook = ProjectHookClient.ParseHook(hookType);
-            if (hook.HookType == Core.GitLab.ProjectHookType.push)
+            if (hook.HookType == ProjectHookType.push)
                 ProcessPushHook((PushHookClient)hook);
-            else if (hook.HookType == Core.GitLab.ProjectHookType.merge_request)
+            else if (hook.HookType == ProjectHookType.merge_request)
                 ProcessMergeRequestHook((MergeRequestHookClient)hook);
-            else if (hook.HookType == Core.GitLab.ProjectHookType.build)
+            else if (hook.HookType == ProjectHookType.build)
                 ProcessBuildHook((BuildHookClient)hook);
         }
         void ProcessBuildHook(BuildHookClient hook) {

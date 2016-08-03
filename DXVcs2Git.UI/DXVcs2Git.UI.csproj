@@ -532,6 +532,9 @@
     <None Include="Configs\UWP_2016.1.config">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+    <None Include="Configs\Dashboard_2016.2.config">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Include="Configs\XPF_2016.2.config">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>

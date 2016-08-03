@@ -4,7 +4,6 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
-using System.Runtime.Remoting.Messaging;
 using System.Text;
 using System.Windows.Threading;
 using DevExpress.CCNetSmart.Lib;
@@ -47,6 +46,9 @@ namespace DXVcs2Git.UI.Farm {
         }
         public static FarmExtendedStatus GetExtendedTaskStatus(string task) {
             return Instance.GetExtendedTaskStatus(task);
+        }
+        public static void SendNotification(string farmTaskName, string recepient, string message) {
+            Instance.SendNotification(farmTaskName, recepient, message);
         }
     }
 
@@ -264,12 +266,42 @@ namespace DXVcs2Git.UI.Farm {
         }
         ServerI FindServer(string farm, string project) {
             ServerI server;
-            if (serverDict.TryGetValue(new ProjectKey() {Farm = farm, Project = project}, out server))
+            if (serverDict.TryGetValue(new ProjectKey() { Farm = farm, Project = project }, out server))
                 return server;
             return this.serverTable.FirstOrDefault(x => string.Compare(x.HyperName, project, StringComparison.InvariantCultureIgnoreCase) == 0);
         }
+        public bool SendNotification(string farmTaskName, string recipient, string message) {
+            lock (syncLocker) {
+                ProjectTagI tag = FindTask(farmTaskName);
+                if (tag == null) {
+                    Log.Message($"Can`t find task for sending message {farmTaskName}");
+                    return false;
+                }
+                var server = FindServer(tag.farm, tag.server);
+                if (server == null) {
+                    Log.Message($"Can`t find task for sending message {farmTaskName}");
+                    return false;
+                }
+                var integrator = GetIntegrator(server.Server);
+                if (integrator == null) {
+                    Log.Error("Can`t send message. Integrator not found.");
+                    return false;
+                }
+                string project = tag.name;
+                bool result = integrator.SendNotification(project, recipient, message);
+                if (result)
+                    Log.Message($"Message sent to: server = {server} project = {project} recipient = {recipient}");
+                else
+                    Log.Message("Can`t send message. Integrator returns error.");
+                return result;
+            }
+        }
+        DXCCTrayIntegrator GetIntegrator(string server) {
+            return integratorList.FirstOrDefault(integrator => server.Equals(integrator.Name, StringComparison.InvariantCultureIgnoreCase));
+        }
 
         #region inner farm shit
+
         class ProjectKeyComparer : IEqualityComparer<ProjectKey> {
             public bool Equals(ProjectKey x, ProjectKey y) {
                 return x.Farm == y.Farm && x.Project == y.Project;
@@ -809,6 +841,5 @@ namespace DXVcs2Git.UI.Farm {
             //}
         }
         #endregion
-
     }
 }
