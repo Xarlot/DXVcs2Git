@@ -503,12 +503,12 @@ namespace DevExpress.DXCCTray {
             watchDogTimer.Interval = waitTime * 3;
             waitTimeIndex = 0;
             wcfConnectionTimer.Elapsed += WcfConnectionTimer_Elapsed;
-            watchDogTimer.Elapsed += new System.Timers.ElapsedEventHandler(watchDogTimer_Elapsed);
-            checkMulticastTimer.Elapsed += new System.Timers.ElapsedEventHandler(checkMulticastTimer_Elapsed);
+            watchDogTimer.Elapsed += watchDogTimer_Elapsed;
+            checkMulticastTimer.Elapsed += checkMulticastTimer_Elapsed;
             InitUserNames();
 
             sendServerIAmHereTimer = new System.Timers.Timer(TimeSpan.FromMinutes(sendServerIAmHereIntervalMinutes).TotalMilliseconds);
-            sendServerIAmHereTimer.Elapsed += new System.Timers.ElapsedEventHandler(sendServerIAmHereTimer_Elapsed);
+            sendServerIAmHereTimer.Elapsed += sendServerIAmHereTimer_Elapsed;
             sendServerIAmHereTimer.Start();
         }
         private void InitUserNames() {
@@ -533,6 +533,8 @@ namespace DevExpress.DXCCTray {
             Log.Message("Found names: " + string.Join(";", allUserNames));
         }
         bool CheckUserName(string userName) {
+            if (userName?.StartsWith("dxvcs2git") == true)
+                return true;
             foreach (string user in allUserNames) {
                 if (user.Equals(userName, StringComparison.InvariantCultureIgnoreCase)) {
                     return true;
@@ -614,7 +616,7 @@ namespace DevExpress.DXCCTray {
         public void Start() {
             if (!isRunning) {
                 isRunning = true;
-                thread = new Thread(new ThreadStart(Run));
+                thread = new Thread(Run);
                 thread.IsBackground = true;
                 thread.Start();
             }
@@ -632,7 +634,7 @@ namespace DevExpress.DXCCTray {
             if (udpProcessor.IsReceiving) {
                 udpProcessor.StopReceiveMessages();
             }
-            udpProcessor.reseiveMessageCompleted -= new UDPMulticastingPacketProcessor.ReseiveMessageEventHandler(udpProcessor_reseiveMessageCompleted);
+            udpProcessor.reseiveMessageCompleted -= udpProcessor_reseiveMessageCompleted;
             udpProcessor.Close();
             udpProcessor = null;
             checkMulticastTimer.Stop();
@@ -814,7 +816,7 @@ namespace DevExpress.DXCCTray {
             string[] parts = multicastAddress.Split(':');
             string source = new Uri(string.IsNullOrEmpty(nearestUrlWCF) ? Url : nearestUrlWCF).Host;
             udpProcessor = new UDPMulticastingPacketProcessor(parts[0], int.Parse(parts[1]), source);
-            udpProcessor.reseiveMessageCompleted += new UDPMulticastingPacketProcessor.ReseiveMessageEventHandler(udpProcessor_reseiveMessageCompleted);
+            udpProcessor.reseiveMessageCompleted += udpProcessor_reseiveMessageCompleted;
 
             if (!udpProcessor.IsReceiving) {
                 udpProcessor.StartReceiveMessagesAsync();

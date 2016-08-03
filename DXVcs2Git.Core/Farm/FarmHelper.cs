@@ -14,20 +14,18 @@ using ThoughtWorks.CruiseControl.Remote;
 namespace DXVcs2Git.UI.Farm {
     public class FarmIntegrator {
         static readonly FarmHelper Instance;
-        static Dispatcher Dispatcher { get; set; }
-        static Action InvalidateCallback { get; set; }
+        static Action<FarmRefreshedEventArgs> InvalidateCallback { get; set; }
 
         static FarmIntegrator() {
             Instance = new FarmHelper();
         }
-        public static void Start(Dispatcher dispatcher, Action invalidateCallback) {
-            Dispatcher = dispatcher;
-            InvalidateCallback = invalidateCallback ?? (() => { });
+        public static void Start(Action<FarmRefreshedEventArgs> invalidateCallback) {
+            InvalidateCallback = invalidateCallback ?? (x => { });
             Instance.Refreshed += InstanceOnRefreshed;
             Instance.StartIntegrator();
         }
-        static void InstanceOnRefreshed(object sender, EventArgs eventArgs) {
-            Dispatcher.BeginInvoke(DispatcherPriority.ContextIdle, InvalidateCallback);
+        static void InstanceOnRefreshed(object sender, FarmRefreshedEventArgs eventArgs) {
+            InvalidateCallback(eventArgs);
         }
         public static void Stop() {
             Instance.Refreshed -= InstanceOnRefreshed;
@@ -94,11 +92,11 @@ namespace DXVcs2Git.UI.Farm {
         public string ActivityMessage { get; set; }
     }
     public class FarmHelper {
-        public event EventHandler Refreshed;
+        public event EventHandler<FarmRefreshedEventArgs> Refreshed;
 
-        void RaiseRefreshed() {
+        void RaiseRefreshed(FarmRefreshedEventArgs args = null) {
             var refreshed = Refreshed;
-            refreshed?.Invoke(this, EventArgs.Empty);
+            refreshed?.Invoke(this, args);
         }
         public FarmStatus GetTaskStatus(string task) {
             lock (this.syncLocker) {
@@ -282,7 +280,7 @@ namespace DXVcs2Git.UI.Farm {
                     Log.Message($"Can`t find task for sending message {farmTaskName}");
                     return false;
                 }
-                var integrator = GetIntegrator(server.Server);
+                var integrator = GetIntegrator(server.Farm);
                 if (integrator == null) {
                     Log.Error("Can`t send message. Integrator not found.");
                     return false;
@@ -382,7 +380,7 @@ namespace DXVcs2Git.UI.Farm {
                     integrator_OnNotificationListChanged(sender);
                 integrator_OnProjectDetailsAndForcerUpdated(sender);
 
-                if (projects || notification)
+                if (projects)
                     RaiseRefreshed();
                 //if (tip != null) {
                 //ToolTipControllerGetActiveObjectInfoEventArgs newArgs = new ToolTipControllerGetActiveObjectInfoEventArgs((Control)toolTipController.ActiveControlClient,
@@ -612,12 +610,14 @@ namespace DXVcs2Git.UI.Farm {
                     string projectName;
                     string buildName;
                     DXCCTrayHelper.ParseBuildUrl(bn.BuildUrl, out projectName, out buildName);
-                    balloonMessages.Add(String.Format("{0} - {1}", projectName, (bn.BuildChangeStatus == BuildChangeStatus.None ? bn.BuildStatus.ToString() : bn.BuildChangeStatus.ToString())));
+                    var balloonMessage = CalcBalloonMessage(projectName, bn);
+                    balloonMessages.Add(balloonMessage);
                     if (bn.BuildStatus != BuildIntegrationStatus.Success) {
                         balloonFailState = true;
                     }
                     lastNotification = bn;
                     buildNotifications.Insert(0, new BuildNotificationViewInfo(bn));
+                    RaiseRefreshed(new NotificationReceivedEventArgs(balloonMessage));
                 }
                 integrator.Notifications.Clear();
                 if (balloonMessages.Count > 0) {
@@ -625,31 +625,23 @@ namespace DXVcs2Git.UI.Farm {
                 }
             }
             lock (buildNotifications) {
-                while (buildNotifications.Count > notificationsMaxCount) {
-                    buildNotifications.RemoveAt(notificationsMaxCount);
+                while (buildNotifications.Count > NotificationsMaxCount) {
+                    buildNotifications.RemoveAt(NotificationsMaxCount);
                 }
             }
-            //if (needSetTopRowIndex) {
-            //    gridViewNotifications.TopRowIndex = 0;
-            //}
         }
-        const int notificationsMaxCount = 100;
+        static string CalcBalloonMessage(string projectName, BuildNotification bn) {
+            if (bn.Recipient.StartsWith("dxvcs2git"))
+                return bn.Sender;
+            return $"{projectName} - {(bn.BuildChangeStatus == BuildChangeStatus.None ? bn.BuildStatus.ToString() : bn.BuildChangeStatus.ToString())}";
+        }
+        const int NotificationsMaxCount = 100;
         void integrator_OnServersChanged(DXCCTrayIntegrator integrator) {
             try {
                 if (skipUpdateControllerServers.SkipUpdate()) {
                     return;
                 }
                 object update = new object();
-
-                //ServerI focusedRow = gridViewServers.GetFocusedRow() as ServerI;
-                //bool focusedGroupped = gridViewServers.IsGroupRow(gridViewServers.FocusedRowHandle);
-                //int[] selectedRowHandles = gridViewServers.GetSelectedRows();
-                //List<ServerI> selectedRows = new List<ServerI>();
-                //foreach (int srh in selectedRowHandles) {
-                //    if (!gridViewServers.IsGroupRow(srh)) {
-                //        selectedRows.Add((ServerI)gridViewServers.GetRow(srh));
-                //    }
-                //}
                 lock (integrator.ServerList) {
                     foreach (ServerInfo newInfo in integrator.ServerList) {
                         ServerI row;
@@ -841,5 +833,20 @@ namespace DXVcs2Git.UI.Farm {
             //}
         }
         #endregion
+    }
+
+    public enum FarmRefreshType {
+        notification
+    }
+    public abstract class FarmRefreshedEventArgs : EventArgs {
+        public abstract FarmRefreshType RefreshType { get; }
+    }
+
+    public class NotificationReceivedEventArgs : FarmRefreshedEventArgs {
+        public string Message { get; }
+        public NotificationReceivedEventArgs(string message) {
+            Message = message;
+        }
+        public override FarmRefreshType RefreshType => FarmRefreshType.notification;
     }
 }

@@ -33,7 +33,7 @@
     </dxr:DXRibbonWindow.Resources>
     <dxmvvm:Interaction.Behaviors>
         <dxmvvm:EventToCommand Event="Loaded" Command="{Binding Path=InitializeCommand}"/>
-        <dxmvvm:NotificationService x:Name="notificationService" />
+        <dxmvvm:NotificationService x:Name="notificationService" ApplicationId="dxvcs2git.ui"/>
         <dx:DialogService x:Name="downloaderDialogService">
             <dx:DialogService.DialogStyle>
                 <Style TargetType="{x:Type dx:DXDialogWindow}">

@@ -400,13 +400,12 @@ namespace DXVcs2Git.Console {
             string gitlabauthtoken = clo.AuthToken;
             string sharedWebHookPath = clo.WebHook;
             string taskName = clo.FarmTaskName;
-            bool supportsSendingMessages = string.IsNullOrEmpty(taskName);
+            string serviceUser = clo.Login;
+            bool supportsSendingMessages = !string.IsNullOrEmpty(taskName);
             Stopwatch sw = Stopwatch.StartNew();
 
             GitLabWrapper gitLabWrapper = new GitLabWrapper(gitServer, gitlabauthtoken);
-            DXVcsWrapper vcsWrapper = new DXVcsWrapper(vcsServer);
-            FarmIntegrator.Start(Dispatcher.CurrentDispatcher, null);
-            RegisteredUsers users = new RegisteredUsers(gitLabWrapper, vcsWrapper);
+            FarmIntegrator.Start(null);
 
             var projects = gitLabWrapper.GetAllProjects();
             foreach (Project project in projects) {
@@ -427,12 +426,12 @@ namespace DXVcs2Git.Console {
                 var request = server.GetRequest();
                 if (request == null)
                     continue;
-                ProcessWebHook(gitLabWrapper, users, request, supportsSendingMessages, taskName);
+                ProcessWebHook(gitLabWrapper, serviceUser, request, supportsSendingMessages, taskName);
             }
 
             return 0;
         }
-        static void ProcessWebHook(GitLabWrapper gitLabWrapper, RegisteredUsers users, WebHookRequest request, bool supportSendingMessages, string farmTaskName) {
+        static void ProcessWebHook(GitLabWrapper gitLabWrapper, string serviceUser, WebHookRequest request, bool supportSendingMessages, string farmTaskName) {
             var hookType = ProjectHookClient.ParseHookType(request);
             if (hookType == null)
                 return;
@@ -442,7 +441,7 @@ namespace DXVcs2Git.Console {
             if (hook.HookType == ProjectHookType.push)
                 ProcessPushHook((PushHookClient)hook);
             else if (hook.HookType == ProjectHookType.merge_request)
-                ProcessMergeRequestHook(gitLabWrapper, users, (MergeRequestHookClient)hook, supportSendingMessages, farmTaskName);
+                ProcessMergeRequestHook(gitLabWrapper, serviceUser, (MergeRequestHookClient)hook, supportSendingMessages, farmTaskName);
             else if (hook.HookType == ProjectHookType.build)
                 ProcessBuildHook(gitLabWrapper, (BuildHookClient)hook);
         }
@@ -500,16 +499,14 @@ namespace DXVcs2Git.Console {
             }
             return null;
         }
-        static void ProcessMergeRequestHook(GitLabWrapper gitLabWrapper, RegisteredUsers users, MergeRequestHookClient hook, bool supportSendingMessages, string farmTaskName) {
+        static void ProcessMergeRequestHook(GitLabWrapper gitLabWrapper, string serviceUser, MergeRequestHookClient hook, bool supportSendingMessages, string farmTaskName) {
             Log.Message($"Merge hook title: {hook.Attributes.Description}");
             Log.Message($"Merge hook state: {hook.Attributes.State}");
 
             var project = gitLabWrapper.GetProject(hook.Attributes.TargetProjectId);
             var mergeRequest = gitLabWrapper.GetMergeRequest(project, hook.Attributes.Id);
-            var commits = gitLabWrapper.GetMergeRequestCommits(mergeRequest);
-            var commitAuthors = commits.Select(x => users.TryGetUser(x.AuthorName)).Distinct().ToList();
             if (supportSendingMessages)
-                SendMessage(commitAuthors, hook.Json, farmTaskName);
+                SendMessage(serviceUser, hook.Json, farmTaskName);
 
             if (!IsOpenedState(hook))
                 return;
@@ -525,28 +522,11 @@ namespace DXVcs2Git.Console {
                 return;
             }
         }
-        static void SendMessage(IEnumerable<User> users, string json, string farmTaskName) {
+        static void SendMessage(string serviceUser, string json, string farmTaskName) {
             var bytes = Encoding.UTF8.GetBytes(json);
             string message = Convert.ToBase64String(bytes);
 
-            foreach (var user in users) {
-                FarmIntegrator.SendNotification(farmTaskName, user.UserName, message);
-            }
-        }
-        static void ForceTestMergeRequest(GitLabWrapper gitLabWrapper, MergeRequestHookClient hook) {
-            Log.Error("Force test merge request is not implemented yet.");
-        }
-        static bool ShouldTestMergeRequest(GitLabWrapper gitLabWrapper, MergeRequestHookClient hook) {
-            var project = gitLabWrapper.GetProject(hook.Attributes.TargetProjectId);
-            var mergeRequest = gitLabWrapper.GetMergeRequest(project, hook.Attributes.Id);
-            var assignee = mergeRequest.Assignee;
-            if (assignee == null || !assignee.Name.StartsWith("dxvcs2git")) {
-                Log.Message("Force sync rejected because assignee is not set or not sync task.");
-                return false;
-            }
-
-            Log.Message("Force sync rejected because merge request can`t be merged automatically.");
-            return false;
+            FarmIntegrator.SendNotification(farmTaskName, serviceUser, message);
         }
         static void ForceSyncBuild(GitLabWrapper gitLabWrapper, MergeRequest mergeRequest, MergeRequestHookClient hook) {
             var xmlComments = gitLabWrapper.GetComments(mergeRequest).Where(x => IsXml(x.Note));

@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Reflection;
+using System.Text;
+using System.Threading.Tasks;
 using System.Windows.Input;
 using System.Windows.Threading;
 using DevExpress.Mvvm;
@@ -29,6 +31,7 @@ namespace DXVcs2Git.UI.ViewModels {
         public Config Config { get; private set; }
         public string Version { get; private set; }
         public LoggingViewModel LogViewModel { get; private set; }
+        Dispatcher dispatcher;
         public bool ShowLog {
             get { return GetProperty(() => ShowLog); }
             set { SetProperty(() => ShowLog, value, ShowLogChanged); }
@@ -36,8 +39,8 @@ namespace DXVcs2Git.UI.ViewModels {
         public RootViewModel() {
             Config = ConfigSerializer.GetConfig();
             UpdateDefaultTheme();
-
-            FarmIntegrator.Start(Dispatcher.CurrentDispatcher, FarmRefreshed);
+            dispatcher = Dispatcher.CurrentDispatcher;
+            FarmIntegrator.Start(FarmRefreshed);
             AtomFeed.FeedWorker.Initialize();
             UpdateCommand = DelegateCommandFactory.Create(PerformUpdate, CanPerformUpdate);
             SettingsCommand = DelegateCommandFactory.Create(ShowSettings, CanShowSettings);
@@ -62,7 +65,7 @@ namespace DXVcs2Git.UI.ViewModels {
         bool CanPerformActivate() {
             return (Repositories?.IsInitialized ?? false) && Repositories.SelectedBranch != null;
         }
-        void SlackRefreshed(string message) {
+        void ProcessNotification(string message) {
             var hookType = ProjectHookClient.ParseHookType(message);
             if (hookType == null)
                 return;
@@ -93,8 +96,12 @@ namespace DXVcs2Git.UI.ViewModels {
             selectedBranch.RefreshMergeRequest();
             RepositoriesViewModel.RaiseRefreshSelectedBranch();
 
-            var notification = NotificationService.CreatePredefinedNotification("build", null, null, null);
-            notification.ShowAsync();
+            //var notification = NotificationService.CreatePredefinedNotification(hook.Json, null, null, null);
+            //var task = notification.ShowAsync();
+            //task.ContinueWith(x => PerformClick(x.Result), TaskScheduler.FromCurrentSynchronizationContext());
+        }
+
+        void PerformClick(NotificationResult result) {
         }
         void ProcessMergeRequestHook(MergeRequestHookClient hook) {
             int mergeRequestId = hook.Attributes.Id;
@@ -105,8 +112,9 @@ namespace DXVcs2Git.UI.ViewModels {
                 RepositoriesViewModel.RaiseRefreshSelectedBranch();
                 Log.Message("Selected branch refreshed.");
             }
-            var notification = NotificationService.CreatePredefinedNotification("build", null, null, null);
-            notification.ShowAsync();
+            //var notification = NotificationService.CreatePredefinedNotification(hook.Json, null, null, null);
+            //var task = notification.ShowAsync();
+            //task.ContinueWith(x => PerformClick(x.Result));
         }
         void ProcessPushHook(PushHookClient hook) {
         }
@@ -143,9 +151,22 @@ namespace DXVcs2Git.UI.ViewModels {
         void RefreshLog() {
             LogViewModel.Text = Log.GetLog();
         }
-        void FarmRefreshed() {
-            Repositories.Repositories.ForEach(x => x.RefreshFarm());
-            Messenger.Default.Send(new Message(MessageType.RefreshFarm));
+        void FarmRefreshed(FarmRefreshedEventArgs args) {
+            if (args == null) {
+                dispatcher.BeginInvoke(DispatcherPriority.ContextIdle, new Action(() => {
+                    Repositories.Repositories.ForEach(x => x.RefreshFarm());
+                    Messenger.Default.Send(new Message(MessageType.RefreshFarm));
+                }));
+                return;
+            }
+            if (args.RefreshType == FarmRefreshType.notification) {
+                dispatcher.BeginInvoke(() => {
+                    var notification = (NotificationReceivedEventArgs)args;
+                    var bytes = Convert.FromBase64String(notification.Message);
+                    string message = Encoding.UTF8.GetString(bytes);
+                    ProcessNotification(message);
+                });
+            }
         }
         public void Initialize() {
             Repositories = ServiceLocator.Current.GetInstance<RepositoriesViewModel>();
