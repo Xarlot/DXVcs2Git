@@ -159,8 +159,15 @@ namespace DXVcs2Git.UI.ViewModels {
             if (args.RefreshType == FarmRefreshType.notification) {
                 dispatcher.BeginInvoke(() => {
                     var notification = (NotificationReceivedEventArgs)args;
-                    var bytes = Convert.FromBase64String(notification.Message);
-                    string message = Encoding.UTF8.GetString(bytes);
+                    string message;
+                    try {
+                        var bytes = Convert.FromBase64String(notification.Message);
+                        message = Encoding.UTF8.GetString(bytes);
+                    }
+                    catch (Exception ex) {
+                        Log.Error("Can`t convert message from base64 string", ex);
+                        return;
+                    }
                     ProcessNotification(message);
                 });
             }
