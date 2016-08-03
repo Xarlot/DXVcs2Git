@@ -113,6 +113,9 @@ namespace DXVcs2Git.UI.ViewModels {
         static bool IsXml(string xml) {
             return !string.IsNullOrEmpty(xml) && xml.StartsWith("<");
         }
+        public byte[] DownloadArtifacts(string project, Build build) {
+            return gitLabWrapper.DownloadArtifacts(project, build);
+        }
         public byte[] DownloadArtifacts(MergeRequest mergeRequest, Build build) {
             return gitLabWrapper.DownloadArtifacts(mergeRequest, build);
         }

@@ -11,12 +11,26 @@
              xmlns:dxb="http://schemas.devexpress.com/winfx/2008/xaml/bars"
              xmlns:dx="http://schemas.devexpress.com/winfx/2008/xaml/core"
              xmlns:dxmvvm="http://schemas.devexpress.com/winfx/2008/xaml/mvvm"
+             xmlns:behaviors="clr-namespace:DXVcs2Git.UI.Behaviors"
              mc:Ignorable="d" 
-             d:DesignHeight="300" d:DesignWidth="300">
+             d:DesignHeight="300" d:DesignWidth="300"
+             AllowDrop="True">
     <UserControl.DataContext>
         <extensions:IoC TargetType="{x:Type viewModels:EditMergeRequestTestsViewModel}"/>
     </UserControl.DataContext>
     <dxmvvm:Interaction.Behaviors>
+        <dx:DialogService x:Name="loadLog">
+            <dx:DialogService.DialogStyle>
+                <Style TargetType="{x:Type dx:DXDialogWindow}">
+                    <Setter Property="SizeToContent" Value="WidthAndHeight"/>
+                </Style>
+            </dx:DialogService.DialogStyle>
+            <dx:DialogService.ViewTemplate>
+                <DataTemplate>
+                    <local:LoadLogControl/>
+                </DataTemplate>
+            </dx:DialogService.ViewTemplate>
+        </dx:DialogService>
         <dxmvvm:WindowService>
             <dxmvvm:WindowService.ViewTemplate>
                 <DataTemplate>
@@ -53,6 +67,13 @@
                             LargeGlyph="{dx:DXImageOffice2013 Image=Close_32x32.png}">
                         </dxb:BarButtonItem>
                         <dxb:BarItemSeparator/>
+                        <dxb:BarButtonItem
+                            RibbonStyle="Large" 
+                            GlyphSize="Large" 
+                            Content="Load log"
+                            Command="{Binding Path=LoadLogCommand}"
+                            LargeGlyph="{dx:DXImageOffice2013 Image=Close_32x32.png}">
+                        </dxb:BarButtonItem>
                     </dxr:RibbonPageGroup>
                 </dxr:RibbonPage>
             </dxr:RibbonDefaultPageCategory>

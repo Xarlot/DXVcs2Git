@@ -39,8 +39,8 @@ namespace DXVcs2Git.UI.ViewModels {
                         subReader.Close();
                         reader.Skip();
                     }
-                    reader.Close();
                 }
+                reader.Close();
             }
             catch (Exception ex) {
                 Log.Error("Error during parsing build log", ex);

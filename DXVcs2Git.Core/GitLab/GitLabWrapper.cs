@@ -14,6 +14,9 @@ namespace DXVcs2Git.Git {
         public GitLabWrapper(string server, string token) {
             client = GitLabClient.Connect(server, token);
         }
+        public bool IsAdmin() {
+            return client.Users.Current.IsAdmin;
+        }
         public IEnumerable<Project> GetProjects() {
             return client.Projects.Accessible;
         }
@@ -181,8 +184,19 @@ namespace DXVcs2Git.Git {
                 return;
             projectClient.Builds.Retry(build);
         }
+        public byte[] DownloadArtifacts(string projectUrl, Build build) {
+            Func<string, Project> findProject = IsAdmin() ? (Func<string, Project>)FindProjectFromAll : FindProject;
+            var project = findProject(projectUrl);
+            if (project == null)
+                return null;
+            var projectClient = client.GetRepository(project.Id);
+            return DownloadArtifactsCore(projectClient, build);
+        }
         public byte[] DownloadArtifacts(MergeRequest mergeRequest, Build build) {
             var projectClient = client.GetRepository(mergeRequest.SourceProjectId);
+            return DownloadArtifactsCore(projectClient, build);
+        }
+        static byte[] DownloadArtifactsCore(IRepositoryClient projectClient, Build build) {
             byte[] result = null;
             projectClient.Builds.GetArtifactFile(build, stream => {
                 if (stream == null)

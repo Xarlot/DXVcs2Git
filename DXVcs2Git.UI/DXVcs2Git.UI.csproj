@@ -397,6 +397,9 @@
     <Compile Include="Views\EditMergeRequestControl.xaml.cs">
       <DependentUpon>EditMergeRequestControl.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Views\LoadLogControl.xaml.cs">
+      <DependentUpon>LoadLogControl.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Views\LoggingUserControl.xaml.cs">
       <DependentUpon>LoggingUserControl.xaml</DependentUpon>
     </Compile>
@@ -449,6 +452,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Views\EditMergeRequestControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\LoadLogControl.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

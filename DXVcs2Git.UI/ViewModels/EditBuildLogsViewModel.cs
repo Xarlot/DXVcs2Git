@@ -2,7 +2,6 @@
 
 namespace DXVcs2Git.UI.ViewModels {
     public class EditBuildLogsViewModel : ViewModelBase {
-        CommitViewModel Commit => (CommitViewModel)((ISupportParentViewModel)this).ParentViewModel;
         public EditBuildLogsViewModel() {
 
         }
@@ -26,13 +25,24 @@ namespace DXVcs2Git.UI.ViewModels {
 
         protected override void OnParentViewModelChanged(object parentViewModel) {
             base.OnParentViewModelChanged(parentViewModel);
-            Initialize();
+            var commitViewModel = parentViewModel as CommitViewModel;
+            if (commitViewModel != null) {
+                Initialize(commitViewModel);
+            }
+            else {
+                var artifactsViewModel = parentViewModel as ArtifactsViewModel;
+                if (artifactsViewModel != null)
+                    Initialize(artifactsViewModel);
+            }
         }
-        void Initialize() {
-            Artifact = Commit.DownloadArtifacts();
-            Modifications = new ModificationsViewModel(Artifact);
-            Build = new BuildLogViewModel(Artifact);
-            Tests = new TestLogViewModel(Artifact);
+        void Initialize(CommitViewModel commit) {
+            Artifact = commit.DownloadArtifacts();
+            Initialize(Artifact);
+        }
+        void Initialize(ArtifactsViewModel artifact) {
+            Modifications = new ModificationsViewModel(artifact);
+            Build = new BuildLogViewModel(artifact);
+            Tests = new TestLogViewModel(artifact);
         }
     }
 }

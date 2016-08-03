@@ -19,6 +19,7 @@
         Height="800" Width="1024"  ShowIcon="True"
         UseLayoutRounding="True"                  
         MinHeight="600" MinWidth="800"
+        AllowDrop="True"
         Icon="Icon.ico">
     <dxr:DXRibbonWindow.DataContext>
         <extensions:IoC TargetType="{x:Type viewModels:RootViewModel}"/>

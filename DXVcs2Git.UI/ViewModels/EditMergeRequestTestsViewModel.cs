@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Windows.Controls;
 using System.Windows.Input;
 using DevExpress.Mvvm;
@@ -16,8 +17,10 @@ namespace DXVcs2Git.UI.ViewModels {
 
         public ICommand CancelTestsCommand { get; }
         public ICommand ShowLogCommand { get; }
+        public ICommand LoadLogCommand { get; }
 
         IWindowService ShowLogsService => GetService<IWindowService>();
+        IDialogService LoadLogService => GetService<IDialogService>("loadLog");
 
         public IEnumerable<CommitViewModel> Commits {
             get { return GetProperty(() => Commits); }
@@ -28,8 +31,29 @@ namespace DXVcs2Git.UI.ViewModels {
             Messenger.Default.Register<Message>(this, OnMessageReceived);
             CancelTestsCommand = DelegateCommandFactory.Create(PerformCancelTests, CanPerformCancelTests);
             ShowLogCommand = DelegateCommandFactory.Create<CommitViewModel>(PerformShowLogs, CanPerformShowLogs);
+            LoadLogCommand = DelegateCommandFactory.Create(PerformLoadLog, CanPerformLoadLog);
 
             Initialize();
+        }
+        bool CanPerformLoadLog() {
+            return BranchViewModel != null;
+        }
+        readonly Regex parseBuildRegex = new Regex(@"http://(?<server>[\w\._-]+)/(?<nspace>[\w\._-]+)/(?<name>[\w\._-]+)/builds/(?<build>\d+)", RegexOptions.Compiled);
+        void PerformLoadLog() {
+            var log = new LoadLogViewModel();
+            if (LoadLogService.ShowDialog(MessageButton.OKCancel, "Load log", log) == MessageResult.OK) {
+                string url = log.Url;
+                if (string.IsNullOrEmpty(url))
+                    return;
+                var match = parseBuildRegex.Match(url);
+                if (!match.Success)
+                    return;
+                var artifacts = BranchViewModel.DownloadArtifacts($@"http://{match.Groups["server"]}/{match.Groups["nspace"]}/{match.Groups["name"]}.git", new Build() { Id = Convert.ToInt32(match.Groups["build"].Value)});
+                if (artifacts == null)
+                    return;
+                ArtifactsViewModel model = new ArtifactsViewModel(new ArtifactsFile() { FileName = "test.zip"}, artifacts);
+                ShowLogsService.Show(model);
+            }
         }
         bool CanPerformShowLogs(CommitViewModel model) {
             if (model == null)
@@ -74,6 +98,13 @@ namespace DXVcs2Git.UI.ViewModels {
             return BranchViewModel?.MergeRequest != null;
         }
         void PerformRunTests() {
+        }
+    }
+
+    public class LoadLogViewModel : BindableBase {
+        public string Url {
+            get { return GetProperty(() => Url); }
+            set { SetProperty(() => Url, value); }
         }
     }
 

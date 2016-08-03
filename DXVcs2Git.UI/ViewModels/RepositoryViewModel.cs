@@ -38,6 +38,7 @@ namespace DXVcs2Git.UI.ViewModels {
         RepositoriesViewModel Repositories { get; }
         public RepoConfig RepoConfig { get; private set; }
         public TrackRepository TrackRepository { get; }
+        public bool HasAdminPrivileges { get; }
         public string DefaultServiceName => RepoConfig?.DefaultServiceName;
 
         public BranchViewModel SelectedBranch {
@@ -47,6 +48,7 @@ namespace DXVcs2Git.UI.ViewModels {
         public RepositoryViewModel(string name, TrackRepository trackRepository, RepositoriesViewModel repositories) {
             TrackRepository = trackRepository;
             GitLabWrapper = new GitLabWrapper(TrackRepository.Server, TrackRepository.Token);
+            HasAdminPrivileges = GitLabWrapper.IsAdmin();
             GitReader = new GitReaderWrapper(trackRepository.LocalPath);
             UpdateConfigs(trackRepository, repositories);
             Repositories = repositories;

@@ -1,9 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Reflection;
 using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Input;
 using System.Windows.Threading;
 using DevExpress.Mvvm;
@@ -66,16 +63,16 @@ namespace DXVcs2Git.UI.ViewModels {
             return (Repositories?.IsInitialized ?? false) && Repositories.SelectedBranch != null;
         }
         void ProcessNotification(string message) {
+            if (string.IsNullOrEmpty(message) || !message.StartsWith("{")) {
+                Log.Message("Slack message is not json string.");
+                return;
+            }
             var hookType = ProjectHookClient.ParseHookType(message);
             if (hookType == null)
                 return;
             Log.Message($"Web hook received.");
             Log.Message($"Web hook type: {hookType.HookType}.");
 
-            if (string.IsNullOrEmpty(message) || !message.StartsWith("{")) {
-                Log.Message("Slack message is not json string.");
-                return;
-            }
             var hook = ProjectHookClient.ParseHook(hookType);
             if (hook.HookType == ProjectHookType.push)
                 ProcessPushHook((PushHookClient)hook);
