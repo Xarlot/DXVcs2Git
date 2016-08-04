@@ -43,9 +43,6 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\Lib\DXFarm\ccnet.smart.plugin.dll</HintPath>
     </Reference>
-    <Reference Include="ConfigureAwait">
-      <HintPath>..\..\GitLab.NET\GitLab.NET\bin\Debug\ConfigureAwait.dll</HintPath>
-    </Reference>
     <Reference Include="DXVCS, Version=1.0.0.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\Lib\DXVcs\DXVCS.dll</HintPath>
@@ -53,9 +50,6 @@
     <Reference Include="DXVCSCore, Version=1.0.0.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\Lib\DXVcs\DXVCSCore.dll</HintPath>
-    </Reference>
-    <Reference Include="GitLab.NET">
-      <HintPath>..\..\GitLab.NET\GitLab.NET\bin\Debug\GitLab.NET.dll</HintPath>
     </Reference>
     <Reference Include="Ionic.Zip.Reduced, Version=1.9.1.5, Culture=neutral, PublicKeyToken=edbe51ad942a3f5c, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
@@ -88,9 +82,6 @@
     <Reference Include="Polenter.SharpSerializer, Version=2.20.0.0, Culture=neutral, PublicKeyToken=8f4f20011571ee5f, processorArchitecture=MSIL">
       <HintPath>..\packages\SharpSerializer.2.20\lib\net20\Polenter.SharpSerializer.dll</HintPath>
       <Private>True</Private>
-    </Reference>
-    <Reference Include="RestSharp">
-      <HintPath>..\..\GitLab.NET\GitLab.NET\bin\Debug\RestSharp.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.ComponentModel.DataAnnotations" />
@@ -137,7 +128,6 @@
     <Compile Include="Farm\FileSystem.cs" />
     <Compile Include="Farm\ProjectI.cs" />
     <Compile Include="Farm\SmartProjectActivity.cs" />
-    <Compile Include="GitLab\GitLabWrapperNet.cs" />
     <Compile Include="GitLab\GitLabWrapper.cs" />
     <Compile Include="GitLab\HttpRequestParser.cs" />
     <Compile Include="GitLab\MergeRequestAttributes.cs" />
