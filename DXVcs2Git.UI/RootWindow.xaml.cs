@@ -10,11 +10,6 @@ namespace DXVcs2Git.UI {
     public partial class RootWindow : DXRibbonWindow {
         public RootWindow() {
             InitializeComponent();
-            Activated += OnActivated;
-        }
-        void OnActivated(object sender, EventArgs eventArgs) {
-            var root = (RootViewModel)DataContext;
-            root?.ActivateCommand.TryExecute();
         }
     }
 }

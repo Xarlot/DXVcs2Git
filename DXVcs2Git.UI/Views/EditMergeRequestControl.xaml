@@ -41,7 +41,7 @@
                     <dxe:CheckEdit Content="Test commit on farm" EditValue="{Binding Path=PerformTesting, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
                 </dxlc:LayoutItem>
                 <dxlc:LayoutItem>
-                    <dxe:CheckEdit Content="{Binding Path=PerformTesting, Converter={StaticResource ShowAssignedToServiceMessageConverter}}" EditValue="{Binding Path=AssignedToService, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                    <dxe:CheckEdit ValidateOnTextInput="True" Content="{Binding Path=PerformTesting, Converter={StaticResource ShowAssignedToServiceMessageConverter}}" EditValue="{Binding Path=AssignedToService, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
                 </dxlc:LayoutItem>
                 <dxlc:LayoutItem>
                     <Button Content="Apply" Command="{Binding Path=ApplyCommand}"/>

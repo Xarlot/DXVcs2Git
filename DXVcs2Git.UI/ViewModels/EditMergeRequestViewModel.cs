@@ -64,9 +64,10 @@ namespace DXVcs2Git.UI.ViewModels {
             if (Repositories.Config.AlwaysSure || MessageBoxService.Show("Are you sure?", "Update merge request", MessageBoxButton.OKCancel) == MessageBoxResult.OK) {
                 Branch.UpdateMergeRequest(CalcMergeRequestTitle(Comment), CalcMergeRequestDescription(Comment), CalcServiceName());
                 Branch.UpdateMergeRequest(CalcOptionsComment(mergeRequestOptions));
-                Branch.UpdateWebHook();
-                if (PerformTesting)
+                if (PerformTesting) {
+                    Branch.UpdateWebHook();
                     Branch.ForceBuild(Branch.MergeRequest.MergeRequest);
+                }
                 IsModified = false;
                 RepositoriesViewModel.RaiseRefreshSelectedBranch();
             }
@@ -76,7 +77,7 @@ namespace DXVcs2Git.UI.ViewModels {
         }
         string CalcServiceName() {
             if (!AssignedToService && !PerformTesting)
-                return IsServiceUser(Branch.MergeRequest.Assignee) ? null : Branch.MergeRequest.Assignee;
+                return IsServiceUser(Branch.MergeRequest.Assignee) ? Branch.MergeRequest.Author : Branch.MergeRequest.Assignee;
 
             return PerformTesting ? Branch.TestServiceName : Branch.SyncServiceName;
         }
@@ -113,10 +114,16 @@ namespace DXVcs2Git.UI.ViewModels {
                 IsModified = false;
             }
             else {
-                var syncOptions = Branch.GetSyncOptions(mergeRequest.MergeRequest);
-                performTesting = syncOptions?.PerformTesting ?? false;
+                if (Branch.SupportsTesting) {
+                    var syncOptions = Branch.GetSyncOptions(mergeRequest.MergeRequest);
+                    performTesting = syncOptions?.PerformTesting ?? false;
+                    assignedToService = (syncOptions?.AssignToSyncService ?? false) && IsTestUser(mergeRequest.Assignee);
+                }
+                else {
+                    assignedToService = mergeRequest.Assignee == Branch.SyncServiceName;
+                    performTesting = false;
+                }
                 comment = mergeRequest.Title;
-                assignedToService = ((syncOptions?.AssignToSyncService ?? false) && IsTestUser(mergeRequest.Assignee)) || mergeRequest.Assignee == Branch.SyncServiceName;
                 IsModified = false;
             }
             SupportsTesting = Branch?.SupportsTesting ?? false;

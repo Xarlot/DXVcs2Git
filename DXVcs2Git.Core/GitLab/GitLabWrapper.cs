@@ -180,7 +180,7 @@ namespace DXVcs2Git.Git {
         public void ForceBuild(MergeRequest mergeRequest) {
             var projectClient = client.GetRepository(mergeRequest.SourceProjectId);
             var build = projectClient.Builds.GetBuilds().FirstOrDefault();
-            if (build == null || build.Status == BuildStatus.success)
+            if (build == null || build.Status == BuildStatus.success || build.Status == BuildStatus.pending || build.Status == BuildStatus.running)
                 return;
             projectClient.Builds.Retry(build);
         }
