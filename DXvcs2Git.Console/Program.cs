@@ -443,11 +443,14 @@ namespace DXVcs2Git.Console {
             else if (hook.HookType == ProjectHookType.merge_request)
                 ProcessMergeRequestHook(gitLabWrapper, serviceUser, (MergeRequestHookClient)hook, supportSendingMessages, farmTaskName);
             else if (hook.HookType == ProjectHookType.build)
-                ProcessBuildHook(gitLabWrapper, (BuildHookClient)hook);
+                ProcessBuildHook(gitLabWrapper, serviceUser, (BuildHookClient)hook, supportSendingMessages, farmTaskName);
         }
-        static void ProcessBuildHook(GitLabWrapper gitLabWrapper, BuildHookClient hook) {
+        static void ProcessBuildHook(GitLabWrapper gitLabWrapper, string serviceUser, BuildHookClient hook, bool supportSendingMessages, string farmTaskName) {
             Log.Message($"Build hook title: {hook.BuildName}");
             Log.Message($"Build hook status: {hook.Status}");
+
+            if (supportSendingMessages)
+                SendMessage(serviceUser, hook.Json, farmTaskName);
 
             if (hook.Status == BuildStatus.success) {
                 Project project = gitLabWrapper.GetProject(hook.ProjectId);
@@ -455,19 +458,23 @@ namespace DXVcs2Git.Console {
                     Log.Message($"Can`t find project {hook.ProjectName}.");
                     return;
                 }
+                Log.Message($"Project: {project.PathWithNamespace}");
                 var mergeRequest = CalcMergeRequest(gitLabWrapper, hook, project);
                 if (mergeRequest == null) {
                     Log.Message("Can`t find merge request.");
                     return;
                 }
+                Log.Message($"Merge request: id = {mergeRequest.Id} title = {mergeRequest.Title}");
+                Log.Message($"Merge request state = {mergeRequest.State}");
                 if (mergeRequest.State == "opened" || mergeRequest.State == "reopened") {
                     var latestCommit = gitLabWrapper.GetMergeRequestCommits(mergeRequest).FirstOrDefault();
                     if (latestCommit == null) {
                         Log.Message("Wrong merge request found.");
                         return;
                     }
-                    if (!latestCommit.Id.Equals(hook.Commit.Id)) {
-                        Log.Message("Additional commits has been added.");
+                    Log.Message($"Merge request latest commit sha = {latestCommit.Id}");
+                    if (!latestCommit.Id.Equals(new Sha1(hook.Commit.Id))) {
+                        Log.Message($"Additional commits has been added {hook.Commit.Id}");
                         return;
                     }
 
