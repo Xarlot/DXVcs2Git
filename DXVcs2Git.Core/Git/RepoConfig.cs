@@ -7,6 +7,8 @@
         public string TargetBranch { get; set; }
         public string Server { get; set; }
         public bool SupportsTesting { get; set; }
-        public string FarmTestUser { get; set; }
+        public string TestServiceName { get; set; }
+        public string WebHook { get; set; }
+        public string WebHookTask { get; set; }
     }
 }

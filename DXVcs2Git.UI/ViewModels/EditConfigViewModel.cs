@@ -24,6 +24,10 @@ namespace DXVcs2Git.UI.ViewModels {
             get { return GetProperty(() => UpdateDelay); }
             set { SetProperty(() => UpdateDelay, value, OnUpdateDelayChanged); }
         }
+        public bool SupportsTesting {
+            get { return GetProperty(() => SupportsTesting); }
+            set { SetProperty(() => SupportsTesting, value); }
+        }
         public bool StartWithWindows {
             get { return GetProperty(() => StartWithWindows); }
             set { SetProperty(() => StartWithWindows, value, OnStartWithWindowsChanged); }
@@ -133,6 +137,7 @@ namespace DXVcs2Git.UI.ViewModels {
             this.config = config;
             this.configsReader = new RepoConfigsReader();
             KeyGesture = config.KeyGesture;
+            SupportsTesting = config.SupportsTesting;
             DefaultTheme = config.DefaultTheme;
             Configs = this.configsReader.RegisteredConfigs;
             UpdateDelay = AtomFeed.FeedWorker.UpdateDelay;
@@ -171,6 +176,7 @@ namespace DXVcs2Git.UI.ViewModels {
             config.UpdateDelay = UpdateDelay;
             config.KeyGesture = KeyGesture;
             config.AlwaysSure = AlwaysSure4;
+            config.SupportsTesting = SupportsTesting;
             this.config.DefaultTheme = DefaultTheme;
         }
         public void UpdateTokens() {

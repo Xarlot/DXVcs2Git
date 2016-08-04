@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Net;
+using NGitLab.Models;
 
 namespace DXVcs2Git.Core {
     public static class WebHookHelper {
@@ -24,6 +25,9 @@ namespace DXVcs2Git.Core {
         }
         public static string GetSharedHookUrl(IPAddress ip, string sharedWebHookPath) {
             return string.Format(WebhookFormat, ip) + string.Format(SharedWebHook, sharedWebHookPath);
+        }
+        public static bool EnsureWebHook(ProjectHook webHook) {
+            return webHook.BuildEvents && webHook.PushEvents && webHook.MergeRequestsEvents && !webHook.EnableSSLVerification;
         }
     }
 }

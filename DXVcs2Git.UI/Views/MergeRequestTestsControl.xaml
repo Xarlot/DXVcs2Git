@@ -10,11 +10,37 @@
              xmlns:dxr="http://schemas.devexpress.com/winfx/2008/xaml/ribbon"
              xmlns:dxb="http://schemas.devexpress.com/winfx/2008/xaml/bars"
              xmlns:dx="http://schemas.devexpress.com/winfx/2008/xaml/core"
+             xmlns:dxmvvm="http://schemas.devexpress.com/winfx/2008/xaml/mvvm"
+             xmlns:behaviors="clr-namespace:DXVcs2Git.UI.Behaviors"
              mc:Ignorable="d" 
-             d:DesignHeight="300" d:DesignWidth="300">
+             d:DesignHeight="300" d:DesignWidth="300"
+             AllowDrop="True">
     <UserControl.DataContext>
         <extensions:IoC TargetType="{x:Type viewModels:EditMergeRequestTestsViewModel}"/>
     </UserControl.DataContext>
+    <dxmvvm:Interaction.Behaviors>
+        <dx:DialogService x:Name="loadLog">
+            <dx:DialogService.DialogStyle>
+                <Style TargetType="{x:Type dx:DXDialogWindow}">
+                    <Setter Property="SizeToContent" Value="WidthAndHeight"/>
+                </Style>
+            </dx:DialogService.DialogStyle>
+            <dx:DialogService.ViewTemplate>
+                <DataTemplate>
+                    <local:LoadLogControl/>
+                </DataTemplate>
+            </dx:DialogService.ViewTemplate>
+        </dx:DialogService>
+        <dxmvvm:WindowService>
+            <dxmvvm:WindowService.ViewTemplate>
+                <DataTemplate>
+                    <Grid x:Name="LayoutRoot">
+                        <local:BuildLogsControl dxmvvm:ViewModelExtensions.ParentViewModel="{Binding DataContext, ElementName=LayoutRoot}"/>
+                    </Grid>
+                </DataTemplate>
+            </dxmvvm:WindowService.ViewTemplate>
+        </dxmvvm:WindowService>
+    </dxmvvm:Interaction.Behaviors>
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
@@ -27,30 +53,50 @@
                         <dxb:BarButtonItem
                             RibbonStyle="Large" 
                             GlyphSize="Large" 
-                            Content="Create"
-                            Command="{Binding Path=RunTestsCommand}"
-                            LargeGlyph="{dx:DXImageOffice2013 Image=NewTask_32x32.png}">
+                            Content="Show test logs"
+                            Command="{Binding Path=ShowLogCommand}"
+                            CommandParameter="{Binding Path=CurrentItem, ElementName=grid, UpdateSourceTrigger=PropertyChanged}"
+                            LargeGlyph="{dx:DXImageOffice2013 Image=AlignCenter_32x32.png}">
                         </dxb:BarButtonItem>
                         <dxb:BarButtonItem
                             RibbonStyle="Large" 
                             GlyphSize="Large" 
-                            Content="Close"
+                            Content="Cancel tests"
                             Command="{Binding Path=CancelTestsCommand}"
+                            CommandParameter="{Binding Path=CurrentItem, ElementName=grid, UpdateSourceTrigger=PropertyChanged}"
                             LargeGlyph="{dx:DXImageOffice2013 Image=Close_32x32.png}">
                         </dxb:BarButtonItem>
                         <dxb:BarItemSeparator/>
+                        <dxb:BarButtonItem
+                            RibbonStyle="Large" 
+                            GlyphSize="Large" 
+                            Content="Load test log"
+                            Command="{Binding Path=LoadLogCommand}"
+                            LargeGlyph="{dx:DXImageOffice2013 Image=Close_32x32.png}">
+                        </dxb:BarButtonItem>
                     </dxr:RibbonPageGroup>
                 </dxr:RibbonPage>
             </dxr:RibbonDefaultPageCategory>
         </dxr:RibbonControl>
-        <dxg:GridControl Grid.Row="1" ItemsSource="{Binding Path=Commits}">
+        <dxg:GridControl x:Name="grid" Grid.Row="1" ItemsSource="{Binding Path=Commits}">
             <dxg:GridControl.Columns>
                 <dxg:GridColumn Width="60" Header="BuildStatus"  FieldName="Build.BuildStatus" IsSmart="True"/>
                 <dxg:GridColumn Width="*" FieldName="Title" IsSmart="true" />
-                <dxg:GridColumn Width="90" Header="Duration"  FieldName="Build.Duration" IsSmart="True"/>
+                <dxg:GridColumn Width="90" Header="Tests duration"  FieldName="Build.Duration" IsSmart="True"/>
             </dxg:GridControl.Columns>
+            <dxmvvm:Interaction.Behaviors>
+                <dxmvvm:EventToCommand PassEventArgsToCommand="True" Command="{Binding ShowLogCommand}" EventName="MouseDoubleClick">
+                    <dxmvvm:EventToCommand.EventArgsConverter>
+                        <dx:EventArgsToDataRowConverter />
+                    </dxmvvm:EventToCommand.EventArgsConverter>
+                </dxmvvm:EventToCommand>
+            </dxmvvm:Interaction.Behaviors>
             <dxg:GridControl.View>
-                <dxg:TableView/>
+                <dxg:TableView NavigationStyle="Row">
+                    <dxg:TableView.RowCellMenuCustomizations>
+                        <dxb:BarButtonItem Content="Show test logs " Command="{Binding Path=DataContext.ShowLogCommand, ElementName=grid}" CommandParameter="{Binding Path=CurrentItem, ElementName=grid, UpdateSourceTrigger=PropertyChanged}"/>
+                    </dxg:TableView.RowCellMenuCustomizations>
+                </dxg:TableView>
             </dxg:GridControl.View>
         </dxg:GridControl>
     </Grid>

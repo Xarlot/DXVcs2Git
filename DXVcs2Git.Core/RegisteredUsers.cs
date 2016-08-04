@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
 using DXVcs2Git.Core.AD;
@@ -47,6 +48,13 @@ namespace DXVcs2Git.Core {
                 return user;
             user = FindAndRegisterUser(name);
             return user ?? new User(name, DefaultMail, name);
+        }
+        public User TryGetUser(string name) {
+            User user;
+            if (Users.TryGetValue(name, out user))
+                return user;
+            user = FindAndRegisterUser(name);
+            return user;
         }
         string GetEmail(string userName) {
             User user;

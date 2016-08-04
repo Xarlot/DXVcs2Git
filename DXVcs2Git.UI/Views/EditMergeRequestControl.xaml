@@ -9,9 +9,16 @@
              xmlns:extensions="clr-namespace:DXVcs2Git.UI.Extensions"
              xmlns:dxmvvm="http://schemas.devexpress.com/winfx/2008/xaml/mvvm"
              xmlns:dx="http://schemas.devexpress.com/winfx/2008/xaml/core"
+             xmlns:converters="clr-namespace:DXVcs2Git.UI.Converters"
              mc:Ignorable="d" 
              d:DesignHeight="300" d:DesignWidth="300"
              KeyboardNavigation.TabNavigation="Cycle">
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
+            <converters:ShowAssignedToServiceMessageConverter x:Key="ShowAssignedToServiceMessageConverter"/>
+        </ResourceDictionary>
+    </UserControl.Resources>
     <UserControl.DataContext>
         <extensions:IoC TargetType="{x:Type viewModels:EditMergeRequestViewModel}"/>
     </UserControl.DataContext>
@@ -30,11 +37,11 @@
                         AcceptsReturn="True">
                     </dxe:TextEdit>
                 </dxlc:LayoutItem>
-                <dxlc:LayoutItem>
-                    <dxe:CheckEdit Content="Perform testing on farm" EditValue="{Binding Path=PerformTesting, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                <dxlc:LayoutItem Visibility="{Binding Path=SupportsTesting, Converter={StaticResource BooleanToVisibilityConverter}}">
+                    <dxe:CheckEdit Content="Test commit on farm" EditValue="{Binding Path=PerformTesting, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
                 </dxlc:LayoutItem>
                 <dxlc:LayoutItem>
-                    <dxe:CheckEdit Content="Assign to service" EditValue="{Binding Path=AssignedToService, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                    <dxe:CheckEdit ValidateOnTextInput="True" Content="{Binding Path=PerformTesting, Converter={StaticResource ShowAssignedToServiceMessageConverter}}" EditValue="{Binding Path=AssignedToService, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
                 </dxlc:LayoutItem>
                 <dxlc:LayoutItem>
                     <Button Content="Apply" Command="{Binding Path=ApplyCommand}"/>

@@ -11,6 +11,21 @@ using NGitLab.Models;
 
 namespace DXVcs2Git.UI.ViewModels {
     public class RepositoryViewModel : BindableBase {
+        protected bool Equals(RepositoryViewModel other) {
+            return this.Origin.Id == other.Origin.Id && this.Upstream.Id == other.Upstream.Id;
+        }
+        public override bool Equals(object obj) {
+            if (ReferenceEquals(null, obj))
+                return false;
+            if (ReferenceEquals(this, obj))
+                return true;
+            if (obj.GetType() != this.GetType())
+                return false;
+            return Equals((RepositoryViewModel)obj);
+        }
+        public override int GetHashCode() {
+            return 0;
+        }
         GitLabWrapper GitLabWrapper { get; }
         GitReaderWrapper GitReader { get; }
         public IEnumerable<BranchViewModel> Branches {
@@ -23,6 +38,7 @@ namespace DXVcs2Git.UI.ViewModels {
         RepositoriesViewModel Repositories { get; }
         public RepoConfig RepoConfig { get; private set; }
         public TrackRepository TrackRepository { get; }
+        public bool HasAdminPrivileges { get; }
         public string DefaultServiceName => RepoConfig?.DefaultServiceName;
 
         public BranchViewModel SelectedBranch {
@@ -32,6 +48,7 @@ namespace DXVcs2Git.UI.ViewModels {
         public RepositoryViewModel(string name, TrackRepository trackRepository, RepositoriesViewModel repositories) {
             TrackRepository = trackRepository;
             GitLabWrapper = new GitLabWrapper(TrackRepository.Server, TrackRepository.Token);
+            HasAdminPrivileges = GitLabWrapper.IsAdmin();
             GitReader = new GitReaderWrapper(trackRepository.LocalPath);
             UpdateConfigs(trackRepository, repositories);
             Repositories = repositories;

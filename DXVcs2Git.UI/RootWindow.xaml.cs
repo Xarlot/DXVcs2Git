@@ -1,4 +1,7 @@
-﻿using DevExpress.Xpf.Ribbon;
+﻿using System;
+using DevExpress.Xpf.CodeView;
+using DevExpress.Xpf.Ribbon;
+using DXVcs2Git.UI.ViewModels;
 
 namespace DXVcs2Git.UI {
     /// <summary>

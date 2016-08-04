@@ -49,6 +49,9 @@
                     <dxlc:LayoutItem Label="Are you always sure?" VerticalAlignment="Center">
                         <dxe:CheckEdit EditValue="{Binding Path=AlwaysSure1, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
                     </dxlc:LayoutItem>
+                    <dxlc:LayoutItem Label="Enable test merge request support: " VerticalAlignment="Center">
+                        <dxe:CheckEdit EditValue="{Binding Path=SupportsTesting, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                    </dxlc:LayoutItem>
                     <dxlc:LayoutGroup Orientation="Vertical" Visibility="{Binding AlwaysSure1, Converter={dxmvvm:BooleanToVisibilityConverter}}">
                         <dxlc:LayoutItem Label="Really sure?" VerticalAlignment="Center">
                             <dxe:CheckEdit EditValue="{Binding Path=AlwaysSure2, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>

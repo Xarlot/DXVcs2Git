@@ -10,7 +10,7 @@ using Microsoft.Practices.ServiceLocation;
 
 namespace DXVcs2Git.UI.ViewModels {
     public class EditMergeRequestViewModel : ViewModelBase {
-        RepositoriesViewModel RepositoriesViewModel => ServiceLocator.Current.GetInstance<RepositoriesViewModel>();
+        RepositoriesViewModel Repositories => ServiceLocator.Current.GetInstance<RepositoriesViewModel>();
 
         IMessageBoxService MessageBoxService => GetService<IMessageBoxService>();
 
@@ -18,6 +18,10 @@ namespace DXVcs2Git.UI.ViewModels {
         bool assignedToService;
         bool performTesting;
 
+        public bool SupportsTesting {
+            get { return GetProperty(() => SupportsTesting); }
+            private set { SetProperty(() => SupportsTesting, value); }
+        }
         public string Comment {
             get { return comment; }
             set { SetProperty(ref comment, value, () => Comment, CommentChanged); }
@@ -55,19 +59,33 @@ namespace DXVcs2Git.UI.ViewModels {
             return Branch?.MergeRequest != null && IsModified;
         }
         void PerformApply() {
-            var mergeRequestAction = new MergeRequestSyncAction(Branch.Repository.RepoConfig.FarmTaskName, Branch.Repository.RepoConfig.FarmSyncTaskName, PerformTesting);
+            var mergeRequestAction = new MergeRequestSyncAction(Branch.SyncTaskName, Branch.SyncServiceName, Branch.TestServiceName, PerformTesting, AssignedToService);
             var mergeRequestOptions = new MergeRequestOptions(mergeRequestAction);
-            if (RepositoriesViewModel.Config.AlwaysSure || MessageBoxService.Show("Are you sure?", "Update merge request", MessageBoxButton.OKCancel) == MessageBoxResult.OK) {
-                Branch.UpdateMergeRequest(CalcMergeRequestTitle(Comment), CalcMergeRequestDescription(Comment), AssignedToService ? CalcServiceName() : Branch.MergeRequest.Assignee);
+            if (Repositories.Config.AlwaysSure || MessageBoxService.Show("Are you sure?", "Update merge request", MessageBoxButton.OKCancel) == MessageBoxResult.OK) {
+                Branch.UpdateMergeRequest(CalcMergeRequestTitle(Comment), CalcMergeRequestDescription(Comment), CalcServiceName());
                 Branch.UpdateMergeRequest(CalcOptionsComment(mergeRequestOptions));
+                if (PerformTesting) {
+                    Branch.UpdateWebHook();
+                    Branch.ForceBuild(Branch.MergeRequest.MergeRequest);
+                }
                 IsModified = false;
+                RepositoriesViewModel.RaiseRefreshSelectedBranch();
             }
         }
         string CalcOptionsComment(MergeRequestOptions options) {
             return MergeRequestOptions.ConvertToString(options);
         }
         string CalcServiceName() {
-            return Branch.Repository.RepoConfig.DefaultServiceName;
+            if (!AssignedToService && !PerformTesting)
+                return IsServiceUser(Branch.MergeRequest.Assignee) ? Branch.MergeRequest.Author : Branch.MergeRequest.Assignee;
+
+            return PerformTesting ? Branch.TestServiceName : Branch.SyncServiceName;
+        }
+        bool IsServiceUser(string assignee) {
+            return !string.IsNullOrEmpty(assignee) && assignee.StartsWith("dxvcs2git.");
+        }
+        bool IsTestUser(string assignee) {
+            return !string.IsNullOrEmpty(assignee) && assignee == Branch?.TestServiceName;
         }
         string CalcMergeRequestDescription(string message) {
             var changes = message.Split(new[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries);
@@ -87,18 +105,28 @@ namespace DXVcs2Git.UI.ViewModels {
             }
         }
         void RefreshSelectedBranch() {
-            Branch = RepositoriesViewModel?.SelectedBranch;
+            Branch = Repositories?.SelectedBranch;
             var mergeRequest = Branch?.MergeRequest;
             if (mergeRequest == null) {
                 comment = null;
                 assignedToService = false;
+                performTesting = false;
                 IsModified = false;
             }
             else {
+                if (Branch.SupportsTesting) {
+                    var syncOptions = Branch.GetSyncOptions(mergeRequest.MergeRequest);
+                    performTesting = syncOptions?.PerformTesting ?? false;
+                    assignedToService = (syncOptions?.AssignToSyncService ?? false) && IsTestUser(mergeRequest.Assignee);
+                }
+                else {
+                    assignedToService = mergeRequest.Assignee == Branch.SyncServiceName;
+                    performTesting = false;
+                }
                 comment = mergeRequest.Title;
-                assignedToService = mergeRequest.Assignee == Branch.Repository.DefaultServiceName;
                 IsModified = false;
             }
+            SupportsTesting = Branch?.SupportsTesting ?? false;
             RaisePropertyChanged(null);
         }
     }

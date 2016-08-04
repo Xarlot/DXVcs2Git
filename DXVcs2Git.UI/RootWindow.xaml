@@ -19,6 +19,7 @@
         Height="800" Width="1024"  ShowIcon="True"
         UseLayoutRounding="True"                  
         MinHeight="600" MinWidth="800"
+        AllowDrop="True"
         Icon="Icon.ico">
     <dxr:DXRibbonWindow.DataContext>
         <extensions:IoC TargetType="{x:Type viewModels:RootViewModel}"/>
@@ -33,7 +34,7 @@
     </dxr:DXRibbonWindow.Resources>
     <dxmvvm:Interaction.Behaviors>
         <dxmvvm:EventToCommand Event="Loaded" Command="{Binding Path=InitializeCommand}"/>
-        <dxmvvm:NotificationService x:Name="notificationService" />
+        <dxmvvm:NotificationService x:Name="notificationService" ApplicationId="dxvcs2git.ui"/>
         <dx:DialogService x:Name="downloaderDialogService">
             <dx:DialogService.DialogStyle>
                 <Style TargetType="{x:Type dx:DXDialogWindow}">

@@ -6,19 +6,23 @@ using NGitLab.Models;
 
 namespace DXVcs2Git.UI.ViewModels {
     public class MergeRequestViewModel : BindableBase {
-        GitLabWrapper gitLabWrapper;
         public MergeRequest MergeRequest { get; }
         public IEnumerable<MergeRequestFileDataViewModel> Changes { get; private set; }
+        public IEnumerable<CommitViewModel> Commits { get; }
+        public BranchViewModel Branch { get; }
         public string Title { get; }
         public string Author { get; }
         public string SourceBranch { get; }
         public string TargetBranch { get; }
         public string Assignee { get; }
         public int MergeRequestId => MergeRequest.Id;
-        public MergeRequestViewModel(GitLabWrapper gitLabWrapper, MergeRequest mergeRequest) {
-            this.gitLabWrapper = gitLabWrapper;
+        public MergeRequestViewModel(BranchViewModel branch, MergeRequest mergeRequest) {
+            Branch = branch;
             MergeRequest = mergeRequest;
-            Changes = gitLabWrapper.GetMergeRequestChanges(mergeRequest).Select(x => new MergeRequestFileDataViewModel(x)).ToList();
+            Changes = branch.GetMergeRequestChanges(mergeRequest).Select(x => new MergeRequestFileDataViewModel(x)).ToList();
+            Commits = branch.GetCommits(mergeRequest)
+                .Select(commit => new CommitViewModel(commit, sha => branch.GetBuilds(mergeRequest, sha), x => branch.DownloadArtifacts(mergeRequest, x)))
+                .ToList();
             Title = MergeRequest.Title;
             SourceBranch = MergeRequest.SourceBranch;
             TargetBranch = MergeRequest.TargetBranch;

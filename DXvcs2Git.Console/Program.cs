@@ -37,13 +37,14 @@ namespace DXVcs2Git.Console {
         const string vcsServer = @"net.tcp://vcsservice.devexpress.devx:9091/DXVCSService";
         const int MaxChangesCount = 1000;
         static void Main(string[] args) {
-            var result = Parser.Default.ParseArguments<SyncOptions, PatchOptions, ApplyPatchOptions, ListenerOptions>(args);
+            var result = Parser.Default.ParseArguments<SyncOptions, PatchOptions, ApplyPatchOptions, ListenerOptions, ProcessTestsOptions>(args);
             try {
                 var exitCode = result.MapResult(
                     (SyncOptions syncOptions) => DoSyncWork(syncOptions),
-                    (PatchOptions patchOptions) => DoPatchWork(patchOptions), 
+                    (PatchOptions patchOptions) => DoPatchWork(patchOptions),
                     (ApplyPatchOptions applypatch) => DoApplyPatchWork(applypatch),
                     (ListenerOptions listenerOptions) => DoListenerWork(listenerOptions),
+                    (ProcessTestsOptions testOptions) => DoProcessTestResultsWork(testOptions),
                     err => DoErrors(args));
                 Environment.Exit(exitCode);
             }
@@ -89,7 +90,7 @@ namespace DXVcs2Git.Console {
                         continue;
                     }
                     if (patchItem.SyncAction == SyncAction.Move) {
-                        DeleteFile(localDir, patchItem);                        
+                        DeleteFile(localDir, patchItem);
                         RewriteFile(patchItem, localDir, zip);
                     }
                     if (patchItem.SyncAction == SyncAction.New) {
@@ -116,6 +117,108 @@ namespace DXVcs2Git.Console {
             string path = Path.Combine(localDir, patchItem.OldPath);
             File.Delete(path);
         }
+        static int DoProcessTestResultsWork(ProcessTestsOptions clo) {
+            Log.Message("process test results.");
+            string targetRepoPath = GetSimpleGitHttpPath(clo.Repo);
+
+            if (string.IsNullOrEmpty(targetRepoPath)) {
+                Log.Error($"Can`t parse repo path {clo.Repo}");
+                return 1;
+            }
+
+            string sourceRepoPath = GetSimpleGitHttpPath(clo.SourceRepo);
+            if (string.IsNullOrEmpty(sourceRepoPath)) {
+                Log.Error($"Can`t parse source repo path {clo.SourceRepo}");
+                return 1;
+            }
+
+            string gitlabauthtoken = clo.AuthToken;
+            string targetBranchName = clo.Branch;
+            string gitServer = clo.Server;
+            string sourceBranchName = clo.SourceBranch;
+
+            GitLabWrapper gitLabWrapper = new GitLabWrapper(gitServer, gitlabauthtoken);
+
+            Project targetProject = gitLabWrapper.FindProject(targetRepoPath);
+            if (targetProject == null) {
+                Log.Error($"Can`t find target project {targetRepoPath}.");
+                return 1;
+            }
+            Branch targetBranch = gitLabWrapper.GetBranch(targetProject, targetBranchName);
+            if (targetBranch == null) {
+                Log.Error($"Can`t find targetBranch branch {targetBranchName}");
+                return 1;
+            }
+
+            var sourceProject = gitLabWrapper.FindProjectFromAll(sourceRepoPath);
+            if (sourceProject == null) {
+                Log.Error($"Can`t find source project {sourceRepoPath}");
+                return 1;
+            }
+
+            var sourceBranch = gitLabWrapper.GetBranch(sourceProject, sourceBranchName);
+            if (sourceBranch == null) {
+                Log.Error($"Source branch {sourceBranchName} was not found.");
+                return 1;
+            }
+
+            MergeRequest mergeRequest = gitLabWrapper.GetMergeRequests(targetProject, x => x.SourceBranch == sourceBranchName && x.TargetBranch == targetBranchName).FirstOrDefault();
+            if (mergeRequest == null) {
+                Log.Error($"Can`t find merge request.");
+                return 1;
+            }
+
+            var comments = gitLabWrapper.GetComments(mergeRequest);
+            var mergeRequestSyncOptions = comments?.Where(x => IsXml(x.Note)).Where(x => {
+                var mr = MergeRequestOptions.ConvertFromString(x.Note);
+                return mr?.ActionType == MergeRequestActionType.sync;
+            }).Select(x => (MergeRequestSyncAction)MergeRequestOptions.ConvertFromString(x.Note).Action).LastOrDefault();
+
+            if (mergeRequestSyncOptions == null) {
+                Log.Message("Merge request sync options not found. Nothing to do.");
+                return 0;
+            }
+
+            if (!mergeRequestSyncOptions.PerformTesting) {
+                Log.Message("Testing is disabled in config.");
+                return 0;
+            }
+
+            Log.Message("Testing is enabled in config.");
+            var commit = gitLabWrapper.GetMergeRequestCommits(mergeRequest).FirstOrDefault();
+            if (commit == null) {
+                Log.Message("Merge request has no commits.");
+                return 0;
+            }
+
+            var mergeRequestBuild = gitLabWrapper.GetBuilds(mergeRequest, commit.Id).FirstOrDefault();
+            if (mergeRequestBuild == null) {
+                Log.Message("Merge request has no build.");
+                return 0;
+            }
+
+            Log.Message($"Build has {mergeRequestBuild.Status} status.");
+
+            if (mergeRequestBuild.Status == BuildStatus.success) {
+                if (mergeRequestSyncOptions.AssignToSyncService) {
+                    gitLabWrapper.UpdateMergeRequestAssignee(mergeRequest, mergeRequestSyncOptions.SyncTask);
+                    Log.Message($"Success tests. Assigning to sync service {mergeRequestSyncOptions.SyncTask}");
+                    return 0;
+                }
+                else {
+                    gitLabWrapper.UpdateMergeRequestAssignee(mergeRequest, mergeRequest.Author.Username);
+                    Log.Message($"Success tests. Assigning to back to author {mergeRequest.Author.Username}");
+                    return 0;
+                }
+            }
+            if (mergeRequestBuild.Status == BuildStatus.failed) {
+                Log.Message($"Failed tests.");
+                return 0;
+            }
+            Log.Message("Nothing happens.");
+            return 0;
+        }
+
         static int DoPatchWork(PatchOptions clo) {
             string localGitDir = clo.LocalFolder != null && Path.IsPathRooted(clo.LocalFolder) ? clo.LocalFolder : Path.Combine(Environment.CurrentDirectory, clo.LocalFolder ?? repoPath);
 
@@ -192,12 +295,12 @@ namespace DXVcs2Git.Console {
             }
 
             var comments = gitLabWrapper.GetComments(mergeRequest);
-            var mergeRequestSyncOptions = comments.Where(x => IsXml(x.Note)).Where(x => {
+            var mergeRequestSyncOptions = comments?.Where(x => IsXml(x.Note)).Where(x => {
                 var mr = MergeRequestOptions.ConvertFromString(x.Note);
                 return mr?.ActionType == MergeRequestActionType.sync;
             }).Select(x => (MergeRequestSyncAction)MergeRequestOptions.ConvertFromString(x.Note).Action).LastOrDefault();
 
-            if (mergeRequest.Assignee.Name != username || (!mergeRequestSyncOptions?.PerformTesting ?? false)) {
+            if (mergeRequest.Assignee?.Name != username && (!mergeRequestSyncOptions?.PerformTesting ?? false)) {
                 Log.Error($"Merge request is not assigned to service user {username} or doesn`t require testing.");
                 return 1;
             }
@@ -296,19 +399,22 @@ namespace DXVcs2Git.Console {
             string gitServer = clo.Server;
             string gitlabauthtoken = clo.AuthToken;
             string sharedWebHookPath = clo.WebHook;
+            string taskName = clo.FarmTaskName;
+            string serviceUser = clo.Login;
+            bool supportsSendingMessages = !string.IsNullOrEmpty(taskName);
             Stopwatch sw = Stopwatch.StartNew();
 
             GitLabWrapper gitLabWrapper = new GitLabWrapper(gitServer, gitlabauthtoken);
-            FarmIntegrator.Start(Dispatcher.CurrentDispatcher, null);
+            FarmIntegrator.Start(null);
 
-            var projects = gitLabWrapper.GetProjects();
+            var projects = gitLabWrapper.GetAllProjects();
             foreach (Project project in projects) {
-                var hooks = gitLabWrapper.GetHooks(project);
+                var hooks = gitLabWrapper.GetProjectHooks(project);
                 foreach (ProjectHook hook in hooks) {
                     if (WebHookHelper.IsSameHost(hook.Url, IP) || !WebHookHelper.IsSharedHook(sharedWebHookPath, hook.Url))
                         continue;
                     Uri url = WebHookHelper.Replace(hook.Url, IP);
-                    gitLabWrapper.UpdateProjectHook(project, hook, url);
+                    gitLabWrapper.UpdateProjectHook(project, hook, url, true, true, true);
                     Log.Message($"WebHook registered for project {project.Name} at {url}");
                 }
             }
@@ -320,12 +426,12 @@ namespace DXVcs2Git.Console {
                 var request = server.GetRequest();
                 if (request == null)
                     continue;
-                ProcessWebHook(gitLabWrapper, request);
+                ProcessWebHook(gitLabWrapper, serviceUser, request, supportsSendingMessages, taskName);
             }
 
             return 0;
         }
-        static void ProcessWebHook(GitLabWrapper gitLabWrapper, WebHookRequest request) {
+        static void ProcessWebHook(GitLabWrapper gitLabWrapper, string serviceUser, WebHookRequest request, bool supportSendingMessages, string farmTaskName) {
             var hookType = ProjectHookClient.ParseHookType(request);
             if (hookType == null)
                 return;
@@ -335,11 +441,79 @@ namespace DXVcs2Git.Console {
             if (hook.HookType == ProjectHookType.push)
                 ProcessPushHook((PushHookClient)hook);
             else if (hook.HookType == ProjectHookType.merge_request)
-                ProcessMergeRequestHook(gitLabWrapper, (MergeRequestHookClient)hook);
+                ProcessMergeRequestHook(gitLabWrapper, serviceUser, (MergeRequestHookClient)hook, supportSendingMessages, farmTaskName);
+            else if (hook.HookType == ProjectHookType.build)
+                ProcessBuildHook(gitLabWrapper, serviceUser, (BuildHookClient)hook, supportSendingMessages, farmTaskName);
         }
-        static void ProcessMergeRequestHook(GitLabWrapper gitLabWrapper, MergeRequestHookClient hook) {
+        static void ProcessBuildHook(GitLabWrapper gitLabWrapper, string serviceUser, BuildHookClient hook, bool supportSendingMessages, string farmTaskName) {
+            Log.Message($"Build hook title: {hook.BuildName}");
+            Log.Message($"Build hook status: {hook.Status}");
+
+            if (supportSendingMessages)
+                SendMessage(serviceUser, hook.Json, farmTaskName);
+
+            if (hook.Status == BuildStatus.success) {
+                Project project = gitLabWrapper.GetProject(hook.ProjectId);
+                if (project == null) {
+                    Log.Message($"Can`t find project {hook.ProjectName}.");
+                    return;
+                }
+                Log.Message($"Project: {project.PathWithNamespace}");
+                var mergeRequest = CalcMergeRequest(gitLabWrapper, hook, project);
+                if (mergeRequest == null) {
+                    Log.Message("Can`t find merge request.");
+                    return;
+                }
+                Log.Message($"Merge request: id = {mergeRequest.Id} title = {mergeRequest.Title}");
+                Log.Message($"Merge request state = {mergeRequest.State}");
+                if (mergeRequest.State == "opened" || mergeRequest.State == "reopened") {
+                    var latestCommit = gitLabWrapper.GetMergeRequestCommits(mergeRequest).FirstOrDefault();
+                    if (latestCommit == null) {
+                        Log.Message("Wrong merge request found.");
+                        return;
+                    }
+                    Log.Message($"Merge request latest commit sha = {latestCommit.Id}");
+                    if (!latestCommit.Id.Equals(new Sha1(hook.Commit.Id))) {
+                        Log.Message($"Additional commits has been added {hook.Commit.Id}");
+                        return;
+                    }
+
+                    var xmlComments = gitLabWrapper.GetComments(mergeRequest).Where(x => IsXml(x.Note));
+                    var options = xmlComments.Select(x => MergeRequestOptions.ConvertFromString(x.Note)).FirstOrDefault();
+                    if (options?.ActionType == MergeRequestActionType.sync) {
+                        Log.Message("Sync options found.");
+                        var syncOptions = (MergeRequestSyncAction)options.Action;
+                        Log.Message($"Sync options perform testing is {syncOptions.PerformTesting}");
+                        Log.Message($"Sync options assign to service is {syncOptions.AssignToSyncService}");
+                        Log.Message($"Sync options sync task is {syncOptions.SyncTask}");
+                        Log.Message($"Sync options sync service is {syncOptions.SyncService}");
+                        if (syncOptions.PerformTesting && syncOptions.AssignToSyncService) {
+                            gitLabWrapper.UpdateMergeRequestAssignee(mergeRequest, syncOptions.SyncService);
+                            ForceBuild(syncOptions.SyncTask);
+                        }
+                        return;
+                    }
+                    Log.Message("Sync options not found.");
+                }
+            }
+        }
+        static MergeRequest CalcMergeRequest(GitLabWrapper gitLabWrapper, BuildHookClient hook, Project project) {
+            foreach (var checkProject in gitLabWrapper.GetProjects()) {
+                var mergeRequests = gitLabWrapper.GetMergeRequests(checkProject, x => x.SourceProjectId == project.Id);
+                var mergeRequest = mergeRequests.FirstOrDefault(x => x.SourceBranch == hook.Branch);
+                if (mergeRequest != null)
+                    return mergeRequest;
+            }
+            return null;
+        }
+        static void ProcessMergeRequestHook(GitLabWrapper gitLabWrapper, string serviceUser, MergeRequestHookClient hook, bool supportSendingMessages, string farmTaskName) {
             Log.Message($"Merge hook title: {hook.Attributes.Description}");
             Log.Message($"Merge hook state: {hook.Attributes.State}");
+
+            var project = gitLabWrapper.GetProject(hook.Attributes.TargetProjectId);
+            var mergeRequest = gitLabWrapper.GetMergeRequest(project, hook.Attributes.Id);
+            if (supportSendingMessages)
+                SendMessage(serviceUser, hook.Json, farmTaskName);
 
             if (!IsOpenedState(hook))
                 return;
@@ -350,45 +524,40 @@ namespace DXVcs2Git.Console {
             Log.Message($"Merge hook target branch: {hook.Attributes.TargetBranch}.");
             Log.Message($"Merge hook sourceBranch branch: {hook.Attributes.SourceBranch}.");
 
-            if (ShouldForceSyncTask(gitLabWrapper, hook)) {
-                ForceSyncBuild(gitLabWrapper, hook);
+            if (ShouldForceSyncTask(mergeRequest, hook)) {
+                ForceSyncBuild(gitLabWrapper, mergeRequest, hook);
                 return;
             }
-            if (ShouldTestMergeRequest(gitLabWrapper, hook)) {
-                ForceTestMergeRequest(gitLabWrapper, hook);
-            }
         }
-        static void ForceTestMergeRequest(GitLabWrapper gitLabWrapper, MergeRequestHookClient hook) {
-            throw new NotImplementedException();
-        }
-        static bool ShouldTestMergeRequest(GitLabWrapper gitLabWrapper, MergeRequestHookClient hook) {
-            var project = gitLabWrapper.GetProject(hook.Attributes.TargetProjectId);
-            var mergeRequest = gitLabWrapper.GetMergeRequest(project, hook.Attributes.Id);
-            var assignee = mergeRequest.Assignee;
-            if (assignee == null || !assignee.Name.StartsWith("dxvcs2git")) {
-                Log.Message("Force sync rejected because assignee is not set or not sync task.");
-                return false;
-            }
+        static void SendMessage(string serviceUser, string json, string farmTaskName) {
+            var bytes = Encoding.UTF8.GetBytes(json);
+            string message = Convert.ToBase64String(bytes);
 
-            Log.Message("Force sync rejected because merge request can`t be merged automatically.");
-            return false;
+            FarmIntegrator.SendNotification(farmTaskName, serviceUser, message);
         }
-        static void ForceSyncBuild(GitLabWrapper gitLabWrapper, MergeRequestHookClient hook) {
-            var project = gitLabWrapper.GetProject(hook.Attributes.TargetProjectId);
-            var mergeRequest = gitLabWrapper.GetMergeRequest(project, hook.Attributes.Id);
+        static void ForceSyncBuild(GitLabWrapper gitLabWrapper, MergeRequest mergeRequest, MergeRequestHookClient hook) {
             var xmlComments = gitLabWrapper.GetComments(mergeRequest).Where(x => IsXml(x.Note));
             var options = xmlComments.Select(x => MergeRequestOptions.ConvertFromString(x.Note)).FirstOrDefault();
             if (options != null && options.ActionType == MergeRequestActionType.sync) {
                 var action = (MergeRequestSyncAction)options.Action;
+                if (action.PerformTesting) {
+                    Log.Message("Check build status before force build.");
+                    var commit = gitLabWrapper.GetMergeRequestCommits(mergeRequest).FirstOrDefault();
+                    var build = commit != null ? gitLabWrapper.GetBuilds(mergeRequest, commit.Id).FirstOrDefault() : null;
+                    var buildStatus = build?.Status ?? BuildStatus.undefined;
+                    Log.Message($"Build status = {buildStatus}.");
+                    if (buildStatus == BuildStatus.success)
+                        ForceBuild(action.SyncTask);
+                    return;
+                }
+                Log.Message("Build forces without checking tests status.");
                 ForceBuild(action.SyncTask);
             }
             else
                 Log.Message("Merge request can`t be merged because merge request notes has no farm config.");
             Log.Message("");
         }
-        static bool ShouldForceSyncTask(GitLabWrapper gitLabWrapper, MergeRequestHookClient hook) {
-            var project = gitLabWrapper.GetProject(hook.Attributes.TargetProjectId);
-            var mergeRequest = gitLabWrapper.GetMergeRequest(project, hook.Attributes.Id);
+        static bool ShouldForceSyncTask(MergeRequest mergeRequest, MergeRequestHookClient hook) {
             var assignee = mergeRequest.Assignee;
             if (assignee == null || !assignee.Name.StartsWith("dxvcs2git")) {
                 Log.Message("Force sync rejected because assignee is not set or not sync task.");

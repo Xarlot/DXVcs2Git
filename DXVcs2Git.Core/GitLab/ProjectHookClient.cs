@@ -9,14 +9,18 @@ namespace DXVcs2Git.Core.GitLab {
         public string Json { get; set; }
 
         public static ProjectHookTypeClient ParseHookType(WebHookRequest message) {
-            var projectHook = HttpRequestParser.Parse<ProjectHookTypeClient>(message.Request);
-            return projectHook;
+            return ParseHookType(message.Request);
+        }
+        public static ProjectHookTypeClient ParseHookType(string json) {
+            return HttpRequestParser.Parse<ProjectHookTypeClient>(json);
         }
         public static ProjectHookClient ParseHook(ProjectHookTypeClient hookType) {
             if (hookType.HookType == ProjectHookType.push) 
                 return HttpRequestParser.Parse<PushHookClient>(hookType.Json);
             if (hookType.HookType == ProjectHookType.merge_request)
                 return HttpRequestParser.Parse<MergeRequestHookClient>(hookType.Json);
+            if (hookType.HookType == ProjectHookType.build)
+                return HttpRequestParser.Parse<BuildHookClient>(hookType.Json);
             return null;
         }
     }

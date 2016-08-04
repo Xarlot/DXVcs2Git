@@ -14,6 +14,8 @@ namespace DXVcs2Git.UI {
         protected override void OnStartup(StartupEventArgs e) {
             base.OnStartup(e);
 
+            DevExpress.Data.ShellHelper.TryCreateShortcut("dxvcs2git.ui",  "dxvcs2git.ui");
+
             DefaultInitializer.Initialize();
 
             StartupOptions = Parser.Default.ParseArguments<UIStartupOptions>(e.Args).MapResult(x => x, x => UIStartupOptions.GenerateDefault());

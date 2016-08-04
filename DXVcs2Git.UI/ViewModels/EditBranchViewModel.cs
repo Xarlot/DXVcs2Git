@@ -98,7 +98,7 @@ namespace DXVcs2Git.UI.ViewModels {
             Branch = RepositoriesViewModel.SelectedBranch;
             MergeRequest = Branch?.MergeRequest;
             HasMergeRequest = MergeRequest != null;
-            SupportsTesting = Branch?.Repository.RepoConfig.SupportsTesting ?? false;
+            SupportsTesting = Branch?.SupportsTesting ?? false;
         }
         void RefreshFarm() {
             FarmStatus = Branch?.FarmStatus ?? new FarmStatus();
