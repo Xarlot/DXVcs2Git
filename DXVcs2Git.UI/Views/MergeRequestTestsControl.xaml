@@ -70,7 +70,7 @@
                         <dxb:BarButtonItem
                             RibbonStyle="Large" 
                             GlyphSize="Large" 
-                            Content="Load log"
+                            Content="Load test log"
                             Command="{Binding Path=LoadLogCommand}"
                             LargeGlyph="{dx:DXImageOffice2013 Image=Close_32x32.png}">
                         </dxb:BarButtonItem>
