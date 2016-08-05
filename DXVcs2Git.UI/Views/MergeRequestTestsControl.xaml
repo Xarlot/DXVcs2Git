@@ -103,6 +103,8 @@
                 <dxg:TableView NavigationStyle="Row">
                     <dxg:TableView.RowCellMenuCustomizations>
                         <dxb:BarButtonItem Content="Show test logs " Command="{Binding Path=DataContext.ShowLogCommand, ElementName=grid}" CommandParameter="{Binding Path=CurrentItem, ElementName=grid, UpdateSourceTrigger=PropertyChanged}"/>
+                        <dxb:BarButtonItem Content="Force test " Command="{Binding Path=DataContext.ForceTestCommand, ElementName=grid}" CommandParameter="{Binding Path=CurrentItem, ElementName=grid, UpdateSourceTrigger=PropertyChanged}"/>
+                        <dxb:BarButtonItem Content="Abort test " Command="{Binding Path=DataContext.AbortTestCommand, ElementName=grid}" CommandParameter="{Binding Path=CurrentItem, ElementName=grid, UpdateSourceTrigger=PropertyChanged}"/>
                     </dxg:TableView.RowCellMenuCustomizations>
                 </dxg:TableView>
             </dxg:GridControl.View>
