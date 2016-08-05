@@ -63,7 +63,9 @@ namespace DXVcs2Git.UI.ViewModels {
         IEnumerable<EditRepositoryItem> CreateItems() {
             var repositoryItems = new List<RepositoryItem>();
             foreach (var repository in RepositoriesViewModel?.Repositories ?? Enumerable.Empty<RepositoryViewModel>()) {
-                var branches = repository.Branches.Select(x => new BranchRepositoryItem(x)).ToList();
+                var branches = repository.Branches?.Select(x => new BranchRepositoryItem(x)).ToList();
+                if (branches == null || !branches.Any())
+                    continue;
                 var repositoryItem = new RepositoryItem(repository, branches);
                 repositoryItems.Add(repositoryItem);
             }
