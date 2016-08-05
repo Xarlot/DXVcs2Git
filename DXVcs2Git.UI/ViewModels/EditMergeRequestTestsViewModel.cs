@@ -18,6 +18,8 @@ namespace DXVcs2Git.UI.ViewModels {
         public ICommand CancelTestsCommand { get; }
         public ICommand ShowLogCommand { get; }
         public ICommand LoadLogCommand { get; }
+        public ICommand ForceTestCommand { get; }
+        public ICommand AbortTestCommand { get; }
 
         IWindowService ShowLogsService => GetService<IWindowService>();
         IDialogService LoadLogService => GetService<IDialogService>("loadLog");
@@ -32,8 +34,36 @@ namespace DXVcs2Git.UI.ViewModels {
             CancelTestsCommand = DelegateCommandFactory.Create(PerformCancelTests, CanPerformCancelTests);
             ShowLogCommand = DelegateCommandFactory.Create<CommitViewModel>(PerformShowLogs, CanPerformShowLogs);
             LoadLogCommand = DelegateCommandFactory.Create(PerformLoadLog, CanPerformLoadLog);
+            ForceTestCommand = DelegateCommandFactory.Create<CommitViewModel>(PerformForceTest, CanPerformForceTest);
+            AbortTestCommand = DelegateCommandFactory.Create<CommitViewModel>(PerformAbortTest, CanPerformAbortTest);
 
             Initialize();
+        }
+        void PerformForceTest(CommitViewModel commit) {
+            var actualCommit = commit ?? BranchViewModel.MergeRequest.Commits.FirstOrDefault();
+
+            BranchViewModel.ForceBuild(BranchViewModel.MergeRequest.MergeRequest, actualCommit?.Build.Build);
+        }
+        bool CanPerformForceTest(CommitViewModel commit) {
+            if (BranchViewModel?.MergeRequest == null)
+                return false;
+            var actualCommit = commit ?? BranchViewModel.MergeRequest.Commits.FirstOrDefault();
+            if (actualCommit == null)
+                return false;
+            return actualCommit.Build?.BuildStatus != BuildStatus.pending && actualCommit.Build?.BuildStatus != BuildStatus.running;
+        }
+        bool CanPerformAbortTest(CommitViewModel commit) {
+            if (BranchViewModel?.MergeRequest == null)
+                return false;
+            var actualCommit = commit ?? BranchViewModel.MergeRequest.Commits.FirstOrDefault();
+            if (actualCommit == null)
+                return false;
+            return actualCommit.Build?.BuildStatus == BuildStatus.pending || actualCommit.Build?.BuildStatus == BuildStatus.running;
+        }
+        void PerformAbortTest(CommitViewModel commit) {
+            var actualCommit = commit ?? BranchViewModel.MergeRequest.Commits.FirstOrDefault();
+
+            BranchViewModel.AbortBuild(BranchViewModel.MergeRequest.MergeRequest, actualCommit?.Build.Build);
         }
         bool CanPerformLoadLog() {
             return BranchViewModel != null;

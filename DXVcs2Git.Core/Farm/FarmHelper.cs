@@ -590,9 +590,6 @@ namespace DXVcs2Git.UI.Farm {
         }
 
         protected void integrator_OnNotificationListChanged(DXCCTrayIntegrator integrator) {
-            List<string> balloonMessages = new List<string>();
-            bool balloonFailState = false;
-            BuildNotification lastNotification = null;
             lock (integrator.Notifications) {
                 foreach (BuildNotification bn in integrator.Notifications) {
                     bool bnExists = false;
@@ -607,33 +604,16 @@ namespace DXVcs2Git.UI.Farm {
                     if (bnExists) {
                         continue;
                     }
-                    string projectName;
-                    string buildName;
-                    DXCCTrayHelper.ParseBuildUrl(bn.BuildUrl, out projectName, out buildName);
-                    var balloonMessage = CalcBalloonMessage(projectName, bn);
-                    balloonMessages.Add(balloonMessage);
-                    if (bn.BuildStatus != BuildIntegrationStatus.Success) {
-                        balloonFailState = true;
-                    }
-                    lastNotification = bn;
                     buildNotifications.Insert(0, new BuildNotificationViewInfo(bn));
-                    RaiseRefreshed(new NotificationReceivedEventArgs(balloonMessage));
+                    RaiseRefreshed(new NotificationReceivedEventArgs(bn));
                 }
                 integrator.Notifications.Clear();
-                if (balloonMessages.Count > 0) {
-                    ShowBalloonTip(string.Join(Environment.NewLine, balloonMessages), balloonFailState, balloonMessages.Count > 1 ? null : lastNotification);
-                }
             }
             lock (buildNotifications) {
                 while (buildNotifications.Count > NotificationsMaxCount) {
                     buildNotifications.RemoveAt(NotificationsMaxCount);
                 }
             }
-        }
-        static string CalcBalloonMessage(string projectName, BuildNotification bn) {
-            if (bn.Recipient.StartsWith("dxvcs2git"))
-                return bn.Sender;
-            return $"{projectName} - {(bn.BuildChangeStatus == BuildChangeStatus.None ? bn.BuildStatus.ToString() : bn.BuildChangeStatus.ToString())}";
         }
         const int NotificationsMaxCount = 100;
         void integrator_OnServersChanged(DXCCTrayIntegrator integrator) {
@@ -840,13 +820,37 @@ namespace DXVcs2Git.UI.Farm {
     }
     public abstract class FarmRefreshedEventArgs : EventArgs {
         public abstract FarmRefreshType RefreshType { get; }
+
+        public abstract void Parse();
     }
 
     public class NotificationReceivedEventArgs : FarmRefreshedEventArgs {
-        public string Message { get; }
-        public NotificationReceivedEventArgs(string message) {
-            Message = message;
+        public string Message { get; private set; }
+        readonly BuildNotification buildNotification;
+        public string ProjectName { get; private set; }
+        public string BuildName { get; private set; }
+        public string Sender { get; private set; }
+        public bool IsServiceUser => Sender?.StartsWith("dxvcs2git") ?? false;
+        public NotificationReceivedEventArgs(BuildNotification buildNotification) {
+            this.buildNotification = buildNotification;
         }
         public override FarmRefreshType RefreshType => FarmRefreshType.notification;
+
+        public override void Parse() {
+            string projectName;
+            string buildName;
+            DXCCTrayHelper.ParseBuildUrl(buildNotification.BuildUrl, out projectName, out buildName);
+            Sender = buildNotification.Recipient;
+            ProjectName = projectName;
+            BuildName = buildName;
+            Message = CalcBalloonMessage(projectName, buildNotification);
+        }
+        string CalcBalloonMessage(string projectName, BuildNotification bn) {
+            if (IsServiceUser) {
+                var bytes = Convert.FromBase64String(bn.Sender);
+                return Encoding.UTF8.GetString(bytes);
+            }
+            return $"{projectName} - {(bn.BuildChangeStatus == BuildChangeStatus.None ? bn.BuildStatus.ToString() : bn.BuildChangeStatus.ToString())}";
+        }
     }
 }

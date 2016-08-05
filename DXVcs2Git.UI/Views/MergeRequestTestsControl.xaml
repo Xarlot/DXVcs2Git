@@ -61,8 +61,16 @@
                         <dxb:BarButtonItem
                             RibbonStyle="Large" 
                             GlyphSize="Large" 
-                            Content="Cancel tests"
-                            Command="{Binding Path=CancelTestsCommand}"
+                            Content="Force test"
+                            Command="{Binding Path=ForceTestCommand}"
+                            CommandParameter="{Binding Path=CurrentItem, ElementName=grid, UpdateSourceTrigger=PropertyChanged}"
+                            LargeGlyph="{dx:DXImageOffice2013 Image=Refresh2_32x32.png}">
+                        </dxb:BarButtonItem>
+                        <dxb:BarButtonItem
+                            RibbonStyle="Large" 
+                            GlyphSize="Large" 
+                            Content="Abort test"
+                            Command="{Binding Path=AbortTestCommand}"
                             CommandParameter="{Binding Path=CurrentItem, ElementName=grid, UpdateSourceTrigger=PropertyChanged}"
                             LargeGlyph="{dx:DXImageOffice2013 Image=Close_32x32.png}">
                         </dxb:BarButtonItem>
@@ -72,7 +80,7 @@
                             GlyphSize="Large" 
                             Content="Load test log"
                             Command="{Binding Path=LoadLogCommand}"
-                            LargeGlyph="{dx:DXImageOffice2013 Image=Close_32x32.png}">
+                            LargeGlyph="{dx:DXImageOffice2013 Image=Download_32x32.png}">
                         </dxb:BarButtonItem>
                     </dxr:RibbonPageGroup>
                 </dxr:RibbonPage>

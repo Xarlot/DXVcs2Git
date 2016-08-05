@@ -119,8 +119,11 @@ namespace DXVcs2Git.UI.ViewModels {
         public byte[] DownloadArtifacts(MergeRequest mergeRequest, Build build) {
             return gitLabWrapper.DownloadArtifacts(mergeRequest, build);
         }
-        public void ForceBuild(MergeRequest mergeRequest) {
-            gitLabWrapper.ForceBuild(mergeRequest);
+        public void ForceBuild(MergeRequest mergeRequest, Build build = null) {
+            gitLabWrapper.ForceBuild(mergeRequest, build);
+        }
+        public void AbortBuild(MergeRequest mergeRequest, Build build = null) {
+            gitLabWrapper.AbortBuild(mergeRequest, build);
         }
         public void UpdateWebHook() {
             if (!SupportsTesting)

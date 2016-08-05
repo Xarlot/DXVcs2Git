@@ -177,12 +177,19 @@ namespace DXVcs2Git.Git {
             var projectClient = client.GetRepository(mergeRequest.SourceProjectId);
             return projectClient.Builds.GetBuildsForCommit(sha);
         }
-        public void ForceBuild(MergeRequest mergeRequest) {
+        public void ForceBuild(MergeRequest mergeRequest, Build build = null) {
             var projectClient = client.GetRepository(mergeRequest.SourceProjectId);
-            var build = projectClient.Builds.GetBuilds().FirstOrDefault();
-            if (build == null || build.Status == BuildStatus.success || build.Status == BuildStatus.pending || build.Status == BuildStatus.running)
+            var actualBuild = build ?? projectClient.Builds.GetBuilds().FirstOrDefault();
+            if (actualBuild == null || actualBuild.Status == BuildStatus.success || actualBuild.Status == BuildStatus.pending || actualBuild.Status == BuildStatus.running)
                 return;
-            projectClient.Builds.Retry(build);
+            projectClient.Builds.Retry(actualBuild);
+        }
+        public void AbortBuild(MergeRequest mergeRequest, Build build) {
+            var projectClient = client.GetRepository(mergeRequest.SourceProjectId);
+            var actualBuild = build ?? projectClient.Builds.GetBuilds().FirstOrDefault();
+            if (actualBuild == null || (actualBuild.Status != BuildStatus.pending && actualBuild.Status != BuildStatus.running))
+                return;
+            projectClient.Builds.Cancel(actualBuild);
         }
         public byte[] DownloadArtifacts(string projectUrl, Build build) {
             Func<string, Project> findProject = IsAdmin() ? (Func<string, Project>)FindProjectFromAll : FindProject;
