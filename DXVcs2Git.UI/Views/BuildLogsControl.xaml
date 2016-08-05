@@ -52,7 +52,7 @@
             <dx:DXTabItem Header="Tests" Content="{Binding Path=Tests}">
                 <dx:DXTabItem.ContentTemplate>
                     <DataTemplate>
-                        <dxg:GridControl ItemsSource="{Binding Path=Tests}" GroupCount="3" IsRecursiveExpand="True">
+                        <dxg:GridControl ItemsSource="{Binding Path=Tests}" GroupCount="3" IsRecursiveExpand="True" FilterString="[Executed]='True'">
                             <dxg:GridControl.Resources>
                                 <ResourceDictionary>
                                     <dxmvvm:ObjectToObjectConverter x:Key="highlightConverter">
