@@ -55,7 +55,12 @@ namespace DXVcs2Git.UI.AtomFeed {
         }
 
         public static void Update() {
-            downloader.OpenReadAsync(galleryUri);
+            try {
+                downloader.OpenReadAsync(galleryUri);
+            }
+            catch (Exception ex) {
+                Log.Error("Web client error.", ex);
+            }
         }
 
         static void OnOpenReadCompleted(object sender, OpenReadCompletedEventArgs e) {

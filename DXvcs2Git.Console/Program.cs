@@ -228,7 +228,6 @@ namespace DXVcs2Git.Console {
                 Log.Error($"Can`t parse repo path {clo.Repo}");
                 return 1;
             }
-
             string sourceRepoPath = GetSimpleGitHttpPath(clo.SourceRepo);
             if (string.IsNullOrEmpty(sourceRepoPath)) {
                 Log.Error($"Can`t parse source repo path {clo.SourceRepo}");
@@ -335,7 +334,7 @@ namespace DXVcs2Git.Console {
             return 0;
         }
         static readonly Regex SimpleHttpGitRegex = new Regex(@"http://[\w\._-]+/[\w\._-]+/[\w\._-]+.git", RegexOptions.Compiled);
-        static readonly Regex GitlabciCheckRegex = new Regex(@"http://gitlab-ci-token:\w+@(?<server>[\w\._-]+)/(?<nspace>[\w\._-]+)/(?<name>[\w\._-]+).git", RegexOptions.Compiled);
+        static readonly Regex GitlabciCheckRegex = new Regex(@"http://gitlab-ci-token:[\w\._-]+@(?<server>[\w\._-]+)/(?<nspace>[\w\._-]+)/(?<name>[\w\._-]+).git", RegexOptions.Compiled);
         static string GetSimpleGitHttpPath(string gitRepoPath) {
             if (string.IsNullOrEmpty(gitRepoPath)) {
                 Log.Error("Git repo path is null or empty");
