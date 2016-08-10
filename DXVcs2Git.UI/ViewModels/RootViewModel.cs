@@ -151,7 +151,7 @@ namespace DXVcs2Git.UI.ViewModels {
         void FarmRefreshed(FarmRefreshedEventArgs args) {
             if (args == null) {
                 dispatcher.BeginInvoke(DispatcherPriority.ContextIdle, new Action(() => {
-                    Repositories.Repositories.ForEach(x => x.RefreshFarm());
+                    Repositories?.Repositories?.ForEach(x => x.RefreshFarm());
                     Messenger.Default.Send(new Message(MessageType.RefreshFarm));
                 }));
                 return;
