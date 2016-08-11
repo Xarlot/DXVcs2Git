@@ -100,7 +100,7 @@
                                 </dxg:GridColumn>
                             </dxg:GridControl.Columns>
                             <dxg:GridControl.View>
-                                <dxg:TableView NavigationStyle="Row" UseAnimationWhenExpanding="False" ShowGroupedColumns="False" ShowTotalSummary="True">
+                                <dxg:TableView NavigationStyle="Row" ShowGroupedColumns="False" ShowTotalSummary="True">
                                     <dxg:TableView.FormatConditions>
                                         <dxg:FormatCondition Expression="[Executed] = Null">
                                             <dxg:FormatCondition.Format>
