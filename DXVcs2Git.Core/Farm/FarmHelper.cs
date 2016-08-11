@@ -48,6 +48,9 @@ namespace DXVcs2Git.UI.Farm {
         public static void SendNotification(string farmTaskName, string recepient, string message) {
             Instance.SendNotification(farmTaskName, recepient, message);
         }
+        public static string FindTask(string path) {
+            return Instance.FindTaskByTag(path);
+        }
     }
 
     public enum ActivityStatus {
@@ -107,6 +110,14 @@ namespace DXVcs2Git.UI.Farm {
             lock (this.syncLocker) {
                 return CalcExtendedTaskStatus(task);
             }
+        }
+        public string FindTaskByTag(string path) {
+            lock (this.syncLocker) {
+                return FindTaskInternal(path);
+            }
+        }
+        string FindTaskInternal(string path) {
+            return this.projectTagTable.FirstOrDefault(x => x.tag == path)?.name;
         }
         FarmExtendedStatus CalcExtendedTaskStatus(string task) {
             var farmStatus = new FarmExtendedStatus();
@@ -813,6 +824,7 @@ namespace DXVcs2Git.UI.Farm {
             //}
         }
         #endregion
+
     }
 
     public enum FarmRefreshType {

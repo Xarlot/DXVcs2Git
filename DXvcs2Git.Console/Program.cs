@@ -509,8 +509,8 @@ namespace DXVcs2Git.Console {
             Log.Message($"Merge hook title: {hook.Attributes.Description}");
             Log.Message($"Merge hook state: {hook.Attributes.State}");
 
-            var project = gitLabWrapper.GetProject(hook.Attributes.TargetProjectId);
-            var mergeRequest = gitLabWrapper.GetMergeRequest(project, hook.Attributes.Id);
+            var targetProject = gitLabWrapper.GetProject(hook.Attributes.TargetProjectId);
+            var mergeRequest = gitLabWrapper.GetMergeRequest(targetProject, hook.Attributes.Id);
             if (supportSendingMessages)
                 SendMessage(serviceUser, hook.Json, farmTaskName);
 
@@ -524,7 +524,7 @@ namespace DXVcs2Git.Console {
             Log.Message($"Merge hook sourceBranch branch: {hook.Attributes.SourceBranch}.");
 
             if (ShouldForceSyncTask(mergeRequest, hook)) {
-                ForceSyncBuild(gitLabWrapper, mergeRequest, hook);
+                ForceSyncBuild(gitLabWrapper, mergeRequest, targetProject, hook);
                 return;
             }
         }
@@ -534,7 +534,7 @@ namespace DXVcs2Git.Console {
 
             FarmIntegrator.SendNotification(farmTaskName, serviceUser, message);
         }
-        static void ForceSyncBuild(GitLabWrapper gitLabWrapper, MergeRequest mergeRequest, MergeRequestHookClient hook) {
+        static void ForceSyncBuild(GitLabWrapper gitLabWrapper, MergeRequest mergeRequest, Project targetProject, MergeRequestHookClient hook) {
             var xmlComments = gitLabWrapper.GetComments(mergeRequest).Where(x => IsXml(x.Note));
             var options = xmlComments.Select(x => MergeRequestOptions.ConvertFromString(x.Note)).FirstOrDefault();
             if (options != null && options.ActionType == MergeRequestActionType.sync) {
@@ -551,9 +551,16 @@ namespace DXVcs2Git.Console {
                 }
                 Log.Message("Build forces without checking tests status.");
                 ForceBuild(action.SyncTask);
+                return;
             }
-            else
-                Log.Message("Merge request can`t be merged because merge request notes has no farm config.");
+            string task = FarmIntegrator.FindTask($"{mergeRequest.TargetBranch}@{targetProject.PathWithNamespace}");
+            if (!string.IsNullOrEmpty(task)) {
+                Log.Message($"Sync task {task} found by heuristic.");
+                ForceBuild(task);
+                return;
+            }
+
+            Log.Message("Merge request can`t be merged because merge request notes has no farm config.");
             Log.Message("");
         }
         static bool ShouldForceSyncTask(MergeRequest mergeRequest, MergeRequestHookClient hook) {

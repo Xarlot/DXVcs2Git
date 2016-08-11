@@ -103,6 +103,8 @@ namespace DXVcs2Git.UI.ViewModels {
         void ProcessMergeRequestHook(MergeRequestHookClient hook) {
             int mergeRequestId = hook.Attributes.Id;
             var selectedBranch = Repositories.SelectedBranch;
+            if (selectedBranch == null)
+                return;
             var mergeRequest = selectedBranch?.MergeRequest;
             if (mergeRequest?.MergeRequestId == mergeRequestId) {
                 selectedBranch.RefreshMergeRequest();
