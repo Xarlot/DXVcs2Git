@@ -35,6 +35,35 @@
     <dxmvvm:Interaction.Behaviors>
         <dxmvvm:EventToCommand Event="Loaded" Command="{Binding Path=InitializeCommand}"/>
         <dxmvvm:NotificationService x:Name="notificationService" ApplicationId="dxvcs2git.ui"/>
+        <dx:DialogService x:Name="loadTestLog">
+            <dx:DialogService.DialogStyle>
+                <Style TargetType="{x:Type dx:DXDialogWindow}">
+                    <Setter Property="SizeToContent" Value="WidthAndHeight"/>
+                    <Setter Property="UseLayoutRounding" Value="True"/>
+                    <Setter Property="WindowStyle" Value="ToolWindow"/>
+                </Style>
+            </dx:DialogService.DialogStyle>
+            <dx:DialogService.ViewTemplate>
+                <DataTemplate>
+                    <views:LoadLogControl/>
+                </DataTemplate>
+            </dx:DialogService.ViewTemplate>
+        </dx:DialogService>
+        <dxmvvm:WindowService x:Name="showTestLog">
+            <dxmvvm:WindowService.WindowStyle>
+                <Style TargetType="{x:Type dx:DXWindow}">
+                    <Setter Property="UseLayoutRounding" Value="True"/>
+                    <Setter Property="WindowStyle" Value="ToolWindow"/>
+                </Style>
+            </dxmvvm:WindowService.WindowStyle>
+            <dxmvvm:WindowService.ViewTemplate>
+                <DataTemplate>
+                    <Grid x:Name="LayoutRoot">
+                        <views:BuildLogsControl dxmvvm:ViewModelExtensions.ParentViewModel="{Binding DataContext, ElementName=LayoutRoot}"/>
+                    </Grid>
+                </DataTemplate>
+            </dxmvvm:WindowService.ViewTemplate>
+        </dxmvvm:WindowService>
         <dx:DialogService x:Name="downloaderDialogService">
             <dx:DialogService.DialogStyle>
                 <Style TargetType="{x:Type dx:DXDialogWindow}">
@@ -94,7 +123,16 @@
                             LargeGlyph="{dx:DXImageOffice2013 Image=Refresh2_32x32.png}">
                         </dxb:BarButtonItem>
                     </dxr:RibbonPageGroup>
-
+                    <dxr:RibbonPageGroup Caption="Tests">
+                        <dxb:BarButtonItem
+                            RibbonStyle="Large" 
+                            GlyphSize="Large" 
+                            Content="Load test log"
+                            Command="{Binding Path=LoadTestLogCommand}"
+                            LargeGlyph="{dx:DXImageOffice2013 Image=Download_32x32.png}">
+                        </dxb:BarButtonItem>
+                        <dxb:BarItemSeparator/>
+                    </dxr:RibbonPageGroup>
                     <dxr:RibbonPageGroup Caption="Settings" MergeOrder="666">
                         <dxb:BarButtonItem
                             RibbonStyle="Large" 

@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Text;
+using System.Text.RegularExpressions;
+using System.Windows;
 using System.Windows.Input;
 using System.Windows.Threading;
 using DevExpress.Mvvm;
@@ -11,6 +13,9 @@ using DXVcs2Git.Core.Configuration;
 using Microsoft.Practices.ServiceLocation;
 using DevExpress.Xpf.Core;
 using DXVcs2Git.Core.GitLab;
+using DXVcs2Git.Git;
+using NGitLab.Models;
+using ProjectHookType = DXVcs2Git.Core.GitLab.ProjectHookType;
 
 namespace DXVcs2Git.UI.ViewModels {
     public class RootViewModel : ViewModelBase {
@@ -22,13 +27,17 @@ namespace DXVcs2Git.UI.ViewModels {
         public ICommand InitializeCommand { get; private set; }
         public ICommand UpdateCommand { get; private set; }
         public ICommand ActivateCommand { get; private set; }
+        public ICommand LoadTestLogCommand { get; private set; }
         public INotificationService NotificationService => GetService<INotificationService>("notificationService");
         public IDialogService SettingsDialogService => GetService<IDialogService>("settingsDialogService");
         public IDialogService DownloaderDialogService => GetService<IDialogService>("downloaderDialogService");
+        public IDialogService LoadLogService => GetService<IDialogService>("loadTestLog");
+        public IWindowService ShowLogsService => GetService<IWindowService>("showTestLog");
+        public IMessageBoxService MessageBoxService => GetService<IMessageBoxService>("MessageBoxService");
         public Config Config { get; private set; }
         public string Version { get; private set; }
         public LoggingViewModel LogViewModel { get; private set; }
-        Dispatcher dispatcher;
+        readonly Dispatcher dispatcher;
         public bool ShowLog {
             get { return GetProperty(() => ShowLog); }
             set { SetProperty(() => ShowLog, value, ShowLogChanged); }
@@ -42,11 +51,39 @@ namespace DXVcs2Git.UI.ViewModels {
             UpdateCommand = DelegateCommandFactory.Create(PerformUpdate, CanPerformUpdate);
             SettingsCommand = DelegateCommandFactory.Create(ShowSettings, CanShowSettings);
             ShowLogCommand = DelegateCommandFactory.Create(PerformShowLog);
+            LoadTestLogCommand = DelegateCommandFactory.Create(PerformLoadTestLog, CanPerformLoadTestLog);
             DownloadNewVersionCommand = DelegateCommandFactory.Create(DownloadNewVersion, CanDownloadNewVersion);
             InitializeCommand = DelegateCommandFactory.Create(PerformInitialize, CanPerformInitialize);
             ActivateCommand = DelegateCommandFactory.Create(PerformActivate, CanPerformActivate);
             LogViewModel = new LoggingViewModel();
             Version = $"Git tools {VersionInfo.Version}";
+        }
+        bool CanPerformLoadTestLog() {
+            return Repositories?.SelectedBranch != null;
+        }
+        readonly Regex parseBuildRegex = new Regex(@"http://(?<server>[\w\._-]+)/(?<nspace>[\w\._-]+)/(?<name>[\w\._-]+)/builds/(?<build>\d+)", RegexOptions.Compiled);
+        void PerformLoadTestLog() {
+            var log = new LoadLogViewModel();
+            if (LoadLogService.ShowDialog(MessageButton.OKCancel, "Load log", log) == MessageResult.OK) {
+                string url = log.Url;
+                if (string.IsNullOrEmpty(url)) {
+                    MessageBoxService.Show("Build url is not specified.", "Build log error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    return;
+                }
+                var match = parseBuildRegex.Match(url);
+                if (!match.Success) {
+                    MessageBoxService.Show("Specified url doesn`t match the pattern:\r\nhttp://{server}/{namespace}/{name}/builds/{buildId}", "Build log error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    return;
+                }
+                var repo = $@"http://{match.Groups["server"]}/{match.Groups["nspace"]}/{match.Groups["name"]}.git";
+                var artifacts = Repositories.SelectedBranch.DownloadArtifacts(repo, new Build() { Id = Convert.ToInt32(match.Groups["build"].Value) });
+                if (artifacts == null) {
+                    MessageBoxService.Show("Build artifacts not found", "Build log error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    return;
+                }
+                ArtifactsViewModel model = new ArtifactsViewModel(new ArtifactsFile() { FileName = "test.zip" }, artifacts);
+                ShowLogsService.Show(model);
+            }
         }
         Stopwatch sw = Stopwatch.StartNew();
         void PerformActivate() {

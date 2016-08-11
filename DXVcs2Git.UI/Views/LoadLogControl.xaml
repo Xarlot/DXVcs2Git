@@ -6,8 +6,8 @@
              xmlns:local="clr-namespace:DXVcs2Git.UI.Views"
              xmlns:dxe="http://schemas.devexpress.com/winfx/2008/xaml/editors"
              mc:Ignorable="d" 
-             d:DesignHeight="300" d:DesignWidth="300" Padding="10" >
+             d:DesignHeight="300" d:DesignWidth="300" Padding="10" FocusManager.FocusedElement="{Binding ElementName=editor}" >
     <Grid>
-            <dxe:TextEdit ValidateOnTextInput="True" EditValue="{Binding Path=Url, UpdateSourceTrigger=PropertyChanged}" Width="200"/>
+            <dxe:TextEdit x:Name="editor" ValidateOnTextInput="True" EditValue="{Binding Path=Url, UpdateSourceTrigger=PropertyChanged}" Width="400"/>
     </Grid>
 </UserControl>

@@ -12,11 +12,18 @@
              xmlns:dxg="http://schemas.devexpress.com/winfx/2008/xaml/grid"
              xmlns:dxgt="http://schemas.devexpress.com/winfx/2008/xaml/grid/themekeys"
              xmlns:system="clr-namespace:System;assembly=mscorlib"
+             xmlns:converters="clr-namespace:DXVcs2Git.UI.Converters"
+             xmlns:dxe="http://schemas.devexpress.com/winfx/2008/xaml/editors"
              mc:Ignorable="d" 
              d:DesignHeight="300" d:DesignWidth="300">
     <UserControl.DataContext>
         <extensions:IoC TargetType="{x:Type viewModels:EditBuildLogsViewModel }"/>
     </UserControl.DataContext>
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <converters:TestsLogPassedToCriteriaConverter x:Key="PassedToCriteriaConverter"/>
+        </ResourceDictionary>
+    </UserControl.Resources>
     <Grid>
         <dx:DXTabControl>
             <dx:DXTabItem Header="Modifications" Content="{Binding Path=Modifications}">
@@ -52,7 +59,7 @@
             <dx:DXTabItem Header="Tests" Content="{Binding Path=Tests}">
                 <dx:DXTabItem.ContentTemplate>
                     <DataTemplate>
-                        <dxg:GridControl ItemsSource="{Binding Path=Tests}" GroupCount="3" IsRecursiveExpand="True">
+                        <dxg:GridControl ItemsSource="{Binding Path=Tests}" GroupCount="3" IsRecursiveExpand="True" FilterCriteria="{Binding Path=Passed, Converter={StaticResource PassedToCriteriaConverter}}">
                             <dxg:GridControl.Resources>
                                 <ResourceDictionary>
                                     <dxmvvm:ObjectToObjectConverter x:Key="highlightConverter">
@@ -82,14 +89,18 @@
                             <dxg:GridControl.Columns>
                                 <dxg:GridColumn Width="*" FieldName="Project"/>
                                 <dxg:GridColumn Width="*" FieldName="Name" Header="Test"/>
-                                <dxg:GridColumn Width="80" FieldName="Time"/>
+                                <dxg:GridColumn Width="180" FieldName="Time"/>
                                 <dxg:GridColumn Width="*" Header="Class" FieldName="ClassName"/>
                                 <dxg:GridColumn Width="*" Header="Namespace"  FieldName="NamespaceName"/>
-                                <dxg:GridColumn Width="80" FieldName="Executed" Visible="False"/>
-                                <dxg:GridColumn Width="80" FieldName="Failed"/>
+                                <dxg:GridColumn Width="180" FieldName="Executed" Visible="False"/>
+                                <dxg:GridColumn Width="180" FieldName="Failed">
+                                    <dxg:GridColumn.EditSettings>
+                                        <dxe:CheckEditSettings/>
+                                    </dxg:GridColumn.EditSettings>
+                                </dxg:GridColumn>
                             </dxg:GridControl.Columns>
                             <dxg:GridControl.View>
-                                <dxg:TableView NavigationStyle="Row" UseAnimationWhenExpanding="False" ShowGroupedColumns="False">
+                                <dxg:TableView NavigationStyle="Row" UseAnimationWhenExpanding="False" ShowGroupedColumns="False" ShowTotalSummary="True">
                                     <dxg:TableView.FormatConditions>
                                         <dxg:FormatCondition Expression="[Executed] = Null">
                                             <dxg:FormatCondition.Format>
@@ -114,6 +125,11 @@
                                 <dxg:GridSummaryItem FieldName="Time" SummaryType="Sum" DisplayFormat="Total time: {0}"/>
                                 <dxg:GridSummaryItem FieldName="Failed" SummaryType="Sum" DisplayFormat="Failed: {0}"/>
                             </dxg:GridControl.GroupSummary>
+                            <dxg:GridControl.TotalSummary>
+                                <dxg:GridSummaryItem FieldName="Name" SummaryType="Count" DisplayFormat="Total count: {0}"/>
+                                <dxg:GridSummaryItem FieldName="Time" SummaryType="Sum" DisplayFormat="Total time: {0}"/>
+                                <dxg:GridSummaryItem FieldName="Failed" SummaryType="Sum" DisplayFormat="Total failed: {0}"/>
+                            </dxg:GridControl.TotalSummary>
                         </dxg:GridControl>
                     </DataTemplate>
                 </dx:DXTabItem.ContentTemplate>

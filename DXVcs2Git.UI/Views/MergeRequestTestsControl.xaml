@@ -74,14 +74,6 @@
                             CommandParameter="{Binding Path=CurrentItem, ElementName=grid, UpdateSourceTrigger=PropertyChanged}"
                             LargeGlyph="{dx:DXImageOffice2013 Image=Close_32x32.png}">
                         </dxb:BarButtonItem>
-                        <dxb:BarItemSeparator/>
-                        <dxb:BarButtonItem
-                            RibbonStyle="Large" 
-                            GlyphSize="Large" 
-                            Content="Load test log"
-                            Command="{Binding Path=LoadLogCommand}"
-                            LargeGlyph="{dx:DXImageOffice2013 Image=Download_32x32.png}">
-                        </dxb:BarButtonItem>
                     </dxr:RibbonPageGroup>
                 </dxr:RibbonPage>
             </dxr:RibbonDefaultPageCategory>
