@@ -101,6 +101,8 @@ namespace DXVcs2Git.UI.ViewModels {
 
         void OnMessageReceived(Message msg) {
             if (msg.MessageType == MessageType.RefreshSelectedBranch) {
+                if (IsModified)
+                    return;
                 RefreshSelectedBranch();
             }
         }
