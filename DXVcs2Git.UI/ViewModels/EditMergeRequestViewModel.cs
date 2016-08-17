@@ -59,21 +59,12 @@ namespace DXVcs2Git.UI.ViewModels {
             return Branch?.MergeRequest != null && IsModified;
         }
         void PerformApply() {
-            var mergeRequestAction = new MergeRequestSyncAction(Branch.SyncTaskName, Branch.SyncServiceName, Branch.TestServiceName, PerformTesting, AssignedToService);
-            var mergeRequestOptions = new MergeRequestOptions(mergeRequestAction);
             if (Repositories.Config.AlwaysSure || MessageBoxService.Show("Are you sure?", "Update merge request", MessageBoxButton.OKCancel) == MessageBoxResult.OK) {
                 Branch.UpdateMergeRequest(CalcMergeRequestTitle(Comment), CalcMergeRequestDescription(Comment), CalcServiceName());
-                Branch.UpdateMergeRequest(CalcOptionsComment(mergeRequestOptions));
-                if (PerformTesting) {
-                    Branch.UpdateWebHook();
-                    Branch.ForceBuild(Branch.MergeRequest.MergeRequest);
-                }
+                Branch.AddMergeRequestSyncInfo(PerformTesting, AssignedToService);
                 IsModified = false;
                 RepositoriesViewModel.RaiseRefreshSelectedBranch();
             }
-        }
-        string CalcOptionsComment(MergeRequestOptions options) {
-            return MergeRequestOptions.ConvertToString(options);
         }
         string CalcServiceName() {
             if (!AssignedToService && !PerformTesting)

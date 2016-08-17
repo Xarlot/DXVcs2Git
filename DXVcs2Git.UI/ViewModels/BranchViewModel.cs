@@ -77,6 +77,8 @@ namespace DXVcs2Git.UI.ViewModels {
         }
         public void CreateMergeRequest(string title, string description, string user, string sourceBranch, string targetBranch) {
             var mergeRequest = this.gitLabWrapper.CreateMergeRequest(Repository.Origin, Repository.Upstream, title, description, user, sourceBranch, targetBranch);
+            if (SupportsTesting && Repositories.Config.TestByDefault)
+
             MergeRequest = new MergeRequestViewModel(this, mergeRequest);
             RepositoriesViewModel.RaiseRefreshSelectedBranch();
         }
@@ -98,6 +100,17 @@ namespace DXVcs2Git.UI.ViewModels {
         }
         public void UpdateMergeRequest(string comment) {
             this.gitLabWrapper.AddCommentToMergeRequest(MergeRequest.MergeRequest, comment);
+        }
+        public void AddMergeRequestSyncInfo(bool performTesting, bool assignToService) {
+            var mergeRequestAction = new MergeRequestSyncAction(SyncTaskName, SyncServiceName, TestServiceName, performTesting, assignToService);
+            var mergeRequestOptions = new MergeRequestOptions(mergeRequestAction);
+            string comment = MergeRequestOptions.ConvertToString(mergeRequestOptions);
+            var mergeRequest = MergeRequest.MergeRequest;
+            gitLabWrapper.AddCommentToMergeRequest(mergeRequest, comment);
+            if (performTesting) {
+                UpdateWebHook();
+                ForceBuild(mergeRequest);
+            }
         }
         public void RefreshFarm() {
             FarmStatus = FarmIntegrator.GetTaskStatus(Repository.RepoConfig.FarmSyncTaskName);

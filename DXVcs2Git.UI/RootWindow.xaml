@@ -123,7 +123,7 @@
                             LargeGlyph="{dx:DXImageOffice2013 Image=Refresh2_32x32.png}">
                         </dxb:BarButtonItem>
                     </dxr:RibbonPageGroup>
-                    <dxr:RibbonPageGroup Caption="Tests">
+                    <dxr:RibbonPageGroup Caption="Tests" MergeOrder="665">
                         <dxb:BarButtonItem
                             RibbonStyle="Large" 
                             GlyphSize="Large" 

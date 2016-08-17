@@ -28,6 +28,10 @@ namespace DXVcs2Git.UI.ViewModels {
             get { return GetProperty(() => SupportsTesting); }
             set { SetProperty(() => SupportsTesting, value); }
         }
+        public bool TestByDefault {
+            get { return GetProperty(() => TestByDefault); }
+            set { SetProperty(() => TestByDefault, value); }
+        }
         public bool StartWithWindows {
             get { return GetProperty(() => StartWithWindows); }
             set { SetProperty(() => StartWithWindows, value, OnStartWithWindowsChanged); }
@@ -148,6 +152,7 @@ namespace DXVcs2Git.UI.ViewModels {
             Repositories = CreateEditRepositories(config);
             Repositories.CollectionChanged += RepositoriesOnCollectionChanged;
             AlwaysSure4 = AlwaysSure3 = AlwaysSure2 = AlwaysSure1 = config.AlwaysSure;
+            TestByDefault = config.TestByDefault;
             UpdateWpf2SLProperties = new AsyncCommand(OnUpdateWpf2SLProperties);
             UpdateTokens();
         }
@@ -177,7 +182,8 @@ namespace DXVcs2Git.UI.ViewModels {
             config.KeyGesture = KeyGesture;
             config.AlwaysSure = AlwaysSure4;
             config.SupportsTesting = SupportsTesting;
-            this.config.DefaultTheme = DefaultTheme;
+            config.DefaultTheme = DefaultTheme;
+            config.TestByDefault = TestByDefault;
         }
         public void UpdateTokens() {
             AvailableTokens = Repositories.Return(x => new ObservableCollection<string>(x.Select(repo => repo.Token).Distinct()), () => new ObservableCollection<string>());
