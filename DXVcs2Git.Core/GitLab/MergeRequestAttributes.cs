@@ -24,7 +24,7 @@ namespace DXVcs2Git.Core.GitLab {
         //[DataMember(Name = "updated_at")]
         //public DateTime UpdatedAt { get; set; }
         [DataMember(Name = "state")]
-        public string State { get; set; }
+        public MergerRequestState State { get; set; }
         [DataMember(Name = "merge_status")]
         public string MergeStatus { get; set; }
         [DataMember(Name = "iid")]
@@ -35,5 +35,12 @@ namespace DXVcs2Git.Core.GitLab {
         public bool WorkInProcess { get; set; }
         [DataMember(Name = "action")]
         public string Action { get; set; }
+    }
+
+    public enum MergerRequestState {
+        opened,
+        reopened,
+        closed,
+        merged,
     }
 }

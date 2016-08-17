@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Linq;
+using System.ServiceModel.ComIntegration;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Windows;
@@ -129,10 +131,6 @@ namespace DXVcs2Git.UI.ViewModels {
                 return;
             selectedBranch.RefreshMergeRequest();
             RepositoriesViewModel.RaiseRefreshSelectedBranch();
-
-            //var notification = NotificationService.CreatePredefinedNotification(hook.Json, null, null, null);
-            //var task = notification.ShowAsync();
-            //task.ContinueWith(x => PerformClick(x.Result), TaskScheduler.FromCurrentSynchronizationContext());
         }
 
         void PerformClick(NotificationResult result) {
@@ -148,9 +146,37 @@ namespace DXVcs2Git.UI.ViewModels {
                 RepositoriesViewModel.RaiseRefreshSelectedBranch();
                 Log.Message("Selected branch refreshed.");
             }
-            //var notification = NotificationService.CreatePredefinedNotification(hook.Json, null, null, null);
-            //var task = notification.ShowAsync();
-            //task.ContinueWith(x => PerformClick(x.Result));
+
+            foreach (var repo in Repositories.Repositories) {
+                var branch = repo.Branches.Where(x => x.MergeRequest != null).FirstOrDefault(x => x.MergeRequest.MergeRequestId == mergeRequestId);
+                if (branch != null)
+                    ShowMergeRequestNotification(branch, hook);
+                return;
+            }
+        }
+        void ShowMergeRequestNotification(BranchViewModel branchViewModel, MergeRequestHookClient hook) {
+            var mergeStatus = hook.Attributes.State;
+            if (mergeStatus == MergerRequestState.merged) {
+                string message = $"Merge request {hook.Attributes.Title} for branch {hook.Attributes.SourceBranch} was merged.";
+                var notification = NotificationService.CreatePredefinedNotification(message, null, null, null);
+                var task = notification.ShowAsync();
+                task.ContinueWith(x => PerformClick(x.Result));
+                return;
+            }
+            if (mergeStatus == MergerRequestState.closed) {
+                string message = $"Merge request {hook.Attributes.Title} for branch {hook.Attributes.SourceBranch} was closed.";
+                var notification = NotificationService.CreatePredefinedNotification(message, null, null, null);
+                var task = notification.ShowAsync();
+                task.ContinueWith(x => PerformClick(x.Result));
+                return;
+            }
+            if (branchViewModel.MergeRequest.AssigneeId != hook.Attributes.AssigneeId) {
+                string message = $"Assignee for merge request {hook.Attributes.Title} for branch {hook.Attributes.SourceBranch} was changed.";
+                var notification = NotificationService.CreatePredefinedNotification(message, null, null, null);
+                var task = notification.ShowAsync();
+                task.ContinueWith(x => PerformClick(x.Result));
+                return;
+            }
         }
         void ProcessPushHook(PushHookClient hook) {
         }

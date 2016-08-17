@@ -15,6 +15,7 @@ namespace DXVcs2Git.UI.ViewModels {
         public string SourceBranch { get; }
         public string TargetBranch { get; }
         public string Assignee { get; }
+        public int? AssigneeId { get; }
         public int MergeRequestId => MergeRequest.Id;
         public MergeRequestViewModel(BranchViewModel branch, MergeRequest mergeRequest) {
             Branch = branch;
@@ -28,6 +29,7 @@ namespace DXVcs2Git.UI.ViewModels {
             TargetBranch = MergeRequest.TargetBranch;
             Author = MergeRequest.Author.Username;
             Assignee = MergeRequest.Assignee?.Username;
+            AssigneeId = MergeRequest?.Assignee?.Id;
         }
     }
 }

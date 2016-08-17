@@ -588,7 +588,7 @@ namespace DXVcs2Git.Console {
             return !string.IsNullOrEmpty(xml) && xml.StartsWith("<");
         }
         static bool IsOpenedState(MergeRequestHookClient hook) {
-            return hook.Attributes.State == "opened" || hook.Attributes.State == "reopened";
+            return hook.Attributes.State == MergerRequestState.opened || hook.Attributes.State == MergerRequestState.opened;
         }
         static void ProcessPushHook(PushHookClient hook) {
         }
