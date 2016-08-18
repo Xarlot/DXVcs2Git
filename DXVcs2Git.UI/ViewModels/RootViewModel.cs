@@ -140,18 +140,17 @@ namespace DXVcs2Git.UI.ViewModels {
             var selectedBranch = Repositories.SelectedBranch;
             if (selectedBranch == null)
                 return;
+            foreach (var repo in Repositories.Repositories) {
+                var branch = repo.Branches.Where(x => x.MergeRequest != null).FirstOrDefault(x => x.MergeRequest.MergeRequestId == mergeRequestId);
+                if (branch != null)
+                    ShowMergeRequestNotification(branch, hook);
+                break;
+            }
             var mergeRequest = selectedBranch?.MergeRequest;
             if (mergeRequest?.MergeRequestId == mergeRequestId) {
                 selectedBranch.RefreshMergeRequest();
                 RepositoriesViewModel.RaiseRefreshSelectedBranch();
                 Log.Message("Selected branch refreshed.");
-            }
-
-            foreach (var repo in Repositories.Repositories) {
-                var branch = repo.Branches.Where(x => x.MergeRequest != null).FirstOrDefault(x => x.MergeRequest.MergeRequestId == mergeRequestId);
-                if (branch != null)
-                    ShowMergeRequestNotification(branch, hook);
-                return;
             }
         }
         void ShowMergeRequestNotification(BranchViewModel branchViewModel, MergeRequestHookClient hook) {
