@@ -269,23 +269,28 @@ namespace DXVcs2Git.Console {
                 Log.Error($"Can`t find target project {targetRepoPath}.");
                 return 1;
             }
+            Log.Message($"Target project url: {targetProject.HttpUrl}");
+
             Branch targetBranch = gitLabWrapper.GetBranch(targetProject, targetBranchName);
             if (targetBranch == null) {
                 Log.Error($"Can`t find targetBranch branch {targetBranchName}");
                 return 1;
             }
+            Log.Message($"Target branch name: {targetBranch.Name}");
 
             var sourceProject = gitLabWrapper.FindProjectFromAll(sourceRepoPath);
             if (sourceProject == null) {
                 Log.Error($"Can`t find source project {sourceRepoPath}");
                 return 1;
             }
+            Log.Message($"Source project url: {sourceProject.HttpUrl}");
 
             var sourceBranch = gitLabWrapper.GetBranch(sourceProject, sourceBranchName);
             if (sourceBranch == null) {
                 Log.Error($"Source branch {sourceBranchName} was not found.");
                 return 1;
             }
+            Log.Message($"Target branch name: {sourceBranch.Name}");
 
             MergeRequest mergeRequest = gitLabWrapper.GetMergeRequests(targetProject, x => x.SourceBranch == sourceBranchName && x.TargetBranch == targetBranchName).FirstOrDefault();
             if (mergeRequest == null) {
@@ -299,7 +304,7 @@ namespace DXVcs2Git.Console {
                 return mr?.ActionType == MergeRequestActionType.sync;
             }).Select(x => (MergeRequestSyncAction)MergeRequestOptions.ConvertFromString(x.Note).Action).LastOrDefault();
 
-            if (mergeRequest.Assignee?.Name != username && (!mergeRequestSyncOptions?.PerformTesting ?? false)) {
+            if (mergeRequest.Assignee?.Name != username || (!mergeRequestSyncOptions?.PerformTesting ?? false)) {
                 Log.Error($"Merge request is not assigned to service user {username} or doesn`t require testing.");
                 return 1;
             }
