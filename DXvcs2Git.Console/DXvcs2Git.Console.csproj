@@ -113,6 +113,9 @@
       <SubType>Designer</SubType>
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+    <None Include="trackconfig_demos.win_2016.2.config">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Include="trackconfig_total_2014.2.config">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
