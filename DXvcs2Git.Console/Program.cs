@@ -297,6 +297,8 @@ namespace DXVcs2Git.Console {
                 Log.Error($"Can`t find merge request.");
                 return 1;
             }
+            Log.Message($"Merge request id: {mergeRequest.Id}.");
+            Log.Message($"Merge request title: {mergeRequest.Title}.");
 
             var comments = gitLabWrapper.GetComments(mergeRequest);
             var mergeRequestSyncOptions = comments?.Where(x => IsXml(x.Note)).Where(x => {
@@ -310,8 +312,10 @@ namespace DXVcs2Git.Console {
             }
 
             GitWrapper gitWrapper = CreateGitWrapper(targetRepoPath, localGitDir, trackBranch, username, password);
-            if (gitWrapper == null)
+            if (gitWrapper == null) {
+                Log.Error("Can`t create git wrapper.");
                 return 1;
+            }
 
             var changes = gitLabWrapper
                 .GetMergeRequestChanges(mergeRequest)

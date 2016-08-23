@@ -547,6 +547,12 @@
     <None Include="Configs\XPF_2016.2.config">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+    <None Include="Configs\Win_Demos_2016.2.config">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="Configs\RealLife_Demos_2016.2.config">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Include="Configs\XPF_Demos_2016.2.config">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
