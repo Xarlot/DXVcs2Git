@@ -77,9 +77,9 @@ namespace DXVcs2Git.UI.ViewModels {
         }
         public void CreateMergeRequest(string title, string description, string user, string sourceBranch, string targetBranch) {
             var mergeRequest = this.gitLabWrapper.CreateMergeRequest(Repository.Origin, Repository.Upstream, title, description, user, sourceBranch, targetBranch);
-            if (SupportsTesting && Repositories.Config.TestByDefault)
-
             MergeRequest = new MergeRequestViewModel(this, mergeRequest);
+            if (SupportsTesting && Repositories.Config.TestByDefault)
+                AddMergeRequestSyncInfo(true, false);
             RepositoriesViewModel.RaiseRefreshSelectedBranch();
         }
         public void CloseMergeRequest() {
