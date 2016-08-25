@@ -30,7 +30,7 @@
                     ShowVerticalLines="False"
                     ShowHorizontalLines="False"
                     ImageFieldName="HasMergeRequest"
-                    ShowNodeImages="False"
+                    ShowNodeImages="false"
                     NodeImageSelector="{StaticResource imageSelector}"
                     ShowColumnHeaders="False"
                     AutoExpandAllNodes="True" 
