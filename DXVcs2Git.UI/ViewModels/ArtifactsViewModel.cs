@@ -6,15 +6,14 @@ using NGitLab.Models;
 
 namespace DXVcs2Git.UI.ViewModels {
     public class ArtifactsViewModel : BindableBase {
-        const string buildlogpath = @".patch/buildlog.xml";
-        const string testlogpath = @".patch/testlog.xml";
+        const string workerlogpath = @".patch/workerlog.xml";
         const string modificationspath = @".patch/modifications.xml";
         readonly ArtifactsFile file;
         readonly byte[] fileContent;
         public bool HasContent => file != null && fileContent != null;
 
-        public string BuildLog { get; private set; }
-        public string TestLog { get; private set; }
+
+        public string WorkerLog { get; private set; }
         public string Modifications { get; private set; }
         public ArtifactsViewModel(ArtifactsFile file, byte[] content = null) {
             this.file = file;
@@ -26,8 +25,7 @@ namespace DXVcs2Git.UI.ViewModels {
                 return;
             using (var stream = new MemoryStream(fileContent)) {
                 using (ZipFile zipFile = ZipFile.Read(stream)) {
-                    BuildLog = GetPartContent(zipFile, buildlogpath);
-                    TestLog = GetPartContent(zipFile, testlogpath);
+                    WorkerLog = GetPartContent(zipFile, workerlogpath);
                     Modifications = GetPartContent(zipFile, modificationspath);
                 }
             }

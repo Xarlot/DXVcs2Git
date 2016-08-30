@@ -6,9 +6,9 @@ namespace DXVcs2Git.UI.ViewModels {
 
         }
 
-        public BuildLogViewModel Build {
-            get { return GetProperty(() => Build); }
-            private set { SetProperty(() => Build, value); }
+        public XmlLogViewModel XmlLog {
+            get { return GetProperty(() => XmlLog); }
+            private set { SetProperty(() => XmlLog, value); }
         }
         public ArtifactsViewModel Artifact {
             get { return GetProperty(() => Artifact); }
@@ -21,6 +21,10 @@ namespace DXVcs2Git.UI.ViewModels {
         public ModificationsViewModel Modifications {
             get { return GetProperty(() => Modifications); }
             private set { SetProperty(() => Modifications, value); }
+        }
+        public BuildLogViewModel BuildLog {
+            get { return GetProperty(() => BuildLog); }
+            private set { SetProperty(() => BuildLog, value); }
         }
 
         protected override void OnParentViewModelChanged(object parentViewModel) {
@@ -41,8 +45,9 @@ namespace DXVcs2Git.UI.ViewModels {
         }
         void Initialize(ArtifactsViewModel artifact) {
             Modifications = new ModificationsViewModel(artifact);
-            Build = new BuildLogViewModel(artifact);
-            Tests = new TestLogViewModel(artifact);
+            XmlLog = new XmlLogViewModel(artifact);
+            BuildLog = new BuildLogViewModel(artifact);
+            //Tests = new TestLogViewModel(artifact);
         }
     }
 }

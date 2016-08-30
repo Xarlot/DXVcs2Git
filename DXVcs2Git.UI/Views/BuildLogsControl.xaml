@@ -26,22 +26,18 @@
     </UserControl.Resources>
     <Grid>
         <dx:DXTabControl>
-            <dx:DXTabItem Header="Modifications" Content="{Binding Path=Modifications}">
+            <dx:DXTabItem Header="Build" Content="{Binding Path=BuildLog}">
                 <dx:DXTabItem.ContentTemplate>
                     <DataTemplate>
-                        <avalonedit:TextEditor 
-                            SyntaxHighlighting="XML"
-                            FontFamily="Consolas" 
-                            IsReadOnly="True">
+                        <WebBrowser>
                             <dxmvvm:Interaction.Behaviors>
-                                <behaviors:AvalonEditTextBindingBehavior Text="{Binding Path=Text}"/>
-                                <behaviors:AvalonEditInstallSearchPanelBehavior/>
+                                <behaviors:WebBrowserBindingBehavior Text="{Binding Path=Text}"/>
                             </dxmvvm:Interaction.Behaviors>
-                        </avalonedit:TextEditor>
+                        </WebBrowser>
                     </DataTemplate>
                 </dx:DXTabItem.ContentTemplate>
             </dx:DXTabItem>
-            <dx:DXTabItem Header="Build log" Content="{Binding Path=Build}">
+            <dx:DXTabItem Header="Xml log" Content="{Binding Path=XmlLog}">
                 <dx:DXTabItem.ContentTemplate>
                     <DataTemplate>
                         <avalonedit:TextEditor 
@@ -134,6 +130,22 @@
                     </DataTemplate>
                 </dx:DXTabItem.ContentTemplate>
             </dx:DXTabItem>
+            <dx:DXTabItem Header="Modifications" Content="{Binding Path=Modifications}">
+                <dx:DXTabItem.ContentTemplate>
+                    <DataTemplate>
+                        <avalonedit:TextEditor 
+                            SyntaxHighlighting="XML"
+                            FontFamily="Consolas" 
+                            IsReadOnly="True">
+                            <dxmvvm:Interaction.Behaviors>
+                                <behaviors:AvalonEditTextBindingBehavior Text="{Binding Path=Text}"/>
+                                <behaviors:AvalonEditInstallSearchPanelBehavior/>
+                            </dxmvvm:Interaction.Behaviors>
+                        </avalonedit:TextEditor>
+                    </DataTemplate>
+                </dx:DXTabItem.ContentTemplate>
+            </dx:DXTabItem>
+
         </dx:DXTabControl>
     </Grid>
 </UserControl>

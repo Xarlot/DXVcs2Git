@@ -1,9 +1,9 @@
 ﻿using DevExpress.Mvvm;
 
 namespace DXVcs2Git.UI.ViewModels {
-    public class BuildLogViewModel : BindableBase {
+    public class XmlLogViewModel : BindableBase {
         ArtifactsViewModel model;
-        public BuildLogViewModel(ArtifactsViewModel model) {
+        public XmlLogViewModel(ArtifactsViewModel model) {
             this.model = model;
             Text = model.HasContent ? model.WorkerLog : "Text";
         }
