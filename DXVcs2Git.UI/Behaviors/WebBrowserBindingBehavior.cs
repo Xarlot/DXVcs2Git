@@ -6,11 +6,16 @@ using System.Text;
 using System.Windows;
 using System.Windows.Controls;
 using System.Xml;
+using System.Xml.Linq;
 using System.Xml.XPath;
 using System.Xml.Xsl;
+using DevExpress.CCNetSmart.Lib;
 using DevExpress.Mvvm.UI.Interactivity;
 using DevExpress.Utils;
 using DevExpress.Xpf.Core.Native;
+using ThoughtWorks.CruiseControl.Core;
+using ThoughtWorks.CruiseControl.Core.Publishers;
+using ThoughtWorks.CruiseControl.Remote;
 
 namespace DXVcs2Git.UI.Behaviors {
     public class WebBrowserBindingBehavior : Behavior<WebBrowser> {
@@ -65,8 +70,18 @@ namespace DXVcs2Git.UI.Behaviors {
         string currentHTMLBuildLog = "No document.";
 
         void TextChanged(string newValue) {
-            this.currentHTMLBuildLog = CreateHTMLPage(newValue);
-//            workTimes["CreateHTMLPage"] = checkTimesTimer.Elapsed;
+            if (string.IsNullOrEmpty(newValue)) {
+                this.currentHTMLBuildLog = "No document.";
+                return;
+            }
+            var doc = XDocument.Parse(newValue);
+            var xelement = CalcFirstNode(doc);
+            if (xelement == null) {
+                this.currentHTMLBuildLog = "No document.";
+                return;
+            }
+            this.currentHTMLBuildLog = CreateHTMLPage(xelement.ToString());
+            //            workTimes["CreateHTMLPage"] = checkTimesTimer.Elapsed;
             if (currentHTMLBuildLog.Length > twoWarAndPeaceSize) {
                 this.currentHTMLBuildLog = "Large document. See XML Log.";
             }
@@ -75,6 +90,14 @@ namespace DXVcs2Git.UI.Behaviors {
             if (!IsAttached)
                 return;
             AssociatedObject.NavigateToString(currentHTMLBuildLog);
+        }
+        static XNode CalcFirstNode(XDocument doc) {
+            if (doc == null)
+                return null;
+            var firstElement = doc.FirstNode as XElement;
+            if (firstElement == null)
+                return null;
+            return firstElement.FirstNode;
         }
         string CreateHTMLPage(string buildLog) {
             if (string.IsNullOrEmpty(buildLog)) {

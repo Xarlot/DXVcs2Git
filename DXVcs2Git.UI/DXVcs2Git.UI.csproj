@@ -647,7 +647,6 @@
   <ItemGroup>
     <Resource Include="unittests.xsl" />
   </ItemGroup>
-  <ItemGroup />
   <ItemGroup>
     <EmbeddedResource Include="Xsl\cruisecontrol.css" />
     <EmbeddedResource Include="Xsl\dxbuild.xsl" />
