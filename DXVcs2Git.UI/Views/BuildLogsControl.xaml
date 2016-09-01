@@ -25,7 +25,7 @@
         </ResourceDictionary>
     </UserControl.Resources>
     <Grid>
-        <dx:DXTabControl>
+        <dx:DXTabControl TabContentCacheMode="CacheTabsOnSelecting">
             <dx:DXTabItem Header="Build" Content="{Binding Path=BuildLog}">
                 <dx:DXTabItem.ContentTemplate>
                     <DataTemplate>

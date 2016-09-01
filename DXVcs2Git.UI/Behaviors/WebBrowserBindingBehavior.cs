@@ -77,7 +77,7 @@ namespace DXVcs2Git.UI.Behaviors {
             }
             try {
                 var doc = XDocument.Parse(newValue);
-                var xelement = CalcFirstNode(doc);
+                var xelement = CalcCruiseControlNode(doc);
                 if (xelement == null) {
                     this.currentHTMLBuildLog = "No document.";
                     return;
@@ -98,13 +98,16 @@ namespace DXVcs2Git.UI.Behaviors {
                 return;
             AssociatedObject.NavigateToString(currentHTMLBuildLog);
         }
-        static XNode CalcFirstNode(XDocument doc) {
+        static XNode CalcCruiseControlNode(XDocument doc) {
             if (doc == null)
                 return null;
             var firstElement = doc.FirstNode as XElement;
             if (firstElement == null)
                 return null;
-            return firstElement.FirstNode;
+            var cruisecontrol = firstElement.Element("cruisecontrol");
+            if (cruisecontrol != null)
+                return cruisecontrol;
+            return null;
         }
         string CreateHTMLPage(string buildLog) {
             if (string.IsNullOrEmpty(buildLog)) {

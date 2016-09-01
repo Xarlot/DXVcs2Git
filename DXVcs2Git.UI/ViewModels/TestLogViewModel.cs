@@ -33,18 +33,18 @@ namespace DXVcs2Git.UI.ViewModels {
             List<TestCaseViewModel> result = new List<TestCaseViewModel>();
             try {
                 XmlReader reader = XmlReader.Create(new MemoryStream(Encoding.UTF8.GetBytes(buildLog)));
-                //while (true) {
-                //    if (!reader.ReadToFollowing("test-suite")) {
-                //        break;
-                //    }
-                //    string name = reader.GetAttribute("name");
-                //    if (!string.IsNullOrEmpty(name) && (name.EndsWith(".dll") || name.EndsWith(".xap") || name.EndsWith(".exe"))) {
-                //        XmlReader subReader = reader.ReadSubtree();
-                //        result.AddRange(GetTests(subReader));
-                //        subReader.Close();
-                //        reader.Skip();
-                //    }
-                //}
+                while (true) {
+                    if (!reader.ReadToFollowing("test-suite")) {
+                        break;
+                    }
+                    string name = reader.GetAttribute("name");
+                    if (!string.IsNullOrEmpty(name) && (name.EndsWith(".dll") || name.EndsWith(".xap") || name.EndsWith(".exe"))) {
+                        XmlReader subReader = reader.ReadSubtree();
+                        result.AddRange(GetTests(subReader));
+                        subReader.Close();
+                        reader.Skip();
+                    }
+                }
                 reader.Close();
             }
             catch (Exception ex) {
