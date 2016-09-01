@@ -16,6 +16,7 @@ using DevExpress.Xpf.Core.Native;
 using ThoughtWorks.CruiseControl.Core;
 using ThoughtWorks.CruiseControl.Core.Publishers;
 using ThoughtWorks.CruiseControl.Remote;
+using DXVcs2Git.Core;
 
 namespace DXVcs2Git.UI.Behaviors {
     public class WebBrowserBindingBehavior : Behavior<WebBrowser> {
@@ -74,19 +75,25 @@ namespace DXVcs2Git.UI.Behaviors {
                 this.currentHTMLBuildLog = "No document.";
                 return;
             }
-            var doc = XDocument.Parse(newValue);
-            var xelement = CalcFirstNode(doc);
-            if (xelement == null) {
-                this.currentHTMLBuildLog = "No document.";
-                return;
+            try {
+                var doc = XDocument.Parse(newValue);
+                var xelement = CalcFirstNode(doc);
+                if (xelement == null) {
+                    this.currentHTMLBuildLog = "No document.";
+                    return;
+                }
+                this.currentHTMLBuildLog = CreateHTMLPage(xelement.ToString());
+                //            workTimes["CreateHTMLPage"] = checkTimesTimer.Elapsed;
+                if (currentHTMLBuildLog.Length > twoWarAndPeaceSize) {
+                    this.currentHTMLBuildLog = "Large document. See XML Log.";
+                }
+                else if (string.IsNullOrEmpty(currentHTMLBuildLog))
+                    this.currentHTMLBuildLog = "No document.";
             }
-            this.currentHTMLBuildLog = CreateHTMLPage(xelement.ToString());
-            //            workTimes["CreateHTMLPage"] = checkTimesTimer.Elapsed;
-            if (currentHTMLBuildLog.Length > twoWarAndPeaceSize) {
-                this.currentHTMLBuildLog = "Large document. See XML Log.";
+            catch(Exception ex) {
+                Log.Error("Exception occurs while parsing log.", ex);
+                this.currentHTMLBuildLog = "Exception occurs while parsing log.";
             }
-            else if (string.IsNullOrEmpty(currentHTMLBuildLog))
-                this.currentHTMLBuildLog = "No document.";
             if (!IsAttached)
                 return;
             AssociatedObject.NavigateToString(currentHTMLBuildLog);
