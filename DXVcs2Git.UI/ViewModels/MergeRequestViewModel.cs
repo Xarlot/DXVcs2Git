@@ -22,7 +22,7 @@ namespace DXVcs2Git.UI.ViewModels {
             MergeRequest = mergeRequest;
             Changes = branch.GetMergeRequestChanges(mergeRequest).Select(x => new MergeRequestFileDataViewModel(x)).ToList();
             Commits = branch.GetCommits(mergeRequest)
-                .Select(commit => new CommitViewModel(commit, sha => branch.GetBuilds(mergeRequest, sha), x => branch.DownloadArtifacts(mergeRequest, x)))
+                .Select(commit => new CommitViewModel(commit, sha => branch.GetBuilds(mergeRequest, sha), x => branch.DownloadArtifacts(mergeRequest, x), x => branch.DownloadTrace(mergeRequest, x)))
                 .ToList();
             Title = MergeRequest.Title;
             SourceBranch = MergeRequest.SourceBranch;

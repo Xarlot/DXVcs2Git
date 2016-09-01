@@ -364,6 +364,7 @@
     <Compile Include="UIStartupOptions.cs" />
     <Compile Include="ViewModels\ArtifactsViewModel.cs" />
     <Compile Include="ViewModels\BuildLogViewModel.cs" />
+    <Compile Include="ViewModels\ServerLogViewModel.cs" />
     <Compile Include="ViewModels\XmlLogViewModel.cs" />
     <Compile Include="ViewModels\CreateMergeRequestViewModel.cs" />
     <Compile Include="ViewModels\EditBranchViewModel.cs" />

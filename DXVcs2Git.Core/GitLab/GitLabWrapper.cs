@@ -203,6 +203,19 @@ namespace DXVcs2Git.Git {
             var projectClient = client.GetRepository(mergeRequest.SourceProjectId);
             return DownloadArtifactsCore(projectClient, build);
         }
+        public byte[] DownloadTrace(MergeRequest mergeRequest, Build build) {
+            var projectClient = client.GetRepository(mergeRequest.SourceProjectId);
+            byte[] result = null;
+            projectClient.Builds.GetTraceFile(build, stream => {
+                if (stream == null)
+                    return;
+                using (MemoryStream ms = new MemoryStream()) {
+                    stream.CopyTo(ms);
+                    result = ms.ToArray();
+                }
+            });
+            return result;
+        }
         static byte[] DownloadArtifactsCore(IRepositoryClient projectClient, Build build) {
             byte[] result = null;
             projectClient.Builds.GetArtifactFile(build, stream => {

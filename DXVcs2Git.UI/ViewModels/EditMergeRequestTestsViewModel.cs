@@ -118,6 +118,7 @@ namespace DXVcs2Git.UI.ViewModels {
     public class CommitViewModel : BindableBase {
         readonly Commit commit;
         readonly Func<Build, byte[]> downloadArtifactsHandler;
+        readonly Func<Build, byte[]> downloadTraceHandler;
         readonly Func<Sha1, IEnumerable<Build>> getBuildsHandler;
         public string Id { get; }
         public string Title {
@@ -128,9 +129,10 @@ namespace DXVcs2Git.UI.ViewModels {
             get { return GetProperty(() => Build); }
             private set { SetProperty(() => Build, value); }
         }
-        public CommitViewModel(Commit commit, Func<Sha1, IEnumerable<Build>> getBuildsHandler, Func<Build, byte[]> downloadArtifactsHandler) {
+        public CommitViewModel(Commit commit, Func<Sha1, IEnumerable<Build>> getBuildsHandler, Func<Build, byte[]> downloadArtifactsHandler, Func<Build, byte[]> downloadTraceHandler) {
             this.commit = commit;
             this.downloadArtifactsHandler = downloadArtifactsHandler;
+            this.downloadTraceHandler = downloadTraceHandler;
             this.getBuildsHandler = getBuildsHandler;
             Title = commit.Title;
             Id = commit.ShortId;
@@ -142,7 +144,7 @@ namespace DXVcs2Git.UI.ViewModels {
         public ArtifactsViewModel DownloadArtifacts() {
             if (Build == null)
                 return null;
-            return new ArtifactsViewModel(Build.Artifacts, downloadArtifactsHandler(Build.Build));
+            return new ArtifactsViewModel(Build.Artifacts, downloadArtifactsHandler(Build.Build), downloadTraceHandler(Build.Build));
         }
     }
 

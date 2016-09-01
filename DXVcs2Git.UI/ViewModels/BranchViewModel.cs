@@ -35,6 +35,7 @@ namespace DXVcs2Git.UI.ViewModels {
         public RepositoriesViewModel Repositories => ServiceLocator.Current.GetInstance<RepositoriesViewModel>();
         public RepositoryViewModel Repository { get; }
         public string Name { get; }
+
         public ICommand ForceBuildCommand { get; private set; }
         public FarmStatus FarmStatus {
             get { return GetProperty(() => FarmStatus); }
@@ -133,6 +134,9 @@ namespace DXVcs2Git.UI.ViewModels {
         }
         public byte[] DownloadArtifacts(MergeRequest mergeRequest, Build build) {
             return gitLabWrapper.DownloadArtifacts(mergeRequest, build);
+        }
+        public byte[] DownloadTrace(MergeRequest mergeRequest, Build build) {
+            return gitLabWrapper.DownloadTrace(mergeRequest, build);
         }
         public void ForceBuild(MergeRequest mergeRequest, Build build = null) {
             gitLabWrapper.ForceBuild(mergeRequest, build);

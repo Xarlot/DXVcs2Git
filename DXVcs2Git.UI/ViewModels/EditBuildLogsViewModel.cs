@@ -26,6 +26,10 @@ namespace DXVcs2Git.UI.ViewModels {
             get { return GetProperty(() => BuildLog); }
             private set { SetProperty(() => BuildLog, value); }
         }
+        public ServerLogViewModel ServerLog {
+            get { return GetProperty(() => ServerLog); }
+            private set { SetProperty(() => ServerLog, value); }
+        }
 
         protected override void OnParentViewModelChanged(object parentViewModel) {
             base.OnParentViewModelChanged(parentViewModel);
@@ -47,7 +51,8 @@ namespace DXVcs2Git.UI.ViewModels {
             Modifications = new ModificationsViewModel(artifact);
             XmlLog = new XmlLogViewModel(artifact);
             BuildLog = new BuildLogViewModel(artifact);
-            //Tests = new TestLogViewModel(artifact);
+            Tests = new TestLogViewModel(artifact);
+            ServerLog = new ServerLogViewModel(artifact);
         }
     }
 }

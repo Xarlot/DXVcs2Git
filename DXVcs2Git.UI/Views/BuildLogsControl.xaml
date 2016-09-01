@@ -37,6 +37,20 @@
                     </DataTemplate>
                 </dx:DXTabItem.ContentTemplate>
             </dx:DXTabItem>
+            <dx:DXTabItem Header="Server log" Content="{Binding Path=ServerLog}">
+                <dx:DXTabItem.ContentTemplate>
+                    <DataTemplate>
+                        <avalonedit:TextEditor 
+                            FontFamily="Consolas" 
+                            IsReadOnly="True">
+                            <dxmvvm:Interaction.Behaviors>
+                                <behaviors:AvalonEditTextBindingBehavior Text="{Binding Path=Text}"/>
+                                <behaviors:AvalonEditInstallSearchPanelBehavior/>
+                            </dxmvvm:Interaction.Behaviors>
+                        </avalonedit:TextEditor>
+                    </DataTemplate>
+                </dx:DXTabItem.ContentTemplate>
+            </dx:DXTabItem>
             <dx:DXTabItem Header="Xml log" Content="{Binding Path=XmlLog}">
                 <dx:DXTabItem.ContentTemplate>
                     <DataTemplate>
