@@ -218,14 +218,20 @@ namespace DXVcs2Git.Git {
         }
         static byte[] DownloadArtifactsCore(IRepositoryClient projectClient, Build build) {
             byte[] result = null;
-            projectClient.Builds.GetArtifactFile(build, stream => {
-                if (stream == null)
-                    return;
-                using (MemoryStream ms = new MemoryStream()) {
-                    stream.CopyTo(ms);
-                    result = ms.ToArray();
-                }
-            });
+            try {
+                projectClient.Builds.GetArtifactFile(build, stream => {
+                    if (stream == null)
+                        return;
+                    using (MemoryStream ms = new MemoryStream()) {
+                        stream.CopyTo(ms);
+                        result = ms.ToArray();
+                    }
+                });
+            }
+            catch (Exception ex) {
+                Log.Error("Can`t download artifacts.", ex);
+                return null;
+            }
             return result;
         }
     }
