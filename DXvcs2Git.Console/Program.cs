@@ -292,7 +292,8 @@ namespace DXVcs2Git.Console {
             }
             Log.Message($"Target branch name: {sourceBranch.Name}");
 
-            MergeRequest mergeRequest = gitLabWrapper.GetMergeRequests(targetProject, x => x.SourceBranch == sourceBranchName && x.TargetBranch == targetBranchName).FirstOrDefault();
+            MergeRequest mergeRequest = gitLabWrapper.GetMergeRequests(targetProject, 
+                x => x.SourceBranch == sourceBranchName && x.TargetBranch == targetBranchName && x.SourceProjectId == sourceProject.Id).FirstOrDefault();
             if (mergeRequest == null) {
                 Log.Error($"Can`t find merge request.");
                 return 1;
@@ -311,7 +312,7 @@ namespace DXVcs2Git.Console {
                 return 1;
             }
 
-            GitWrapper gitWrapper = CreateGitWrapper(targetRepoPath, localGitDir, trackBranch, username, password);
+            GitWrapper gitWrapper = CreateGitWrapper(sourceRepoPath, localGitDir, sourceBranchName, username, password);
             if (gitWrapper == null) {
                 Log.Error("Can`t create git wrapper.");
                 return 1;
@@ -394,7 +395,7 @@ namespace DXVcs2Git.Console {
             var changes = patch.Items;
             foreach (var change in changes) {
                 if (change.SyncAction == SyncAction.Delete)
-                    yield break;
+                    continue;
                 yield return change.SyncAction == SyncAction.Move ? change.NewPath : change.OldPath;
             }
         }
@@ -644,7 +645,7 @@ namespace DXVcs2Git.Console {
             if (checkMergeChangesResult == CheckMergeChangesResult.Error)
                 return 1;
 
-            GitWrapper gitWrapper = CreateGitWrapper(gitRepoPath, localGitDir, branch, username, password);
+            GitWrapper gitWrapper = CreateGitWrapper(gitRepoPath, localGitDir, branch.Name, username, password);
             if (gitWrapper == null)
                 return 1;
 
@@ -697,10 +698,10 @@ namespace DXVcs2Git.Console {
                 proc.WaitForExit();
             }
         }
-        static GitWrapper CreateGitWrapper(string gitRepoPath, string localGitDir, TrackBranch branch, string username, string password) {
+        static GitWrapper CreateGitWrapper(string gitRepoPath, string localGitDir, string branchName, string username, string password) {
             try {
-                var gitWrapper = new GitWrapper(localGitDir, gitRepoPath, branch.Name, new GitCredentials { User = username, Password = password });
-                Log.Message($"Branch {branch.Name} initialized.");
+                var gitWrapper = new GitWrapper(localGitDir, gitRepoPath, branchName, new GitCredentials { User = username, Password = password });
+                Log.Message($"Branch {branchName} initialized.");
 
                 return gitWrapper;
             }
