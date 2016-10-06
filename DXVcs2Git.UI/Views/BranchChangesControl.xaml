@@ -6,6 +6,8 @@
              xmlns:local="clr-namespace:DXVcs2Git.UI.Views"
              xmlns:dxlc="http://schemas.devexpress.com/winfx/2008/xaml/layoutcontrol"
              xmlns:dxg="http://schemas.devexpress.com/winfx/2008/xaml/grid"
+             xmlns:dx="http://schemas.devexpress.com/winfx/2008/xaml/core"
+             xmlns:dxe="http://schemas.devexpress.com/winfx/2008/xaml/editors"
              xmlns:dxmvvm="http://schemas.devexpress.com/winfx/2008/xaml/mvvm"
              xmlns:avalonedit="http://icsharpcode.net/sharpdevelop/avalonedit"
              xmlns:viewModels="clr-namespace:DXVcs2Git.UI.ViewModels"
@@ -19,6 +21,14 @@
     <UserControl.Resources>
         <ResourceDictionary>
             <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
+            <dx:EnumToObjectConverter x:Key="FileChangeModeConverter">
+                <dx:EnumToObjectConverter.Values>
+                    <dx:EnumObjectProvider x:Key="New" Value="..\Images\FileChangeMode\New.png" />
+                    <dx:EnumObjectProvider x:Key="Deleted" Value="..\Images\FileChangeMode\Deleted.png" />
+                    <dx:EnumObjectProvider x:Key="Modified" Value="..\Images\FileChangeMode\Modified.png" />
+                    <dx:EnumObjectProvider x:Key="Renamed" Value="..\Images\FileChangeMode\Renamed.png" />
+                </dx:EnumToObjectConverter.Values>
+            </dx:EnumToObjectConverter>
         </ResourceDictionary>
     </UserControl.Resources>
     <Grid x:Name="LayoutRoot">
@@ -28,7 +38,12 @@
                     <dxlc:LayoutItem HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
                         <dxg:GridControl x:Name="grid" ItemsSource="{Binding Path=Changes}" MaxHeight="2000">
                             <dxg:GridControl.Columns>
-                                <dxg:GridColumn FieldName="ChangeMode" FixedWidth="True" Width="70">
+                                <dxg:GridColumn Header="Status" FieldName="ChangeMode" FixedWidth="True" Width="20">
+                                    <dxg:GridColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <dxe:ImageEdit Stretch="None" ShowBorder="False" HorizontalAlignment="Center" ShowMenu="False" IsReadOnly="True" Source="{Binding Path=Value, Converter={StaticResource FileChangeModeConverter}}"/>
+                                        </DataTemplate>
+                                    </dxg:GridColumn.CellTemplate>
                                 </dxg:GridColumn>
                                 <dxg:GridColumn FieldName="Path">
                                 </dxg:GridColumn>

@@ -651,6 +651,10 @@
   <ItemGroup>
     <EmbeddedResource Include="Xsl\cruisecontrol.css" />
     <EmbeddedResource Include="Xsl\dxbuild.xsl" />
+    <Resource Include="Images\FileChangeMode\Deleted.png" />
+    <Resource Include="Images\FileChangeMode\Modified.png" />
+    <Resource Include="Images\FileChangeMode\New.png" />
+    <Resource Include="Images\FileChangeMode\Renamed.png" />
     <EmbeddedResource Include="Xsl\fxcop-report_10_0.xsl" />
     <EmbeddedResource Include="Xsl\header.xsl" />
     <EmbeddedResource Include="Xsl\help.xsl" />
