@@ -204,10 +204,10 @@ namespace DXVcs2Git.DXVcs {
         }
         public bool ProcessCheckout(IEnumerable<SyncItem> items, bool ignoreSharedFiles, TrackBranch branch) {
             var list = items.ToList();
-            list.ForEach(x => {
-                var sharedFiles = items.Where(item => IsSharedFile(item.VcsPath)).ToList();
-                sharedFiles.ForEach(sharedFile => CheckIsSingleSharedFile(items, sharedFile));
+            var sharedFiles = list.Where(item => IsSharedFile(item.VcsPath)).ToList();
+            sharedFiles.ForEach(x => CheckIsSingleSharedFile(list, x));
 
+            list.ForEach(x => {
                 TestFileResult result = ProcessBeforeCheckout(x, ignoreSharedFiles, branch);
                 x.State = CalcBeforeCheckoutState(result);
             });
