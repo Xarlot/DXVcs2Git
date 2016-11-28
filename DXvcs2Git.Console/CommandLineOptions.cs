@@ -91,11 +91,13 @@ namespace DXVcs2Git.Console {
         public int Timeout { get; }
         [Option('t', "task", Required = false, HelpText = "Farm task name")]
         public string FarmTaskName { get; }
+        public string MSTeamConfig { get; }
 
-        public ListenerOptions(string webHook, int timeout, string farmTaskName, string server, string login, string repo, string password, string authToken) : base(server, login, repo, password, authToken) {
+        public ListenerOptions(string webHook, int timeout, string farmTaskName, string msTeamConfig, string server, string login, string repo, string password, string authToken) : base(server, login, repo, password, authToken) {
             WebHook = webHook;
             Timeout = timeout;
             FarmTaskName = farmTaskName;
+            MSTeamConfig = msTeamConfig;
         }
     }
     [Verb("patch", HelpText = "Generate patch for branch")]

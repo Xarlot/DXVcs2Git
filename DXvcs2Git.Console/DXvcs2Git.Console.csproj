@@ -90,6 +90,9 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="CommandLineOptions.cs" />
+    <Compile Include="MSTeam\MSTeamMessageSender.cs" />
+    <Compile Include="MSTeam\MSTeamsConfig.cs" />
+    <Compile Include="MSTeam\MSTeamsMessageFormatter.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

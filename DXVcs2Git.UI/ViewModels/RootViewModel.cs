@@ -17,6 +17,7 @@ using DevExpress.Xpf.Core;
 using DXVcs2Git.Core.GitLab;
 using DXVcs2Git.Git;
 using NGitLab.Models;
+using MergeRequestState = DXVcs2Git.Core.GitLab.MergeRequestState;
 using ProjectHookType = DXVcs2Git.Core.GitLab.ProjectHookType;
 
 namespace DXVcs2Git.UI.ViewModels {
@@ -161,14 +162,14 @@ namespace DXVcs2Git.UI.ViewModels {
         }
         void ShowMergeRequestNotification(BranchViewModel branchViewModel, MergeRequestHookClient hook) {
             var mergeStatus = hook.Attributes.State;
-            if (mergeStatus == MergerRequestState.merged) {
+            if (mergeStatus == MergeRequestState.merged) {
                 string message = $"Merge request {hook.Attributes.Title} for branch {hook.Attributes.SourceBranch} was merged.";
                 var notification = NotificationService.CreatePredefinedNotification(message, null, null, null);
                 var task = notification.ShowAsync();
                 task.ContinueWith(x => PerformClick(x.Result));
                 return;
             }
-            if (mergeStatus == MergerRequestState.closed) {
+            if (mergeStatus == MergeRequestState.closed) {
                 string message = $"Merge request {hook.Attributes.Title} for branch {hook.Attributes.SourceBranch} was closed.";
                 var notification = NotificationService.CreatePredefinedNotification(message, null, null, null);
                 var task = notification.ShowAsync();
