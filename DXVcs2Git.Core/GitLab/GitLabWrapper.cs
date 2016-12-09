@@ -63,14 +63,34 @@ namespace DXVcs2Git.Git {
         }
         public MergeRequest UpdateMergeRequestTitleAndDescription(MergeRequest mergeRequest, string title, string description) {
             var mergeRequestsClient = client.GetMergeRequest(mergeRequest.ProjectId);
-            return mergeRequestsClient.Update(mergeRequest.Id, new MergeRequestUpdate() {
-                Description = description,
-                Title = title,
-            });
+            try {
+                return mergeRequestsClient.Update(mergeRequest.Id, new MergeRequestUpdate() {
+                    Description = description,
+                    Title = title,
+                    AssigneeId = mergeRequest.Assignee?.Id,
+                    SourceBranch = mergeRequest.SourceBranch,
+                    TargetBranch = mergeRequest.TargetBranch,
+                });
+            }
+            catch {
+                return mergeRequestsClient[mergeRequest.Id];
+            }
         }
         public MergeRequest CloseMergeRequest(MergeRequest mergeRequest) {
             var mergeRequestsClient = client.GetMergeRequest(mergeRequest.ProjectId);
-            return mergeRequestsClient.Update(mergeRequest.Id, new MergeRequestUpdate() { NewState = "close" });
+            try {
+                return mergeRequestsClient.Update(mergeRequest.Id, new MergeRequestUpdate() {
+                    NewState = "close",
+                    AssigneeId = mergeRequest.Assignee?.Id,
+                    SourceBranch = mergeRequest.SourceBranch,
+                    TargetBranch = mergeRequest.TargetBranch,
+                    Title = mergeRequest.Title,
+                    Description = mergeRequest.Description,
+                });
+            }
+            catch {
+                return mergeRequestsClient[mergeRequest.Id];
+            }
         }
         public MergeRequest CreateMergeRequest(Project origin, Project upstream, string title, string description, string user, string sourceBranch, string targetBranch) {
             var mergeRequestClient = this.client.GetMergeRequest(origin.Id);
@@ -85,7 +105,12 @@ namespace DXVcs2Git.Git {
         }
         public MergeRequest ReopenMergeRequest(MergeRequest mergeRequest, string autoMergeFailedComment) {
             var mergeRequestsClient = client.GetMergeRequest(mergeRequest.ProjectId);
-            return mergeRequestsClient.Update(mergeRequest.Id, new MergeRequestUpdate() { NewState = "reopen", Description = autoMergeFailedComment });
+            try {
+                return mergeRequestsClient.Update(mergeRequest.Id, new MergeRequestUpdate() {NewState = "reopen", Description = autoMergeFailedComment});
+            }
+            catch {
+                return mergeRequestsClient[mergeRequest.Id];
+            }
         }
         public User GetUser(int id) {
             return this.client.Users[id];
@@ -119,7 +144,12 @@ namespace DXVcs2Git.Git {
         public Branch GetBranch(Project project, string branch) {
             var repo = this.client.GetRepository(project.Id);
             var branchesClient = repo.Branches;
-            return branchesClient[branch];
+            try {
+                return branchesClient[branch];
+            }
+            catch {
+                return branchesClient.All.FirstOrDefault(x => x.Name == branch);
+            }
         }
         public IEnumerable<Branch> GetBranches(Project project) {
             var repo = this.client.GetRepository(project.Id);
@@ -130,7 +160,18 @@ namespace DXVcs2Git.Git {
             var userInfo = GetUsers().FirstOrDefault(x => x.Username == user);
             if (mergeRequest.Assignee?.Username != userInfo?.Username) {
                 var mergeRequestsClient = client.GetMergeRequest(mergeRequest.ProjectId);
-                return mergeRequestsClient.Update(mergeRequest.Id, new MergeRequestUpdate() { AssigneeId = userInfo?.Id });
+                try {
+                    return mergeRequestsClient.Update(mergeRequest.Id, new MergeRequestUpdate() {
+                        AssigneeId = userInfo?.Id,
+                        Title = mergeRequest.Title,
+                        Description = mergeRequest.Description,
+                        SourceBranch = mergeRequest.SourceBranch,
+                        TargetBranch = mergeRequest.TargetBranch,
+                    });
+                }
+                catch {
+                    return mergeRequestsClient[mergeRequest.Id];
+                }
             }
             return mergeRequest;
         }
