@@ -1,4 +1,5 @@
 ﻿using CommandLine;
+using DevExpress.Logify.WPF;
 using DXVcs2Git.Core.Configuration;
 using System.Diagnostics;
 using System.IO;
@@ -11,7 +12,11 @@ namespace DXVcs2Git.Launcher {
         UIFileNotExist = 2
     }
     class Program {
-        static int Main(string[] args) {            
+        static int Main(string[] args) {
+            LogifyClient logifyClient = new LogifyClient();
+            logifyClient.ApiKey = "9F13F4F0568643A3BCAE34E9B0C4A1B1";
+            logifyClient.Run();
+            logifyClient.ConfirmSendReport = true;
             const string UIProcessName = "DXVcs2Git.UI";
             const string UIExecutableName = UIProcessName + ".exe";
             var options = Parser.Default.ParseArguments<CommandLineOptions>(args);
@@ -33,6 +38,7 @@ namespace DXVcs2Git.Launcher {
             foreach (var arg in args)
                 str += arg + " ";
             Process.Start(new ProcessStartInfo(uiFileFullName) { UseShellExecute = true, Arguments =  str});
+            logifyClient.Stop();
             return (int)ExitCodes.Success;
         }
     }
