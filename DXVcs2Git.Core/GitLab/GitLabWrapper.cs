@@ -24,10 +24,14 @@ namespace DXVcs2Git.Git {
             return this.client.Projects[id];
         }
         public Project FindProject(string project) {
-            return client.Projects.Accessible.FirstOrDefault(x => string.Compare(x.HttpUrl, project, StringComparison.InvariantCultureIgnoreCase) == 0);
+            return client.Projects.Accessible.FirstOrDefault(x => 
+                string.Compare(x.HttpUrl, project, StringComparison.InvariantCultureIgnoreCase) == 0 ||
+                string.Compare(x.SshUrl, project, StringComparison.InvariantCultureIgnoreCase) == 0);
         }
         public Project FindProjectFromAll(string project) {
-            return client.Projects.All.FirstOrDefault(x => string.Compare(x.HttpUrl, project, StringComparison.InvariantCultureIgnoreCase) == 0);
+            return client.Projects.All.FirstOrDefault(x => 
+                string.Compare(x.HttpUrl, project, StringComparison.InvariantCultureIgnoreCase) == 0 ||
+                string.Compare(x.SshUrl, project, StringComparison.InvariantCultureIgnoreCase) == 0);
         }
         public IEnumerable<MergeRequest> GetMergeRequests(Project project, Func<MergeRequest, bool> mergeRequestsHandler = null) {
             mergeRequestsHandler = mergeRequestsHandler ?? (x => true);
