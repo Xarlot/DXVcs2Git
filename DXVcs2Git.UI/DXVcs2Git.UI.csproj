@@ -511,18 +511,6 @@
     <None Include="app.manifest" Condition="'$(Configuration)'=='Release'">
       <SubType>Designer</SubType>
     </None>
-    <None Include="Configs\Common_2015.1.config">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Include="Configs\Common_2015.2.config">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Include="Configs\Common_2016.2.config">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Include="Configs\Common_2016.1.config">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
     <None Include="Configs\Dashboard_2016.1.config">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
@@ -536,6 +524,10 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
     <None Include="Configs\Diagram_2015.2.config">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="Configs\Diagram_2017.1.config">
+      <SubType>Designer</SubType>
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
     <None Include="Configs\Diagram_2016.2.config">
@@ -567,6 +559,9 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
     <None Include="Configs\Win_2016.2.config">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="Configs\XPF_2017.1.config">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
     <None Include="Configs\XPF_2016.2.config">
