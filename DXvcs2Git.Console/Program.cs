@@ -312,7 +312,7 @@ namespace DXVcs2Git.Console {
                 return 1;
             }
 
-            GitWrapper gitWrapper = CreateGitWrapper(sourceRepoPath, localGitDir, sourceBranchName, username, password);
+            GitWrapper gitWrapper = CreateGitWrapper(sourceRepoPath, localGitDir, username, password);
             if (gitWrapper == null) {
                 Log.Error("Can`t create git wrapper.");
                 return 1;
@@ -645,9 +645,17 @@ namespace DXVcs2Git.Console {
             if (checkMergeChangesResult == CheckMergeChangesResult.Error)
                 return 1;
 
-            GitWrapper gitWrapper = CreateGitWrapper(gitRepoPath, localGitDir, branch.Name, username, password);
+            GitWrapper gitWrapper = CreateGitWrapper(gitRepoPath, localGitDir, username, password);
             if (gitWrapper == null)
                 return 1;
+            gitWrapper.Remote("remove origin");
+            gitWrapper.Remote($"add origin {gitRepoPath}");
+            gitWrapper.Config("core.sparsecheckout", "true");
+            gitWrapper.Config("branch.autosetupmerge", "always");
+            gitWrapper.SparseCheckout(@"DevExpress.Xpf.Core/*");
+            gitWrapper.Pull(branchName);
+            gitWrapper.ReadTree();
+            gitWrapper.CheckOut(branchName);
 
             ProcessHistoryResult processHistoryResult = ProcessHistory(vcsWrapper, gitWrapper, registeredUsers, defaultUser, gitRepoPath, localGitDir, branch, clo.CommitsCount, syncHistory, true);
             if (processHistoryResult == ProcessHistoryResult.NotEnough)
@@ -698,10 +706,10 @@ namespace DXVcs2Git.Console {
                 proc.WaitForExit();
             }
         }
-        static GitWrapper CreateGitWrapper(string gitRepoPath, string localGitDir, string branchName, string username, string password) {
+        static GitWrapper CreateGitWrapper(string gitRepoPath, string localGitDir, string username, string password) {
             try {
-                var gitWrapper = new GitWrapper(localGitDir, gitRepoPath, branchName, new GitCredentials { User = username, Password = password });
-                Log.Message($"Branch {branchName} initialized.");
+                var gitWrapper = new GitWrapper(localGitDir, gitRepoPath, new GitCredentials { User = username, Password = password });
+                Log.Message($"{gitRepoPath} is initialized.");
 
                 return gitWrapper;
             }

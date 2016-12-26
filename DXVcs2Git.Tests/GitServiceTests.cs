@@ -98,7 +98,7 @@ namespace DXVcs2Git.Tests {
             return InitNewRepository(scd.DirectoryPath);
         }
         protected string InitNewRepository(string path) {
-            var wrapper = new GitWrapper(path, testUrl, "master", testCredentials);
+            var wrapper = new GitWrapper(path, testUrl, testCredentials);
             return wrapper.GitDirectory;
         }
     }
