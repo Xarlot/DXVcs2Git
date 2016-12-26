@@ -837,7 +837,8 @@ namespace DXVcs2Git.Console {
         static bool CheckItemForChangeSet(string path, TrackItem track) {
             if (string.IsNullOrEmpty(path))
                 return false;
-            return path.StartsWith(track.ProjectPath, StringComparison.InvariantCultureIgnoreCase);
+            string projectPath = track.ProjectPath.EndsWith(@"/") ? track.ProjectPath : $@"{track.ProjectPath}/";
+            return path.StartsWith(projectPath, StringComparison.InvariantCultureIgnoreCase);
         }
         static bool ValidateChangeSet(List<SyncItem> genericChangeSet) {
             return !genericChangeSet.Any(x => x.SharedFile);
