@@ -99,6 +99,9 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
     <None Include="packages.config" />
+    <None Include="trackconfig_scheduler_2017.1.config">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Include="trackconfig_asp_2016.1.config">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>

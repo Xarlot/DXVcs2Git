@@ -320,7 +320,7 @@ namespace DXVcs2Git.Console {
 
             var changes = gitLabWrapper
                 .GetMergeRequestChanges(mergeRequest)
-                .Where(x => trackBranch.TrackItems.FirstOrDefault(track => CheckItemForChangeSet(x, track)) != null)
+                .Where(x => trackBranch.TrackItems.FirstOrDefault(track => CheckItemForChangeSet(x.OldPath, track)) != null)
                 .Select(x => new PatchItem() {
                     SyncAction = CalcSyncAction(x),
                     OldPath = x.OldPath,
@@ -784,7 +784,7 @@ namespace DXVcs2Git.Console {
                 return MergeRequestResult.Failed;
             }
             var genericChange = changes
-                .Where(x => branch.TrackItems.FirstOrDefault(track => CheckItemForChangeSet(x, track)) != null)
+                .Where(x => branch.TrackItems.FirstOrDefault(track => CheckItemForChangeSet(x.OldPath, track)) != null)
                 .Select(x => ProcessMergeRequestChanges(mergeRequest, x, localGitDir, branch, autoSyncToken)).ToList();
             bool ignoreValidation = gitLabWrapper.ShouldIgnoreSharedFiles(mergeRequest);
 
@@ -834,9 +834,10 @@ namespace DXVcs2Git.Console {
 
             return MergeRequestResult.Conflicts;
         }
-        static bool CheckItemForChangeSet(MergeRequestFileData x, TrackItem track) {
-            var root = x.OldPath.Split(new[] { @"\", @"/" }, StringSplitOptions.RemoveEmptyEntries).FirstOrDefault();
-            return root == track.ProjectPath;
+        static bool CheckItemForChangeSet(string path, TrackItem track) {
+            if (string.IsNullOrEmpty(path))
+                return false;
+            return path.StartsWith(track.ProjectPath, StringComparison.InvariantCultureIgnoreCase);
         }
         static bool ValidateChangeSet(List<SyncItem> genericChangeSet) {
             return !genericChangeSet.Any(x => x.SharedFile);
@@ -902,8 +903,7 @@ namespace DXVcs2Git.Console {
             return Path.Combine(localGitDir, path);
         }
         static string CalcVcsPath(TrackBranch branch, string path) {
-            var root = path.Split(new[] { @"\", @"/" }, StringSplitOptions.RemoveEmptyEntries).FirstOrDefault();
-            var trackItem = branch.TrackItems.First(x => root == x.ProjectPath);
+            var trackItem = branch.TrackItems.First(x => CheckItemForChangeSet(path, x));
             var resultPath = path.Remove(0, trackItem.ProjectPath.Length).TrimStart(@"\/".ToCharArray());
             string trackPath = branch.GetTrackRoot(trackItem);
             return Path.Combine(trackPath, resultPath).Replace("\\", "/");
