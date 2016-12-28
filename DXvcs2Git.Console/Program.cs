@@ -488,7 +488,7 @@ namespace DXVcs2Git.Console {
                     }
 
                     var xmlComments = gitLabWrapper.GetComments(mergeRequest).Where(x => IsXml(x.Note));
-                    var options = xmlComments.Select(x => MergeRequestOptions.ConvertFromString(x.Note)).FirstOrDefault();
+                    var options = xmlComments.Select(x => MergeRequestOptions.ConvertFromString(x.Note)).LastOrDefault();
                     if (options?.ActionType == MergeRequestActionType.sync) {
                         Log.Message("Sync options found.");
                         var syncOptions = (MergeRequestSyncAction)options.Action;
