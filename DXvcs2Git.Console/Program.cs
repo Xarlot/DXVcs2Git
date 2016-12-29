@@ -604,7 +604,7 @@ namespace DXVcs2Git.Console {
         }
         static int DoSyncWork(SyncOptions clo) {
             string localGitDir = clo.LocalFolder != null && Path.IsPathRooted(clo.LocalFolder) ? clo.LocalFolder : Path.Combine(Environment.CurrentDirectory, clo.LocalFolder ?? repoPath);
-            EnsureGitDir(localGitDir);
+            //EnsureGitDir(localGitDir);
 
             string gitRepoPath = clo.Repo;
             string username = clo.Login;
@@ -800,7 +800,6 @@ namespace DXVcs2Git.Console {
                 Log.Message("Merge request merged successfully.");
 
                 gitWrapper.Pull();
-                gitWrapper.LFSPull();
 
                 var gitCommit = gitWrapper.FindCommit(x => CommentWrapper.Parse(x.Message).Token == autoSyncToken);
                 long timeStamp = lastHistoryItem.VcsCommitTimeStamp;

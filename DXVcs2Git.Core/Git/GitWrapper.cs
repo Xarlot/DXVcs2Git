@@ -109,7 +109,7 @@ namespace DXVcs2Git {
         }
         public void Pull(string repoPath) {
             var args = new[] {
-                "-c", "filter.lfs.smudge=", "-c", "filter.lfs.required=false", "pull", "--depth", "2"
+                "pull", "--depth", "2"
             };
 
             string output, errors;
@@ -127,9 +127,10 @@ namespace DXVcs2Git {
             CheckFail(code, output, errors);
         }
 
-        public void Checkout(string repoPath, string branch) {
+        public void Checkout(string repoPath, string branch, bool track = true) {
             string output, errors;
-            var code = WaitForProcess(gitPath, repoPath, out output, out errors, "checkout", "-B", branch);
+            string args = track ? "checkout -B " : "checkout";
+            var code = WaitForProcess(gitPath, repoPath, out output, out errors, args, branch, $"origin/{branch}");
             CheckFail(code, output, errors);
         }
 
@@ -142,14 +143,19 @@ namespace DXVcs2Git {
             string output, errors;
             var args = new List<string>();
             args.Add("fetch");
-            args.Add("--depth");
-            args.Add("1");
-            if (!string.IsNullOrEmpty(remote))
+            if (!string.IsNullOrEmpty(remote)) {
+                args.Add("origin");
                 args.Add(remote);
+            }
+            else {
+                args.Add("--all");
+                args.Add("--depth");
+                args.Add("1");
+            }
             if (tags) {
                 args.Add("--tags");
             }
-            var code = WaitForProcess(gitPath, repoPath, out output, out errors, "fetch");
+            var code = WaitForProcess(gitPath, repoPath, out output, out errors, args.ToArray());
             CheckFail(code, output, errors);
         }
         public void Merge(string repoPath, string remote, string targetBranch, string sourceBranch) {
@@ -221,8 +227,8 @@ namespace DXVcs2Git {
             Log.Message("End initializing git repo");
         }
         public void GitInit(string branch) {
-            gitCmd.Init(localPath);
-            CheckOut(branch);
+            Fetch();
+            CheckOut(branch, false);
         }
         void GitClone(string branch) {
             gitCmd.ShallowClone(localPath, branch, remotePath);
@@ -254,7 +260,7 @@ namespace DXVcs2Git {
         string GetOriginName(string name) {
             return $"origin/{name}";
         }
-        public void CheckOut(string branch) {
+        public void CheckOut(string branch, bool track = true) {
             gitCmd.Checkout(localPath, branch);
             Log.Message($"Git repo {localPath} was checked out for branch {branch}.");
         }

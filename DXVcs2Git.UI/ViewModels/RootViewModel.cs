@@ -121,15 +121,13 @@ namespace DXVcs2Git.UI.ViewModels {
                 ProcessBuildHook((BuildHookClient)hook);
         }
         void ProcessBuildHook(BuildHookClient hook) {
-            var selectedBranch = Repositories.SelectedBranch;
-            if (selectedBranch == null)
-                return;
+            var selectedBranch = Repositories?.SelectedBranch;
             var mergeRequest = selectedBranch?.MergeRequest;
             if (mergeRequest == null)
                 return;
             if (mergeRequest.SourceBranch != hook.Branch)
                 return;
-            if (selectedBranch.Repository.Origin.Id != hook.ProjectId)
+            if (selectedBranch.Repository?.Origin?.Id != hook.ProjectId)
                 return;
             selectedBranch.RefreshMergeRequest();
             RepositoriesViewModel.RaiseRefreshSelectedBranch();
