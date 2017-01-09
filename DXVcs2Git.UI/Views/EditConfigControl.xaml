@@ -46,11 +46,14 @@
                             </dxmvvm:Interaction.Behaviors>
                         </dxe:TextEdit>
                     </dxlc:LayoutItem>
-                    <dxlc:LayoutItem Label="Are you always sure?" VerticalAlignment="Center">
-                        <dxe:CheckEdit EditValue="{Binding Path=AlwaysSure1, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
-                    </dxlc:LayoutItem>
                     <dxlc:LayoutItem Label="Allow testing merge requests: " VerticalAlignment="Center">
                         <dxe:CheckEdit EditValue="{Binding Path=SupportsTesting, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                    </dxlc:LayoutItem>
+                    <dxlc:LayoutItem Label="Allow auto assign merge request to test service: " VerticalAlignment="Center">
+                        <dxe:CheckEdit EditValue="{Binding Path=TestByDefault, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                    </dxlc:LayoutItem>
+                    <dxlc:LayoutItem Label="Are you always sure?" VerticalAlignment="Center">
+                        <dxe:CheckEdit EditValue="{Binding Path=AlwaysSure1, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
                     </dxlc:LayoutItem>
                     <dxlc:LayoutGroup Orientation="Vertical" Visibility="{Binding AlwaysSure1, Converter={dxmvvm:BooleanToVisibilityConverter}}">
                         <dxlc:LayoutItem Label="Really sure?" VerticalAlignment="Center">

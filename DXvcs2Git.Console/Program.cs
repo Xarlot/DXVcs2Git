@@ -290,7 +290,7 @@ namespace DXVcs2Git.Console {
                 Log.Error($"Source branch {sourceBranchName} was not found.");
                 return 1;
             }
-            Log.Message($"Target branch name: {sourceBranch.Name}");
+            Log.Message($"Source branch name: {sourceBranch.Name}");
 
             MergeRequest mergeRequest = gitLabWrapper.GetMergeRequests(targetProject, 
                 x => x.SourceBranch == sourceBranchName && x.TargetBranch == targetBranchName && x.SourceProjectId == sourceProject.Id).FirstOrDefault();
