@@ -514,6 +514,9 @@
     <None Include="Configs\Dashboard_2016.1.config">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+    <None Include="Configs\Dashboard_2017.1.config">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Include="Configs\DataAccess_2015.1_New.config">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
