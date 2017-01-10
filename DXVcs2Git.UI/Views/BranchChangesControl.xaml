@@ -36,7 +36,7 @@
             <dxlc:LayoutGroup Orientation="Horizontal">
                 <dxlc:LayoutGroup Orientation="Vertical">
                     <dxlc:LayoutItem HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
-                        <dxg:GridControl x:Name="grid" ItemsSource="{Binding Path=Changes}" MaxHeight="2000">
+                        <dxg:GridControl x:Name="grid" ItemsSource="{Binding Path=Changes}" MaxHeight="2000" AutoExpandAllGroups="True">
                             <dxg:GridControl.Columns>
                                 <dxg:GridColumn Header="Status" FieldName="ChangeMode" FixedWidth="True" Width="20">
                                     <dxg:GridColumn.CellTemplate>
@@ -45,14 +45,33 @@
                                         </DataTemplate>
                                     </dxg:GridColumn.CellTemplate>
                                 </dxg:GridColumn>
-                                <dxg:GridColumn FieldName="Path">
-                                </dxg:GridColumn>
+                                <dxg:GridColumn FieldName="Path" Visible="False"/>
+                                <dxg:GridColumn FieldName="FileName" Visible="True"/>
+                                <dxg:GridColumn FieldName="DirName" Visible="False" GroupIndex="0"/>
                             </dxg:GridControl.Columns>
                             <dxg:GridControl.View>
-                                <dxg:TableView 
+                                <dxg:TableView
+                                    ShowColumnHeaders="False"
+                                    ShowIndicator="False"
+                                    ShowVerticalLines="False"
+                                    ShowHorizontalLines="False"
                                     ShowGroupPanel="False" 
                                     NavigationStyle="Row" 
                                     AutoWidth="True">
+                                    <dxg:TableView.Resources>
+                                        <Style TargetType="{x:Type dxg:GroupValuePresenter}">
+                                            <Setter Property="VerticalAlignment" Value="Center" />
+                                            <Setter Property="Template">
+                                                <Setter.Value>
+                                                    <ControlTemplate TargetType="{x:Type dxg:GroupValuePresenter}">
+                                                        <StackPanel Orientation="Horizontal">
+                                                            <TextBlock x:Name="PART_GroupValue" ToolTip="{Binding Text, RelativeSource={RelativeSource Self}}"/>
+                                                        </StackPanel>
+                                                    </ControlTemplate>
+                                                </Setter.Value>
+                                            </Setter>
+                                        </Style>
+                                    </dxg:TableView.Resources>
                                 </dxg:TableView>
                             </dxg:GridControl.View>
                         </dxg:GridControl>
