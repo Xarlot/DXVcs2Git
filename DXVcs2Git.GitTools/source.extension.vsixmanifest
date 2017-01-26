@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PackageManifest Version="2.0.0" xmlns="http://schemas.microsoft.com/developer/vsx-schema/2011" xmlns:d="http://schemas.microsoft.com/developer/vsx-schema-design/2011">
   <Metadata>
-    <Identity Id="DXVcs2Git.GitTools.Xarlot.e4313842-75d7-4bf3-9516-fccdb00bec7d" Version="1.2.55" Language="en-US" Publisher="Xarlot" />
+    <Identity Id="DXVcs2Git.GitTools.Xarlot.e4313842-75d7-4bf3-9516-fccdb00bec7d" Version="1.2.56" Language="en-US" Publisher="Xarlot" />
     <DisplayName>DXVcs2Git.GitTools</DisplayName>
     <Description xml:space="preserve">Git Tools</Description>
     <License>licence.rtf</License>
