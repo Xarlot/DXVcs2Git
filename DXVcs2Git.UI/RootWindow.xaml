@@ -16,6 +16,7 @@
         mc:Ignorable="d"
         ShowActivated="True"
         Title="{Binding Version}" 
+        dx:ScrollBarExtensions.ScrollBarMode="{Binding ScrollBarMode, UpdateSourceTrigger=PropertyChanged}"
         Height="800" Width="1024"  ShowIcon="True"
         UseLayoutRounding="True"                  
         MinHeight="600" MinWidth="800"
@@ -87,6 +88,7 @@
                         <Setter Property="UseLayoutRounding" Value="True"/>
                         <Setter Property="Width" Value="800"/>
                         <Setter Property="Height" Value="600"/>
+                        <Setter Property="dx:ScrollBarExtensions.ScrollBarMode" Value="{Binding Path=ScrollBarMode}"/>
                     </Style.Setters>
                 </Style>
             </dx:DialogService.DialogStyle>

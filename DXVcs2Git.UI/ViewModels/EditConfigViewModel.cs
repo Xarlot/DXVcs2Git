@@ -10,6 +10,7 @@ using System.Windows.Input;
 using DXVcs2Git.Core.Git;
 using Microsoft.Win32;
 using System.IO;
+using DevExpress.Xpf.Core;
 
 namespace DXVcs2Git.UI.ViewModels {
     public class EditConfigViewModel : ViewModelBase {
@@ -19,6 +20,10 @@ namespace DXVcs2Git.UI.ViewModels {
         public string DefaultTheme {
             get { return GetProperty(() => DefaultTheme); }
             set { SetProperty(() => DefaultTheme, value); }
+        }
+        public ScrollBarMode ScrollBarMode {
+            get { return GetProperty(() => ScrollBarMode); }
+            set { SetProperty(() => ScrollBarMode, value); }
         }
         public int UpdateDelay {
             get { return GetProperty(() => UpdateDelay); }
@@ -143,6 +148,7 @@ namespace DXVcs2Git.UI.ViewModels {
             KeyGesture = config.KeyGesture;
             SupportsTesting = config.SupportsTesting;
             DefaultTheme = config.DefaultTheme;
+            ScrollBarMode = (ScrollBarMode)config.ScrollBarMode;
             Configs = this.configsReader.RegisteredConfigs;
             UpdateDelay = AtomFeed.FeedWorker.UpdateDelay;
             RefreshUpdateCommand = DelegateCommandFactory.Create(AtomFeed.FeedWorker.Update);
@@ -182,6 +188,7 @@ namespace DXVcs2Git.UI.ViewModels {
             config.KeyGesture = KeyGesture;
             config.AlwaysSure = AlwaysSure4;
             config.SupportsTesting = SupportsTesting;
+            config.ScrollBarMode = (int)ScrollBarMode;
             config.DefaultTheme = DefaultTheme;
             config.TestByDefault = TestByDefault;
         }
