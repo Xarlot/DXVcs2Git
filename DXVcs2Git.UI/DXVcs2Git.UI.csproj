@@ -623,6 +623,7 @@
     </None>
     <None Include="Configs\XPF_2016.1.config">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <SubType>Designer</SubType>
     </None>
     <None Include="Configs\XPF_2015.2.config">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
