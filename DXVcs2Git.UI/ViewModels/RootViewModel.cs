@@ -21,7 +21,7 @@ using ProjectHookType = DXVcs2Git.Core.GitLab.ProjectHookType;
 
 namespace DXVcs2Git.UI.ViewModels {
     public class RootViewModel : ViewModelBase {
-        const string DefaultThemeName = "Office2013";
+        public const string DefaultThemeName = "Office2013";
         public RepositoriesViewModel Repositories { get; private set; }
         public ICommand SettingsCommand { get; private set; }
         public ICommand ShowLogCommand { get; private set; }
@@ -44,9 +44,13 @@ namespace DXVcs2Git.UI.ViewModels {
             get { return GetProperty(() => ShowLog); }
             set { SetProperty(() => ShowLog, value, ShowLogChanged); }
         }
+        public ScrollBarMode ScrollBarMode {
+            get { return GetProperty(() => ScrollBarMode); }
+            set { SetProperty(() => ScrollBarMode, value); }
+        }
         public RootViewModel() {
             Config = ConfigSerializer.GetConfig();
-            UpdateDefaultTheme();
+            UpdateAppearance();
             dispatcher = Dispatcher.CurrentDispatcher;
             FarmIntegrator.Start(FarmRefreshed);
             AtomFeed.FeedWorker.Initialize();
@@ -246,7 +250,10 @@ namespace DXVcs2Git.UI.ViewModels {
             Repositories = ServiceLocator.Current.GetInstance<RepositoriesViewModel>();
             Update();
         }
-        void UpdateDefaultTheme() => ApplicationThemeHelper.ApplicationThemeName = Config?.DefaultTheme ?? DefaultThemeName;
+        void UpdateAppearance() {
+            ScrollBarMode = (ScrollBarMode)Config.ScrollBarMode;
+            ApplicationThemeHelper.ApplicationThemeName = Config?.DefaultTheme ?? DefaultThemeName;
+        }
         public void Update() {
             Repositories.Update();
         }
@@ -258,7 +265,7 @@ namespace DXVcs2Git.UI.ViewModels {
                 viewModel.UpdateConfig();
                 ConfigSerializer.SaveConfig(Config);
                 Initialize();
-                UpdateDefaultTheme();
+                UpdateAppearance();
             }
         }
         bool CanShowSettings() {
