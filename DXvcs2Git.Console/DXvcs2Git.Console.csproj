@@ -158,6 +158,9 @@
     <None Include="trackconfig_uwp_2016.1.config">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+    <None Include="trackconfig_xaf_2017.1.config">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Include="trackconfig_xpf_2016.1.config">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>

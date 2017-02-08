@@ -6,3 +6,5 @@ listen -s http://gitserver -l dxvcs2git.xpf -r http://gitserver/XPF/XPF.git  -p 
 patch -s http://gitserver -l dxvcs2git.tester -b 2016.1 -r http://gitserver/XPF/XPF.git -c 150 -d z:/repo -t trackconfig_XPF_2016.1.config -p  E4kDAk3j -a vPbfpJSzGRyPi6g249GP --sourcebranch test_branch --sourcerepo http://gitserver/Litvinov/XPF.git
 
 patch -s http://gitserver -l dxvcs2git.tester -b 2016.1 -r http://gitserver/XPF/XPF.git -d z:\repo -t trackconfig_XPF_2016.1.config -p E4kDAk3j -a vPbfpJSzGRyPi6g249GP --sourcebranch 2016.1 --sourcerepo http://gitlab-ci-token:xxxxxx@gitserver/Litvinov/XPF.git --patchdir z:\repo
+
+sync -s http://gitserver -l dxvcs2git.xaf -b 2017.1 -r git@gitserver:XAF/XAF.git -c 150 -d c:\repo\XAF\XAF -t trackconfig_XAF_2017.1.config -p LF3SaqFx -a zZzDHyx3q1jwzZNYLKL7

@@ -585,6 +585,15 @@
     <None Include="Configs\Scheduler_2017.1.config">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+    <None Include="Configs\XAF_2016.1.config">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="Configs\XAF_2016.2.config">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="Configs\XAF_2017.1.config">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Include="Configs\XPF_2017.1.config">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
