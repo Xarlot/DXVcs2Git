@@ -99,12 +99,16 @@ namespace DXVcs2Git.UI.ViewModels {
             Branch.CreateMergeRequest(title, description, null, Branch.Name, targetBranch);
         }
         string CalcMergeRequestDescription(string message) {
+            if (string.IsNullOrEmpty(message))
+                return string.Empty;
             var changes = message.Split(new[] { "\r\n" }, StringSplitOptions.RemoveEmptyEntries);
             StringBuilder sb = new StringBuilder();
             changes.Skip(1).ForEach(x => sb.AppendLine(x.ToString()));
             return sb.ToString();
         }
         string CalcMergeRequestTitle(string message) {
+            if (string.IsNullOrEmpty(message))
+                return string.Empty;
             var changes = message.Split(new[] { "\r\n" }, StringSplitOptions.RemoveEmptyEntries);
             var title = changes.FirstOrDefault();
             return title;
