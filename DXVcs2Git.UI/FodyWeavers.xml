@@ -1,0 +1,14 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Weavers>
+  <Costura CreateTemporaryAssemblies="true" IncludeDebugSymbols="false">
+    <Unmanaged32Assemblies>
+      git2-4d6362b.dll
+    </Unmanaged32Assemblies>
+    <Unmanaged64Assemblies>
+      git2-4d6362b.dll
+    </Unmanaged64Assemblies>
+    <PreloadOrder>
+      git2-4d6362b.dll
+    </PreloadOrder>
+  </Costura>
+</Weavers>

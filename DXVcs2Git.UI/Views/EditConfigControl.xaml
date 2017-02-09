@@ -44,13 +44,6 @@
                             </dxe:CheckEdit.EditValue>
                         </dxe:CheckEdit>
                     </dxlc:LayoutItem>
-                    <dxlc:LayoutItem Label="Update delay: " VerticalAlignment="Center">
-                        <dxe:ButtonEdit EditValue="{Binding Path=UpdateDelay, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" AllowDefaultButton="False">
-                            <dxe:ButtonEdit.Buttons>
-                                <dxe:ButtonInfo GlyphKind="Refresh" IsDefaultButton="True" Command="{Binding RefreshUpdateCommand}" Content="Check for updates" />
-                            </dxe:ButtonEdit.Buttons>
-                        </dxe:ButtonEdit>
-                    </dxlc:LayoutItem>
                     <dxlc:LayoutItem Label="Run on Windows startup: " VerticalAlignment="Center">
                         <dxe:CheckEdit EditValue="{Binding Path=StartWithWindows, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
                     </dxlc:LayoutItem>

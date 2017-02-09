@@ -25,7 +25,6 @@ namespace DXVcs2Git.UI.ViewModels {
         public RepositoriesViewModel Repositories { get; private set; }
         public ICommand SettingsCommand { get; private set; }
         public ICommand ShowLogCommand { get; private set; }
-        public ICommand DownloadNewVersionCommand { get; private set; }
         public ICommand InitializeCommand { get; private set; }
         public ICommand UpdateCommand { get; private set; }
         public ICommand ActivateCommand { get; private set; }
@@ -53,12 +52,10 @@ namespace DXVcs2Git.UI.ViewModels {
             UpdateAppearance();
             dispatcher = Dispatcher.CurrentDispatcher;
             FarmIntegrator.Start(FarmRefreshed);
-            AtomFeed.FeedWorker.Initialize();
             UpdateCommand = DelegateCommandFactory.Create(PerformUpdate, CanPerformUpdate);
             SettingsCommand = DelegateCommandFactory.Create(ShowSettings, CanShowSettings);
             ShowLogCommand = DelegateCommandFactory.Create(PerformShowLog);
             LoadTestLogCommand = DelegateCommandFactory.Create(PerformLoadTestLog, CanPerformLoadTestLog);
-            DownloadNewVersionCommand = DelegateCommandFactory.Create(DownloadNewVersion, CanDownloadNewVersion);
             InitializeCommand = DelegateCommandFactory.Create(PerformInitialize, CanPerformInitialize);
             ActivateCommand = DelegateCommandFactory.Create(PerformActivate, CanPerformActivate);
             LogViewModel = new LoggingViewModel();
@@ -202,13 +199,6 @@ namespace DXVcs2Git.UI.ViewModels {
             Initialize();
         }
         void PerformShowLog() {
-        }
-        void DownloadNewVersion() {
-            var model = new UriDownloaderViewModel(AtomFeed.FeedWorker.NewVersionUri, AtomFeed.FeedWorker.NewVersion);
-            DownloaderDialogService.ShowDialog(new[] { model.RestartCommand, model.CancelCommand }, "Downloading new version...", model);
-        }
-        bool CanDownloadNewVersion() {
-            return AtomFeed.FeedWorker.HasNewVersion;
         }
         void ShowLogChanged() {
             if (ShowLog) {

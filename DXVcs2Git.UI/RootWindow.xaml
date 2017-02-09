@@ -100,11 +100,6 @@
         </dx:DialogService>
         <dx:DXMessageBoxService x:Name="MessageBoxService"/>
         <behaviors:TaskBarIconBehavior/>
-        <behaviors:RibbonWindowButtonsInjectionBehavior Content="{Binding}">
-            <DataTemplate>
-                <Button Command="{Binding DownloadNewVersionCommand}" Style="{StaticResource windowButtonStyle}"/>
-            </DataTemplate>
-        </behaviors:RibbonWindowButtonsInjectionBehavior>
     </dxmvvm:Interaction.Behaviors>
     <Grid x:Name="LayoutRoot">
         <Grid.RowDefinitions>
