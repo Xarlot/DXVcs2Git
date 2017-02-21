@@ -22,8 +22,16 @@ namespace DXVcs2Git.UI.ViewModels {
             Path = fileData.OldPath;
             Diff = fileData.Diff;
             FileName = System.IO.Path.GetFileName(Path);
-            DirName = System.IO.Path.GetDirectoryName(Path);
+            DirName = GetDirName();
         }
+
+        string GetDirName() {
+            string dirName = System.IO.Path.GetDirectoryName(Path);
+            if(dirName == string.Empty)
+                dirName = @".\";
+            return dirName;
+        }
+
         FileChangeMode CalcChangeMode() {
             if (this.fileData.IsDeleted)
                 return FileChangeMode.Deleted;
