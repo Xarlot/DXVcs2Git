@@ -10,6 +10,7 @@ using System.Windows.Input;
 using DXVcs2Git.Core.Git;
 using Microsoft.Win32;
 using System.IO;
+using DevExpress.Xpf.Core;
 
 namespace DXVcs2Git.UI.ViewModels {
     public class EditConfigViewModel : ViewModelBase {
@@ -20,9 +21,9 @@ namespace DXVcs2Git.UI.ViewModels {
             get { return GetProperty(() => DefaultTheme); }
             set { SetProperty(() => DefaultTheme, value); }
         }
-        public int UpdateDelay {
-            get { return GetProperty(() => UpdateDelay); }
-            set { SetProperty(() => UpdateDelay, value, OnUpdateDelayChanged); }
+        public ScrollBarMode ScrollBarMode {
+            get { return GetProperty(() => ScrollBarMode); }
+            set { SetProperty(() => ScrollBarMode, value); }
         }
         public bool SupportsTesting {
             get { return GetProperty(() => SupportsTesting); }
@@ -94,7 +95,6 @@ namespace DXVcs2Git.UI.ViewModels {
         }
 
         public IEnumerable<RepoConfig> Configs { get; }
-        public ICommand RefreshUpdateCommand { get; private set; }
         public bool HasUIValidationErrors {
             get { return GetProperty(() => HasUIValidationErrors); }
             set { SetProperty(() => HasUIValidationErrors, value); }
@@ -109,7 +109,6 @@ namespace DXVcs2Git.UI.ViewModels {
             private set { SetProperty(() => AvailableConfigs, value); }
         }
         void OnUpdateDelayChanged() {
-            AtomFeed.FeedWorker.UpdateDelay = UpdateDelay;
             StartWithWindows = GetStartWithWindows();
         }
         const string registryValueName = "DXVcs2Git";
@@ -143,9 +142,8 @@ namespace DXVcs2Git.UI.ViewModels {
             KeyGesture = config.KeyGesture;
             SupportsTesting = config.SupportsTesting;
             DefaultTheme = config.DefaultTheme;
+            ScrollBarMode = (ScrollBarMode)config.ScrollBarMode;
             Configs = this.configsReader.RegisteredConfigs;
-            UpdateDelay = AtomFeed.FeedWorker.UpdateDelay;
-            RefreshUpdateCommand = DelegateCommandFactory.Create(AtomFeed.FeedWorker.Update);
             CommonXaml = GetWpf2SlKey("Common");
             DiagramXaml = GetWpf2SlKey("Diagram");
             XPFGITXaml = GetWpf2SlKey("XPF");
@@ -178,10 +176,10 @@ namespace DXVcs2Git.UI.ViewModels {
         }
         public void UpdateConfig() {
             config.Repositories = Repositories.With(x => x.Select(repo => new TrackRepository() { Name = repo.Name, ConfigName = repo.ConfigName, LocalPath = repo.LocalPath, Server = repo.RepoConfig.Server, Token = repo.Token }).ToArray());
-            config.UpdateDelay = UpdateDelay;
             config.KeyGesture = KeyGesture;
             config.AlwaysSure = AlwaysSure4;
             config.SupportsTesting = SupportsTesting;
+            config.ScrollBarMode = (int)ScrollBarMode;
             config.DefaultTheme = DefaultTheme;
             config.TestByDefault = TestByDefault;
         }

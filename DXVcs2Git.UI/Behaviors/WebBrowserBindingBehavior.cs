@@ -77,7 +77,7 @@ namespace DXVcs2Git.UI.Behaviors {
             }
             try {
                 var doc = XDocument.Parse(newValue);
-                var xelement = CalcCruiseControlNode(doc);
+                var xelement = TransformDocumentManually(doc);
                 if (xelement == null) {
                     this.currentHTMLBuildLog = "No document.";
                     return;
@@ -97,6 +97,23 @@ namespace DXVcs2Git.UI.Behaviors {
             if (!IsAttached)
                 return;
             AssociatedObject.NavigateToString(currentHTMLBuildLog);
+        }
+        object TransformDocumentManually(XDocument doc) {
+            var rootModifications = doc.XPathSelectElement("ROOT/modifications");
+            var cruiseControlModifications = doc.XPathSelectElement("ROOT/cruisecontrol/modifications");
+            if (cruiseControlModifications != null)
+                cruiseControlModifications.ReplaceWith(rootModifications);
+
+            var testResults = doc.XPathSelectElement("/ROOT/test-results");
+            if (testResults != null) {
+                var cruiseControlNode = doc.XPathSelectElement("/ROOT/cruisecontrol");
+                var cruiseControlTestResults = doc.XPathSelectElement("/ROOT/cruisecontrol/test-results");
+                if (cruiseControlTestResults == null)
+                    cruiseControlNode.Add(testResults);
+                else 
+                    cruiseControlTestResults.ReplaceWith(testResults);
+            }
+            return CalcCruiseControlNode(doc);
         }
         static XNode CalcCruiseControlNode(XDocument doc) {
             if (doc == null)

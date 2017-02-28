@@ -126,7 +126,7 @@ namespace DXVcs2Git.Git {
         public void RegisterUser(string userName, string displayName, string email) {
             try {
                 var userClient = this.client.Users;
-                var userUpsert = new UserUpsert() { Username = userName, Name = displayName, Email = email, Password = new Guid().ToString() };
+                var userUpsert = new UserUpsert() { Username = userName, Name = displayName, Email = email, Password = Guid.NewGuid().ToString(), ProjectsLimit = 10, Provider = null, ExternUid = null };
                 userClient.Create(userUpsert);
             }
             catch (Exception ex) {
@@ -137,7 +137,7 @@ namespace DXVcs2Git.Git {
         public User RenameUser(User gitLabUser, string userName, string displayName, string email) {
             try {
                 var userClient = this.client.Users;
-                var userUpsert = new UserUpsert() { Username = userName, Name = displayName, Email = email, Password = new Guid().ToString() };
+                var userUpsert = new UserUpsert() { Username = userName, Name = displayName, Email = email, Password = new Guid().ToString(), ProjectsLimit = 10, Provider = null, ExternUid = null};
                 return userClient.Update(gitLabUser.Id, userUpsert);
             }
             catch (Exception ex) {
