@@ -21,14 +21,6 @@
     <Grid>
         <dxlc:DockLayoutControl>
             <dxlc:LayoutGroup Orientation="Horizontal" dxlc:DockLayoutControl.Dock="Top">
-                <dxlc:LayoutItem Label="Selected repository: ">
-                    <TextBlock Text="{Binding Path=RepositoryName}" FontWeight="Bold"/>
-                </dxlc:LayoutItem>
-                <dxlc:LayoutItem Label="Selected branch: ">
-                    <TextBlock Text="{Binding Path=BranchName}" FontWeight="Bold"/>
-                </dxlc:LayoutItem>
-            </dxlc:LayoutGroup>
-            <dxlc:LayoutGroup Orientation="Horizontal" dxlc:DockLayoutControl.Dock="Top">
                 <dxlc:LayoutGroup Orientation="Vertical">
                     <dxlc:LayoutItem Label="Merge request: " LabelVerticalAlignment="Top">
                         <dxe:TextEdit ShowBorder="False" TextWrapping="WrapWithOverflow" AcceptsReturn="True" IsReadOnly="True" Text="{Binding Path=MergeRequestTitle, Mode=OneWay, Converter={StaticResource MergeRequestTitleConverter}}"/>
