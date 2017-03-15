@@ -23,7 +23,7 @@
     <Grid>
         <dxg:GridControl ShowBorder="False" ItemsSource="{Binding Path=Items}" SelectedItem="{Binding Path=SelectedItem, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}">
             <dxg:GridControl.Columns>
-                <dxg:GridColumn FieldName="Name" Width="*"></dxg:GridColumn>
+                <dxg:GridColumn FieldName="Name" Width="*" SortOrder="Ascending"></dxg:GridColumn>
             </dxg:GridControl.Columns>
             <dxg:GridControl.View>
                 <dxg:TreeListView 

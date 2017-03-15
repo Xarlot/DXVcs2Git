@@ -362,6 +362,7 @@
     <Compile Include="Behaviors\TaskBarIconBehavior.cs" />
     <Compile Include="Behaviors\ValidateEditConfigBehavior.cs" />
     <Compile Include="Behaviors\WebBrowserBindingBehavior.cs" />
+    <Compile Include="Converters\EditBranchDescriptionConverter.cs" />
     <Compile Include="Converters\ShowAssignedToServiceMessageConverter.cs" />
     <Compile Include="Converters\TestsLogPassedToCriteriaConverter.cs" />
     <Compile Include="DefaultInitializer.cs" />

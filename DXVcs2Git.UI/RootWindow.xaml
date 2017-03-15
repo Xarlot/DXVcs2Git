@@ -164,9 +164,20 @@
                         <local:RepositoriesControl/>
                     </dxdo:LayoutPanel>
                     <dxdo:LayoutPanel
-                        Caption="Selected branch"
                         dxb:MergingProperties.ElementMergingBehavior="InternalWithExternal"
                         ItemWidth="4*">
+                        <dxdo:LayoutPanel.Caption>
+                            <MultiBinding>
+                                <Binding Path='RepositoryName'/>
+                                <Binding Path='BranchName'/>
+                                <MultiBinding.Converter>
+                                    <views:EditBranchDescriptionConverter StringFormat="{}Repository: {0}, Branch: {1}"/>
+                                </MultiBinding.Converter>
+                            </MultiBinding>
+                        </dxdo:LayoutPanel.Caption>
+                        <dxdo:LayoutPanel.DataContext>
+                            <extensions:IoC TargetType="{x:Type viewModels:EditBranchDescriptionViewModel}"/>
+                        </dxdo:LayoutPanel.DataContext>
                         <views:BranchControl/>
                     </dxdo:LayoutPanel>
                 </dxdo:LayoutGroup>

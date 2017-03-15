@@ -12,6 +12,7 @@
     xmlns:dxr="http://schemas.devexpress.com/winfx/2008/xaml/ribbon"
     xmlns:dxb="http://schemas.devexpress.com/winfx/2008/xaml/bars"
     xmlns:dxlc="http://schemas.devexpress.com/winfx/2008/xaml/layoutcontrol"
+    xmlns:dxdo="http://schemas.devexpress.com/winfx/2008/xaml/docking"
     xmlns:selectors="clr-namespace:DXVcs2Git.UI.Selectors"
     mc:Ignorable="d" 
     d:DesignHeight="300" d:DesignWidth="300">
@@ -114,16 +115,16 @@
                     <dx:DXTabItem Header="Merge request settings" Content="{Binding}">
                         <dx:DXTabItem.ContentTemplate>
                             <DataTemplate>
-                                <dxlc:LayoutControl Margin="0" Padding="0">
-                                    <dxlc:LayoutGroup Orientation="Horizontal">
-                                        <dxlc:LayoutItem VerticalAlignment="Stretch">
+                                <dxdo:DockLayoutManager>
+                                    <dxdo:LayoutGroup>
+                                        <dxdo:LayoutPanel ShowCaption="False" ShowBorder="False">
                                             <local:EditMergeRequestControl/>
-                                        </dxlc:LayoutItem>
-                                        <dxlc:LayoutItem VerticalAlignment="Stretch">
+                                        </dxdo:LayoutPanel>
+                                        <dxdo:LayoutPanel ShowCaption="False" dxb:MergingProperties.ElementMergingBehavior="All" ShowBorder="False">
                                             <ContentControl Focusable="False" Content="{Binding Path=SupportsTesting}" ContentTemplateSelector="{StaticResource testsSelector}"/>
-                                        </dxlc:LayoutItem>
-                                    </dxlc:LayoutGroup>
-                                </dxlc:LayoutControl>
+                                        </dxdo:LayoutPanel>
+                                    </dxdo:LayoutGroup>
+                                </dxdo:DockLayoutManager>
                             </DataTemplate>
                         </dx:DXTabItem.ContentTemplate>
                     </dx:DXTabItem>
