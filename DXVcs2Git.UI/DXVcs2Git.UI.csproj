@@ -35,7 +35,7 @@
     <PublisherName>Xarlot</PublisherName>
     <SuiteName>Git Tools</SuiteName>
     <MinimumRequiredVersion>1.3.1.0</MinimumRequiredVersion>
-    <ApplicationRevision>2</ApplicationRevision>
+    <ApplicationRevision>3</ApplicationRevision>
     <ApplicationVersion>1.3.8.%2a</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <CreateDesktopShortcut>true</CreateDesktopShortcut>
