@@ -292,7 +292,7 @@ namespace DXVcs2Git.Console {
             }
             Log.Message($"Source branch name: {sourceBranch.Name}");
 
-            MergeRequest mergeRequest = gitLabWrapper.GetMergeRequests(targetProject, 
+            MergeRequest mergeRequest = gitLabWrapper.GetMergeRequests(targetProject,
                 x => x.SourceBranch == sourceBranchName && x.TargetBranch == targetBranchName && x.SourceProjectId == sourceProject.Id).FirstOrDefault();
             if (mergeRequest == null) {
                 Log.Error($"Can`t find merge request.");
@@ -301,13 +301,7 @@ namespace DXVcs2Git.Console {
             Log.Message($"Merge request id: {mergeRequest.Id}.");
             Log.Message($"Merge request title: {mergeRequest.Title}.");
 
-            var comments = gitLabWrapper.GetComments(mergeRequest);
-            var mergeRequestSyncOptions = comments?.Where(x => IsXml(x.Note)).Where(x => {
-                var mr = MergeRequestOptions.ConvertFromString(x.Note);
-                return mr?.ActionType == MergeRequestActionType.sync;
-            }).Select(x => (MergeRequestSyncAction)MergeRequestOptions.ConvertFromString(x.Note).Action).LastOrDefault();
-
-            if (mergeRequest.Assignee?.Name != username || (!mergeRequestSyncOptions?.PerformTesting ?? false)) {
+            if (mergeRequest.Assignee?.Name != username) {
                 Log.Error($"Merge request is not assigned to service user {username} or doesn`t require testing.");
                 return 1;
             }
@@ -342,6 +336,18 @@ namespace DXVcs2Git.Console {
 
             Log.Message($"Patch.info generated at {patchPath}");
             return 0;
+        }
+        static MergeRequestSyncAction CalcMergeRequestSyncOptions(IEnumerable<Comment> comments) {
+            if (comments == null)
+                return null;
+            var xmlBased = comments.Where(x => IsXml(x.Note)).Where(x => {
+                var mr = MergeRequestOptions.ConvertFromString(x.Note);
+                return mr?.ActionType == MergeRequestActionType.sync;
+            }).Select(x => (MergeRequestSyncAction)MergeRequestOptions.ConvertFromString(x.Note).Action).LastOrDefault();
+
+            if (xmlBased != null)
+                return xmlBased;
+            return null;
         }
         static readonly Regex SimpleHttpGitRegex = new Regex(@"http://[\w\._-]+/[\w\._-]+/[\w\._-]+.git", RegexOptions.Compiled);
         static readonly Regex GitlabciCheckRegex = new Regex(@"http://gitlab-ci-token:[\w\._-]+@(?<server>[\w\._-]+)/(?<nspace>[\w\._-]+)/(?<name>[\w\._-]+).git", RegexOptions.Compiled);

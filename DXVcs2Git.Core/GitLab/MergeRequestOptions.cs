@@ -15,13 +15,11 @@ namespace DXVcs2Git.Core.GitLab {
         public string SyncTask { get; set; }
         public bool PerformTesting { get; set; }
         public string SyncService { get; set; }
-        public string TestService { get; set; }
         public bool AssignToSyncService { get; set; }
         public MergeRequestSyncAction() {
         }
-        public MergeRequestSyncAction(string syncTask, string syncServiceUser, string testServiceUser, bool performTesting, bool assignToService) {
+        public MergeRequestSyncAction(string syncTask, string syncServiceUser, bool performTesting, bool assignToService) {
             SyncService = syncServiceUser;
-            TestService = testServiceUser;
             AssignToSyncService = assignToService;
             SyncTask = syncTask;
             PerformTesting = performTesting;

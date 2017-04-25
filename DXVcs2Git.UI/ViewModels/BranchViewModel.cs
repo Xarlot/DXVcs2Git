@@ -106,7 +106,7 @@ namespace DXVcs2Git.UI.ViewModels {
             this.gitLabWrapper.AddCommentToMergeRequest(MergeRequest.MergeRequest, comment);
         }
         public void AddMergeRequestSyncInfo(bool performTesting, bool assignToService) {
-            var mergeRequestAction = new MergeRequestSyncAction(SyncTaskName, SyncServiceName, TestServiceName, performTesting, assignToService);
+            var mergeRequestAction = new MergeRequestSyncAction(SyncTaskName, SyncServiceName, performTesting, assignToService);
             var mergeRequestOptions = new MergeRequestOptions(mergeRequestAction);
             string comment = MergeRequestOptions.ConvertToString(mergeRequestOptions);
             var mergeRequest = MergeRequest.MergeRequest;
