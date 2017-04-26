@@ -508,6 +508,12 @@ namespace DXVcs2Git.Console {
                         }
                         return;
                     }
+                    var syncService = project.Tags?.FirstOrDefault(x => IsServiceUser(x, null));
+                    if (!string.IsNullOrEmpty(syncService)) {
+                        Log.Message($"Found sync service from project tag: {syncService}");
+                        gitLabWrapper.UpdateMergeRequestAssignee(mergeRequest, syncService);
+                        return;
+                    }
                     Log.Message("Sync options not found.");
                 }
             }
