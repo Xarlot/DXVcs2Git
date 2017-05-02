@@ -197,25 +197,7 @@ namespace DXVcs2Git.Console {
                 return 0;
             }
 
-            Log.Message($"Build has {mergeRequestBuild.Status} status.");
-
-            if (mergeRequestBuild.Status == BuildStatus.success) {
-                if (mergeRequestSyncOptions.AssignToSyncService) {
-                    gitLabWrapper.UpdateMergeRequestAssignee(mergeRequest, mergeRequestSyncOptions.SyncTask);
-                    Log.Message($"Success tests. Assigning to sync service {mergeRequestSyncOptions.SyncTask}");
-                    return 0;
-                }
-                else {
-                    gitLabWrapper.UpdateMergeRequestAssignee(mergeRequest, mergeRequest.Author.Username);
-                    Log.Message($"Success tests. Assigning to back to author {mergeRequest.Author.Username}");
-                    return 0;
-                }
-            }
-            if (mergeRequestBuild.Status == BuildStatus.failed) {
-                Log.Message($"Failed tests.");
-                return 0;
-            }
-            Log.Message("Nothing happens.");
+            gitLabWrapper.AddCommentToMergeRequest(mergeRequest, $@"You can look at the test result at http://builder03/ci/{sourceProject.Id}/{mergeRequestBuild.Id}");
             return 0;
         }
 
