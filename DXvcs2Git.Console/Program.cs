@@ -132,6 +132,7 @@ namespace DXVcs2Git.Console {
                 return 1;
             }
 
+            string username = clo.Login;
             string gitlabauthtoken = clo.AuthToken;
             string targetBranchName = clo.Branch;
             string gitServer = clo.Server;
@@ -168,23 +169,11 @@ namespace DXVcs2Git.Console {
                 return 1;
             }
 
-            var comments = gitLabWrapper.GetComments(mergeRequest);
-            var mergeRequestSyncOptions = comments?.Where(x => IsXml(x.Note)).Where(x => {
-                var mr = MergeRequestOptions.ConvertFromString(x.Note);
-                return mr?.ActionType == MergeRequestActionType.sync;
-            }).Select(x => (MergeRequestSyncAction)MergeRequestOptions.ConvertFromString(x.Note).Action).LastOrDefault();
-
-            if (mergeRequestSyncOptions == null) {
-                Log.Message("Merge request sync options not found. Nothing to do.");
-                return 0;
+            if (mergeRequest.Assignee?.Name != username) {
+                Log.Error($"Merge request is not assigned to service user {username} or doesn`t require testing.");
+                return 1;
             }
 
-            if (!mergeRequestSyncOptions.PerformTesting) {
-                Log.Message("Testing is disabled in config.");
-                return 0;
-            }
-
-            Log.Message("Testing is enabled in config.");
             var commit = gitLabWrapper.GetMergeRequestCommits(mergeRequest).FirstOrDefault();
             if (commit == null) {
                 Log.Message("Merge request has no commits.");
@@ -197,7 +186,10 @@ namespace DXVcs2Git.Console {
                 return 0;
             }
 
-            gitLabWrapper.AddCommentToMergeRequest(mergeRequest, $@"You can look at the test result at http://builder03/ci/{sourceProject.Id}/{mergeRequestBuild.Id}");
+            if (clo.Result == 0)
+                gitLabWrapper.AddCommentToMergeRequest(mergeRequest, $@"Pipeline passed. http://builder03/ci/{sourceProject.Id}/{mergeRequestBuild.Id}");
+            else
+                gitLabWrapper.AddCommentToMergeRequest(mergeRequest, $@"Pipeline failed. http://builder03/ci/{sourceProject.Id}/{mergeRequestBuild.Id}");
             return 0;
         }
 
