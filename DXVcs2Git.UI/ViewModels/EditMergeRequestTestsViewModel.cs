@@ -19,6 +19,7 @@ namespace DXVcs2Git.UI.ViewModels {
         public ICommand ShowLogCommand { get; }
         public ICommand ForceTestCommand { get; }
         public ICommand AbortTestCommand { get; }
+        public ICommand UseCommitDescriptionCommand { get; }
 
         IWindowService ShowLogsService => GetService<IWindowService>();
 
@@ -33,6 +34,7 @@ namespace DXVcs2Git.UI.ViewModels {
             ShowLogCommand = DelegateCommandFactory.Create<CommitViewModel>(PerformShowLogs, CanPerformShowLogs);
             ForceTestCommand = DelegateCommandFactory.Create<CommitViewModel>(PerformForceTest, CanPerformForceTest);
             AbortTestCommand = DelegateCommandFactory.Create<CommitViewModel>(PerformAbortTest, CanPerformAbortTest);
+            UseCommitDescriptionCommand = DelegateCommandFactory.Create<CommitViewModel>(UseCommitDescription, CanUseCommitDescription);
 
             Initialize();
         }
@@ -75,6 +77,13 @@ namespace DXVcs2Git.UI.ViewModels {
             return false;
         }
         void PerformCancelTests() {
+        }
+        bool CanUseCommitDescription(CommitViewModel commit) {
+            return commit != null && BranchViewModel?.MergeRequest != null;
+        }
+        void UseCommitDescription(CommitViewModel commit) {
+            BranchViewModel.UpdateMergeRequest(commit.Title, BranchViewModel.MergeRequest.MergeRequest.Description, BranchViewModel.MergeRequest.Assignee);
+            RepositoriesViewModel.RaiseRefreshSelectedBranch();
         }
         BranchViewModel BranchViewModel { get; set; }
         void OnMessageReceived(Message msg) {
