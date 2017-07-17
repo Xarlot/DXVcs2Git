@@ -3,11 +3,16 @@ import sys
 import gitlab
 import socket
 import urllib.parse
+from optparse import OptionParser
 
-def update_project_hook(project, hook):
+def update_project_hook(project, hook, hook_addr):
     base_url_split = urllib.parse.urlsplit(hook.url)
     base_url = "{0.hostname}".format(base_url_split)
     base_port = "{0.port}".format(base_url_split)
+    base_path = "{0.path}".format(base_url_split)
+
+    if (base_path != "/{0}/".format(hook_addr)):
+        pass
 
     local_ip = socket.gethostbyname(socket.gethostname())
     if (base_url == local_ip):
@@ -23,14 +28,17 @@ def update_project_hook(project, hook):
     pass
 
 def main(argv):
-    parser = argparse.ArgumentParser()
-    parser.parse_args()
+    parser = OptionParser()
+    parser.add_option("-w", "--webhook", default="sharedwebhook", action="store", type="string", dest="webhook")
+    parser.add_option("-i", "--timeout", dest="timeout", default=30)
+
+    (options, args) = parser.parse_args()
 
     gl = gitlab.Gitlab('http://gitserver', 'FZ8YxktKW95wsxybykxs', api_version=4)
     projects = gl.projects.list()
     for project in projects:
         for hook in project.hooks.list():
-            update_project_hook(project, hook)
+            update_project_hook(project, hook, options.webhook)
         print(project)
     pass
 
