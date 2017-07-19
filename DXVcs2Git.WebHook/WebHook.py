@@ -3,7 +3,29 @@ import sys
 import gitlab
 import socket
 import urllib.parse
+from http.server import BaseHTTPRequestHandler, HTTPServer
 from optparse import OptionParser
+
+
+class HttpHandler(BaseHTTPRequestHandler):
+    def do_HEAD(self):
+        self.send_response(200)
+        self.send_header("Content-type", "text/html")
+        self.end_headers()
+        print("do_head")
+        pass
+
+    def do_GET(self):
+        self.send_response(200)
+        print("do_get")
+        pass
+
+    def do_POST(self):
+        content_length = int(self.headers['Content-Length'])  # <--- Gets the size of data
+        post_data = self.rfile.read(content_length)  # <--- Gets the data itself
+        self.send_response(200)
+        print("do_post")
+        pass
 
 def update_project_hook(project, hook, hook_addr):
     base_url_split = urllib.parse.urlsplit(hook.url)
@@ -25,6 +47,11 @@ def update_project_hook(project, hook, hook_addr):
     hook.save()
     print('Project {0}. Web hook updated to {1}'.format(project.http_url_to_repo, new_url))
 
+    pass
+
+def do_listener_work(url):
+    httpd = HTTPServer(url, HttpHandler)
+    httpd.serve_forever()
     pass
 
 def main(argv):
@@ -50,6 +77,8 @@ def main(argv):
             for hook in project.hooks.list():
                 update_project_hook(project, hook, options.webhook)
             print(project)
+
+    do_listener_work((socket.gethostbyname(socket.gethostname()), 8080))
     pass
 
 if __name__ == "__main__":
