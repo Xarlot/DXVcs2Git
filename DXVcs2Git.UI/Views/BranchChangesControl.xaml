@@ -48,6 +48,9 @@
                         <dxg:GridColumn FieldName="FileName" Visible="True"/>
                         <dxg:GridColumn FieldName="DirName" Visible="False" GroupIndex="0"/>
                     </dxg:GridControl.Columns>
+                    <dxg:GridControl.TotalSummary>
+                        <dxg:GridSummaryItem SummaryType="Count" Alignment="Left"/>
+                    </dxg:GridControl.TotalSummary>
                     <dxg:GridControl.View>
                         <dxg:TableView
                                     ShowColumnHeaders="False"
@@ -71,6 +74,9 @@
                                     </Setter>
                                 </Style>
                             </dxg:TableView.Resources>
+                            <dxmvvm:Interaction.Behaviors>
+                                <behaviors:FixedTotalSummaryBehavior/>
+                            </dxmvvm:Interaction.Behaviors>
                         </dxg:TableView>
                     </dxg:GridControl.View>
                 </dxg:GridControl>
