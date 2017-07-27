@@ -1,10 +1,9 @@
-import argparse
-import sys
-import gitlab
 import socket
+import sys
 import urllib.parse
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from optparse import OptionParser
+import gitlab
 
 
 class HttpHandler(BaseHTTPRequestHandler):
@@ -21,9 +20,12 @@ class HttpHandler(BaseHTTPRequestHandler):
         pass
 
     def do_POST(self):
+        self.send_response(200)
+        self.send_header('Content-type', 'text/html')
+        self.end_headers()
+
         content_length = int(self.headers['Content-Length'])  # <--- Gets the size of data
         post_data = self.rfile.read(content_length)  # <--- Gets the data itself
-        self.send_response(200)
         print("do_post")
         pass
 
@@ -78,7 +80,7 @@ def main(argv):
                 update_project_hook(project, hook, options.webhook)
             print(project)
 
-    do_listener_work((socket.gethostbyname(socket.gethostname()), 8080))
+    do_listener_work(('', 8080))
     pass
 
 if __name__ == "__main__":
