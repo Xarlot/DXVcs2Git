@@ -6,7 +6,8 @@ from optparse import OptionParser
 import dotmap
 import gitlab
 import json
-import ctypes
+import subprocess
+from subprocess import DEVNULL
 
 class HttpHandler(BaseHTTPRequestHandler):
     def do_HEAD(self):
@@ -31,10 +32,8 @@ class HttpHandler(BaseHTTPRequestHandler):
 
         self.parse_post(post_data)
 
-        print("do_post")
         pass
     def parse_post(self, data):
-        json_str = str(data, 'utf-8')
         webhook_content = json.loads(data)
         self.process_webhook(webhook_content)
         pass
@@ -52,7 +51,7 @@ class HttpHandler(BaseHTTPRequestHandler):
         return False
         pass
 
-    def should_force_synctask(self, mergerequest, content):
+    def should_force_synctask(self, content):
         assignee = content.assignee.username
 
         if not assignee or not assignee.startswith("dxvcs2git."):
@@ -75,58 +74,58 @@ class HttpHandler(BaseHTTPRequestHandler):
         if not self.is_mergerequest_opened(content):
             return
         user = self.gl.users.get(content.object_attributes.author_id)
+        targetbranch = content.object_attributes.target_branch
         print("Merge hook action: " + content.object_attributes.action)
         print("Merge hook merge status: " + content.object_attributes.merge_status)
         print("Merge hook author: " + user.name)
-        print("Merge hook target branch: " + content.object_attributes.target_branch)
+        print("Merge hook target branch: " + targetbranch)
         print("Merge hook source branch: " + content.object_attributes.source_branch)
 
-        project = self.gl.projects.get(content.object_attributes.target_project_id)
-        mergerequest = project.mergerequests.get(content.object_attributes.id)
-
-        if not self.should_force_synctask(mergerequest, content):
+        if not self.should_force_synctask(content):
             return
+        ssh = "{0}@{1}".format(r'git', content.object_attributes.target.path_with_namespace)
+        branch_path = r'branch_{0}'.format(targetbranch)
+        synctasksnames = self.synctasks.get(branch_path)
+        if not synctasksnames:
+            return
+        forcetaskname = None
+        for v in synctasksnames:
+            if v.get("ssh") == ssh:
+                forcetaskname = v.get("task")
+                break
 
-
+        if forcetaskname:
+            forcebuild = self.ForceBuild(forcetaskname)
+            if forcebuild == 0:
+                print("build forced")
+            else:
+                print("force build failed")
 
         pass
+    def ForceBuild(self, taskname):
+        p = subprocess.Popen(r'DXVcs2Git.FarmIntegrator.exe -t "{0}"'.format(taskname), stdout=DEVNULL, stdin=DEVNULL, shell=False )
+        p.communicate()
+        return p.wait()
+        pass
 
-
-def update_project_hook(project, hook, hook_addr):
-    base_url_split = urllib.parse.urlsplit(hook.url)
-    base_url = "{0.hostname}".format(base_url_split)
-    base_port = "{0.port}".format(base_url_split)
-    base_path = "{0.path}".format(base_url_split)
-
-    if (base_path != "/{0}/".format(hook_addr)):
-        return
-
-    local_ip = socket.gethostbyname(socket.gethostname())
-    if (base_url == local_ip):
-        return
-    url = list(base_url_split)
-    url[1] = local_ip + ':' + base_port
-    new_url = urllib.parse.urlunsplit(url)
-
-    hook.url = new_url
-    hook.save()
-    print('Project {0}. Web hook updated to {1}'.format(project.http_url_to_repo, new_url))
-
-    pass
-
-def do_listener_work(url, gitlab, supportsendingmessages, serviceuser, taskname):
+def do_listener_work(url, gitlab, synctasks, supportsendingmessages, serviceuser, taskname):
     httpd = HTTPServer(url, HttpHandler)
     httpd.RequestHandlerClass.gl = gitlab
     httpd.RequestHandlerClass.supportsendingmessages = supportsendingmessages
     httpd.RequestHandlerClass.serviceuser = serviceuser
     httpd.RequestHandlerClass.taskname = taskname
+    httpd.RequestHandlerClass.synctasks = synctasks
 
     httpd.serve_forever()
     pass
 
+def ParseTasks(tasks):
+    with open(tasks) as json_data:
+        return json.load(json_data)
+    pass
+
 def main(argv):
     parser = OptionParser()
-    parser.add_option("-w", "--webhook", default="sharedwebhook", action="store", type="string", dest="webhook")
     parser.add_option("-i", "--timeout", dest="timeout", default=30)
     parser.add_option("-t", "--task", dest="task")
     parser.add_option("-s", "--server", dest="server")
@@ -134,19 +133,17 @@ def main(argv):
     parser.add_option("-r", "--repo", dest="repo")
     parser.add_option("-p", "--password", dest="password")
     parser.add_option("-a", "--auth", dest="token")
-    parser.add_option("-u", "--update", dest="update", default=False)
+    parser.add_option("--tasklist", dest="tasklist", default="tasks.json")
 
     (options, args) = parser.parse_args()
-
-    farmintegrator = ctypes.cdll.LoadLibrary(r"C:\GitHub\DXVcs2Git\DXVcs2Git.Core\bin\x64\Export\DXVcs2Git.Core.dll")
-    farmintegrator.Start()
 
     supportsendingmessages = True if options.task else False
     serviceuser = options.login
     taskname = options.task
     gl = gitlab.Gitlab(options.server, options.token, api_version=4)
+    synctasks = ParseTasks(options.tasklist) if options.tasklist else {}
 
-    do_listener_work(('', 8080), gl, supportsendingmessages, serviceuser, taskname)
+    do_listener_work(('', 8080), gl, synctasks, supportsendingmessages, serviceuser, taskname)
     pass
 
 if __name__ == "__main__":

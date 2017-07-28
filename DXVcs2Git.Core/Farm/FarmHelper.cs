@@ -4,14 +4,45 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
-using System.Windows.Threading;
 using DevExpress.CCNetSmart.Lib;
 using DevExpress.DXCCTray;
 using DXVcs2Git.Core;
 using ThoughtWorks.CruiseControl.Remote;
 
 namespace DXVcs2Git.UI.Farm {
+    [Guid("B191F08A-E585-406F-AF30-6FA3400B1B30")]
+    [ComVisible(true)]
+    public interface IPythonBridge {
+        void Start();
+        void Stop();
+        bool CanForceBuild(string taskName);
+        void ForceBuild(string taskName);
+        string FindTask(string taskName);
+    }
+    [Guid("E63B0F80-CFF3-4566-ADD4-187F408847A9")]
+    [ClassInterface(ClassInterfaceType.None)]
+    [ComVisible(true)]
+    public class PythonBridge : IPythonBridge {
+        public void Start() {
+            FarmIntegrator.Start(null);
+        }
+        public void Stop() {
+            FarmIntegrator.Stop();
+        }
+        public bool CanForceBuild(string taskName) {
+            return FarmIntegrator.CanForceBuild(taskName);
+        }
+        public void ForceBuild(string taskName) {
+            Debugger.Launch();
+            FarmIntegrator.ForceBuild(taskName);
+        }
+        public string FindTask(string taskName) {
+            return FarmIntegrator.FindTask(taskName);
+        }
+    }
+    
     public class FarmIntegrator {
         static readonly FarmHelper Instance;
         static Action<FarmRefreshedEventArgs> InvalidateCallback { get; set; }
