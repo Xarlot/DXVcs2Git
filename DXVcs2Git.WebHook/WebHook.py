@@ -95,15 +95,15 @@ class HttpHandler(BaseHTTPRequestHandler):
                 break
 
         if forcetaskname:
-            forcebuild = self.ForceBuild(forcetaskname)
+            forcebuild = self.ForceBuild(forcetaskname, user.name)
             if forcebuild == 0:
                 print("build forced")
             else:
                 print("force build failed")
 
         pass
-    def ForceBuild(self, taskname):
-        p = subprocess.Popen(r'DXVcs2Git.FarmIntegrator.exe -t "{0}"'.format(taskname), stdout=DEVNULL, stdin=DEVNULL, shell=False )
+    def ForceBuild(self, taskname, username):
+        p = subprocess.Popen(r'DXVcs2Git.FarmIntegrator.exe -t "{0}" -f "{1}"'.format(taskname), username, stdout=DEVNULL, stdin=DEVNULL, shell=False )
         p.communicate()
         return p.wait()
         pass

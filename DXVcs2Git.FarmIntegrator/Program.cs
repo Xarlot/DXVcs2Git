@@ -1,5 +1,10 @@
 ﻿using System;
+using System.Runtime.Serialization;
+using System.Runtime.Serialization.Json;
+using System.Text;
 using CommandLine;
+using DevExpress.CCNetSmart.Lib;
+using Newtonsoft.Json;
 using ThoughtWorks.CruiseControl.Remote;
 
 namespace DXVcs2Git.FarmIntegrator {
@@ -25,9 +30,27 @@ namespace DXVcs2Git.FarmIntegrator {
             string taskname = options.TaskName;
             
             RemoteCruiseManagerFactory f = new RemoteCruiseManagerFactory();
-            ICruiseManager m = f.GetCruiseManager(auxPath);
+            ISmartCruiseManager m = (ISmartCruiseManager)f.GetCruiseManager(auxPath);
             m.ForceBuild(taskname, forcer);
+            m.SendNotification(taskname, forcer, CalcMessage(MessageKind.Refresh));
             return 0;
         }
+        static string CalcMessage(MessageKind kind) {
+            var message = new Message {MessageKind = kind};
+            string json = JsonConvert.SerializeObject(message);
+            byte[] bytes = Encoding.UTF8.GetBytes(json);
+            return Convert.ToBase64String(bytes);
+        }
+    }
+
+    enum MessageKind {
+        Refresh,
+    }
+    [DataContract]
+    class Message {
+        [DataMember]
+        public MessageKind MessageKind { get; set; }
+        [DataMember]
+        public string Parameters { get; set; }
     }
 }
