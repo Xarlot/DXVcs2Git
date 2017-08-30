@@ -16,7 +16,7 @@ namespace DXVcs2Git.UI.ViewModels {
         public string TargetBranch { get; }
         public string Assignee { get; }
         public int? AssigneeId { get; }
-        public int MergeRequestId => MergeRequest.Id;
+        public int MergeRequestId => MergeRequest.Iid;
         public MergeRequestViewModel(BranchViewModel branch, MergeRequest mergeRequest) {
             Branch = branch;
             MergeRequest = mergeRequest;

@@ -272,7 +272,7 @@ namespace DXVcs2Git.Console {
                 Log.Error($"Can`t find merge request.");
                 return 1;
             }
-            Log.Message($"Merge request id: {mergeRequest.Id}.");
+            Log.Message($"Merge request id: {mergeRequest.Iid}.");
             Log.Message($"Merge request title: {mergeRequest.Title}.");
 
             if (mergeRequest.Assignee?.Name != username) {
@@ -396,7 +396,7 @@ namespace DXVcs2Git.Console {
             GitLabWrapper gitLabWrapper = new GitLabWrapper(gitServer, gitlabauthtoken);
             FarmIntegrator.Start(null);
 
-            var projects = gitLabWrapper.GetAllProjects();
+            var projects = gitLabWrapper.GetProjects();
             foreach (Project project in projects) {
                 var hooks = gitLabWrapper.GetProjectHooks(project);
                 foreach (ProjectHook hook in hooks) {
@@ -441,7 +441,7 @@ namespace DXVcs2Git.Console {
             if (supportSendingMessages)
                 SendMessage(serviceUser, hook.Json, farmTaskName);
 
-            if (hook.Status == BuildStatus.success) {
+            if (hook.Status == JobStatus.success) {
                 Project project = gitLabWrapper.GetProject(hook.ProjectId);
                 if (project == null) {
                     Log.Message($"Can`t find project {hook.ProjectName}.");
@@ -453,9 +453,9 @@ namespace DXVcs2Git.Console {
                     Log.Message("Can`t find merge request.");
                     return;
                 }
-                Log.Message($"Merge request: id = {mergeRequest.Id} title = {mergeRequest.Title}");
+                Log.Message($"Merge request: id = {mergeRequest.Iid} title = {mergeRequest.Title}");
                 Log.Message($"Merge request state = {mergeRequest.State}");
-                if (mergeRequest.State == "opened" || mergeRequest.State == "reopened") {
+                if (mergeRequest.State == MergeRequestState.opened || mergeRequest.State == MergeRequestState.reopened) {
                     var latestCommit = gitLabWrapper.GetMergeRequestCommits(mergeRequest).FirstOrDefault();
                     if (latestCommit == null) {
                         Log.Message("Wrong merge request found.");
@@ -539,9 +539,9 @@ namespace DXVcs2Git.Console {
                     Log.Message("Check build status before force build.");
                     var commit = gitLabWrapper.GetMergeRequestCommits(mergeRequest).FirstOrDefault();
                     var build = commit != null ? gitLabWrapper.GetBuilds(mergeRequest, commit.Id).FirstOrDefault() : null;
-                    var buildStatus = build?.Status ?? BuildStatus.undefined;
+                    var buildStatus = build?.Status ?? JobStatus.undefined;
                     Log.Message($"Build status = {buildStatus}.");
-                    if (buildStatus == BuildStatus.success)
+                    if (buildStatus == JobStatus.success)
                         ForceBuild(action.SyncTask);
                     return;
                 }
@@ -750,8 +750,8 @@ namespace DXVcs2Git.Console {
         }
         static MergeRequestResult ProcessMergeRequest(DXVcsWrapper vcsWrapper, GitWrapper gitWrapper, GitLabWrapper gitLabWrapper, RegisteredUsers users, User defaultUser, string localGitDir, TrackBranch branch, MergeRequest mergeRequest, SyncHistoryWrapper syncHistory) {
             switch (mergeRequest.State) {
-                case "reopened":
-                case "opened":
+                case MergeRequestState.opened:
+                case MergeRequestState.reopened:
                     return ProcessOpenedMergeRequest(vcsWrapper, gitWrapper, gitLabWrapper, users, defaultUser, localGitDir, branch, mergeRequest, syncHistory);
             }
             return MergeRequestResult.InvalidState;
@@ -782,7 +782,7 @@ namespace DXVcs2Git.Console {
             }
             CommentWrapper comment = CalcComment(mergeRequest, branch, autoSyncToken);
             mergeRequest = gitLabWrapper.ProcessMergeRequest(mergeRequest, comment.ToString());
-            if (mergeRequest.State == "merged") {
+            if (mergeRequest.State == MergeRequestState.merged) {
                 Log.Message("Merge request merged successfully.");
 
                 gitWrapper.Pull();

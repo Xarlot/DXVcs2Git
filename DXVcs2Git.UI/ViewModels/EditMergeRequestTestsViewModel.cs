@@ -7,6 +7,7 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using DevExpress.Mvvm;
 using DevExpress.Mvvm.Native;
+using DXVcs2Git.Core.GitLab;
 using Microsoft.Practices.ServiceLocation;
 using NGitLab;
 using NGitLab.Models;
@@ -49,7 +50,7 @@ namespace DXVcs2Git.UI.ViewModels {
             var actualCommit = commit ?? BranchViewModel.MergeRequest.Commits.FirstOrDefault();
             if (actualCommit == null)
                 return false;
-            return actualCommit.Build?.BuildStatus != BuildStatus.pending && actualCommit.Build?.BuildStatus != BuildStatus.running;
+            return actualCommit.Build?.BuildStatus != JobStatus.pending && actualCommit.Build?.BuildStatus != JobStatus.running;
         }
         bool CanPerformAbortTest(CommitViewModel commit) {
             if (BranchViewModel?.MergeRequest == null)
@@ -57,7 +58,7 @@ namespace DXVcs2Git.UI.ViewModels {
             var actualCommit = commit ?? BranchViewModel.MergeRequest.Commits.FirstOrDefault();
             if (actualCommit == null)
                 return false;
-            return actualCommit.Build?.BuildStatus == BuildStatus.pending || actualCommit.Build?.BuildStatus == BuildStatus.running;
+            return actualCommit.Build?.BuildStatus == JobStatus.pending || actualCommit.Build?.BuildStatus == JobStatus.running;
         }
         void PerformAbortTest(CommitViewModel commit) {
             var actualCommit = commit ?? BranchViewModel.MergeRequest.Commits.FirstOrDefault();
@@ -68,7 +69,7 @@ namespace DXVcs2Git.UI.ViewModels {
             if (model == null)
                 return false;
             var buildStatus = model.Build?.BuildStatus;
-            return buildStatus == BuildStatus.failed || buildStatus == BuildStatus.success;
+            return buildStatus == JobStatus.failed || buildStatus == JobStatus.success;
         }
         void PerformShowLogs(CommitViewModel model) {
             ShowLogsService.Show(model);
@@ -159,14 +160,14 @@ namespace DXVcs2Git.UI.ViewModels {
 
     public class BuildViewModel : BindableBase {
         public int Id => Build.Id;
-        public BuildStatus BuildStatus { get; }
+        public JobStatus BuildStatus { get; }
         public string Duration { get; }
         public ArtifactsFile Artifacts => Build.ArtifactsFile;
         public Build Build { get; }
         public BuildViewModel(Build build) {
             Build = build;
-            BuildStatus = build.Status ?? BuildStatus.undefined;
-            if (build.StartedAt != null && (BuildStatus == BuildStatus.success || BuildStatus == BuildStatus.failed)) {
+            BuildStatus = build.Status ?? JobStatus.undefined;
+            if (build.StartedAt != null && (BuildStatus == JobStatus.success || BuildStatus == JobStatus.failed)) {
                 Duration = ((build.FinishedAt ?? DateTime.Now) - build.StartedAt.Value).ToString("g");
             }
             else

@@ -27,7 +27,7 @@ namespace DXVcs2Git.Core {
             return string.Format(WebhookFormat, ip) + string.Format(SharedWebHook, sharedWebHookPath);
         }
         public static bool EnsureWebHook(ProjectHook webHook) {
-            return webHook.BuildEvents && webHook.PushEvents && webHook.MergeRequestsEvents && !webHook.EnableSSLVerification;
+            return webHook.JobEvents && webHook.PipelineEvents && webHook.PushEvents && webHook.MergeRequestsEvents && !webHook.EnableSslVerification;
         }
     }
 }
