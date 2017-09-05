@@ -6,9 +6,11 @@ namespace DXVcs2Git.DXVcs {
     public interface IDXVcsRepository {
         IList<ProjectHistoryInfo> GetProjectHistory(string vcsFile, bool resursive, DateTime? from = null, DateTime? to = null);
         FileVersionInfo[] GetFileHistory(string vcsFile);
+        FileHistoryInfo[] GetFileHistoryEx(string vcsFile, DateTime? from = null, DateTime? to = null);
         void GetProject(string vcsPath, string localPath, DateTime timeStamp);
         void GetLatestFileVersion(string vcsFile, string fileName);
         void Get(string vcsFile, string fileName, int version);
+        void Get(string vcsFile, string fileName, DateTime timestamp);
         void CheckOutFile(string vcsFile, string localFile, string comment, bool dontGetLocalCopy = false);
         void CheckInFile(string vcsFile, string localFile, string comment);
         void UndoCheckout(string vcsFile, string localFile);

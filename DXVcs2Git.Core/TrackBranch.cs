@@ -20,7 +20,7 @@ namespace DXVcs2Git.Core {
         static void ProcessTrackItems(IList<TrackBranch> branches, DXVcsWrapper vcsWrapper) {
             foreach (var branch in branches) {
                 foreach (var trackItem in branch.TrackItems)
-                    trackItem.Branch = branch.Name;
+                    trackItem.Branch = branch;
                 branch.TrackItems = CalcTrackItems(branch, branch.TrackItems, vcsWrapper);
             }
         }
@@ -45,8 +45,11 @@ namespace DXVcs2Git.Core {
             TrackItems = trackItems.ToList();
             RepoRoot = repoRoot;
         }
+        public string GetLocalRoot(TrackItem trackItem, string localPath) {
+            return Path.Combine(localPath, trackItem.ProjectPath);
+        }
         public string GetTrackRoot(TrackItem trackItem) {
-            if (trackItem.Branch != Name)
+            if (trackItem.Branch.Name != Name)
                 throw new ArgumentException("invalid branch");
             string result = string.IsNullOrEmpty(trackItem.AdditionalOffset) ? Path.Combine(RepoRoot, trackItem.Path) : Path.Combine(RepoRoot, trackItem.AdditionalOffset, trackItem.Path);
             return result.Replace("\\", "/");

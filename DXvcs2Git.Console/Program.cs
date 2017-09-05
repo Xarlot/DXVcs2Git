@@ -667,8 +667,7 @@ namespace DXVcs2Git.Console {
             return CheckMergeChangesResult.HasChanges;
         }
         static string GetVcsSyncHistory(DXVcsWrapper vcsWrapper, string historyPath) {
-            string local = Path.GetTempFileName();
-            return vcsWrapper.GetFile(historyPath, local);
+            return vcsWrapper.GetLatestFile(historyPath);
         }
         static void EnsureGitDir(string localGitDir) {
             if (Directory.Exists(localGitDir)) {
@@ -933,11 +932,18 @@ namespace DXVcs2Git.Console {
                 GitCommit last = null;
                 string token = syncHistory.CreateNewToken();
                 foreach (var localCommit in localCommits) {
-                    string localProjectPath = Path.Combine(localGitDir, localCommit.Track.ProjectPath);
-                    DirectoryHelper.DeleteDirectory(localProjectPath);
-                    string trackPath = branch.GetTrackRoot(localCommit.Track);
-                    vcsWrapper.GetProject(vcsServer, trackPath, localProjectPath, item.TimeStamp);
-
+                    string localPath = branch.GetLocalRoot(localCommit.Track, localGitDir);
+                    if (localCommit.Track.IsFile) {
+                        if (File.Exists(localPath))
+                            File.Delete(localPath);
+                        string trackPath = branch.GetTrackRoot(localCommit.Track);
+                        vcsWrapper.GetFile(trackPath, localPath, item.TimeStamp);
+                    }
+                    else {
+                        DirectoryHelper.DeleteDirectory(localPath);
+                        string trackPath = branch.GetTrackRoot(localCommit.Track);
+                        vcsWrapper.GetProject(vcsServer, trackPath, localPath, item.TimeStamp);
+                    }
                     Log.Message($"git stage {localCommit.Track.ProjectPath}");
                     gitWrapper.Stage(localCommit.Track.ProjectPath);
                     string author = CalcAuthor(localCommit, defaultUser);
@@ -1021,7 +1027,7 @@ namespace DXVcs2Git.Console {
             CommentWrapper comment = new CommentWrapper();
             comment.TimeStamp = item.TimeStamp.Ticks.ToString();
             comment.Author = author;
-            comment.Branch = item.Track.Branch;
+            comment.Branch = item.Track.Branch.Name;
             comment.Token = token;
             if (item.Items.Any(x => !string.IsNullOrEmpty(x.Comment) && CommentWrapper.IsAutoSyncComment(x.Comment)))
                 comment.Comment = item.Items.Select(x => CommentWrapper.Parse(x.Comment ?? x.Message).Comment).FirstOrDefault(x => !string.IsNullOrEmpty(x));

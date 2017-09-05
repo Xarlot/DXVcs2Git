@@ -312,13 +312,13 @@ namespace DXVcs2Git.DXVcs {
                 return TestFileResult.Fail;
             }
 
-            if(!isNewPathTracking && !isOldPathTracking)
+            if (!isNewPathTracking && !isOldPathTracking)
                 return TestFileResult.Ignore;
-            if(isNewPathTracking && !isOldPathTracking) {
+            if (isNewPathTracking && !isOldPathTracking) {
                 newAction = SyncAction.New;
                 return BeforeCheckOutCreateFile(newVcsPath, localPath, ignoreSharedFiles, branch);
             }
-            else if(!isNewPathTracking && isOldPathTracking) {
+            else if (!isNewPathTracking && isOldPathTracking) {
                 newAction = SyncAction.Delete;
                 return BeforeCheckOutDeleteFile(vcsPath, localPath, ignoreSharedFiles, branch);
             }
@@ -339,12 +339,12 @@ namespace DXVcs2Git.DXVcs {
             }
         }
         TestFileResult BeforeCheckOutDeleteFile(string vcsPath, string localPath, bool ignoreSharedFiles, TrackBranch branch) {
-            if(!branch.IsTrackingVcsPath(vcsPath))
+            if (!branch.IsTrackingVcsPath(vcsPath))
                 return TestFileResult.Ignore;
             return PerformSimpleTestBeforeCheckout(vcsPath, ignoreSharedFiles, false, false);
         }
         TestFileResult BeforeCheckOutModifyFile(string vcsPath, string localPath, bool ignoreSharedFiles, bool singleSharedFile, TrackBranch branch) {
-            if(!branch.IsTrackingVcsPath(vcsPath))
+            if (!branch.IsTrackingVcsPath(vcsPath))
                 return TestFileResult.Ignore;
             if (!PerformHasFileTestBeforeCheckout(vcsPath)) {
                 Log.Error($"Check modify capability. File {vcsPath} is not found in vcs.");
@@ -353,7 +353,7 @@ namespace DXVcs2Git.DXVcs {
             return PerformSimpleTestBeforeCheckout(vcsPath, ignoreSharedFiles, singleSharedFile, true);
         }
         TestFileResult BeforeCheckOutCreateFile(string vcsPath, string localPath, bool ignoreSharedFiles, TrackBranch branch) {
-            if(!branch.IsTrackingVcsPath(vcsPath))
+            if (!branch.IsTrackingVcsPath(vcsPath))
                 return TestFileResult.Ignore;
             return PerformSimpleTestBeforeCheckout(vcsPath, ignoreSharedFiles, false, false);
         }
@@ -434,21 +434,21 @@ namespace DXVcs2Git.DXVcs {
 
         public IList<TrackItem> GenerateTrackItems(TrackBranch trackBranch, TrackItem trackItem) {
             if (!trackItem.GoDeeper)
-                return new List<TrackItem>() {trackItem};
+                return new List<TrackItem>() { trackItem };
             try {
                 var repo = DXVcsConnectionHelper.Connect(server, user, password);
                 string trackRoot = trackBranch.GetTrackRoot(trackItem);
                 var projectData = repo.GetProjectData(trackRoot);
                 if (projectData.IsNull || projectData.SubProjectsCount == 0)
-                    return new List<TrackItem>() {trackItem};
+                    return new List<TrackItem>() { trackItem };
                 var innerProjects = repo.GetProjects(trackRoot);
-                if (innerProjects == null || innerProjects.Length == 0) 
+                if (innerProjects == null || innerProjects.Length == 0)
                     return new List<TrackItem>() { trackItem };
 
                 List<TrackItem> result = new List<TrackItem>(innerProjects.Length);
                 foreach (var info in innerProjects) {
                     var newTrackItem = new TrackItem();
-                    newTrackItem.Branch = trackBranch.Name;
+                    newTrackItem.Branch = trackBranch;
                     newTrackItem.GoDeeper = false;
                     newTrackItem.Path = trackItem.Path + @"/" + info.Name;
                     newTrackItem.ProjectPath = Path.Combine(trackItem.ProjectPath, info.Name).Replace(@"\", @"/");
@@ -457,7 +457,7 @@ namespace DXVcs2Git.DXVcs {
                 }
                 return result;
             }
-            catch(Exception ex)  {
+            catch (Exception ex) {
                 Log.Error("Generating trackitems from config failed", ex);
                 throw ex;
             }
@@ -469,17 +469,30 @@ namespace DXVcs2Git.DXVcs {
                 var history = Enumerable.Empty<HistoryItem>();
                 foreach (var trackItem in branch.TrackItems) {
                     string trackPath = branch.GetTrackRoot(trackItem);
-                    var historyForItem = repo.GetProjectHistory(trackPath, true, from).Select(x =>
-                        new HistoryItem() {
-                            ActionDate = x.ActionDate,
-                            Comment = x.Comment,
-                            Label = x.Label,
-                            Message = x.Message,
-                            Name = x.Name,
-                            User = x.User,
-                            Track = trackItem,
+                    if (trackItem.IsFile) {
+                        var historyForItem = repo.GetFileHistoryEx(trackPath, from).Select(x => {
+                            return new HistoryItem() {
+                                ActionDate = x.ActionDate,
+                                Comment = x.Comment,
+                                Label = x.Label,
+                                User = x.User,
+                                Track = trackItem,
+                            };
                         });
-                    history = history.Concat(historyForItem);
+                        history = history.Concat(historyForItem);
+                    }
+                    else {
+                        var historyForItem = repo.GetProjectHistory(trackPath, true, from).Select(x =>
+                            new HistoryItem() {
+                                ActionDate = x.ActionDate,
+                                Comment = x.Comment,
+                                Label = x.Label,
+                                Message = x.Message,
+                                User = x.User,
+                                Track = trackItem,
+                            });
+                        history = history.Concat(historyForItem);
+                    }
                 }
                 return history.ToList();
             }
@@ -542,7 +555,16 @@ namespace DXVcs2Git.DXVcs {
                 }
             }
         }
-        public string GetFile(string historyPath, string local) {
+        public void GetFile(string historyPath, string localPath, DateTime timestamp) {
+            try {
+                var repo = DXVcsConnectionHelper.Connect(server, this.user, this.password);
+                repo.Get(historyPath, localPath, timestamp);
+            }
+            catch (Exception ex) {
+                Log.Error($"Loading sync history from {historyPath} failed", ex);
+            }
+        }
+        public string GetLatestFile(string historyPath) {
             try {
                 var repo = DXVcsConnectionHelper.Connect(server, this.user, this.password);
                 string localPath = Path.GetTempFileName();

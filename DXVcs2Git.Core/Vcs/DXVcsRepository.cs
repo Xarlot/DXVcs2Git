@@ -10,7 +10,7 @@ using DXVCS;
 namespace DXVcs2Git.DXVcs {
     class DXVcsRepository : IDXVcsRepository {
         readonly string serviceUrl;
-        readonly string user ;
+        readonly string user;
         readonly string password;
         readonly DXVcsServiceProvider serviceProvider;
         readonly FileSystem fileSystem = new FileSystem();
@@ -43,7 +43,11 @@ namespace DXVcs2Git.DXVcs {
             result.Reverse();
             return result.ToArray();
         }
-
+        public FileHistoryInfo[] GetFileHistoryEx(string vcsPath, DateTime? from = null, DateTime? to = null) {
+            if (string.IsNullOrEmpty(vcsPath))
+                throw new ArgumentException("vcsPath");
+            return Service.GetFileHistory(vcsPath, null, from != null ? from.Value.ToUniversalTime() : from, to, false);
+        }
         public IList<ProjectHistoryInfo> GetProjectHistory(string vcsPath, bool recursive, DateTime? from = null, DateTime? to = null) {
             if (string.IsNullOrEmpty(vcsPath))
                 throw new ArgumentException("vcsPath");
@@ -92,6 +96,16 @@ namespace DXVcs2Git.DXVcs {
             File.WriteAllBytes(fileName, data);
         }
 
+        public void Get(string vcsFile, string fileName, DateTime timestamp) {
+            if (string.IsNullOrEmpty(vcsFile))
+                throw new ArgumentException("vcsFile");
+
+            if (string.IsNullOrEmpty(fileName))
+                throw new ArgumentException("path");
+
+            byte[] data = DXVCSHelpers.TryToDecompressData(Service.GetFileData(vcsFile, timestamp));
+            File.WriteAllBytes(fileName, data);
+        }
         public void Get(string vcsFile, string fileName, int version) {
             if (string.IsNullOrEmpty(vcsFile))
                 throw new ArgumentException("vcsFile");
@@ -101,7 +115,6 @@ namespace DXVcs2Git.DXVcs {
 
             if (version <= 0)
                 throw new ArgumentException("version");
-
             byte[] data = DXVCSHelpers.TryToDecompressData(Service.GetFileData(vcsFile, version));
             File.WriteAllBytes(fileName, data);
         }
