@@ -105,6 +105,9 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
     <None Include="packages.config" />
+    <None Include="trackconfig_xaf_2017.2.config">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Include="trackconfig_common_2017.2.config">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>

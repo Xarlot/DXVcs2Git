@@ -48,6 +48,11 @@ namespace DXVcs2Git.Core {
         public string GetLocalRoot(TrackItem trackItem, string localPath) {
             return Path.Combine(localPath, trackItem.ProjectPath);
         }
+        public string GetVcsPath(TrackItem trackItem, string path) {
+            if (trackItem.IsFile)
+                return GetTrackRoot(trackItem);
+            return $"{GetTrackRoot(trackItem)}/{path}";
+        }
         public string GetTrackRoot(TrackItem trackItem) {
             if (trackItem.Branch.Name != Name)
                 throw new ArgumentException("invalid branch");

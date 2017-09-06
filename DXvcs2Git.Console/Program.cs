@@ -288,13 +288,19 @@ namespace DXVcs2Git.Console {
 
             var changes = gitLabWrapper
                 .GetMergeRequestChanges(mergeRequest)
-                .Where(x => trackBranch.TrackItems.FirstOrDefault(track => CheckItemForChangeSet(x.OldPath, track)) != null)
+                .Select(x => {
+                    var trackItem = trackBranch.TrackItems.Where(b => !b.IsFile).FirstOrDefault(track => CheckItemForChangeSet(x.OldPath, track));
+                    if (trackItem == null)
+                        trackBranch.TrackItems.Where(b => b.IsFile).FirstOrDefault(track => CheckFileItemForChangeSet(x.OldPath, track));
+                    return new { trackItem = trackItem, item = x };
+                })
+                .Where(x => x.trackItem != null)
                 .Select(x => new PatchItem() {
-                    SyncAction = CalcSyncAction(x),
-                    OldPath = x.OldPath,
-                    NewPath = x.NewPath,
-                    OldVcsPath = CalcVcsPath(trackBranch, x.OldPath),
-                    NewVcsPath = CalcVcsPath(trackBranch, x.NewPath),
+                    SyncAction = CalcSyncAction(x.item),
+                    OldPath = x.item.OldPath,
+                    NewPath = x.item.NewPath,
+                    OldVcsPath = CalcVcsPath(x.trackItem, x.item.OldPath),
+                    NewVcsPath = CalcVcsPath(x.trackItem, x.item.NewPath),
                 }).ToList();
 
             var patch = new PatchInfo() { TimeStamp = DateTime.Now.Ticks, Items = changes };
@@ -769,8 +775,14 @@ namespace DXVcs2Git.Console {
                 return MergeRequestResult.Failed;
             }
             var genericChange = changes
-                .Where(x => branch.TrackItems.FirstOrDefault(track => CheckItemForChangeSet(x.OldPath, track)) != null)
-                .Select(x => ProcessMergeRequestChanges(mergeRequest, x, localGitDir, branch, autoSyncToken)).ToList();
+                .Select(x => {
+                    var trackItem = branch.TrackItems.Where(b => !b.IsFile).FirstOrDefault(track => CheckItemForChangeSet(x.OldPath, track));
+                    if (trackItem == null)
+                        trackItem = branch.TrackItems.Where(b => b.IsFile).FirstOrDefault(track => CheckFileItemForChangeSet(x.OldPath, track));
+                    return new { trackItem = trackItem, item = x };
+                })
+                .Where(x => x.trackItem != null)
+                .Select(x => ProcessMergeRequestChanges(mergeRequest, x.item, localGitDir, x.trackItem, autoSyncToken)).ToList();
             bool ignoreValidation = gitLabWrapper.ShouldIgnoreSharedFiles(mergeRequest);
 
             if (!ValidateMergeRequestChanges(gitLabWrapper, mergeRequest, ignoreValidation) || !vcsWrapper.ProcessCheckout(genericChange, ignoreValidation, branch)) {
@@ -824,6 +836,12 @@ namespace DXVcs2Git.Console {
             string projectPath = track.ProjectPath.EndsWith(@"/") ? track.ProjectPath : $@"{track.ProjectPath}/";
             return path.StartsWith(projectPath, StringComparison.InvariantCultureIgnoreCase);
         }
+        static bool CheckFileItemForChangeSet(string path, TrackItem track) {
+            if (string.IsNullOrEmpty(path))
+                return false;
+            string projectPath = track.ProjectPath;
+            return string.Compare(path, projectPath, StringComparison.InvariantCultureIgnoreCase) == 0;
+        }
         static bool ValidateChangeSet(List<SyncItem> genericChangeSet) {
             return !genericChangeSet.Any(x => x.SharedFile);
         }
@@ -856,42 +874,42 @@ namespace DXVcs2Git.Console {
             sb.AppendLine(Log.GetErrorsAccumulatorContent());
             return sb.ToString();
         }
-        static SyncItem ProcessMergeRequestChanges(MergeRequest mergeRequest, MergeRequestFileData fileData, string localGitDir, TrackBranch branch, string token) {
-            string vcsRoot = branch.RepoRoot;
+        static SyncItem ProcessMergeRequestChanges(MergeRequest mergeRequest, MergeRequestFileData fileData, string localGitDir, TrackItem trackItem, string token) {
             var syncItem = new SyncItem();
             if (fileData.IsNew) {
                 syncItem.SyncAction = SyncAction.New;
-                syncItem.LocalPath = CalcLocalPath(localGitDir, branch, fileData.OldPath);
-                syncItem.VcsPath = CalcVcsPath(branch, fileData.OldPath);
+                syncItem.LocalPath = CalcLocalPath(localGitDir, fileData.OldPath);
+                syncItem.VcsPath = CalcVcsPath(trackItem, fileData.OldPath);
             }
             else if (fileData.IsDeleted) {
                 syncItem.SyncAction = SyncAction.Delete;
-                syncItem.LocalPath = CalcLocalPath(localGitDir, branch, fileData.OldPath);
-                syncItem.VcsPath = CalcVcsPath(branch, fileData.OldPath);
+                syncItem.LocalPath = CalcLocalPath(localGitDir, fileData.OldPath);
+                syncItem.VcsPath = CalcVcsPath(trackItem, fileData.OldPath);
             }
             else if (fileData.IsRenamed) {
                 syncItem.SyncAction = SyncAction.Move;
-                syncItem.LocalPath = CalcLocalPath(localGitDir, branch, fileData.OldPath);
-                syncItem.NewLocalPath = CalcLocalPath(localGitDir, branch, fileData.NewPath);
-                syncItem.VcsPath = CalcVcsPath(branch, fileData.OldPath);
-                syncItem.NewVcsPath = CalcVcsPath(branch, fileData.NewPath);
+                syncItem.LocalPath = CalcLocalPath(localGitDir, fileData.OldPath);
+                syncItem.NewLocalPath = CalcLocalPath(localGitDir, fileData.NewPath);
+                syncItem.VcsPath = CalcVcsPath(trackItem, fileData.OldPath);
+                syncItem.NewVcsPath = CalcVcsPath(trackItem, fileData.NewPath);
             }
             else {
                 syncItem.SyncAction = SyncAction.Modify;
-                syncItem.LocalPath = CalcLocalPath(localGitDir, branch, fileData.OldPath);
-                syncItem.VcsPath = CalcVcsPath(branch, fileData.OldPath);
+                syncItem.LocalPath = CalcLocalPath(localGitDir, fileData.OldPath);
+                syncItem.VcsPath = CalcVcsPath(trackItem, fileData.OldPath);
             }
-            syncItem.Comment = CalcComment(mergeRequest, branch, token);
+            syncItem.SingleSyncFile = trackItem.IsFile;
+            syncItem.Track = trackItem;
+            syncItem.Comment = CalcComment(mergeRequest, trackItem.Branch, token);
             return syncItem;
         }
-        static string CalcLocalPath(string localGitDir, TrackBranch branch, string path) {
+        static string CalcLocalPath(string localGitDir, string path) {
             return Path.Combine(localGitDir, path);
         }
-        static string CalcVcsPath(TrackBranch branch, string path) {
-            var trackItem = branch.TrackItems.First(x => CheckItemForChangeSet(path, x));
+        static string CalcVcsPath(TrackItem trackItem, string path) {
             var resultPath = path.Remove(0, trackItem.ProjectPath.Length).TrimStart(@"\/".ToCharArray());
-            string trackPath = branch.GetTrackRoot(trackItem);
-            return Path.Combine(trackPath, resultPath).Replace("\\", "/");
+            var branch = trackItem.Branch;
+            return branch.GetVcsPath(trackItem, resultPath);
         }
         static ProcessHistoryResult ProcessHistory(DXVcsWrapper vcsWrapper, GitWrapper gitWrapper, RegisteredUsers users, User defaultUser, string gitRepoPath, string localGitDir, TrackBranch branch, int commitsCount, SyncHistoryWrapper syncHistory, bool mergeCommits) {
             IList<CommitItem> commits = GenerateCommits(vcsWrapper, branch, syncHistory, mergeCommits);

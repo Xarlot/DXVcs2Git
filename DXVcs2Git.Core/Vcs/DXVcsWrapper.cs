@@ -208,7 +208,7 @@ namespace DXVcs2Git.DXVcs {
             sharedFiles.ForEach(x => CheckIsSingleSharedFile(list, x));
 
             list.ForEach(x => {
-                TestFileResult result = ProcessBeforeCheckout(x, ignoreSharedFiles, branch);
+                TestFileResult result = ProcessBeforeCheckout(x, ignoreSharedFiles, branch, x.Track);
                 x.State = CalcBeforeCheckoutState(result);
             });
 
@@ -277,21 +277,21 @@ namespace DXVcs2Git.DXVcs {
 
             }
         }
-        TestFileResult ProcessBeforeCheckout(SyncItem item, bool ignoreSharedFiles, TrackBranch branch) {
+        TestFileResult ProcessBeforeCheckout(SyncItem item, bool ignoreSharedFiles, TrackBranch branch, TrackItem trackItem) {
             TestFileResult result;
             switch (item.SyncAction) {
                 case SyncAction.New:
-                    result = BeforeCheckOutCreateFile(item.VcsPath, item.LocalPath, ignoreSharedFiles, branch);
+                    result = BeforeCheckOutCreateFile(item.VcsPath, item.LocalPath, ignoreSharedFiles, trackItem);
                     break;
                 case SyncAction.Modify:
-                    result = BeforeCheckOutModifyFile(item.VcsPath, item.LocalPath, ignoreSharedFiles, item.SingleSharedFile, branch);
+                    result = BeforeCheckOutModifyFile(item.VcsPath, item.LocalPath, ignoreSharedFiles, item.SingleSharedFile, branch, trackItem);
                     break;
                 case SyncAction.Delete:
-                    result = BeforeCheckOutDeleteFile(item.VcsPath, item.LocalPath, ignoreSharedFiles, branch);
+                    result = BeforeCheckOutDeleteFile(item.VcsPath, item.LocalPath, ignoreSharedFiles, trackItem);
                     break;
                 case SyncAction.Move:
                     SyncAction newAction = SyncAction.Move;
-                    result = BeforeCheckOutMoveFile(item.VcsPath, item.NewVcsPath, item.LocalPath, item.NewLocalPath, ignoreSharedFiles, branch, ref newAction);
+                    result = BeforeCheckOutMoveFile(item.VcsPath, item.NewVcsPath, item.LocalPath, item.NewLocalPath, ignoreSharedFiles, branch, trackItem, ref newAction);
                     item.SyncAction = newAction;
                     break;
                 default:
@@ -299,7 +299,12 @@ namespace DXVcs2Git.DXVcs {
             }
             return result;
         }
-        TestFileResult BeforeCheckOutMoveFile(string vcsPath, string newVcsPath, string localPath, string newLocalPath, bool ignoreSharedFiles, TrackBranch branch, ref SyncAction newAction) {
+        TestFileResult BeforeCheckOutMoveFile(string vcsPath, string newVcsPath, string localPath, string newLocalPath, bool ignoreSharedFiles, TrackBranch branch, TrackItem trackItem, ref SyncAction newAction) {
+            if (trackItem.IsFile) {
+                Log.Error($"Moving individually synchronized files is forbidden. Remove {trackItem.ProjectPath} from track config first.");
+                return TestFileResult.Fail;
+            }
+
             bool isOldPathTracking = branch.IsTrackingVcsPath(vcsPath);
             bool isNewPathTracking = branch.IsTrackingVcsPath(newVcsPath);
 
@@ -316,11 +321,11 @@ namespace DXVcs2Git.DXVcs {
                 return TestFileResult.Ignore;
             if (isNewPathTracking && !isOldPathTracking) {
                 newAction = SyncAction.New;
-                return BeforeCheckOutCreateFile(newVcsPath, localPath, ignoreSharedFiles, branch);
+                return BeforeCheckOutCreateFile(newVcsPath, localPath, ignoreSharedFiles, trackItem);
             }
             else if (!isNewPathTracking && isOldPathTracking) {
                 newAction = SyncAction.Delete;
-                return BeforeCheckOutDeleteFile(vcsPath, localPath, ignoreSharedFiles, branch);
+                return BeforeCheckOutDeleteFile(vcsPath, localPath, ignoreSharedFiles, trackItem);
             }
 
             var oldPathResult = PerformSimpleTestBeforeCheckout(vcsPath, ignoreSharedFiles, false, false);
@@ -338,23 +343,22 @@ namespace DXVcs2Git.DXVcs {
                 return false;
             }
         }
-        TestFileResult BeforeCheckOutDeleteFile(string vcsPath, string localPath, bool ignoreSharedFiles, TrackBranch branch) {
-            if (!branch.IsTrackingVcsPath(vcsPath))
-                return TestFileResult.Ignore;
+        TestFileResult BeforeCheckOutDeleteFile(string vcsPath, string localPath, bool ignoreSharedFiles, TrackItem item) {
+            if (item.IsFile) {
+                Log.Error($"Deleting individually synchronized files is forbidden. Remove {item.ProjectPath} from track config first.");
+                return TestFileResult.Fail;
+            }
+
             return PerformSimpleTestBeforeCheckout(vcsPath, ignoreSharedFiles, false, false);
         }
-        TestFileResult BeforeCheckOutModifyFile(string vcsPath, string localPath, bool ignoreSharedFiles, bool singleSharedFile, TrackBranch branch) {
-            if (!branch.IsTrackingVcsPath(vcsPath))
-                return TestFileResult.Ignore;
+        TestFileResult BeforeCheckOutModifyFile(string vcsPath, string localPath, bool ignoreSharedFiles, bool singleSharedFile, TrackBranch branch, TrackItem item) {
             if (!PerformHasFileTestBeforeCheckout(vcsPath)) {
                 Log.Error($"Check modify capability. File {vcsPath} is not found in vcs.");
                 return TestFileResult.Fail;
             }
             return PerformSimpleTestBeforeCheckout(vcsPath, ignoreSharedFiles, singleSharedFile, true);
         }
-        TestFileResult BeforeCheckOutCreateFile(string vcsPath, string localPath, bool ignoreSharedFiles, TrackBranch branch) {
-            if (!branch.IsTrackingVcsPath(vcsPath))
-                return TestFileResult.Ignore;
+        TestFileResult BeforeCheckOutCreateFile(string vcsPath, string localPath, bool ignoreSharedFiles, TrackItem trackItem) {
             return PerformSimpleTestBeforeCheckout(vcsPath, ignoreSharedFiles, false, false);
         }
         TestFileResult PerformSimpleTestBeforeCheckout(string vcsPath, bool ignoreSharedFiles, bool singleSharedFile, bool allowSingleSharedFile) {

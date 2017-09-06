@@ -22,5 +22,7 @@
         public ProcessState State { get; set; }
         public bool SharedFile { get; set; }
         public bool SingleSharedFile { get; set; }
+        public bool SingleSyncFile { get; set; }
+        public TrackItem Track { get; set; }
     }
 }
