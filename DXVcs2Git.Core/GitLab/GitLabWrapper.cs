@@ -215,26 +215,30 @@ namespace DXVcs2Git.Git {
             var changes = mergeRequestsClient.Changes(mergeRequest.Iid);
             return changes.Changes.Files;
         }
-        public IEnumerable<Build> GetBuilds(MergeRequest mergeRequest, Sha1 sha) {
-            return Enumerable.Empty<Build>();
-            //var projectClient = client.GetRepository(mergeRequest.SourceProjectId);
-            //return projectClient.Builds.GetBuildsForCommit(sha);
+        public IEnumerable<Job> GetBuilds(MergeRequest mergeRequest, Sha1 sha) {
+            var projectClient = client.GetRepository(mergeRequest.SourceProjectId);
+            var pipelinesClient = projectClient.Pipelines;
+            var pipelines = pipelinesClient.All();
+            var pipeline = pipelines.FirstOrDefault(x => object.Equals(x.Sha1, sha));
+            if (pipeline == null)
+                return Enumerable.Empty<Job>();
+            return pipelinesClient.GetJobs(pipeline.Id);
         }
-        public void ForceBuild(MergeRequest mergeRequest, Build build = null) {
+        public void ForceBuild(MergeRequest mergeRequest, Job build = null) {
             //var projectClient = client.GetRepository(mergeRequest.SourceProjectId);
             //var actualBuild = build ?? projectClient.Builds.GetBuilds().FirstOrDefault();
             //if (actualBuild == null || actualBuild.Status == JobStatus.success || actualBuild.Status == JobStatus.pending || actualBuild.Status == JobStatus.running)
             //    return;
             //projectClient.Builds.Retry(actualBuild);
         }
-        public void AbortBuild(MergeRequest mergeRequest, Build build) {
+        public void AbortBuild(MergeRequest mergeRequest, Job build) {
             //var projectClient = client.GetRepository(mergeRequest.SourceProjectId);
             //var actualBuild = build ?? projectClient.Builds.GetBuilds().FirstOrDefault();
             //if (actualBuild == null || (actualBuild.Status != JobStatus.pending && actualBuild.Status != JobStatus.running))
             //    return;
             //projectClient.Builds.Cancel(actualBuild);
         }
-        public byte[] DownloadArtifacts(string projectUrl, Build build) {
+        public byte[] DownloadArtifacts(string projectUrl, Job build) {
             Func<string, Project> findProject = IsAdmin() ? (Func<string, Project>)FindProjectFromAll : FindProject;
             var project = findProject(projectUrl);
             if (project == null)
@@ -242,40 +246,45 @@ namespace DXVcs2Git.Git {
             var projectClient = client.GetRepository(project.Id);
             return DownloadArtifactsCore(projectClient, build);
         }
-        public byte[] DownloadArtifacts(MergeRequest mergeRequest, Build build) {
+        public byte[] DownloadArtifacts(MergeRequest mergeRequest, Job build) {
             var projectClient = client.GetRepository(mergeRequest.SourceProjectId);
             return DownloadArtifactsCore(projectClient, build);
         }
-        public byte[] DownloadTrace(MergeRequest mergeRequest, Build build) {
-            return null;
-            //var projectClient = client.GetRepository(mergeRequest.SourceProjectId);
-            //byte[] result = null;
-            //projectClient.Builds.GetTraceFile(build, stream => {
-            //    if (stream == null)
-            //        return;
-            //    using (MemoryStream ms = new MemoryStream()) {
-            //        stream.CopyTo(ms);
-            //        result = ms.ToArray();
-            //    }
-            //});
-            //return result;
-        }
-        static byte[] DownloadArtifactsCore(IRepositoryClient projectClient, Build build) {
+        public byte[] DownloadTrace(MergeRequest mergeRequest, Job job) {
             byte[] result = null;
-            //try {
-            //    projectClient.Builds.GetArtifactFile(build, stream => {
-            //        if (stream == null)
-            //            return;
-            //        using (MemoryStream ms = new MemoryStream()) {
-            //            stream.CopyTo(ms);
-            //            result = ms.ToArray();
-            //        }
-            //    });
-            //}
-            //catch (Exception ex) {
-            //    Log.Error("Can`t download artifacts.", ex);
-            //    return null;
-            //}
+            try {
+                var projectClient = client.GetRepository(mergeRequest.SourceProjectId);
+                projectClient.Jobs.DownloadTrace(job, stream => {
+                    if (stream == null)
+                        return;
+                    using (MemoryStream ms = new MemoryStream()) {
+                        stream.CopyTo(ms);
+                        result = ms.ToArray();
+                    }
+                });
+            }
+            catch (Exception ex) {
+                Log.Error("Can`t download trace.", ex);
+                return null;
+            }
+            return result;
+        }
+        static byte[] DownloadArtifactsCore(IRepositoryClient projectClient, Job job) {
+            byte[] result = null;
+            try {
+                projectClient.Jobs.DownloadArtifact(job, stream => {
+                    if (stream == null)
+                        return;
+                    using (MemoryStream ms = new MemoryStream()) {
+                        stream.CopyTo(ms);
+                        result = ms.ToArray();
+                    }
+                });
+            }
+            catch (Exception ex) {
+                Log.Error("Can`t download artifacts.", ex);
+                return null;
+            }
             return result;
         }
     }

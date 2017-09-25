@@ -53,7 +53,7 @@ namespace DXVcs2Git.Core.GitLab {
         [DataMember(Name = "build_name")]
         public string BuildName;
         [DataMember(Name = "build_status")]
-        public JobStatus Status;
+        public PipelineStatus Status;
         [DataMember(Name = "commit")]
         public BuildHookCommit Commit;
         [DataMember(Name = "project_id")]

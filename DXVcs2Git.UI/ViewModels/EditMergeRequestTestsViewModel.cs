@@ -47,7 +47,7 @@ namespace DXVcs2Git.UI.ViewModels {
             var actualCommit = commit ?? BranchViewModel.MergeRequest.Commits.FirstOrDefault();
             if (actualCommit == null)
                 return false;
-            return actualCommit.Build?.BuildStatus != JobStatus.pending && actualCommit.Build?.BuildStatus != JobStatus.running;
+            return actualCommit.Build?.BuildStatus != PipelineStatus.pending && actualCommit.Build?.BuildStatus != PipelineStatus.running;
         }
         bool CanPerformAbortTest(CommitViewModel commit) {
             if (BranchViewModel?.MergeRequest == null)
@@ -55,7 +55,7 @@ namespace DXVcs2Git.UI.ViewModels {
             var actualCommit = commit ?? BranchViewModel.MergeRequest.Commits.FirstOrDefault();
             if (actualCommit == null)
                 return false;
-            return actualCommit.Build?.BuildStatus == JobStatus.pending || actualCommit.Build?.BuildStatus == JobStatus.running;
+            return actualCommit.Build?.BuildStatus == PipelineStatus.pending || actualCommit.Build?.BuildStatus == PipelineStatus.running;
         }
         void PerformAbortTest(CommitViewModel commit) {
             var actualCommit = commit ?? BranchViewModel.MergeRequest.Commits.FirstOrDefault();
@@ -66,7 +66,7 @@ namespace DXVcs2Git.UI.ViewModels {
             if (model == null)
                 return false;
             var buildStatus = model.Build?.BuildStatus;
-            return buildStatus == JobStatus.failed || buildStatus == JobStatus.success;
+            return buildStatus == PipelineStatus.failed || buildStatus == PipelineStatus.success;
         }
         void PerformShowLogs(CommitViewModel model) {
             ShowLogsService.Show(model);
@@ -124,9 +124,9 @@ namespace DXVcs2Git.UI.ViewModels {
 
     public class CommitViewModel : BindableBase {
         readonly Commit commit;
-        readonly Func<Build, byte[]> downloadArtifactsHandler;
-        readonly Func<Build, byte[]> downloadTraceHandler;
-        readonly Func<Sha1, IEnumerable<Build>> getBuildsHandler;
+        readonly Func<Job, byte[]> downloadArtifactsHandler;
+        readonly Func<Job, byte[]> downloadTraceHandler;
+        readonly Func<Sha1, IEnumerable<Job>> getBuildsHandler;
         public string Id { get; }
         public string Title {
             get { return GetProperty(() => Title); }
@@ -136,7 +136,7 @@ namespace DXVcs2Git.UI.ViewModels {
             get { return GetProperty(() => Build); }
             private set { SetProperty(() => Build, value); }
         }
-        public CommitViewModel(Commit commit, Func<Sha1, IEnumerable<Build>> getBuildsHandler, Func<Build, byte[]> downloadArtifactsHandler, Func<Build, byte[]> downloadTraceHandler) {
+        public CommitViewModel(Commit commit, Func<Sha1, IEnumerable<Job>> getBuildsHandler, Func<Job, byte[]> downloadArtifactsHandler, Func<Job, byte[]> downloadTraceHandler) {
             this.commit = commit;
             this.downloadArtifactsHandler = downloadArtifactsHandler;
             this.downloadTraceHandler = downloadTraceHandler;
@@ -157,15 +157,15 @@ namespace DXVcs2Git.UI.ViewModels {
 
     public class BuildViewModel : BindableBase {
         public int Id => Build.Id;
-        public JobStatus BuildStatus { get; }
+        public PipelineStatus BuildStatus { get; }
         public string Duration { get; }
-        public ArtifactsFile Artifacts => Build.ArtifactsFile;
-        public Build Build { get; }
-        public BuildViewModel(Build build) {
+        public ArtifactsFile Artifacts => Build.File;
+        public Job Build { get; }
+        public BuildViewModel(Job build) {
             Build = build;
-            BuildStatus = build.Status ?? JobStatus.undefined;
-            if (build.StartedAt != null && (BuildStatus == JobStatus.success || BuildStatus == JobStatus.failed)) {
-                Duration = ((build.FinishedAt ?? DateTime.Now) - build.StartedAt.Value).ToString("g");
+            BuildStatus = build.Pipeline.Status;
+            if (build.CreatedAt != null && (BuildStatus == PipelineStatus.success || BuildStatus == PipelineStatus.failed)) {
+                Duration = ((build.FinishedAt ?? DateTime.Now) - build.CreatedAt.Value).ToString("g");
             }
             else
                 Duration = string.Empty;

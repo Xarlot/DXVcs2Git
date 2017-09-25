@@ -13,6 +13,7 @@ using DXVcs2Git.Core.Configuration;
 using Microsoft.Practices.ServiceLocation;
 using DevExpress.Xpf.Core;
 using DXVcs2Git.Core.GitLab;
+using NGitLab.Models;
 using ProjectHookType = DXVcs2Git.Core.GitLab.ProjectHookType;
 
 namespace DXVcs2Git.UI.ViewModels {
@@ -75,7 +76,7 @@ namespace DXVcs2Git.UI.ViewModels {
                     return;
                 }
                 var repo = $@"http://{match.Groups["server"]}/{match.Groups["nspace"]}/{match.Groups["name"]}.git";
-                var artifacts = Repositories.SelectedBranch.DownloadArtifacts(repo, new Build() { Id = Convert.ToInt32(match.Groups["build"].Value) });
+                var artifacts = Repositories.SelectedBranch.DownloadArtifacts(repo, new Job() { Id = Convert.ToInt32(match.Groups["build"].Value) });
                 if (artifacts == null) {
                     MessageBoxService.Show("Build artifacts not found", "Build log error", MessageBoxButton.OK, MessageBoxImage.Error);
                     return;

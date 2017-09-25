@@ -3,7 +3,7 @@ using System.Text;
 using DevExpress.Mvvm;
 using Ionic.Zip;
 using System.IO.Compression;
-using DXVcs2Git.Core.GitLab;
+using NGitLab.Models;
 
 namespace DXVcs2Git.UI.ViewModels {
     public class ArtifactsViewModel : BindableBase {

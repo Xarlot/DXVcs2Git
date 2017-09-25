@@ -447,7 +447,7 @@ namespace DXVcs2Git.Console {
             if (supportSendingMessages)
                 SendMessage(serviceUser, hook.Json, farmTaskName);
 
-            if (hook.Status == JobStatus.success) {
+            if (hook.Status == PipelineStatus.success) {
                 Project project = gitLabWrapper.GetProject(hook.ProjectId);
                 if (project == null) {
                     Log.Message($"Can`t find project {hook.ProjectName}.");
@@ -545,9 +545,9 @@ namespace DXVcs2Git.Console {
                     Log.Message("Check build status before force build.");
                     var commit = gitLabWrapper.GetMergeRequestCommits(mergeRequest).FirstOrDefault();
                     var build = commit != null ? gitLabWrapper.GetBuilds(mergeRequest, commit.Id).FirstOrDefault() : null;
-                    var buildStatus = build?.Status ?? JobStatus.undefined;
+                    var buildStatus = build?.Pipeline.Status;
                     Log.Message($"Build status = {buildStatus}.");
-                    if (buildStatus == JobStatus.success)
+                    if (buildStatus == PipelineStatus.success)
                         ForceBuild(action.SyncTask);
                     return;
                 }
