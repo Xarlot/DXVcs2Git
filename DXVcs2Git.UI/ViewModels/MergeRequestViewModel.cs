@@ -1,7 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using DevExpress.Mvvm;
-using DXVcs2Git.Git;
 using NGitLab.Models;
 
 namespace DXVcs2Git.UI.ViewModels {

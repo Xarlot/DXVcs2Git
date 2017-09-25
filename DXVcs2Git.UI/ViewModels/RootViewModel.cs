@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Linq;
-using System.ServiceModel.ComIntegration;
-using System.Text;
 using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Input;
@@ -15,8 +13,6 @@ using DXVcs2Git.Core.Configuration;
 using Microsoft.Practices.ServiceLocation;
 using DevExpress.Xpf.Core;
 using DXVcs2Git.Core.GitLab;
-using DXVcs2Git.Git;
-using NGitLab.Models;
 using ProjectHookType = DXVcs2Git.Core.GitLab.ProjectHookType;
 
 namespace DXVcs2Git.UI.ViewModels {

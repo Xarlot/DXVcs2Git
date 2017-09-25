@@ -5,7 +5,6 @@ using System.Windows;
 using System.Windows.Input;
 using DevExpress.Mvvm;
 using DevExpress.Mvvm.Native;
-using DXVcs2Git.Core.GitLab;
 using Microsoft.Practices.ServiceLocation;
 
 namespace DXVcs2Git.UI.ViewModels {

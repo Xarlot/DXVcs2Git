@@ -2,7 +2,6 @@
 using System.Text;
 using DevExpress.Mvvm;
 using Ionic.Zip;
-using NGitLab.Models;
 using System.IO.Compression;
 using DXVcs2Git.Core.GitLab;
 
