@@ -26,7 +26,7 @@ namespace DXVcs2Git.UI.Behaviors {
         }
 
         void UpdateTotalSummaryState() {
-            AssociatedObject.ShowFixedTotalSummary = VerticalScrollInfo.Viewport != VerticalScrollInfo.Extent;
+            AssociatedObject.ShowFixedTotalSummary = VerticalScrollInfo.Viewport < VerticalScrollInfo.Extent;
         }
 
         void ContentChanged(object sender, EventArgs e) {

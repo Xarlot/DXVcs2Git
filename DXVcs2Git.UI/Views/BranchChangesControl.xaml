@@ -50,7 +50,15 @@
                     </dxg:GridControl.Columns>
                     <dxg:GridControl.TotalSummary>
                         <dxg:GridSummaryItem SummaryType="Count" Alignment="Left"/>
+                        <dxg:GridSummaryItem x:Name="SummaryAdded" SummaryType="Custom" Alignment="Left" FieldName="ChangeMode" DisplayFormat="{}Added={0}"/>
+                        <dxg:GridSummaryItem x:Name="SummaryRemoved" SummaryType="Custom" Alignment="Left" FieldName="ChangeMode" DisplayFormat="{}Removed={0}"/>
+                        <dxg:GridSummaryItem x:Name="SummaryChanged" SummaryType="Custom" Alignment="Left" FieldName="ChangeMode" DisplayFormat="{}Changed={0}"/>
+                        <dxg:GridSummaryItem x:Name="SummaryRenamed" SummaryType="Custom" Alignment="Left" FieldName="ChangeMode" DisplayFormat="{}Renamed={0}"/>
                     </dxg:GridControl.TotalSummary>
+                    <dxmvvm:Interaction.Behaviors>
+                        <behaviors:GridSummaryChangeModeBehavior SummaryItemAdded="{Binding ElementName=SummaryAdded}" SummaryItemRemoved="{Binding ElementName=SummaryRemoved}" 
+                                                                 SummaryItemChanged="{Binding ElementName=SummaryChanged}" SummaryItemRenamed="{Binding ElementName=SummaryRenamed}"/>
+                    </dxmvvm:Interaction.Behaviors>
                     <dxg:GridControl.View>
                         <dxg:TableView
                                     ShowColumnHeaders="False"
