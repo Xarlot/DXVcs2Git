@@ -65,10 +65,14 @@ namespace DXVcs2Git.UI.ViewModels {
         bool CanPerformShowLogs(CommitViewModel model) {
             if (model == null)
                 return false;
+            if (model.Build == null)
+                model.UpdateBuilds();
             var buildStatus = model.Build?.BuildStatus;
             return buildStatus == PipelineStatus.failed || buildStatus == PipelineStatus.success;
         }
         void PerformShowLogs(CommitViewModel model) {
+            if (model.Build == null)
+                model.UpdateBuilds();
             ShowLogsService.Show(model);
         }
         bool CanPerformCancelTests() {
@@ -100,7 +104,6 @@ namespace DXVcs2Git.UI.ViewModels {
             }
             var mergeRequest = BranchViewModel.MergeRequest;
             Commits = mergeRequest.Commits;
-            Commits.ForEach(x => x.UpdateBuilds());
         }
         void RefreshFarmStatus() {
         }
@@ -128,13 +131,18 @@ namespace DXVcs2Git.UI.ViewModels {
         readonly Func<Job, byte[]> downloadTraceHandler;
         readonly Func<Sha1, IEnumerable<Job>> getBuildsHandler;
         public string Id { get; }
+        public BuildViewModel Build { get; private set; }
         public string Title {
             get { return GetProperty(() => Title); }
             private set { SetProperty(() => Title, value); }
         }
-        public BuildViewModel Build {
-            get { return GetProperty(() => Build); }
-            private set { SetProperty(() => Build, value); }
+        public PipelineStatus BuildStatus {
+            get { return GetProperty(() => BuildStatus); }
+            private set { SetProperty(() => BuildStatus, value); }
+        }
+        public string Duration {
+            get { return GetProperty(() => Duration); }
+            private set { SetProperty(() => Duration, value); }
         }
         public CommitViewModel(Commit commit, Func<Sha1, IEnumerable<Job>> getBuildsHandler, Func<Job, byte[]> downloadArtifactsHandler, Func<Job, byte[]> downloadTraceHandler) {
             this.commit = commit;
@@ -143,10 +151,15 @@ namespace DXVcs2Git.UI.ViewModels {
             this.getBuildsHandler = getBuildsHandler;
             Title = commit.Title;
             Id = commit.ShortId;
+            Duration = "Click to load";
         }
         public void UpdateBuilds() {
             var builds = getBuildsHandler(commit.Id);
             Build = builds.Select(x => new BuildViewModel(x)).FirstOrDefault();
+            if(Build == null)
+                return;
+            BuildStatus = Build.BuildStatus;
+            Duration = Build.Duration;
         }
         public ArtifactsViewModel DownloadArtifacts() {
             if (Build == null)

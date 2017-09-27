@@ -9,12 +9,32 @@
              xmlns:viewModels="clr-namespace:DXVcs2Git.UI.ViewModels"
              xmlns:dxr="http://schemas.devexpress.com/winfx/2008/xaml/ribbon"
              xmlns:dxb="http://schemas.devexpress.com/winfx/2008/xaml/bars"
+             xmlns:dxe="http://schemas.devexpress.com/winfx/2008/xaml/editors"
              xmlns:dx="http://schemas.devexpress.com/winfx/2008/xaml/core"
              xmlns:dxmvvm="http://schemas.devexpress.com/winfx/2008/xaml/mvvm"
              xmlns:behaviors="clr-namespace:DXVcs2Git.UI.Behaviors"
              mc:Ignorable="d" 
              d:DesignHeight="300" d:DesignWidth="300"
              AllowDrop="True">
+    <UserControl.Resources>
+        <DataTemplate x:Key="PipelineStatusColumnCellTemplate">
+            <dx:DXImage Width="16" Height="16" VerticalAlignment="Center" HorizontalAlignment="Center">
+                <dx:DXImage.Source>
+                    <Binding Path="Value">
+                        <Binding.Converter>
+                            <dxmvvm:ObjectToObjectConverter DefaultTarget="{x:Null}">
+                                <dxmvvm:MapItem Source="success" Target="{dx:SvgImageSource Uri=../Images/PipelineStatus/success.svg}"/>
+                                <dxmvvm:MapItem Source="pending" Target="{dx:SvgImageSource Uri=../Images/PipelineStatus/pending.svg}"/>
+                                <dxmvvm:MapItem Source="failed" Target="{dx:SvgImageSource Uri=../Images/PipelineStatus/failed.svg}"/>
+                                <dxmvvm:MapItem Source="running" Target="{dx:SvgImageSource Uri=../Images/PipelineStatus/running.svg}"/>
+                                <dxmvvm:MapItem Source="canceled" Target="{dx:SvgImageSource Uri=../Images/PipelineStatus/canceled.svg}"/>
+                            </dxmvvm:ObjectToObjectConverter>
+                        </Binding.Converter>
+                    </Binding>
+                </dx:DXImage.Source>
+            </dx:DXImage>
+        </DataTemplate>
+    </UserControl.Resources>
     <UserControl.DataContext>
         <extensions:IoC TargetType="{x:Type viewModels:EditMergeRequestTestsViewModel}"/>
     </UserControl.DataContext>
@@ -80,9 +100,9 @@
         </dxr:RibbonControl>
         <dxg:GridControl x:Name="grid" Grid.Row="1" ItemsSource="{Binding Path=Commits}">
             <dxg:GridControl.Columns>
-                <dxg:GridColumn Width="60" Header="BuildStatus"  FieldName="Build.BuildStatus" IsSmart="True"/>
+                <dxg:GridColumn Width="22" Header="" FieldName="BuildStatus" IsSmart="True" CellTemplate="{StaticResource PipelineStatusColumnCellTemplate}"/>
                 <dxg:GridColumn Width="*" FieldName="Title" IsSmart="true" />
-                <dxg:GridColumn Width="90" Header="Tests duration"  FieldName="Build.Duration" IsSmart="True"/>
+                <dxg:GridColumn Width="90" Header="Tests duration"  FieldName="Duration" IsSmart="True"/>
             </dxg:GridControl.Columns>
             <dxmvvm:Interaction.Behaviors>
                 <dxmvvm:EventToCommand PassEventArgsToCommand="True" Command="{Binding ShowLogCommand}" EventName="MouseDoubleClick">
@@ -92,7 +112,7 @@
                 </dxmvvm:EventToCommand>
             </dxmvvm:Interaction.Behaviors>
             <dxg:GridControl.View>
-                <dxg:TableView NavigationStyle="Row">
+                <dxg:TableView NavigationStyle="Row" ShowIndicator="False">
                     <dxg:TableView.RowCellMenuCustomizations>
                         <dxb:BarButtonItem Content="Show test logs " Command="{Binding Path=DataContext.ShowLogCommand, ElementName=grid}" CommandParameter="{Binding Path=CurrentItem, ElementName=grid, UpdateSourceTrigger=PropertyChanged}"/>
                         <dxb:BarButtonItem Content="Force test " Command="{Binding Path=DataContext.ForceTestCommand, ElementName=grid}" CommandParameter="{Binding Path=CurrentItem, ElementName=grid, UpdateSourceTrigger=PropertyChanged}"/>
