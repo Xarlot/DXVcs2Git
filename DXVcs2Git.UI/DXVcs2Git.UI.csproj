@@ -539,6 +539,11 @@
     <Content Include="Configs\Office_2016.2.config">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
+    <Resource Include="Images\PipelineStatus\canceled.svg" />
+    <Resource Include="Images\PipelineStatus\failed.svg" />
+    <Resource Include="Images\PipelineStatus\pending.svg" />
+    <Resource Include="Images\PipelineStatus\running.svg" />
+    <Resource Include="Images\PipelineStatus\success.svg" />
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
