@@ -58,11 +58,14 @@ namespace DXVcs2Git.Console {
         public string SourceRepo { get; }
         [Option("sourcebranch", Required = true, HelpText = "Source branch for searching merge request")]
         public string SourceBranch { get; }
+        [Option("result", Required = true, HelpText = "Test results")]
+        public int Result { get; }
 
-        public ProcessTestsOptions(string branch, string sourceRepo, string sourceBranch, string server, string login, string repo, string password, string authToken) : base(server, login, repo, password, authToken) {
+        public ProcessTestsOptions(string branch, string sourceRepo, string sourceBranch, int result, string server, string login, string repo, string password, string authToken) : base(server, login, repo, password, authToken) {
             Branch = branch;
             SourceRepo = sourceRepo;
             SourceBranch = sourceBranch;
+            Result = result;
         }
     }
     [Verb("sync", HelpText = "Sync changes between dxvcs and git")]

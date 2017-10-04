@@ -5,6 +5,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:DXVcs2Git.UI.Views"
              xmlns:dxlc="http://schemas.devexpress.com/winfx/2008/xaml/layoutcontrol"
+             xmlns:dxdo="http://schemas.devexpress.com/winfx/2008/xaml/docking"
              xmlns:dxg="http://schemas.devexpress.com/winfx/2008/xaml/grid"
              xmlns:dx="http://schemas.devexpress.com/winfx/2008/xaml/core"
              xmlns:dxe="http://schemas.devexpress.com/winfx/2008/xaml/editors"
@@ -31,26 +32,35 @@
             </dx:EnumToObjectConverter>
         </ResourceDictionary>
     </UserControl.Resources>
-    <Grid x:Name="LayoutRoot">
-        <dxlc:LayoutControl Padding="0">
-            <dxlc:LayoutGroup Orientation="Horizontal">
-                <dxlc:LayoutGroup Orientation="Vertical">
-                    <dxlc:LayoutItem HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
-                        <dxg:GridControl x:Name="grid" ItemsSource="{Binding Path=Changes}" MaxHeight="2000" AutoExpandAllGroups="True">
-                            <dxg:GridControl.Columns>
-                                <dxg:GridColumn Header="Status" FieldName="ChangeMode" FixedWidth="True" Width="20">
-                                    <dxg:GridColumn.CellTemplate>
-                                        <DataTemplate>
-                                            <dxe:ImageEdit Stretch="None" ShowBorder="False" HorizontalAlignment="Center" ShowMenu="False" IsReadOnly="True" Source="{Binding Path=Value, Converter={StaticResource FileChangeModeConverter}}"/>
-                                        </DataTemplate>
-                                    </dxg:GridColumn.CellTemplate>
-                                </dxg:GridColumn>
-                                <dxg:GridColumn FieldName="Path" Visible="False"/>
-                                <dxg:GridColumn FieldName="FileName" Visible="True"/>
-                                <dxg:GridColumn FieldName="DirName" Visible="False" GroupIndex="0"/>
-                            </dxg:GridControl.Columns>
-                            <dxg:GridControl.View>
-                                <dxg:TableView
+    <dxdo:DockLayoutManager x:Name="LayoutRoot">
+        <dxdo:LayoutGroup>
+            <dxdo:LayoutPanel ShowCaption="False">
+                <dxg:GridControl x:Name="grid" ItemsSource="{Binding Path=Changes}" MaxHeight="2000" AutoExpandAllGroups="True" ShowBorder="False">
+                    <dxg:GridControl.Columns>
+                        <dxg:GridColumn Header="Status" FieldName="ChangeMode" FixedWidth="True" Width="20">
+                            <dxg:GridColumn.CellTemplate>
+                                <DataTemplate>
+                                    <dxe:ImageEdit Stretch="None" ShowBorder="False" HorizontalAlignment="Center" ShowMenu="False" IsReadOnly="True" Source="{Binding Path=Value, Converter={StaticResource FileChangeModeConverter}}"/>
+                                </DataTemplate>
+                            </dxg:GridColumn.CellTemplate>
+                        </dxg:GridColumn>
+                        <dxg:GridColumn FieldName="Path" Visible="False"/>
+                        <dxg:GridColumn FieldName="FileName" Visible="True"/>
+                        <dxg:GridColumn FieldName="DirName" Visible="False" GroupIndex="0"/>
+                    </dxg:GridControl.Columns>
+                    <dxg:GridControl.TotalSummary>
+                        <dxg:GridSummaryItem SummaryType="Count" Alignment="Left"/>
+                        <dxg:GridSummaryItem x:Name="SummaryAdded" SummaryType="Custom" Alignment="Left" FieldName="ChangeMode" DisplayFormat="{}Added={0}"/>
+                        <dxg:GridSummaryItem x:Name="SummaryRemoved" SummaryType="Custom" Alignment="Left" FieldName="ChangeMode" DisplayFormat="{}Removed={0}"/>
+                        <dxg:GridSummaryItem x:Name="SummaryChanged" SummaryType="Custom" Alignment="Left" FieldName="ChangeMode" DisplayFormat="{}Changed={0}"/>
+                        <dxg:GridSummaryItem x:Name="SummaryRenamed" SummaryType="Custom" Alignment="Left" FieldName="ChangeMode" DisplayFormat="{}Renamed={0}"/>
+                    </dxg:GridControl.TotalSummary>
+                    <dxmvvm:Interaction.Behaviors>
+                        <behaviors:GridSummaryChangeModeBehavior SummaryItemAdded="{Binding ElementName=SummaryAdded}" SummaryItemRemoved="{Binding ElementName=SummaryRemoved}" 
+                                                                 SummaryItemChanged="{Binding ElementName=SummaryChanged}" SummaryItemRenamed="{Binding ElementName=SummaryRenamed}"/>
+                    </dxmvvm:Interaction.Behaviors>
+                    <dxg:GridControl.View>
+                        <dxg:TableView
                                     ShowColumnHeaders="False"
                                     ShowIndicator="False"
                                     ShowVerticalLines="False"
@@ -58,40 +68,36 @@
                                     ShowGroupPanel="False" 
                                     NavigationStyle="Row" 
                                     AutoWidth="True">
-                                    <dxg:TableView.Resources>
-                                        <Style TargetType="{x:Type dxg:GroupValuePresenter}">
-                                            <Setter Property="VerticalAlignment" Value="Center" />
-                                            <Setter Property="Template">
-                                                <Setter.Value>
-                                                    <ControlTemplate TargetType="{x:Type dxg:GroupValuePresenter}">
-                                                        <StackPanel Orientation="Horizontal">
-                                                            <TextBlock x:Name="PART_GroupValue" ToolTip="{Binding Text, RelativeSource={RelativeSource Self}}"/>
-                                                        </StackPanel>
-                                                    </ControlTemplate>
-                                                </Setter.Value>
-                                            </Setter>
-                                        </Style>
-                                    </dxg:TableView.Resources>
-                                </dxg:TableView>
-                            </dxg:GridControl.View>
-                        </dxg:GridControl>
-                    </dxlc:LayoutItem>
-                </dxlc:LayoutGroup>
-                <dxlc:LayoutGroup>
-                    <dxlc:LayoutItem VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
-                        <Border BorderBrush="#FFD6D6D6" BorderThickness="1">
-                            <avalonedit:TextEditor 
-                                    FontFamily="Consolas" 
-                                    IsReadOnly="True">
-                                <dxmvvm:Interaction.Behaviors>
-                                    <behaviors:AvalonEditTextBindingBehavior Text="{Binding Path=SelectedItem.Diff, ElementName=grid}"/>
-                                </dxmvvm:Interaction.Behaviors>
-                            </avalonedit:TextEditor>
-                        </Border>
-                    </dxlc:LayoutItem>
-                </dxlc:LayoutGroup>
-            </dxlc:LayoutGroup>
-        </dxlc:LayoutControl>
-
-    </Grid>
+                            <dxg:TableView.Resources>
+                                <Style TargetType="{x:Type dxg:GroupValuePresenter}">
+                                    <Setter Property="VerticalAlignment" Value="Center" />
+                                    <Setter Property="Template">
+                                        <Setter.Value>
+                                            <ControlTemplate TargetType="{x:Type dxg:GroupValuePresenter}">
+                                                <StackPanel Orientation="Horizontal">
+                                                    <TextBlock x:Name="PART_GroupValue" ToolTip="{Binding Text, RelativeSource={RelativeSource Self}}"/>
+                                                </StackPanel>
+                                            </ControlTemplate>
+                                        </Setter.Value>
+                                    </Setter>
+                                </Style>
+                            </dxg:TableView.Resources>
+                            <dxmvvm:Interaction.Behaviors>
+                                <behaviors:FixedTotalSummaryBehavior/>
+                            </dxmvvm:Interaction.Behaviors>
+                        </dxg:TableView>
+                    </dxg:GridControl.View>
+                </dxg:GridControl>
+            </dxdo:LayoutPanel>
+            <dxdo:LayoutPanel ShowCaption="False">
+                <avalonedit:TextEditor 
+                                FontFamily="Consolas" 
+                                IsReadOnly="True">
+                    <dxmvvm:Interaction.Behaviors>
+                        <behaviors:AvalonEditTextBindingBehavior Text="{Binding Path=SelectedItem.Diff, ElementName=grid}"/>
+                    </dxmvvm:Interaction.Behaviors>
+                </avalonedit:TextEditor>
+            </dxdo:LayoutPanel>
+        </dxdo:LayoutGroup>
+    </dxdo:DockLayoutManager>
 </UserControl>

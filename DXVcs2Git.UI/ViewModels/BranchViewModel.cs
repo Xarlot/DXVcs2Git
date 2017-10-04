@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Net;
 using System.Windows.Input;
@@ -94,7 +93,7 @@ namespace DXVcs2Git.UI.ViewModels {
         public IEnumerable<Commit> GetCommits(MergeRequest mergeRequest) {
             return gitLabWrapper.GetMergeRequestCommits(mergeRequest);
         }
-        public IEnumerable<Build> GetBuilds(MergeRequest mergeRequest, Sha1 sha) {
+        public IEnumerable<Job> GetBuilds(MergeRequest mergeRequest, Sha1 sha) {
             return gitLabWrapper.GetBuilds(mergeRequest, sha);
         }
         public void UpdateMergeRequest(string title, string description, string assignee) {
@@ -106,7 +105,7 @@ namespace DXVcs2Git.UI.ViewModels {
             this.gitLabWrapper.AddCommentToMergeRequest(MergeRequest.MergeRequest, comment);
         }
         public void AddMergeRequestSyncInfo(bool performTesting, bool assignToService) {
-            var mergeRequestAction = new MergeRequestSyncAction(SyncTaskName, SyncServiceName, TestServiceName, performTesting, assignToService);
+            var mergeRequestAction = new MergeRequestSyncAction(SyncTaskName, SyncServiceName, performTesting, assignToService);
             var mergeRequestOptions = new MergeRequestOptions(mergeRequestAction);
             string comment = MergeRequestOptions.ConvertToString(mergeRequestOptions);
             var mergeRequest = MergeRequest.MergeRequest;
@@ -130,19 +129,19 @@ namespace DXVcs2Git.UI.ViewModels {
         static bool IsXml(string xml) {
             return !string.IsNullOrEmpty(xml) && xml.StartsWith("<");
         }
-        public byte[] DownloadArtifacts(string project, Build build) {
+        public byte[] DownloadArtifacts(string project, Job build) {
             return gitLabWrapper.DownloadArtifacts(project, build);
         }
-        public byte[] DownloadArtifacts(MergeRequest mergeRequest, Build build) {
+        public byte[] DownloadArtifacts(MergeRequest mergeRequest, Job build) {
             return gitLabWrapper.DownloadArtifacts(mergeRequest, build);
         }
-        public byte[] DownloadTrace(MergeRequest mergeRequest, Build build) {
+        public byte[] DownloadTrace(MergeRequest mergeRequest, Job build) {
             return gitLabWrapper.DownloadTrace(mergeRequest, build);
         }
-        public void ForceBuild(MergeRequest mergeRequest, Build build = null) {
+        public void ForceBuild(MergeRequest mergeRequest, Job build = null) {
             gitLabWrapper.ForceBuild(mergeRequest, build);
         }
-        public void AbortBuild(MergeRequest mergeRequest, Build build = null) {
+        public void AbortBuild(MergeRequest mergeRequest, Job build = null) {
             gitLabWrapper.AbortBuild(mergeRequest, build);
         }
         public void UpdateWebHook() {

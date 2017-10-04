@@ -1,12 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Text.RegularExpressions;
-using System.Windows.Controls;
 using System.Windows.Input;
 using DevExpress.Mvvm;
 using DevExpress.Mvvm.Native;
+using DXVcs2Git.Core.GitLab;
 using Microsoft.Practices.ServiceLocation;
 using NGitLab;
 using NGitLab.Models;
@@ -19,6 +17,7 @@ namespace DXVcs2Git.UI.ViewModels {
         public ICommand ShowLogCommand { get; }
         public ICommand ForceTestCommand { get; }
         public ICommand AbortTestCommand { get; }
+        public ICommand UseCommitDescriptionCommand { get; }
 
         IWindowService ShowLogsService => GetService<IWindowService>();
 
@@ -33,6 +32,7 @@ namespace DXVcs2Git.UI.ViewModels {
             ShowLogCommand = DelegateCommandFactory.Create<CommitViewModel>(PerformShowLogs, CanPerformShowLogs);
             ForceTestCommand = DelegateCommandFactory.Create<CommitViewModel>(PerformForceTest, CanPerformForceTest);
             AbortTestCommand = DelegateCommandFactory.Create<CommitViewModel>(PerformAbortTest, CanPerformAbortTest);
+            UseCommitDescriptionCommand = DelegateCommandFactory.Create<CommitViewModel>(UseCommitDescription, CanUseCommitDescription);
 
             Initialize();
         }
@@ -47,7 +47,7 @@ namespace DXVcs2Git.UI.ViewModels {
             var actualCommit = commit ?? BranchViewModel.MergeRequest.Commits.FirstOrDefault();
             if (actualCommit == null)
                 return false;
-            return actualCommit.Build?.BuildStatus != BuildStatus.pending && actualCommit.Build?.BuildStatus != BuildStatus.running;
+            return actualCommit.Build?.BuildStatus != PipelineStatus.pending && actualCommit.Build?.BuildStatus != PipelineStatus.running;
         }
         bool CanPerformAbortTest(CommitViewModel commit) {
             if (BranchViewModel?.MergeRequest == null)
@@ -55,7 +55,7 @@ namespace DXVcs2Git.UI.ViewModels {
             var actualCommit = commit ?? BranchViewModel.MergeRequest.Commits.FirstOrDefault();
             if (actualCommit == null)
                 return false;
-            return actualCommit.Build?.BuildStatus == BuildStatus.pending || actualCommit.Build?.BuildStatus == BuildStatus.running;
+            return actualCommit.Build?.BuildStatus == PipelineStatus.pending || actualCommit.Build?.BuildStatus == PipelineStatus.running;
         }
         void PerformAbortTest(CommitViewModel commit) {
             var actualCommit = commit ?? BranchViewModel.MergeRequest.Commits.FirstOrDefault();
@@ -65,16 +65,27 @@ namespace DXVcs2Git.UI.ViewModels {
         bool CanPerformShowLogs(CommitViewModel model) {
             if (model == null)
                 return false;
+            if (model.Build == null)
+                model.UpdateBuilds();
             var buildStatus = model.Build?.BuildStatus;
-            return buildStatus == BuildStatus.failed || buildStatus == BuildStatus.success;
+            return buildStatus == PipelineStatus.failed || buildStatus == PipelineStatus.success;
         }
         void PerformShowLogs(CommitViewModel model) {
+            if (model.Build == null)
+                model.UpdateBuilds();
             ShowLogsService.Show(model);
         }
         bool CanPerformCancelTests() {
             return false;
         }
         void PerformCancelTests() {
+        }
+        bool CanUseCommitDescription(CommitViewModel commit) {
+            return commit != null && BranchViewModel?.MergeRequest != null;
+        }
+        void UseCommitDescription(CommitViewModel commit) {
+            BranchViewModel.UpdateMergeRequest(commit.Title, BranchViewModel.MergeRequest.MergeRequest.Description, BranchViewModel.MergeRequest.Assignee);
+            RepositoriesViewModel.RaiseRefreshSelectedBranch();
         }
         BranchViewModel BranchViewModel { get; set; }
         void OnMessageReceived(Message msg) {
@@ -93,7 +104,6 @@ namespace DXVcs2Git.UI.ViewModels {
             }
             var mergeRequest = BranchViewModel.MergeRequest;
             Commits = mergeRequest.Commits;
-            Commits.ForEach(x => x.UpdateBuilds());
         }
         void RefreshFarmStatus() {
         }
@@ -117,29 +127,39 @@ namespace DXVcs2Git.UI.ViewModels {
 
     public class CommitViewModel : BindableBase {
         readonly Commit commit;
-        readonly Func<Build, byte[]> downloadArtifactsHandler;
-        readonly Func<Build, byte[]> downloadTraceHandler;
-        readonly Func<Sha1, IEnumerable<Build>> getBuildsHandler;
+        readonly Func<Job, byte[]> downloadArtifactsHandler;
+        readonly Func<Job, byte[]> downloadTraceHandler;
+        readonly Func<Sha1, IEnumerable<Job>> getBuildsHandler;
         public string Id { get; }
+        public BuildViewModel Build { get; private set; }
         public string Title {
             get { return GetProperty(() => Title); }
             private set { SetProperty(() => Title, value); }
         }
-        public BuildViewModel Build {
-            get { return GetProperty(() => Build); }
-            private set { SetProperty(() => Build, value); }
+        public PipelineStatus BuildStatus {
+            get { return GetProperty(() => BuildStatus); }
+            private set { SetProperty(() => BuildStatus, value); }
         }
-        public CommitViewModel(Commit commit, Func<Sha1, IEnumerable<Build>> getBuildsHandler, Func<Build, byte[]> downloadArtifactsHandler, Func<Build, byte[]> downloadTraceHandler) {
+        public string Duration {
+            get { return GetProperty(() => Duration); }
+            private set { SetProperty(() => Duration, value); }
+        }
+        public CommitViewModel(Commit commit, Func<Sha1, IEnumerable<Job>> getBuildsHandler, Func<Job, byte[]> downloadArtifactsHandler, Func<Job, byte[]> downloadTraceHandler) {
             this.commit = commit;
             this.downloadArtifactsHandler = downloadArtifactsHandler;
             this.downloadTraceHandler = downloadTraceHandler;
             this.getBuildsHandler = getBuildsHandler;
             Title = commit.Title;
             Id = commit.ShortId;
+            Duration = "Click to load";
         }
         public void UpdateBuilds() {
             var builds = getBuildsHandler(commit.Id);
             Build = builds.Select(x => new BuildViewModel(x)).FirstOrDefault();
+            if(Build == null)
+                return;
+            BuildStatus = Build.BuildStatus;
+            Duration = Build.Duration;
         }
         public ArtifactsViewModel DownloadArtifacts() {
             if (Build == null)
@@ -150,15 +170,15 @@ namespace DXVcs2Git.UI.ViewModels {
 
     public class BuildViewModel : BindableBase {
         public int Id => Build.Id;
-        public BuildStatus BuildStatus { get; }
+        public PipelineStatus BuildStatus { get; }
         public string Duration { get; }
-        public ArtifactsFile Artifacts => Build.ArtifactsFile;
-        public Build Build { get; }
-        public BuildViewModel(Build build) {
+        public ArtifactsFile Artifacts => Build.File;
+        public Job Build { get; }
+        public BuildViewModel(Job build) {
             Build = build;
-            BuildStatus = build.Status ?? BuildStatus.undefined;
-            if (build.StartedAt != null && (BuildStatus == BuildStatus.success || BuildStatus == BuildStatus.failed)) {
-                Duration = ((build.FinishedAt ?? DateTime.Now) - build.StartedAt.Value).ToString("g");
+            BuildStatus = build.Pipeline.Status;
+            if (build.CreatedAt != null && (BuildStatus == PipelineStatus.success || BuildStatus == PipelineStatus.failed)) {
+                Duration = ((build.FinishedAt ?? DateTime.Now) - build.CreatedAt.Value).ToString("g");
             }
             else
                 Duration = string.Empty;

@@ -132,6 +132,7 @@ namespace DXVcs2Git.Console {
                 return 1;
             }
 
+            string username = clo.Login;
             string gitlabauthtoken = clo.AuthToken;
             string targetBranchName = clo.Branch;
             string gitServer = clo.Server;
@@ -168,23 +169,11 @@ namespace DXVcs2Git.Console {
                 return 1;
             }
 
-            var comments = gitLabWrapper.GetComments(mergeRequest);
-            var mergeRequestSyncOptions = comments?.Where(x => IsXml(x.Note)).Where(x => {
-                var mr = MergeRequestOptions.ConvertFromString(x.Note);
-                return mr?.ActionType == MergeRequestActionType.sync;
-            }).Select(x => (MergeRequestSyncAction)MergeRequestOptions.ConvertFromString(x.Note).Action).LastOrDefault();
-
-            if (mergeRequestSyncOptions == null) {
-                Log.Message("Merge request sync options not found. Nothing to do.");
-                return 0;
+            if (mergeRequest.Assignee?.Name != username) {
+                Log.Error($"Merge request is not assigned to service user {username} or doesn`t require testing.");
+                return 1;
             }
 
-            if (!mergeRequestSyncOptions.PerformTesting) {
-                Log.Message("Testing is disabled in config.");
-                return 0;
-            }
-
-            Log.Message("Testing is enabled in config.");
             var commit = gitLabWrapper.GetMergeRequestCommits(mergeRequest).FirstOrDefault();
             if (commit == null) {
                 Log.Message("Merge request has no commits.");
@@ -197,25 +186,10 @@ namespace DXVcs2Git.Console {
                 return 0;
             }
 
-            Log.Message($"Build has {mergeRequestBuild.Status} status.");
-
-            if (mergeRequestBuild.Status == BuildStatus.success) {
-                if (mergeRequestSyncOptions.AssignToSyncService) {
-                    gitLabWrapper.UpdateMergeRequestAssignee(mergeRequest, mergeRequestSyncOptions.SyncTask);
-                    Log.Message($"Success tests. Assigning to sync service {mergeRequestSyncOptions.SyncTask}");
-                    return 0;
-                }
-                else {
-                    gitLabWrapper.UpdateMergeRequestAssignee(mergeRequest, mergeRequest.Author.Username);
-                    Log.Message($"Success tests. Assigning to back to author {mergeRequest.Author.Username}");
-                    return 0;
-                }
-            }
-            if (mergeRequestBuild.Status == BuildStatus.failed) {
-                Log.Message($"Failed tests.");
-                return 0;
-            }
-            Log.Message("Nothing happens.");
+            if (clo.Result == 0)
+                gitLabWrapper.AddCommentToMergeRequest(mergeRequest, $@"Pipeline passed. http://builder03/ci/{sourceProject.Id}/{mergeRequestBuild.Id}");
+            else
+                gitLabWrapper.AddCommentToMergeRequest(mergeRequest, $@"Pipeline failed. http://builder03/ci/{sourceProject.Id}/{mergeRequestBuild.Id}");
             return 0;
         }
 
@@ -292,22 +266,16 @@ namespace DXVcs2Git.Console {
             }
             Log.Message($"Source branch name: {sourceBranch.Name}");
 
-            MergeRequest mergeRequest = gitLabWrapper.GetMergeRequests(targetProject, 
+            MergeRequest mergeRequest = gitLabWrapper.GetMergeRequests(targetProject,
                 x => x.SourceBranch == sourceBranchName && x.TargetBranch == targetBranchName && x.SourceProjectId == sourceProject.Id).FirstOrDefault();
             if (mergeRequest == null) {
                 Log.Error($"Can`t find merge request.");
                 return 1;
             }
-            Log.Message($"Merge request id: {mergeRequest.Id}.");
+            Log.Message($"Merge request id: {mergeRequest.Iid}.");
             Log.Message($"Merge request title: {mergeRequest.Title}.");
 
-            var comments = gitLabWrapper.GetComments(mergeRequest);
-            var mergeRequestSyncOptions = comments?.Where(x => IsXml(x.Note)).Where(x => {
-                var mr = MergeRequestOptions.ConvertFromString(x.Note);
-                return mr?.ActionType == MergeRequestActionType.sync;
-            }).Select(x => (MergeRequestSyncAction)MergeRequestOptions.ConvertFromString(x.Note).Action).LastOrDefault();
-
-            if (mergeRequest.Assignee?.Name != username || (!mergeRequestSyncOptions?.PerformTesting ?? false)) {
+            if (mergeRequest.Assignee?.Name != username) {
                 Log.Error($"Merge request is not assigned to service user {username} or doesn`t require testing.");
                 return 1;
             }
@@ -320,13 +288,19 @@ namespace DXVcs2Git.Console {
 
             var changes = gitLabWrapper
                 .GetMergeRequestChanges(mergeRequest)
-                .Where(x => trackBranch.TrackItems.FirstOrDefault(track => CheckItemForChangeSet(x.OldPath, track)) != null)
+                .Select(x => {
+                    var trackItem = trackBranch.TrackItems.Where(b => !b.IsFile).FirstOrDefault(track => CheckItemForChangeSet(x.OldPath, track));
+                    if (trackItem == null)
+                        trackBranch.TrackItems.Where(b => b.IsFile).FirstOrDefault(track => CheckFileItemForChangeSet(x.OldPath, track));
+                    return new { trackItem = trackItem, item = x };
+                })
+                .Where(x => x.trackItem != null)
                 .Select(x => new PatchItem() {
-                    SyncAction = CalcSyncAction(x),
-                    OldPath = x.OldPath,
-                    NewPath = x.NewPath,
-                    OldVcsPath = CalcVcsPath(trackBranch, x.OldPath),
-                    NewVcsPath = CalcVcsPath(trackBranch, x.NewPath),
+                    SyncAction = CalcSyncAction(x.item),
+                    OldPath = x.item.OldPath,
+                    NewPath = x.item.NewPath,
+                    OldVcsPath = CalcVcsPath(x.trackItem, x.item.OldPath),
+                    NewVcsPath = CalcVcsPath(x.trackItem, x.item.NewPath),
                 }).ToList();
 
             var patch = new PatchInfo() { TimeStamp = DateTime.Now.Ticks, Items = changes };
@@ -342,6 +316,18 @@ namespace DXVcs2Git.Console {
 
             Log.Message($"Patch.info generated at {patchPath}");
             return 0;
+        }
+        static MergeRequestSyncAction CalcMergeRequestSyncOptions(IEnumerable<Comment> comments) {
+            if (comments == null)
+                return null;
+            var xmlBased = comments.Where(x => IsXml(x.Note)).Where(x => {
+                var mr = MergeRequestOptions.ConvertFromString(x.Note);
+                return mr?.ActionType == MergeRequestActionType.sync;
+            }).Select(x => (MergeRequestSyncAction)MergeRequestOptions.ConvertFromString(x.Note).Action).LastOrDefault();
+
+            if (xmlBased != null)
+                return xmlBased;
+            return null;
         }
         static readonly Regex SimpleHttpGitRegex = new Regex(@"http://[\w\._-]+/[\w\._-]+/[\w\._-]+.git", RegexOptions.Compiled);
         static readonly Regex GitlabciCheckRegex = new Regex(@"http://gitlab-ci-token:[\w\._-]+@(?<server>[\w\._-]+)/(?<nspace>[\w\._-]+)/(?<name>[\w\._-]+).git", RegexOptions.Compiled);
@@ -416,7 +402,7 @@ namespace DXVcs2Git.Console {
             GitLabWrapper gitLabWrapper = new GitLabWrapper(gitServer, gitlabauthtoken);
             FarmIntegrator.Start(null);
 
-            var projects = gitLabWrapper.GetAllProjects();
+            var projects = gitLabWrapper.GetProjects();
             foreach (Project project in projects) {
                 var hooks = gitLabWrapper.GetProjectHooks(project);
                 foreach (ProjectHook hook in hooks) {
@@ -461,7 +447,7 @@ namespace DXVcs2Git.Console {
             if (supportSendingMessages)
                 SendMessage(serviceUser, hook.Json, farmTaskName);
 
-            if (hook.Status == BuildStatus.success) {
+            if (hook.Status == PipelineStatus.success) {
                 Project project = gitLabWrapper.GetProject(hook.ProjectId);
                 if (project == null) {
                     Log.Message($"Can`t find project {hook.ProjectName}.");
@@ -473,9 +459,9 @@ namespace DXVcs2Git.Console {
                     Log.Message("Can`t find merge request.");
                     return;
                 }
-                Log.Message($"Merge request: id = {mergeRequest.Id} title = {mergeRequest.Title}");
+                Log.Message($"Merge request: id = {mergeRequest.Iid} title = {mergeRequest.Title}");
                 Log.Message($"Merge request state = {mergeRequest.State}");
-                if (mergeRequest.State == "opened" || mergeRequest.State == "reopened") {
+                if (mergeRequest.State == MergeRequestState.opened || mergeRequest.State == MergeRequestState.reopened) {
                     var latestCommit = gitLabWrapper.GetMergeRequestCommits(mergeRequest).FirstOrDefault();
                     if (latestCommit == null) {
                         Log.Message("Wrong merge request found.");
@@ -500,6 +486,12 @@ namespace DXVcs2Git.Console {
                             gitLabWrapper.UpdateMergeRequestAssignee(mergeRequest, syncOptions.SyncService);
                             ForceBuild(syncOptions.SyncTask);
                         }
+                        return;
+                    }
+                    var syncService = project.Tags?.FirstOrDefault(x => IsServiceUser(x, null));
+                    if (!string.IsNullOrEmpty(syncService)) {
+                        Log.Message($"Found sync service from project tag: {syncService}");
+                        gitLabWrapper.UpdateMergeRequestAssignee(mergeRequest, syncService);
                         return;
                     }
                     Log.Message("Sync options not found.");
@@ -553,9 +545,9 @@ namespace DXVcs2Git.Console {
                     Log.Message("Check build status before force build.");
                     var commit = gitLabWrapper.GetMergeRequestCommits(mergeRequest).FirstOrDefault();
                     var build = commit != null ? gitLabWrapper.GetBuilds(mergeRequest, commit.Id).FirstOrDefault() : null;
-                    var buildStatus = build?.Status ?? BuildStatus.undefined;
+                    var buildStatus = build?.Pipeline.Status;
                     Log.Message($"Build status = {buildStatus}.");
-                    if (buildStatus == BuildStatus.success)
+                    if (buildStatus == PipelineStatus.success)
                         ForceBuild(action.SyncTask);
                     return;
                 }
@@ -681,8 +673,7 @@ namespace DXVcs2Git.Console {
             return CheckMergeChangesResult.HasChanges;
         }
         static string GetVcsSyncHistory(DXVcsWrapper vcsWrapper, string historyPath) {
-            string local = Path.GetTempFileName();
-            return vcsWrapper.GetFile(historyPath, local);
+            return vcsWrapper.GetLatestFile(historyPath);
         }
         static void EnsureGitDir(string localGitDir) {
             if (Directory.Exists(localGitDir)) {
@@ -764,8 +755,8 @@ namespace DXVcs2Git.Console {
         }
         static MergeRequestResult ProcessMergeRequest(DXVcsWrapper vcsWrapper, GitWrapper gitWrapper, GitLabWrapper gitLabWrapper, RegisteredUsers users, User defaultUser, string localGitDir, TrackBranch branch, MergeRequest mergeRequest, SyncHistoryWrapper syncHistory) {
             switch (mergeRequest.State) {
-                case "reopened":
-                case "opened":
+                case MergeRequestState.opened:
+                case MergeRequestState.reopened:
                     return ProcessOpenedMergeRequest(vcsWrapper, gitWrapper, gitLabWrapper, users, defaultUser, localGitDir, branch, mergeRequest, syncHistory);
             }
             return MergeRequestResult.InvalidState;
@@ -784,8 +775,14 @@ namespace DXVcs2Git.Console {
                 return MergeRequestResult.Failed;
             }
             var genericChange = changes
-                .Where(x => branch.TrackItems.FirstOrDefault(track => CheckItemForChangeSet(x.OldPath, track)) != null)
-                .Select(x => ProcessMergeRequestChanges(mergeRequest, x, localGitDir, branch, autoSyncToken)).ToList();
+                .Select(x => {
+                    var trackItem = branch.TrackItems.Where(b => !b.IsFile).FirstOrDefault(track => CheckItemForChangeSet(x.OldPath, track));
+                    if (trackItem == null)
+                        trackItem = branch.TrackItems.Where(b => b.IsFile).FirstOrDefault(track => CheckFileItemForChangeSet(x.OldPath, track));
+                    return new { trackItem = trackItem, item = x };
+                })
+                .Where(x => x.trackItem != null)
+                .Select(x => ProcessMergeRequestChanges(mergeRequest, x.item, localGitDir, x.trackItem, autoSyncToken)).ToList();
             bool ignoreValidation = gitLabWrapper.ShouldIgnoreSharedFiles(mergeRequest);
 
             if (!ValidateMergeRequestChanges(gitLabWrapper, mergeRequest, ignoreValidation) || !vcsWrapper.ProcessCheckout(genericChange, ignoreValidation, branch)) {
@@ -796,7 +793,7 @@ namespace DXVcs2Git.Console {
             }
             CommentWrapper comment = CalcComment(mergeRequest, branch, autoSyncToken);
             mergeRequest = gitLabWrapper.ProcessMergeRequest(mergeRequest, comment.ToString());
-            if (mergeRequest.State == "merged") {
+            if (mergeRequest.State == MergeRequestState.merged) {
                 Log.Message("Merge request merged successfully.");
 
                 gitWrapper.Pull();
@@ -839,6 +836,12 @@ namespace DXVcs2Git.Console {
             string projectPath = track.ProjectPath.EndsWith(@"/") ? track.ProjectPath : $@"{track.ProjectPath}/";
             return path.StartsWith(projectPath, StringComparison.InvariantCultureIgnoreCase);
         }
+        static bool CheckFileItemForChangeSet(string path, TrackItem track) {
+            if (string.IsNullOrEmpty(path))
+                return false;
+            string projectPath = track.ProjectPath;
+            return string.Compare(path, projectPath, StringComparison.InvariantCultureIgnoreCase) == 0;
+        }
         static bool ValidateChangeSet(List<SyncItem> genericChangeSet) {
             return !genericChangeSet.Any(x => x.SharedFile);
         }
@@ -871,42 +874,42 @@ namespace DXVcs2Git.Console {
             sb.AppendLine(Log.GetErrorsAccumulatorContent());
             return sb.ToString();
         }
-        static SyncItem ProcessMergeRequestChanges(MergeRequest mergeRequest, MergeRequestFileData fileData, string localGitDir, TrackBranch branch, string token) {
-            string vcsRoot = branch.RepoRoot;
+        static SyncItem ProcessMergeRequestChanges(MergeRequest mergeRequest, MergeRequestFileData fileData, string localGitDir, TrackItem trackItem, string token) {
             var syncItem = new SyncItem();
             if (fileData.IsNew) {
                 syncItem.SyncAction = SyncAction.New;
-                syncItem.LocalPath = CalcLocalPath(localGitDir, branch, fileData.OldPath);
-                syncItem.VcsPath = CalcVcsPath(branch, fileData.OldPath);
+                syncItem.LocalPath = CalcLocalPath(localGitDir, fileData.OldPath);
+                syncItem.VcsPath = CalcVcsPath(trackItem, fileData.OldPath);
             }
             else if (fileData.IsDeleted) {
                 syncItem.SyncAction = SyncAction.Delete;
-                syncItem.LocalPath = CalcLocalPath(localGitDir, branch, fileData.OldPath);
-                syncItem.VcsPath = CalcVcsPath(branch, fileData.OldPath);
+                syncItem.LocalPath = CalcLocalPath(localGitDir, fileData.OldPath);
+                syncItem.VcsPath = CalcVcsPath(trackItem, fileData.OldPath);
             }
             else if (fileData.IsRenamed) {
                 syncItem.SyncAction = SyncAction.Move;
-                syncItem.LocalPath = CalcLocalPath(localGitDir, branch, fileData.OldPath);
-                syncItem.NewLocalPath = CalcLocalPath(localGitDir, branch, fileData.NewPath);
-                syncItem.VcsPath = CalcVcsPath(branch, fileData.OldPath);
-                syncItem.NewVcsPath = CalcVcsPath(branch, fileData.NewPath);
+                syncItem.LocalPath = CalcLocalPath(localGitDir, fileData.OldPath);
+                syncItem.NewLocalPath = CalcLocalPath(localGitDir, fileData.NewPath);
+                syncItem.VcsPath = CalcVcsPath(trackItem, fileData.OldPath);
+                syncItem.NewVcsPath = CalcVcsPath(trackItem, fileData.NewPath);
             }
             else {
                 syncItem.SyncAction = SyncAction.Modify;
-                syncItem.LocalPath = CalcLocalPath(localGitDir, branch, fileData.OldPath);
-                syncItem.VcsPath = CalcVcsPath(branch, fileData.OldPath);
+                syncItem.LocalPath = CalcLocalPath(localGitDir, fileData.OldPath);
+                syncItem.VcsPath = CalcVcsPath(trackItem, fileData.OldPath);
             }
-            syncItem.Comment = CalcComment(mergeRequest, branch, token);
+            syncItem.SingleSyncFile = trackItem.IsFile;
+            syncItem.Track = trackItem;
+            syncItem.Comment = CalcComment(mergeRequest, trackItem.Branch, token);
             return syncItem;
         }
-        static string CalcLocalPath(string localGitDir, TrackBranch branch, string path) {
+        static string CalcLocalPath(string localGitDir, string path) {
             return Path.Combine(localGitDir, path);
         }
-        static string CalcVcsPath(TrackBranch branch, string path) {
-            var trackItem = branch.TrackItems.First(x => CheckItemForChangeSet(path, x));
+        static string CalcVcsPath(TrackItem trackItem, string path) {
             var resultPath = path.Remove(0, trackItem.ProjectPath.Length).TrimStart(@"\/".ToCharArray());
-            string trackPath = branch.GetTrackRoot(trackItem);
-            return Path.Combine(trackPath, resultPath).Replace("\\", "/");
+            var branch = trackItem.Branch;
+            return branch.GetVcsPath(trackItem, resultPath);
         }
         static ProcessHistoryResult ProcessHistory(DXVcsWrapper vcsWrapper, GitWrapper gitWrapper, RegisteredUsers users, User defaultUser, string gitRepoPath, string localGitDir, TrackBranch branch, int commitsCount, SyncHistoryWrapper syncHistory, bool mergeCommits) {
             IList<CommitItem> commits = GenerateCommits(vcsWrapper, branch, syncHistory, mergeCommits);
@@ -947,11 +950,18 @@ namespace DXVcs2Git.Console {
                 GitCommit last = null;
                 string token = syncHistory.CreateNewToken();
                 foreach (var localCommit in localCommits) {
-                    string localProjectPath = Path.Combine(localGitDir, localCommit.Track.ProjectPath);
-                    DirectoryHelper.DeleteDirectory(localProjectPath);
-                    string trackPath = branch.GetTrackRoot(localCommit.Track);
-                    vcsWrapper.GetProject(vcsServer, trackPath, localProjectPath, item.TimeStamp);
-
+                    string localPath = branch.GetLocalRoot(localCommit.Track, localGitDir);
+                    if (localCommit.Track.IsFile) {
+                        if (File.Exists(localPath))
+                            File.Delete(localPath);
+                        string trackPath = branch.GetTrackRoot(localCommit.Track);
+                        vcsWrapper.GetFile(trackPath, localPath, item.TimeStamp);
+                    }
+                    else {
+                        DirectoryHelper.DeleteDirectory(localPath);
+                        string trackPath = branch.GetTrackRoot(localCommit.Track);
+                        vcsWrapper.GetProject(vcsServer, trackPath, localPath, item.TimeStamp);
+                    }
                     Log.Message($"git stage {localCommit.Track.ProjectPath}");
                     gitWrapper.Stage(localCommit.Track.ProjectPath);
                     string author = CalcAuthor(localCommit, defaultUser);
@@ -1035,7 +1045,7 @@ namespace DXVcs2Git.Console {
             CommentWrapper comment = new CommentWrapper();
             comment.TimeStamp = item.TimeStamp.Ticks.ToString();
             comment.Author = author;
-            comment.Branch = item.Track.Branch;
+            comment.Branch = item.Track.Branch.Name;
             comment.Token = token;
             if (item.Items.Any(x => !string.IsNullOrEmpty(x.Comment) && CommentWrapper.IsAutoSyncComment(x.Comment)))
                 comment.Comment = item.Items.Select(x => CommentWrapper.Parse(x.Comment ?? x.Message).Comment).FirstOrDefault(x => !string.IsNullOrEmpty(x));
