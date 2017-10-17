@@ -197,7 +197,7 @@ namespace DXVcs2Git.Git {
         }
         public ProjectHook UpdateProjectHook(Project project, ProjectHook hook, Uri uri, bool mergeRequestEvents, bool pushEvents, bool buildEvents) {
             var repository = this.client.GetRepository(project.Id);
-            return repository.ProjectHooks.Update(new ProjectHookUpdate() { Id = hook.Id, Url = uri, MergeRequestsEvents = mergeRequestEvents, PushEvents = pushEvents, JobEvents = buildEvents, PipelineEvents = buildEvents, EnableSslVerification = false});
+            return repository.ProjectHooks.Update(new ProjectHookUpdate() { Id = project.Id, HookId = hook.Id, Url = uri, MergeRequestsEvents = mergeRequestEvents, PushEvents = pushEvents, JobEvents = buildEvents, PipelineEvents = buildEvents, EnableSslVerification = false});
         }
         public IEnumerable<Comment> GetComments(MergeRequest mergeRequest) {
             var mergeRequestsClient = client.GetMergeRequest(mergeRequest.ProjectId);
