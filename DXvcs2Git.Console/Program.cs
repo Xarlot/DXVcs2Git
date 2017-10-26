@@ -191,7 +191,7 @@ namespace DXVcs2Git.Console {
             }
 
             if (clo.Result == 0) { 
-                gitLabWrapper.AddCommentToMergeRequest(mergeRequest, $@"Pipeline passed. http://builder03/ci/{sourceProject.Id}/{mergeRequestBuild.Id}");
+                gitLabWrapper.AddCommentToMergeRequest(mergeRequest, $@"Pipeline passed. http://builder03/ci/{sourceProject.Id}/{mergeRequest.Iid}/{mergeRequestBuild.Id}");
 
                 if (mergeRequest.WorkInProgress ?? false) {
                     Log.Message("Work in progress. Assign on test service skipped.");
@@ -202,7 +202,7 @@ namespace DXVcs2Git.Console {
                     gitLabWrapper.UpdateMergeRequestAssignee(mergeRequest, user);
             }
             else
-                gitLabWrapper.AddCommentToMergeRequest(mergeRequest, $@"Pipeline failed. http://builder03/ci/{sourceProject.Id}/{mergeRequestBuild.Id}");
+                gitLabWrapper.AddCommentToMergeRequest(mergeRequest, $@"Pipeline failed. http://builder03/ci/{sourceProject.Id}/{mergeRequest.Iid}/{mergeRequestBuild.Id}");
             return 0;
         }
 
