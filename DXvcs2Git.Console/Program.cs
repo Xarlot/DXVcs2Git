@@ -163,11 +163,15 @@ namespace DXVcs2Git.Console {
                 return 1;
             }
 
-            MergeRequest mergeRequest = gitLabWrapper.GetMergeRequests(targetProject, x => x.SourceBranch == sourceBranchName && x.TargetBranch == targetBranchName).FirstOrDefault();
+            MergeRequest mergeRequest = gitLabWrapper.GetMergeRequests(targetProject, x => x.SourceBranch == sourceBranchName && x.TargetBranch == targetBranchName && x.SourceProjectId == sourceProject.Id).FirstOrDefault();
             if (mergeRequest == null) {
                 Log.Error($"Can`t find merge request.");
                 return 1;
             }
+
+            Log.Message($"Merge request id: {mergeRequest.Iid}.");
+            Log.Message($"Merge request title: {mergeRequest.Title}.");
+            Log.Message($"Merge request assignee: {mergeRequest.Assignee?.Name}.");
 
             if (mergeRequest.Assignee?.Name != username) {
                 Log.Error($"Merge request is not assigned to service user {username} or doesn`t require testing.");
@@ -186,8 +190,17 @@ namespace DXVcs2Git.Console {
                 return 0;
             }
 
-            if (clo.Result == 0)
+            if (clo.Result == 0) { 
                 gitLabWrapper.AddCommentToMergeRequest(mergeRequest, $@"Pipeline passed. http://builder03/ci/{sourceProject.Id}/{mergeRequestBuild.Id}");
+
+                if (mergeRequest.WorkInProgress ?? false) {
+                    Log.Message("Work in progress. Assign on test service skipped.");
+                    return 0;
+                }
+                var user = targetProject.Tags?.FirstOrDefault(x => x.StartsWith("dxvcs2git."));
+                if (user != null)
+                    gitLabWrapper.UpdateMergeRequestAssignee(mergeRequest, user);
+            }
             else
                 gitLabWrapper.AddCommentToMergeRequest(mergeRequest, $@"Pipeline failed. http://builder03/ci/{sourceProject.Id}/{mergeRequestBuild.Id}");
             return 0;

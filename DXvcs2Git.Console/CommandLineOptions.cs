@@ -60,12 +60,15 @@ namespace DXVcs2Git.Console {
         public string SourceBranch { get; }
         [Option("result", Required = true, HelpText = "Test results")]
         public int Result { get; }
+        [Option("assign", Required = false, HelpText = "Auto assign to service")]
+        public bool AutoAssign { get; }
 
-        public ProcessTestsOptions(string branch, string sourceRepo, string sourceBranch, int result, string server, string login, string repo, string password, string authToken) : base(server, login, repo, password, authToken) {
+        public ProcessTestsOptions(string branch, string sourceRepo, string sourceBranch, int result, bool autoAssign, string server, string login, string repo, string password, string authToken) : base(server, login, repo, password, authToken) {
             Branch = branch;
             SourceRepo = sourceRepo;
             SourceBranch = sourceBranch;
             Result = result;
+            AutoAssign = autoAssign;
         }
     }
     [Verb("sync", HelpText = "Sync changes between dxvcs and git")]
