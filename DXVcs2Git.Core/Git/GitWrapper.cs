@@ -101,7 +101,10 @@ namespace DXVcs2Git {
                 return comment;
             return comment.Replace("\"", "\\\"");
         }
-
+        public void AddRemote(string repoPath, string remote, string path) {
+            var code = WaitForProcess(gitPath, repoPath, out string output, out string errors, "reset", "--hard");
+            CheckFail(code, output, errors);
+        }
         public void ResetHard(string repoPath) {
             string output, errors;
             var code = WaitForProcess(gitPath, repoPath, out output, out errors, "reset", "--hard");
@@ -235,6 +238,9 @@ namespace DXVcs2Git {
             Log.Message($"Git repo {localPath} was cloned with branch {branch}.");
         }
         public void Dispose() {
+        }
+        public void AddRemote(string remote, string path) {
+            gitCmd.AddRemote(localPath, remote, path);
         }
         public void Fetch(string remote = "", bool updateTags = false) {
             gitCmd.Fetch(remote, localPath, updateTags);
