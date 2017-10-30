@@ -191,7 +191,7 @@ namespace DXVcs2Git.Console {
             }
 
             if (clo.Result == 0) { 
-                gitLabWrapper.AddCommentToMergeRequest(mergeRequest, $@"Pipeline passed. http://builder03/ci?source_id={sourceProject.Id}&path={Uri.EscapeDataString(targetProject.PathWithNamespace)}&mergerequest_id={mergeRequest.Iid}&build={mergeRequestBuild.Id}");
+                gitLabWrapper.AddCommentToMergeRequest(mergeRequest, $@"Pipeline passed. http://asp-git:8181?source_id={sourceProject.Id}&path={Uri.EscapeDataString(targetProject.PathWithNamespace)}&mergerequest_id={mergeRequest.Iid}&build={mergeRequestBuild.Id}");
 
                 if (mergeRequest.WorkInProgress ?? false) {
                     Log.Message("Work in progress. Assign on test service skipped.");
@@ -202,7 +202,7 @@ namespace DXVcs2Git.Console {
                     gitLabWrapper.UpdateMergeRequestAssignee(mergeRequest, user);
             }
             else
-                gitLabWrapper.AddCommentToMergeRequest(mergeRequest, $@"Pipeline failed. http://builder03/ci?source_id={sourceProject.Id}&path={Uri.EscapeDataString(targetProject.PathWithNamespace)}&mergerequest_id={mergeRequest.Iid}&build={mergeRequestBuild.Id}");
+                gitLabWrapper.AddCommentToMergeRequest(mergeRequest, $@"Pipeline failed. http://asp-git:8181?source_id={sourceProject.Id}&path={Uri.EscapeDataString(targetProject.PathWithNamespace)}&mergerequest_id={mergeRequest.Iid}&build={mergeRequestBuild.Id}");
             return 0;
         }
 
