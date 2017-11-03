@@ -35,6 +35,7 @@ namespace DXVcs2Git.Console {
         const string patchZip = "patch.zip";
         const string patchInfoName = "patch.info";
         const string vcsServer = @"net.tcp://vcsservice.devexpress.devx:9091/DXVCSService";
+        const string farmServer = @"tcp://ccnet.devexpress.devx:21234/CruiseManager.rem";
         const int MaxChangesCount = 1000;
         static void Main(string[] args) {
             var result = Parser.Default.ParseArguments<SyncOptions, PatchOptions, ApplyPatchOptions, ListenerOptions, ProcessTestsOptions>(args);
@@ -139,6 +140,7 @@ namespace DXVcs2Git.Console {
             string sourceBranchName = clo.SourceBranch;
             bool testIntegration = !clo.Individual;
             string jobId = clo.JobId;
+            string commitSha = clo.Commit;
 
             GitLabWrapper gitLabWrapper = new GitLabWrapper(gitServer, gitlabauthtoken);
 
@@ -182,25 +184,47 @@ namespace DXVcs2Git.Console {
             Log.Message($"Merge request title: {mergeRequest.Title}.");
             Log.Message($"Merge request assignee: {mergeRequest.Assignee?.Name ?? "None"}.");
 
+            string pipeline = $@"Pipeline {(clo.Result == 0 ? "passed." : "failed")} http://asp-git:8181?source_id={sourceProject.Id}&path={Uri.EscapeDataString(targetProject.PathWithNamespace)}&mergerequest_id={mergeRequest.Iid}&build={jobId}";
+            Log.Message(pipeline);
+
             var commit = gitLabWrapper.GetMergeRequestCommits(mergeRequest).FirstOrDefault();
             if (commit == null) {
                 Log.Message("Merge request has no commits.");
                 return 0;
             }
-
+            
             if (clo.Result == 0) {
-                gitLabWrapper.AddCommentToMergeRequest(mergeRequest, $@"Pipeline passed. http://asp-git:8181?source_id={sourceProject.Id}&path={Uri.EscapeDataString(targetProject.PathWithNamespace)}&mergerequest_id={mergeRequest.Iid}&build={jobId}");
+                gitLabWrapper.AddCommentToMergeRequest(mergeRequest, pipeline);
 
                 if (mergeRequest.WorkInProgress ?? false) {
                     Log.Message("Work in progress. Assign on test service skipped.");
                     return 0;
                 }
+
+                var xmlComments = gitLabWrapper.GetComments(mergeRequest).Where(x => IsXml(x.Note));
+                var options = xmlComments.Select(x => MergeRequestOptions.ConvertFromString(x.Note)).FirstOrDefault();
+                if (options != null && options.ActionType == MergeRequestActionType.sync) {
+                    var action = (MergeRequestSyncAction)options.Action;
+                    if (action.AssignToSyncService && !string.IsNullOrEmpty(action.SyncService) && !string.IsNullOrEmpty(commitSha)) {
+                        if (commit.Id.Equals(new Sha1(commitSha))) {
+                            gitLabWrapper.UpdateMergeRequestAssignee(mergeRequest, action.SyncService);
+                            Log.Message("Auto sync performed by gittools config.");
+                        }
+                        else {
+                            Log.Message("Auto sync by gittools config rejected because testing commit is not head.");
+                        }
+                    }
+                }
+
                 var user = targetProject.Tags?.FirstOrDefault(x => x.StartsWith("dxvcs2git."));
-                if (user != null)
+                if (user != null) {
                     gitLabWrapper.UpdateMergeRequestAssignee(mergeRequest, user);
+                    Log.Message("Auto sync performed by repo tag");
+                }
+
             }
             else
-                gitLabWrapper.AddCommentToMergeRequest(mergeRequest, $@"Pipeline failed. http://asp-git:8181?source_id={sourceProject.Id}&path={Uri.EscapeDataString(targetProject.PathWithNamespace)}&mergerequest_id={mergeRequest.Iid}&build={jobId}");
+                gitLabWrapper.AddCommentToMergeRequest(mergeRequest, pipeline);
             return 0;
         }
 
@@ -492,19 +516,6 @@ namespace DXVcs2Git.Console {
             Stopwatch sw = Stopwatch.StartNew();
 
             GitLabWrapper gitLabWrapper = new GitLabWrapper(gitServer, gitlabauthtoken);
-            FarmIntegrator.Start(null);
-
-            var projects = gitLabWrapper.GetProjects();
-            foreach (Project project in projects) {
-                var hooks = gitLabWrapper.GetProjectHooks(project);
-                foreach (ProjectHook hook in hooks) {
-                    if (WebHookHelper.IsSameHost(hook.Url, IP) || !WebHookHelper.IsSharedHook(sharedWebHookPath, hook.Url))
-                        continue;
-                    Uri url = WebHookHelper.Replace(hook.Url, IP);
-                    gitLabWrapper.UpdateProjectHook(project, hook, url, true, true, true);
-                    Log.Message($"WebHook registered for project {project.Name} at {url}");
-                }
-            }
 
             WebServer server = new WebServer(WebHookHelper.GetSharedHookUrl(IP, sharedWebHookPath));
             server.Start();
@@ -570,11 +581,11 @@ namespace DXVcs2Git.Console {
                     if (options?.ActionType == MergeRequestActionType.sync) {
                         Log.Message("Sync options found.");
                         var syncOptions = (MergeRequestSyncAction)options.Action;
-                        Log.Message($"Sync options perform testing is {syncOptions.PerformTesting}");
+                        Log.Message($"Sync options perform testing is {syncOptions.TestIntegration}");
                         Log.Message($"Sync options assign to service is {syncOptions.AssignToSyncService}");
                         Log.Message($"Sync options sync task is {syncOptions.SyncTask}");
                         Log.Message($"Sync options sync service is {syncOptions.SyncService}");
-                        if (syncOptions.PerformTesting && syncOptions.AssignToSyncService) {
+                        if (syncOptions.TestIntegration && syncOptions.AssignToSyncService) {
                             gitLabWrapper.UpdateMergeRequestAssignee(mergeRequest, syncOptions.SyncService);
                             ForceBuild(syncOptions.SyncTask);
                         }
@@ -604,7 +615,7 @@ namespace DXVcs2Git.Console {
             Log.Message($"Merge hook state: {hook.Attributes.State}");
 
             var targetProject = gitLabWrapper.GetProject(hook.Attributes.TargetProjectId);
-            var mergeRequest = gitLabWrapper.GetMergeRequest(targetProject, hook.Attributes.Id);
+            var mergeRequest = gitLabWrapper.GetMergeRequest(targetProject, hook.Attributes.IID);
             if (supportSendingMessages)
                 SendMessage(serviceUser, hook.Json, farmTaskName);
 
@@ -626,14 +637,14 @@ namespace DXVcs2Git.Console {
             var bytes = Encoding.UTF8.GetBytes(json);
             string message = Convert.ToBase64String(bytes);
 
-            FarmIntegrator.SendNotification(farmTaskName, serviceUser, message);
+            FastFarmIntegrator.SendNotification(farmServer, farmTaskName, serviceUser, message);
         }
         static void ForceSyncBuild(GitLabWrapper gitLabWrapper, MergeRequest mergeRequest, Project targetProject, MergeRequestHookClient hook) {
             var xmlComments = gitLabWrapper.GetComments(mergeRequest).Where(x => IsXml(x.Note));
             var options = xmlComments.Select(x => MergeRequestOptions.ConvertFromString(x.Note)).FirstOrDefault();
             if (options != null && options.ActionType == MergeRequestActionType.sync) {
                 var action = (MergeRequestSyncAction)options.Action;
-                if (action.PerformTesting) {
+                if (action.TestIntegration) {
                     Log.Message("Check build status before force build.");
                     var commit = gitLabWrapper.GetMergeRequestCommits(mergeRequest).FirstOrDefault();
                     var build = commit != null ? gitLabWrapper.GetBuilds(mergeRequest, commit.Id).FirstOrDefault() : null;
@@ -676,7 +687,7 @@ namespace DXVcs2Git.Console {
         }
         static void ForceBuild(string syncTask) {
             Log.Message($"Build forced: {syncTask}");
-            FarmIntegrator.ForceBuild(syncTask);
+            FastFarmIntegrator.ForceBuild(farmServer, syncTask, "DXVcs2Git.Integrator");
         }
         static bool IsXml(string xml) {
             return !string.IsNullOrEmpty(xml) && xml.StartsWith("<");

@@ -66,8 +66,10 @@ namespace DXVcs2Git.Console {
         public bool Individual { get; }
         [Option('j', "job", Required = false, HelpText = "job id")]
         public string JobId { get; }
+        [Option('c', "commit", Required = false, HelpText = "Current commit sha")]
+        public string Commit { get; }
 
-        public ProcessTestsOptions(string branch, string sourceRepo, string sourceBranch, int result, bool autoAssign, bool individual, string jobid, string server, string login, string repo, string password, string authToken) : base(server, login, repo, password, authToken) {
+        public ProcessTestsOptions(string branch, string sourceRepo, string sourceBranch, int result, bool autoAssign, bool individual, string jobid, string commit, string server, string login, string repo, string password, string authToken) : base(server, login, repo, password, authToken) {
             Branch = branch;
             SourceRepo = sourceRepo;
             SourceBranch = sourceBranch;
@@ -75,6 +77,7 @@ namespace DXVcs2Git.Console {
             AutoAssign = autoAssign;
             Individual = individual;
             JobId = jobid;
+            Commit = commit;
         }
     }
     [Verb("sync", HelpText = "Sync changes between dxvcs and git")]

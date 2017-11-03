@@ -13,16 +13,16 @@ namespace DXVcs2Git.Core.GitLab {
 
     public class MergeRequestSyncAction : MergeRequestActionBase {
         public string SyncTask { get; set; }
-        public bool PerformTesting { get; set; }
         public string SyncService { get; set; }
+        public bool TestIntegration { get; set; }
         public bool AssignToSyncService { get; set; }
         public MergeRequestSyncAction() {
         }
-        public MergeRequestSyncAction(string syncTask, string syncServiceUser, bool performTesting, bool assignToService) {
+        public MergeRequestSyncAction(string syncTask, string syncServiceUser, bool testIntegration, bool assignToService) {
             SyncService = syncServiceUser;
+            TestIntegration = testIntegration;
             AssignToSyncService = assignToService;
             SyncTask = syncTask;
-            PerformTesting = performTesting;
         }
         protected internal override MergeRequestActionType ActionType => MergeRequestActionType.sync;
     }

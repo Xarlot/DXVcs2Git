@@ -9,6 +9,7 @@ using System.Text;
 using DevExpress.CCNetSmart.Lib;
 using DevExpress.DXCCTray;
 using DXVcs2Git.Core;
+using Newtonsoft.Json;
 using ThoughtWorks.CruiseControl.Remote;
 
 namespace DXVcs2Git.UI.Farm {
@@ -42,7 +43,20 @@ namespace DXVcs2Git.UI.Farm {
             return FarmIntegrator.FindTask(taskName);
         }
     }
-    
+
+    public static class FastFarmIntegrator {
+        public static void SendNotification(string server, string farmTaskName, string serviceUser, string message) {
+            RemoteCruiseManagerFactory f = new RemoteCruiseManagerFactory();
+            ISmartCruiseManager m = (ISmartCruiseManager)f.GetCruiseManager(server);
+            m.SendNotification(farmTaskName, serviceUser, message);
+        }
+        public static void ForceBuild(string auxPath, string farmTaskName, string forcer) {
+            RemoteCruiseManagerFactory f = new RemoteCruiseManagerFactory();
+            ISmartCruiseManager m = (ISmartCruiseManager)f.GetCruiseManager(auxPath);
+            m.ForceBuild(farmTaskName, forcer);
+        }
+    }
+
     public class FarmIntegrator {
         static readonly FarmHelper Instance;
         static Action<FarmRefreshedEventArgs> InvalidateCallback { get; set; }
