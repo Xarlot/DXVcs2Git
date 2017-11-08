@@ -357,8 +357,9 @@ namespace DXVcs2Git.Console {
                     return 1;
                 }
 
-                var changes = mergeRequest != null ? GetMergeRequestChanges(gitLabWrapper, mergeRequest, trackBranch) : GetCommitChanges(gitLabWrapper, sourceProject, commit.Id, searchSha, trackBranch);
                 Log.Message($"Patch based on commit {searchSha}");
+                Log.Message($"Vcs commit timestamp {new DateTime(vcsCommitTimeStamp.Value).ToLocalTime()}");
+                var changes = GetCommitChanges(gitLabWrapper, sourceProject, commit.Id, searchSha, trackBranch);
                 var patch = new PatchInfo() { TimeStamp = vcsCommitTimeStamp.Value, Items = changes };
 
                 var patchPath = Path.Combine(patchdir, patchZip);
