@@ -13,50 +13,6 @@ using Newtonsoft.Json;
 using ThoughtWorks.CruiseControl.Remote;
 
 namespace DXVcs2Git.UI.Farm {
-    [Guid("B191F08A-E585-406F-AF30-6FA3400B1B30")]
-    [ComVisible(true)]
-    public interface IPythonBridge {
-        void Start();
-        void Stop();
-        bool CanForceBuild(string taskName);
-        void ForceBuild(string taskName);
-        string FindTask(string taskName);
-    }
-    [Guid("E63B0F80-CFF3-4566-ADD4-187F408847A9")]
-    [ClassInterface(ClassInterfaceType.None)]
-    [ComVisible(true)]
-    public class PythonBridge : IPythonBridge {
-        public void Start() {
-            FarmIntegrator.Start(null);
-        }
-        public void Stop() {
-            FarmIntegrator.Stop();
-        }
-        public bool CanForceBuild(string taskName) {
-            return FarmIntegrator.CanForceBuild(taskName);
-        }
-        public void ForceBuild(string taskName) {
-            Debugger.Launch();
-            FarmIntegrator.ForceBuild(taskName);
-        }
-        public string FindTask(string taskName) {
-            return FarmIntegrator.FindTask(taskName);
-        }
-    }
-
-    public static class FastFarmIntegrator {
-        public static void SendNotification(string server, string farmTaskName, string serviceUser, string message) {
-            RemoteCruiseManagerFactory f = new RemoteCruiseManagerFactory();
-            ISmartCruiseManager m = (ISmartCruiseManager)f.GetCruiseManager(server);
-            m.SendNotification(farmTaskName, serviceUser, message);
-        }
-        public static void ForceBuild(string auxPath, string farmTaskName, string forcer) {
-            RemoteCruiseManagerFactory f = new RemoteCruiseManagerFactory();
-            ISmartCruiseManager m = (ISmartCruiseManager)f.GetCruiseManager(auxPath);
-            m.ForceBuild(farmTaskName, forcer);
-        }
-    }
-
     public class FarmIntegrator {
         static readonly FarmHelper Instance;
         static Action<FarmRefreshedEventArgs> InvalidateCallback { get; set; }
@@ -90,8 +46,8 @@ namespace DXVcs2Git.UI.Farm {
         public static FarmExtendedStatus GetExtendedTaskStatus(string task) {
             return Instance.GetExtendedTaskStatus(task);
         }
-        public static void SendNotification(string farmTaskName, string recepient, string message) {
-            Instance.SendNotification(farmTaskName, recepient, message);
+        public static void SendNotification(string server, string farmTaskName, string recepient, string message) {
+            Instance.SendNotificationFast(server, farmTaskName, recepient, message);
         }
         public static string FindTask(string path) {
             return Instance.FindTaskByTag(path);
@@ -324,6 +280,21 @@ namespace DXVcs2Git.UI.Farm {
                 return server;
             return this.serverTable.FirstOrDefault(x => string.Compare(x.HyperName, project, StringComparison.InvariantCultureIgnoreCase) == 0);
         }
+        public bool SendNotificationFast(string server, string farmTaskName, string recipient, string message) {
+            lock (syncLocker) {
+                var integrator = GetIntegratorFast(server);
+                if (integrator == null) {
+                    Log.Error("Can`t send message. Integrator not found.");
+                    return false;
+                }
+                bool result = integrator.SendNotification(farmTaskName, recipient, message);
+                if (result)
+                    Log.Message($"Message sent to: server = {server} project = {farmTaskName} recipient = {recipient}");
+                else
+                    Log.Message("Can`t send message. Integrator returns error.");
+                return result;
+            }
+        }
         public bool SendNotification(string farmTaskName, string recipient, string message) {
             lock (syncLocker) {
                 ProjectTagI tag = FindTask(farmTaskName);
@@ -349,6 +320,9 @@ namespace DXVcs2Git.UI.Farm {
                     Log.Message("Can`t send message. Integrator returns error.");
                 return result;
             }
+        }
+        DXCCTrayIntegrator GetIntegratorFast(string server) {
+            return integratorList.FirstOrDefault(integrator => server.Equals(integrator.Url, StringComparison.InvariantCultureIgnoreCase));
         }
         DXCCTrayIntegrator GetIntegrator(string server) {
             return integratorList.FirstOrDefault(integrator => server.Equals(integrator.Name, StringComparison.InvariantCultureIgnoreCase));
@@ -873,7 +847,7 @@ namespace DXVcs2Git.UI.Farm {
     }
 
     public enum FarmRefreshType {
-        notification
+        notification,
     }
     public abstract class FarmRefreshedEventArgs : EventArgs {
         public abstract FarmRefreshType RefreshType { get; }

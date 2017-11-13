@@ -138,6 +138,7 @@
     <Compile Include="Farm\FileSystem.cs" />
     <Compile Include="Farm\ProjectI.cs" />
     <Compile Include="Farm\SmartProjectActivity.cs" />
+    <Compile Include="Farm\SyncTaskNotification.cs" />
     <Compile Include="GitLab\Build.cs" />
     <Compile Include="GitLab\BuildHookClient.cs" />
     <Compile Include="GitLab\GitLabWrapper.cs" />

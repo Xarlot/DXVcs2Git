@@ -1,6 +1,6 @@
 sync -s http://gitserver -l dxvcs2git.common -b 2017.2 -r http://gitserver/XPF/Common.git -c 150 -d c:\repo -t trackconfig_Common_2017.2.config -p s7As_QsT -a FZ8YxktKW95wsxybykxs
 
-listen -s http://gitserver -l dxvcs2git.xpf -r http://gitserver/XPF/XPF.git  -p DG8_SfAg -a vPbfpJSzGRyPi6g249GP --webhook testwebhook --task "WebHook sync task"
+listen -s http://gitserver -l dxvcs2git.tester -r http://gitserver/XPF/Common.git  -p DG8_SfAg -a vPbfpJSzGRyPi6g249GP --webhook testwebhook --task "WebHook sync task"
 
 patch -s http://gitserver -l dxvcs2git.tester -b 2017.2 -r http://gitserver/XPF/Common.git -d c:\repo -t trackconfig_common_2017.2.config -p E4kDAk3j -a vPbfpJSzGRyPi6g249GP --sourcebranch 2017.2 --sourcerepo http://gitlab-ci-token:xxxxxx@gitserver/Litvinov/Common.git --patchdir c:\repo -i -c 6a0b2aaa4a0f4a26f41fb6d33d3df51b2eadcd78
 

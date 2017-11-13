@@ -90,12 +90,15 @@ namespace DXVcs2Git.Console {
         public int CommitsCount { get; }
         [Option('d', "dir", HelpText = "Path to local git repo")]
         public string LocalFolder { get; }
+        [Option('x', "synctask", HelpText = "Sync task", Required = false)]
+        public string SyncTask { get; }
 
-        public SyncOptions(string branch, string tracker, int commitsCount, string localFolder, string server, string login, string repo, string password, string authToken) : base(server, login, repo, password, authToken) {
+        public SyncOptions(string branch, string tracker, int commitsCount, string localFolder, string syncTask, string server, string login, string repo, string password, string authToken) : base(server, login, repo, password, authToken) {
             Branch = branch;
             CommitsCount = commitsCount;
             LocalFolder = localFolder;
             Tracker = tracker;
+            SyncTask = syncTask;
         }
     }
     [Verb("listen", HelpText = "Web hook listener from gitlab server")]

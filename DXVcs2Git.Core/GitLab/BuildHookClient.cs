@@ -46,6 +46,9 @@ namespace DXVcs2Git.Core.GitLab {
 //	}
 //}
 
+    public class NotificationHookClient : ProjectHookClient {
+        
+    }
     [DataContract]
     public class BuildHookClient : ProjectHookClient {
         [DataMember(Name = "build_id")]
