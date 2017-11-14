@@ -78,11 +78,6 @@ namespace DXVcs2Git.UI.ViewModels {
         public void CreateMergeRequest(string title, string description, string user, string sourceBranch, string targetBranch) {
             var mergeRequest = this.gitLabWrapper.CreateMergeRequest(Repository.Origin, Repository.Upstream, title, description, user, sourceBranch, targetBranch);
             MergeRequest = new MergeRequestViewModel(this, mergeRequest);
-            if (SupportsTesting && Repositories.Config.TestByDefault) {
-                AddMergeRequestSyncInfo(true, false);
-                mergeRequest = this.gitLabWrapper.UpdateMergeRequestAssignee(mergeRequest, Repository.RepoConfig.TestServiceName);
-                MergeRequest = new MergeRequestViewModel(this, mergeRequest);
-            }
             RepositoriesViewModel.RaiseRefreshSelectedBranch();
         }
         public void CloseMergeRequest() {
@@ -104,16 +99,13 @@ namespace DXVcs2Git.UI.ViewModels {
         public void UpdateMergeRequest(string comment) {
             this.gitLabWrapper.AddCommentToMergeRequest(MergeRequest.MergeRequest, comment);
         }
-        public void AddMergeRequestSyncInfo(bool performTesting, bool assignToService) {
-            var mergeRequestAction = new MergeRequestSyncAction(SyncTaskName, SyncServiceName, performTesting, assignToService);
+        public void AddMergeRequestSyncInfo(bool testIntegration, bool assignToService) {
+            var mergeRequestAction = new MergeRequestSyncAction(SyncTaskName, SyncServiceName, testIntegration, assignToService);
             var mergeRequestOptions = new MergeRequestOptions(mergeRequestAction);
             string comment = MergeRequestOptions.ConvertToString(mergeRequestOptions);
             var mergeRequest = MergeRequest.MergeRequest;
             gitLabWrapper.AddCommentToMergeRequest(mergeRequest, comment);
-            if (performTesting) {
-                UpdateWebHook();
-                ForceBuild(mergeRequest);
-            }
+            UpdateWebHook();
         }
         public void RefreshFarm() {
             FarmStatus = FarmIntegrator.GetTaskStatus(Repository.RepoConfig.FarmSyncTaskName);
@@ -123,7 +115,7 @@ namespace DXVcs2Git.UI.ViewModels {
             var mergeRequestSyncOptions = comments.Where(x => IsXml(x.Note)).Where(x => {
                 var mr = MergeRequestOptions.ConvertFromString(x.Note);
                 return mr?.ActionType == MergeRequestActionType.sync;
-            }).Select(x => (MergeRequestSyncAction)MergeRequestOptions.ConvertFromString(x.Note).Action).LastOrDefault();
+            }).Select(x => (MergeRequestSyncAction)MergeRequestOptions.ConvertFromString(x.Note).Action).FirstOrDefault();
             return mergeRequestSyncOptions;
         }
         static bool IsXml(string xml) {

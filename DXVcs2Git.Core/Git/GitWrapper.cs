@@ -101,7 +101,10 @@ namespace DXVcs2Git {
                 return comment;
             return comment.Replace("\"", "\\\"");
         }
-
+        public void AddRemote(string repoPath, string remote, string path) {
+            var code = WaitForProcess(gitPath, repoPath, out string output, out string errors, "remote add", remote, path);
+            CheckFail(code, output, errors);
+        }
         public void ResetHard(string repoPath) {
             string output, errors;
             var code = WaitForProcess(gitPath, repoPath, out output, out errors, "reset", "--hard");
@@ -137,6 +140,14 @@ namespace DXVcs2Git {
         public void Init(string repoPath) {
             string output, errors;
             var code = WaitForProcess(gitPath, repoPath, out output, out errors, "init");
+            CheckFail(code, output, errors);
+        }
+        public void FetchRemoteBranch(string repoPath, string remote, string branch) {
+            var code = WaitForProcess(gitPath, repoPath, out string output, out string errors, "fetch", remote, $@"{branch}:refs/remotes/{remote}/{branch}" );
+            CheckFail(code, output, errors);
+        }
+        public void DiffWithRemoteBranch(string repoPath, string remote, string branch) {
+            var code = WaitForProcess(gitPath, repoPath, out string output, out string errors, "diff --namestatus", branch, $@"{remote}/{branch}");
             CheckFail(code, output, errors);
         }
         public void Fetch(string remote, string repoPath, bool tags) {
@@ -236,8 +247,17 @@ namespace DXVcs2Git {
         }
         public void Dispose() {
         }
+        public void AddRemote(string remote, string path) {
+            gitCmd.AddRemote(localPath, remote, path);
+        }
         public void Fetch(string remote = "", bool updateTags = false) {
             gitCmd.Fetch(remote, localPath, updateTags);
+        }
+        public void FetchRemoteBranch(string remote, string branch) {
+            gitCmd.FetchRemoteBranch(localPath, remote, branch);
+        }
+        public void DiffWithRemoteBranch(string remote, string branch) {
+            gitCmd.DiffWithRemoteBranch(localPath, remote, branch);
         }
         public void Pull() {
             gitCmd.Pull(localPath);;

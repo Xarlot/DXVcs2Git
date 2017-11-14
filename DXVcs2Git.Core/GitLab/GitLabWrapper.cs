@@ -11,6 +11,7 @@ using User = NGitLab.Models.User;
 namespace DXVcs2Git.Git {
     public class GitLabWrapper {
         const string IgnoreValidation = "[IGNOREVALIDATION]";
+        const int commitsCheckDepth = 10;
         readonly GitLabClient client;
         public GitLabWrapper(string server, string token) {
             client = GitLabClient.Connect(server, token);
@@ -25,12 +26,12 @@ namespace DXVcs2Git.Git {
             return this.client.Projects.Get(id);
         }
         public Project FindProject(string project) {
-            return GetProjects().FirstOrDefault(x => 
+            return GetProjects().FirstOrDefault(x =>
                 string.Compare(x.HttpUrl, project, StringComparison.InvariantCultureIgnoreCase) == 0 ||
                 string.Compare(x.SshUrl, project, StringComparison.InvariantCultureIgnoreCase) == 0);
         }
         public Project FindProjectFromAll(string project) {
-            return GetProjects().FirstOrDefault(x => 
+            return GetProjects().FirstOrDefault(x =>
                 string.Compare(x.HttpUrl, project, StringComparison.InvariantCultureIgnoreCase) == 0 ||
                 string.Compare(x.SshUrl, project, StringComparison.InvariantCultureIgnoreCase) == 0);
         }
@@ -43,10 +44,49 @@ namespace DXVcs2Git.Git {
             var mergeRequestsClient = client.GetMergeRequest(project.Id);
             return mergeRequestsClient.Get(id);
         }
+        public IEnumerable<MergeRequestFileData> GetCommitChanges(Project project, Sha1 from, Sha1 to) {
+            var repoClient = client.GetRepository(project.Id);
+            var compareInfo = repoClient.Compare(from, to);
+            var files = compareInfo.Diff.Select(x =>
+                new MergeRequestFileData() {
+                    AMode = x.AMode,
+                    BMode = x.BMode,
+                    Diff = x.Difference,
+                    IsDeleted = x.IsDeletedFile,
+                    IsNew = x.IsNewFile,
+                    IsRenamed = x.IsRenamedFile,
+                    NewPath = x.NewPath,
+                    OldPath = x.OldPath
+                });
+            return files;
+        }
         public IEnumerable<MergeRequestFileData> GetMergeRequestChanges(MergeRequest mergeRequest) {
             var mergeRequestsClient = client.GetMergeRequest(mergeRequest.ProjectId);
             var changesClient = mergeRequestsClient.Changes(mergeRequest.Iid);
-            return changesClient.Changes.Files;
+            var files = changesClient.Changes.Files;
+            foreach (var file in files) {
+                file.OldPath = Uri.UnescapeDataString(file.OldPath);
+                file.NewPath = Uri.UnescapeDataString(file.NewPath);
+            }
+            return files;
+        }
+        public Commit FindParentCommit(Project project, Sha1 sha, Func<Commit, bool> handler) {
+            var repositoryClient = client.GetRepository(project.Id);
+            var commit = repositoryClient.GetCommit(sha);
+            if (commit == null)
+                return null;
+            int i = 0;
+            do {
+                if (commit.Parents == null || !commit.Parents.Any())
+                    return null;
+                var parentSha = commit.Parents.LastOrDefault();
+                commit = repositoryClient.GetCommit(parentSha);
+                if (handler(commit))
+                    return commit;
+                i++;
+            }
+            while (i < commitsCheckDepth);
+            return null;
         }
         public IEnumerable<Commit> GetMergeRequestCommits(MergeRequest mergeRequest) {
             var mergeRequestsClient = client.GetMergeRequest(mergeRequest.ProjectId);
@@ -107,7 +147,7 @@ namespace DXVcs2Git.Git {
         public MergeRequest ReopenMergeRequest(MergeRequest mergeRequest, string autoMergeFailedComment) {
             var mergeRequestsClient = client.GetMergeRequest(mergeRequest.ProjectId);
             try {
-                return mergeRequestsClient.Update(mergeRequest.Iid, new MergeRequestUpdate() {NewState = MergeRequestUpdateState.reopen, Description = autoMergeFailedComment});
+                return mergeRequestsClient.Update(mergeRequest.Iid, new MergeRequestUpdate() { NewState = MergeRequestUpdateState.reopen, Description = autoMergeFailedComment });
             }
             catch {
                 return mergeRequestsClient.Get(mergeRequest.Iid);
@@ -134,7 +174,7 @@ namespace DXVcs2Git.Git {
         public User RenameUser(User gitLabUser, string userName, string displayName, string email) {
             try {
                 var userClient = this.client.Users;
-                var userUpsert = new UserUpsert() { Username = userName, Name = displayName, Email = email, Password = new Guid().ToString(), ProjectsLimit = 10, Provider = null, ExternUid = null};
+                var userUpsert = new UserUpsert() { Username = userName, Name = displayName, Email = email, Password = new Guid().ToString(), ProjectsLimit = 10, Provider = null, ExternUid = null };
                 return userClient.Update(gitLabUser.Id, userUpsert);
             }
             catch (Exception ex) {
@@ -193,11 +233,11 @@ namespace DXVcs2Git.Git {
         public ProjectHook CreateProjectHook(Project project, Uri url, bool mergeRequestEvents, bool pushEvents, bool buildEvents) {
             var projectClient = client.GetRepository(project.Id);
             var projectHooks = projectClient.ProjectHooks;
-            return projectHooks.Create(new ProjectHookInsert() { MergeRequestsEvents = mergeRequestEvents, PushEvents = pushEvents, JobEvents = buildEvents, PipelineEvents = buildEvents, Url = url, EnableSslVerification = false});
+            return projectHooks.Create(new ProjectHookInsert() { MergeRequestsEvents = mergeRequestEvents, PushEvents = pushEvents, JobEvents = buildEvents, PipelineEvents = buildEvents, Url = url, EnableSslVerification = false });
         }
         public ProjectHook UpdateProjectHook(Project project, ProjectHook hook, Uri uri, bool mergeRequestEvents, bool pushEvents, bool buildEvents) {
             var repository = this.client.GetRepository(project.Id);
-            return repository.ProjectHooks.Update(new ProjectHookUpdate() { Id = hook.Id, Url = uri, MergeRequestsEvents = mergeRequestEvents, PushEvents = pushEvents, JobEvents = buildEvents, PipelineEvents = buildEvents, EnableSslVerification = false});
+            return repository.ProjectHooks.Update(new ProjectHookUpdate() { Id = project.Id, HookId = hook.Id, Url = uri, MergeRequestsEvents = mergeRequestEvents, PushEvents = pushEvents, JobEvents = buildEvents, PipelineEvents = buildEvents, EnableSslVerification = false });
         }
         public IEnumerable<Comment> GetComments(MergeRequest mergeRequest) {
             var mergeRequestsClient = client.GetMergeRequest(mergeRequest.ProjectId);

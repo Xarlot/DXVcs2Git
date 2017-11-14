@@ -15,6 +15,7 @@
              KeyboardNavigation.TabNavigation="Cycle">
     <UserControl.Resources>
         <ResourceDictionary>
+            <dxmvvm:BooleanToObjectConverter x:Key="testingConverter" TrueValue="Test merge request integration" FalseValue="Test only merge request changes"/>
             <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
             <converters:ShowAssignedToServiceMessageConverter x:Key="ShowAssignedToServiceMessageConverter"/>
         </ResourceDictionary>
@@ -38,10 +39,13 @@
                     </dxe:TextEdit>
                 </dxlc:LayoutItem>
                 <dxlc:LayoutItem Visibility="{Binding Path=SupportsTesting, Converter={StaticResource BooleanToVisibilityConverter}}">
-                    <dxe:CheckEdit Content="Test commit on farm" EditValue="{Binding Path=PerformTesting, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                    <dxe:CheckEdit Content="{Binding Path=PerformTesting, Converter={StaticResource testingConverter}}" EditValue="{Binding Path=PerformTesting, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
                 </dxlc:LayoutItem>
                 <dxlc:LayoutItem>
-                    <dxe:CheckEdit ValidateOnTextInput="True" Content="{Binding Path=PerformTesting, Converter={StaticResource ShowAssignedToServiceMessageConverter}}" EditValue="{Binding Path=AssignedToService, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                    <dxe:CheckEdit Content="Accept merge request" EditValue="{Binding Path=AssignedToService, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                </dxlc:LayoutItem>
+                <dxlc:LayoutItem Visibility="{Binding Path=SupportsTesting, Converter={StaticResource BooleanToVisibilityConverter}}">
+                    <dxe:CheckEdit Content="Accept merge request if build succeed" EditValue="{Binding Path=AssignedToServiceAfterTesting, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
                 </dxlc:LayoutItem>
                 <dxlc:LayoutItem>
                     <Button Content="Apply" Command="{Binding Path=ApplyCommand}"/>

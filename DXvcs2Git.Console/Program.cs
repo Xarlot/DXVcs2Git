@@ -13,11 +13,13 @@ using System.Threading;
 using System.Windows.Threading;
 using CommandLine;
 using DXVcs2Git.Core;
+using DXVcs2Git.Core.Farm;
 using DXVcs2Git.Core.GitLab;
 using DXVcs2Git.Core.Serialization;
 using DXVcs2Git.DXVcs;
 using DXVcs2Git.Git;
 using DXVcs2Git.UI.Farm;
+using Newtonsoft.Json;
 using NGitLab;
 using NGitLab.Models;
 using ProjectHookType = DXVcs2Git.Core.GitLab.ProjectHookType;
@@ -35,6 +37,7 @@ namespace DXVcs2Git.Console {
         const string patchZip = "patch.zip";
         const string patchInfoName = "patch.info";
         const string vcsServer = @"net.tcp://vcsservice.devexpress.devx:9091/DXVCSService";
+        const string farmServer = @"tcp://ccnet.devexpress.devx:21234/CruiseManager.rem";
         const int MaxChangesCount = 1000;
         static void Main(string[] args) {
             var result = Parser.Default.ParseArguments<SyncOptions, PatchOptions, ApplyPatchOptions, ListenerOptions, ProcessTestsOptions>(args);
@@ -137,6 +140,9 @@ namespace DXVcs2Git.Console {
             string targetBranchName = clo.Branch;
             string gitServer = clo.Server;
             string sourceBranchName = clo.SourceBranch;
+            bool testIntegration = !clo.Individual;
+            string jobId = clo.JobId;
+            string commitSha = clo.Commit;
 
             GitLabWrapper gitLabWrapper = new GitLabWrapper(gitServer, gitlabauthtoken);
 
@@ -163,33 +169,64 @@ namespace DXVcs2Git.Console {
                 return 1;
             }
 
-            MergeRequest mergeRequest = gitLabWrapper.GetMergeRequests(targetProject, x => x.SourceBranch == sourceBranchName && x.TargetBranch == targetBranchName).FirstOrDefault();
+            MergeRequest mergeRequest = gitLabWrapper.GetMergeRequests(targetProject, x => x.SourceBranch == sourceBranchName && x.TargetBranch == targetBranchName && x.SourceProjectId == sourceProject.Id).FirstOrDefault();
             if (mergeRequest == null) {
+                if (!testIntegration) {
+                    if (clo.Result == 0)
+                        Log.Message($@"Pipeline passed. http://asp-git:8181?source_id={sourceProject.Id}&path={Uri.EscapeDataString(targetProject.PathWithNamespace)}&build={jobId}");
+                    else
+                        Log.Message($@"Pipeline failed. http://asp-git:8181?source_id={sourceProject.Id}&path={Uri.EscapeDataString(targetProject.PathWithNamespace)}&build={jobId}");
+                    return clo.Result;
+                }
                 Log.Error($"Can`t find merge request.");
                 return 1;
             }
 
-            if (mergeRequest.Assignee?.Name != username) {
-                Log.Error($"Merge request is not assigned to service user {username} or doesn`t require testing.");
-                return 1;
-            }
+            Log.Message($"Merge request id: {mergeRequest.Iid}.");
+            Log.Message($"Merge request title: {mergeRequest.Title}.");
+            Log.Message($"Merge request assignee: {mergeRequest.Assignee?.Name ?? "None"}.");
+
+            string pipeline = $@"Pipeline {(clo.Result == 0 ? "passed." : "failed")} http://asp-git:8181?source_id={sourceProject.Id}&path={Uri.EscapeDataString(targetProject.PathWithNamespace)}&mergerequest_id={mergeRequest.Iid}&build={jobId}";
+            Log.Message(pipeline);
 
             var commit = gitLabWrapper.GetMergeRequestCommits(mergeRequest).FirstOrDefault();
             if (commit == null) {
                 Log.Message("Merge request has no commits.");
                 return 0;
             }
+            
+            if (clo.Result == 0) {
+                gitLabWrapper.AddCommentToMergeRequest(mergeRequest, pipeline);
 
-            var mergeRequestBuild = gitLabWrapper.GetBuilds(mergeRequest, commit.Id).FirstOrDefault();
-            if (mergeRequestBuild == null) {
-                Log.Message("Merge request has no build.");
-                return 0;
+                if (mergeRequest.WorkInProgress ?? false) {
+                    Log.Message("Work in progress. Assign on test service skipped.");
+                    return 0;
+                }
+
+                var xmlComments = gitLabWrapper.GetComments(mergeRequest).Where(x => IsXml(x.Note));
+                var options = xmlComments.Select(x => MergeRequestOptions.ConvertFromString(x.Note)).FirstOrDefault();
+                if (options != null && options.ActionType == MergeRequestActionType.sync) {
+                    var action = (MergeRequestSyncAction)options.Action;
+                    if (action.AssignToSyncService && !string.IsNullOrEmpty(action.SyncService) && !string.IsNullOrEmpty(commitSha)) {
+                        if (commit.Id.Equals(new Sha1(commitSha))) {
+                            gitLabWrapper.UpdateMergeRequestAssignee(mergeRequest, action.SyncService);
+                            Log.Message("Auto sync performed by gittools config.");
+                        }
+                        else {
+                            Log.Message("Auto sync by gittools config rejected because testing commit is not head.");
+                        }
+                    }
+                }
+
+                var user = targetProject.Tags?.FirstOrDefault(x => x.StartsWith("dxvcs2git."));
+                if (user != null) {
+                    gitLabWrapper.UpdateMergeRequestAssignee(mergeRequest, user);
+                    Log.Message("Auto sync performed by repo tag");
+                }
+
             }
-
-            if (clo.Result == 0)
-                gitLabWrapper.AddCommentToMergeRequest(mergeRequest, $@"Pipeline passed. http://builder03/ci/{sourceProject.Id}/{mergeRequestBuild.Id}");
             else
-                gitLabWrapper.AddCommentToMergeRequest(mergeRequest, $@"Pipeline failed. http://builder03/ci/{sourceProject.Id}/{mergeRequestBuild.Id}");
+                gitLabWrapper.AddCommentToMergeRequest(mergeRequest, pipeline);
             return 0;
         }
 
@@ -216,6 +253,8 @@ namespace DXVcs2Git.Console {
             string gitServer = clo.Server;
             string sourceBranchName = clo.SourceBranch;
             string patchdir = clo.PatchDir ?? localGitDir;
+            bool testIntegration = !clo.Individual;
+            string commitSha = clo.Commit;
 
             DXVcsWrapper vcsWrapper = new DXVcsWrapper(vcsServer, username, password);
 
@@ -268,30 +307,83 @@ namespace DXVcs2Git.Console {
 
             MergeRequest mergeRequest = gitLabWrapper.GetMergeRequests(targetProject,
                 x => x.SourceBranch == sourceBranchName && x.TargetBranch == targetBranchName && x.SourceProjectId == sourceProject.Id).FirstOrDefault();
-            if (mergeRequest == null) {
-                Log.Error($"Can`t find merge request.");
-                return 1;
-            }
-            Log.Message($"Merge request id: {mergeRequest.Iid}.");
-            Log.Message($"Merge request title: {mergeRequest.Title}.");
 
-            if (mergeRequest.Assignee?.Name != username) {
-                Log.Error($"Merge request is not assigned to service user {username} or doesn`t require testing.");
-                return 1;
-            }
+            bool shouldTestIntegration = testIntegration || mergeRequest != null && mergeRequest.Assignee?.Name == username;
 
-            GitWrapper gitWrapper = CreateGitWrapper(sourceRepoPath, localGitDir, sourceBranchName, username, password);
-            if (gitWrapper == null) {
-                Log.Error("Can`t create git wrapper.");
-                return 1;
-            }
+            if (shouldTestIntegration) {
+                if (mergeRequest == null) {
+                    Log.Error($"Can`t find merge request.");
+                    return 1;
+                }
+                Log.Message($"Merge request id: {mergeRequest.Iid}.");
+                Log.Message($"Merge request title: {mergeRequest.Title}.");
 
-            var changes = gitLabWrapper
-                .GetMergeRequestChanges(mergeRequest)
+                if (mergeRequest.Assignee?.Name != username) {
+                    Log.Error($"Merge request is not assigned to service user {username} or doesn`t require testing.");
+                    return 1;
+                }
+
+                var changes = GetMergeRequestChanges(gitLabWrapper, mergeRequest, trackBranch);
+
+                var patch = new PatchInfo() { TimeStamp = DateTime.Now.Ticks, Items = changes };
+
+                var patchPath = Path.Combine(patchdir, patchZip);
+                using (Package zip = Package.Open(patchPath, FileMode.Create)) {
+                    SavePatchInfo(patchdir, patch);
+                    AddPart(zip, patchdir, "patch.info");
+                    foreach (var path in CalcFilesForPatch(patch)) {
+                        AddPart(zip, localGitDir, path);
+                    }
+                }
+
+                Log.Message($"Patch.info generated at {patchPath}");
+                return 0;
+            }
+            else {
+                if (mergeRequest != null) {
+                    Log.Message($"Merge request id: {mergeRequest.Iid}.");
+                    Log.Message($"Merge request title: {mergeRequest.Title}.");
+                }
+                else
+                    Log.Message($"Merge request not found. Testing by commits.");
+
+                Sha1 searchSha = mergeRequest == null ? new Sha1(commitSha) : gitLabWrapper.GetMergeRequestCommits(mergeRequest).LastOrDefault()?.Id ?? new Sha1(commitSha);
+                var commit = FindSyncCommit(gitLabWrapper, sourceProject, searchSha);
+                if (commit == null) {
+                    Log.Error($"Can`t find sync commit. Try to merge with latest version.");
+                    return 1;
+                }
+                long? vcsCommitTimeStamp = FindVcsCommitTimeStamp(commit, vcsWrapper, history, historyPath, trackBranch.HistoryPath);
+                if (vcsCommitTimeStamp == null) {
+                    Log.Error($"Can`t find vcs sync commit. Try to merge with latest version.");
+                    return 1;
+                }
+
+                Log.Message($"Patch based on commit {searchSha}");
+                Log.Message($"Vcs commit timestamp {new DateTime(vcsCommitTimeStamp.Value).ToLocalTime()}");
+                var changes = GetCommitChanges(gitLabWrapper, sourceProject, commit.Id, searchSha, trackBranch);
+                var patch = new PatchInfo() { TimeStamp = vcsCommitTimeStamp.Value, Items = changes };
+
+                var patchPath = Path.Combine(patchdir, patchZip);
+                using (Package zip = Package.Open(patchPath, FileMode.Create)) {
+                    SavePatchInfo(patchdir, patch);
+                    AddPart(zip, patchdir, "patch.info");
+                    foreach (var path in CalcFilesForPatch(patch)) {
+                        AddPart(zip, localGitDir, path);
+                    }
+                }
+
+                Log.Message($"Patch.info generated at {patchPath}");
+                return 0;
+            }
+        }
+        static List<PatchItem> GetCommitChanges(GitLabWrapper gitLabWrapper, Project project, Sha1 from, Sha1 to, TrackBranch trackBranch) {
+            return gitLabWrapper
+                .GetCommitChanges(project, from, to)
                 .Select(x => {
                     var trackItem = trackBranch.TrackItems.Where(b => !b.IsFile).FirstOrDefault(track => CheckItemForChangeSet(x.OldPath, track));
                     if (trackItem == null)
-                        trackBranch.TrackItems.Where(b => b.IsFile).FirstOrDefault(track => CheckFileItemForChangeSet(x.OldPath, track));
+                        trackItem = trackBranch.TrackItems.Where(b => b.IsFile).FirstOrDefault(track => CheckFileItemForChangeSet(x.OldPath, track));
                     return new { trackItem = trackItem, item = x };
                 })
                 .Where(x => x.trackItem != null)
@@ -302,20 +394,47 @@ namespace DXVcs2Git.Console {
                     OldVcsPath = CalcVcsPath(x.trackItem, x.item.OldPath),
                     NewVcsPath = CalcVcsPath(x.trackItem, x.item.NewPath),
                 }).ToList();
+        }
+        static long? FindVcsCommitTimeStamp(Commit commit, DXVcsWrapper vcsWrapper, SyncHistory history, string localHistoryPath, string historyPath) {
+            string token = CommentWrapper.Parse(commit.Title).Token;
+            var item = history.Items.FirstOrDefault(x => new Sha1(x.GitCommitSha).Equals(commit.Id));
+            if (item != null)
+                return item.VcsCommitTimeStamp;
 
-            var patch = new PatchInfo() { TimeStamp = DateTime.Now.Ticks, Items = changes };
-
-            var patchPath = Path.Combine(patchdir, patchZip);
-            using (Package zip = Package.Open(patchPath, FileMode.Create)) {
-                SavePatchInfo(patchdir, patch);
-                AddPart(zip, patchdir, "patch.info");
-                foreach (var path in CalcFilesForPatch(patch)) {
-                    AddPart(zip, localGitDir, path);
+            DateTime commitTime = commit.CreatedAt;
+            foreach (var fileHistoryInfo in vcsWrapper.GetFileHistory(historyPath, commitTime.ToLocalTime())) {
+                vcsWrapper.GetFile(historyPath, localHistoryPath, fileHistoryInfo.ActionDate);
+                SyncHistory currentHistory = SyncHistory.Deserialize(localHistoryPath);
+                if (currentHistory == null) {
+                    Log.Error($"Can`t parse current history file.");
+                    break;
                 }
+                var historyItem = currentHistory.Items.FirstOrDefault(x => new Sha1(x.GitCommitSha).Equals(commit.Id));
+                if (historyItem != null)
+                    return historyItem.VcsCommitTimeStamp;
             }
-
-            Log.Message($"Patch.info generated at {patchPath}");
-            return 0;
+            return null;
+        }
+        static Commit FindSyncCommit(GitLabWrapper gitLabWrapper, Project project, Sha1 commitSha) {
+            return gitLabWrapper.FindParentCommit(project, commitSha, x => CommentWrapper.IsAutoSyncComment(x.Title));
+        }
+        static List<PatchItem> GetMergeRequestChanges(GitLabWrapper gitLabWrapper, MergeRequest mergeRequest, TrackBranch trackBranch) {
+            return gitLabWrapper
+                .GetMergeRequestChanges(mergeRequest)
+                .Select(x => {
+                    var trackItem = trackBranch.TrackItems.Where(b => !b.IsFile).FirstOrDefault(track => CheckItemForChangeSet(x.OldPath, track));
+                    if (trackItem == null)
+                        trackItem = trackBranch.TrackItems.Where(b => b.IsFile).FirstOrDefault(track => CheckFileItemForChangeSet(x.OldPath, track));
+                    return new { trackItem = trackItem, item = x };
+                })
+                .Where(x => x.trackItem != null)
+                .Select(x => new PatchItem() {
+                    SyncAction = CalcSyncAction(x.item),
+                    OldPath = x.item.OldPath,
+                    NewPath = x.item.NewPath,
+                    OldVcsPath = CalcVcsPath(x.trackItem, x.item.OldPath),
+                    NewVcsPath = CalcVcsPath(x.trackItem, x.item.NewPath),
+                }).ToList();
         }
         static MergeRequestSyncAction CalcMergeRequestSyncOptions(IEnumerable<Comment> comments) {
             if (comments == null)
@@ -400,19 +519,6 @@ namespace DXVcs2Git.Console {
             Stopwatch sw = Stopwatch.StartNew();
 
             GitLabWrapper gitLabWrapper = new GitLabWrapper(gitServer, gitlabauthtoken);
-            FarmIntegrator.Start(null);
-
-            var projects = gitLabWrapper.GetProjects();
-            foreach (Project project in projects) {
-                var hooks = gitLabWrapper.GetProjectHooks(project);
-                foreach (ProjectHook hook in hooks) {
-                    if (WebHookHelper.IsSameHost(hook.Url, IP) || !WebHookHelper.IsSharedHook(sharedWebHookPath, hook.Url))
-                        continue;
-                    Uri url = WebHookHelper.Replace(hook.Url, IP);
-                    gitLabWrapper.UpdateProjectHook(project, hook, url, true, true, true);
-                    Log.Message($"WebHook registered for project {project.Name} at {url}");
-                }
-            }
 
             WebServer server = new WebServer(WebHookHelper.GetSharedHookUrl(IP, sharedWebHookPath));
             server.Start();
@@ -478,11 +584,11 @@ namespace DXVcs2Git.Console {
                     if (options?.ActionType == MergeRequestActionType.sync) {
                         Log.Message("Sync options found.");
                         var syncOptions = (MergeRequestSyncAction)options.Action;
-                        Log.Message($"Sync options perform testing is {syncOptions.PerformTesting}");
+                        Log.Message($"Sync options perform testing is {syncOptions.TestIntegration}");
                         Log.Message($"Sync options assign to service is {syncOptions.AssignToSyncService}");
                         Log.Message($"Sync options sync task is {syncOptions.SyncTask}");
                         Log.Message($"Sync options sync service is {syncOptions.SyncService}");
-                        if (syncOptions.PerformTesting && syncOptions.AssignToSyncService) {
+                        if (syncOptions.TestIntegration && syncOptions.AssignToSyncService) {
                             gitLabWrapper.UpdateMergeRequestAssignee(mergeRequest, syncOptions.SyncService);
                             ForceBuild(syncOptions.SyncTask);
                         }
@@ -512,7 +618,7 @@ namespace DXVcs2Git.Console {
             Log.Message($"Merge hook state: {hook.Attributes.State}");
 
             var targetProject = gitLabWrapper.GetProject(hook.Attributes.TargetProjectId);
-            var mergeRequest = gitLabWrapper.GetMergeRequest(targetProject, hook.Attributes.Id);
+            var mergeRequest = gitLabWrapper.GetMergeRequest(targetProject, hook.Attributes.IID);
             if (supportSendingMessages)
                 SendMessage(serviceUser, hook.Json, farmTaskName);
 
@@ -534,14 +640,14 @@ namespace DXVcs2Git.Console {
             var bytes = Encoding.UTF8.GetBytes(json);
             string message = Convert.ToBase64String(bytes);
 
-            FarmIntegrator.SendNotification(farmTaskName, serviceUser, message);
+            FarmIntegrator.SendNotification(farmServer, farmTaskName, serviceUser, message);
         }
         static void ForceSyncBuild(GitLabWrapper gitLabWrapper, MergeRequest mergeRequest, Project targetProject, MergeRequestHookClient hook) {
             var xmlComments = gitLabWrapper.GetComments(mergeRequest).Where(x => IsXml(x.Note));
             var options = xmlComments.Select(x => MergeRequestOptions.ConvertFromString(x.Note)).FirstOrDefault();
             if (options != null && options.ActionType == MergeRequestActionType.sync) {
                 var action = (MergeRequestSyncAction)options.Action;
-                if (action.PerformTesting) {
+                if (action.TestIntegration) {
                     Log.Message("Check build status before force build.");
                     var commit = gitLabWrapper.GetMergeRequestCommits(mergeRequest).FirstOrDefault();
                     var build = commit != null ? gitLabWrapper.GetBuilds(mergeRequest, commit.Id).FirstOrDefault() : null;
@@ -605,6 +711,11 @@ namespace DXVcs2Git.Console {
             string branchName = clo.Branch;
             string trackerPath = clo.Tracker;
             string gitServer = clo.Server;
+            string syncTask = clo.SyncTask;
+            bool sendNotifications = !string.IsNullOrEmpty(clo.SyncTask) && !string.IsNullOrWhiteSpace(clo.SyncTask);
+
+            if (sendNotifications)
+                FarmIntegrator.Start(null);
 
             DXVcsWrapper vcsWrapper = new DXVcsWrapper(vcsServer, username, password);
 
@@ -631,15 +742,19 @@ namespace DXVcs2Git.Console {
                 Log.Error($"default user {username} is not registered in the active directory.");
                 return 1;
             }
+
             var checkMergeChangesResult = CheckChangesForMerging(gitLabWrapper, gitRepoPath, branchName, head, vcsWrapper, branch, syncHistory, defaultUser);
             if (checkMergeChangesResult == CheckMergeChangesResult.NoChanges)
                 return 0;
             if (checkMergeChangesResult == CheckMergeChangesResult.Error)
                 return 1;
 
+            SendMessageToGitTools(sendNotifications, syncTask, username, "Initializing git repo.");
             GitWrapper gitWrapper = CreateGitWrapper(gitRepoPath, localGitDir, branch.Name, username, password);
             if (gitWrapper == null)
                 return 1;
+
+            SendMessageToGitTools(sendNotifications, syncTask, username, "Adding vcs commits to git.");
 
             ProcessHistoryResult processHistoryResult = ProcessHistory(vcsWrapper, gitWrapper, registeredUsers, defaultUser, gitRepoPath, localGitDir, branch, clo.CommitsCount, syncHistory, true);
             if (processHistoryResult == ProcessHistoryResult.NotEnough)
@@ -647,10 +762,20 @@ namespace DXVcs2Git.Console {
             if (processHistoryResult == ProcessHistoryResult.Failed)
                 return 1;
 
-            int result = ProcessMergeRequests(vcsWrapper, gitWrapper, gitLabWrapper, registeredUsers, defaultUser, gitRepoPath, localGitDir, clo.Branch, clo.Tracker, syncHistory, username);
+            SendMessageToGitTools(sendNotifications, syncTask, username, "Process merge requests.");
+
+            int result = ProcessMergeRequests(vcsWrapper, gitWrapper, gitLabWrapper, registeredUsers, defaultUser, gitRepoPath, localGitDir, clo.Branch, clo.Tracker, syncHistory, username, sendNotifications, syncTask);
+
+            SendMessageToGitTools(sendNotifications, syncTask, username, "Shutting down.");
             if (result != 0)
                 return result;
             return 0;
+        }
+        static void SendMessageToGitTools(bool sendMessage, string task, string user, string message) {
+            if (!sendMessage)
+                return;
+            var notification = new FarmSyncTaskNotification(FarmNotificationType.synctask, task, message);
+            FarmIntegrator.SendNotification(farmServer, task, user, JsonConvert.SerializeObject(notification));
         }
         static CheckMergeChangesResult CheckChangesForMerging(GitLabWrapper gitLabWrapper, string gitRepoPath, string branchName, SyncHistoryItem head, DXVcsWrapper vcsWrapper, TrackBranch branch, SyncHistoryWrapper syncHistory, User defaultUser) {
             var project = gitLabWrapper.FindProject(gitRepoPath);
@@ -675,6 +800,7 @@ namespace DXVcs2Git.Console {
         static string GetVcsSyncHistory(DXVcsWrapper vcsWrapper, string historyPath) {
             return vcsWrapper.GetLatestFile(historyPath);
         }
+
         static void EnsureGitDir(string localGitDir) {
             if (Directory.Exists(localGitDir)) {
                 KillProcess("tgitcache");
@@ -717,7 +843,8 @@ namespace DXVcs2Git.Console {
             }
             return branch;
         }
-        static int ProcessMergeRequests(DXVcsWrapper vcsWrapper, GitWrapper gitWrapper, GitLabWrapper gitLabWrapper, RegisteredUsers users, User defaultUser, string gitRepoPath, string localGitDir, string branchName, string tracker, SyncHistoryWrapper syncHistory, string userName) {
+        static int ProcessMergeRequests(DXVcsWrapper vcsWrapper, GitWrapper gitWrapper, GitLabWrapper gitLabWrapper, RegisteredUsers users, User defaultUser, string gitRepoPath, 
+            string localGitDir, string branchName, string tracker, SyncHistoryWrapper syncHistory, string userName, bool sendNotification, string taskName) {
             var project = gitLabWrapper.FindProject(gitRepoPath);
             TrackBranch branch = GetBranch(branchName, tracker, vcsWrapper);
             if (branch == null) {
@@ -731,7 +858,7 @@ namespace DXVcs2Git.Console {
             }
             int result = 0;
             foreach (var mergeRequest in mergeRequests) {
-                var mergeRequestResult = ProcessMergeRequest(vcsWrapper, gitWrapper, gitLabWrapper, users, defaultUser, localGitDir, branch, mergeRequest, syncHistory);
+                var mergeRequestResult = ProcessMergeRequest(vcsWrapper, gitWrapper, gitLabWrapper, users, defaultUser, localGitDir, branch, mergeRequest, syncHistory, sendNotification, taskName);
                 if (mergeRequestResult == MergeRequestResult.Failed)
                     return 1;
                 if (mergeRequestResult == MergeRequestResult.CheckoutFailed || mergeRequestResult == MergeRequestResult.Conflicts || mergeRequestResult == MergeRequestResult.InvalidState)
@@ -753,17 +880,19 @@ namespace DXVcs2Git.Console {
                 return false;
             return true;
         }
-        static MergeRequestResult ProcessMergeRequest(DXVcsWrapper vcsWrapper, GitWrapper gitWrapper, GitLabWrapper gitLabWrapper, RegisteredUsers users, User defaultUser, string localGitDir, TrackBranch branch, MergeRequest mergeRequest, SyncHistoryWrapper syncHistory) {
+        static MergeRequestResult ProcessMergeRequest(DXVcsWrapper vcsWrapper, GitWrapper gitWrapper, GitLabWrapper gitLabWrapper, RegisteredUsers users, User defaultUser, string localGitDir, TrackBranch branch, MergeRequest mergeRequest, SyncHistoryWrapper syncHistory, bool sendNotifications, string syncTask) {
             switch (mergeRequest.State) {
                 case MergeRequestState.opened:
                 case MergeRequestState.reopened:
-                    return ProcessOpenedMergeRequest(vcsWrapper, gitWrapper, gitLabWrapper, users, defaultUser, localGitDir, branch, mergeRequest, syncHistory);
+                    return ProcessOpenedMergeRequest(vcsWrapper, gitWrapper, gitLabWrapper, users, defaultUser, localGitDir, branch, mergeRequest, syncHistory, sendNotifications, syncTask);
             }
             return MergeRequestResult.InvalidState;
         }
-        static MergeRequestResult ProcessOpenedMergeRequest(DXVcsWrapper vcsWrapper, GitWrapper gitWrapper, GitLabWrapper gitLabWrapper, RegisteredUsers users, User defaultUser, string localGitDir, TrackBranch branch, MergeRequest mergeRequest, SyncHistoryWrapper syncHistory) {
+        static MergeRequestResult ProcessOpenedMergeRequest(DXVcsWrapper vcsWrapper, GitWrapper gitWrapper, GitLabWrapper gitLabWrapper, RegisteredUsers users, User defaultUser, string localGitDir, TrackBranch branch, MergeRequest mergeRequest, SyncHistoryWrapper syncHistory, bool sendNotifications, string syncTask) {
             string autoSyncToken = syncHistory.CreateNewToken();
             var lastHistoryItem = syncHistory.GetHead();
+
+            SendMessageToGitTools(sendNotifications, syncTask, defaultUser.UserName, $"Processing merge {mergeRequest.Title}");
 
             Log.Message($"Start merging mergerequest {mergeRequest.Title}");
 

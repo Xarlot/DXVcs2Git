@@ -559,6 +559,16 @@ namespace DXVcs2Git.DXVcs {
                 }
             }
         }
+        public FileHistoryInfo[] GetFileHistory(string historyPath, DateTime from) {
+            try {
+                var repo = DXVcsConnectionHelper.Connect(server, this.user, this.password);
+                return repo.GetFileHistoryEx(historyPath, from);
+            }
+            catch (Exception ex) {
+                Log.Error($"Loading sync history from {historyPath} failed", ex);
+            }
+            return null;
+        }
         public void GetFile(string historyPath, string localPath, DateTime timestamp) {
             try {
                 var repo = DXVcsConnectionHelper.Connect(server, this.user, this.password);

@@ -60,12 +60,24 @@ namespace DXVcs2Git.Console {
         public string SourceBranch { get; }
         [Option("result", Required = true, HelpText = "Test results")]
         public int Result { get; }
+        [Option("assign", Required = false, HelpText = "Auto assign to service")]
+        public bool AutoAssign { get; }
+        [Option('i', "invividual", Required = false, Default = false, HelpText = "Test only my commits")]
+        public bool Individual { get; }
+        [Option('j', "job", Required = false, HelpText = "job id")]
+        public string JobId { get; }
+        [Option('c', "commit", Required = false, HelpText = "Current commit sha")]
+        public string Commit { get; }
 
-        public ProcessTestsOptions(string branch, string sourceRepo, string sourceBranch, int result, string server, string login, string repo, string password, string authToken) : base(server, login, repo, password, authToken) {
+        public ProcessTestsOptions(string branch, string sourceRepo, string sourceBranch, int result, bool autoAssign, bool individual, string jobid, string commit, string server, string login, string repo, string password, string authToken) : base(server, login, repo, password, authToken) {
             Branch = branch;
             SourceRepo = sourceRepo;
             SourceBranch = sourceBranch;
             Result = result;
+            AutoAssign = autoAssign;
+            Individual = individual;
+            JobId = jobid;
+            Commit = commit;
         }
     }
     [Verb("sync", HelpText = "Sync changes between dxvcs and git")]
@@ -78,12 +90,15 @@ namespace DXVcs2Git.Console {
         public int CommitsCount { get; }
         [Option('d', "dir", HelpText = "Path to local git repo")]
         public string LocalFolder { get; }
+        [Option('x', "synctask", HelpText = "Sync task", Required = false)]
+        public string SyncTask { get; }
 
-        public SyncOptions(string branch, string tracker, int commitsCount, string localFolder, string server, string login, string repo, string password, string authToken) : base(server, login, repo, password, authToken) {
+        public SyncOptions(string branch, string tracker, int commitsCount, string localFolder, string syncTask, string server, string login, string repo, string password, string authToken) : base(server, login, repo, password, authToken) {
             Branch = branch;
             CommitsCount = commitsCount;
             LocalFolder = localFolder;
             Tracker = tracker;
+            SyncTask = syncTask;
         }
     }
     [Verb("listen", HelpText = "Web hook listener from gitlab server")]
@@ -105,6 +120,10 @@ namespace DXVcs2Git.Console {
     public class PatchOptions : GeneralOptions {
         [Option('b', "branch", Required = true, HelpText = "Local git branch name")]
         public string Branch { get; }
+        [Option('i', "indivivial", Required = false, Default = false, HelpText = "Test only my commits")]
+        public bool Individual { get; }
+        [Option('c', "commit", Required = false, HelpText = "Current commit sha")]
+        public string Commit { get; }
         [Option('t', "tracker", Required = true, HelpText = "Path to config with items to track")]
         public string Tracker { get; }
         [Option("sourcerepo", Required = true, HelpText = "Source repo for searching merge request")]
@@ -115,8 +134,10 @@ namespace DXVcs2Git.Console {
         public string LocalFolder { get; }
         [Option("patchdir", Required = true, HelpText = "Location of patch.info generated in patch mode")]
         public string PatchDir { get; }
-        public PatchOptions(string branch, string tracker, string sourceRepo, string sourceBranch, string localFolder, string patchDir, string server, string login, string repo, string password, string authToken) : base(server, login, repo, password, authToken) {
+        public PatchOptions(string branch, bool individual, string commit, string tracker, string sourceRepo, string sourceBranch, string localFolder, string patchDir, string server, string login, string repo, string password, string authToken) : base(server, login, repo, password, authToken) {
             Branch = branch;
+            Individual = individual;
+            Commit = commit;
             Tracker = tracker;
             SourceBranch = sourceBranch;
             SourceRepo = sourceRepo;
