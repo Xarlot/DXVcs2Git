@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.IO.Compression;
 using System.IO.Packaging;
 using System.Linq;
 using System.Net;
@@ -322,21 +323,12 @@ namespace DXVcs2Git.Console {
                     Log.Error($"Merge request is not assigned to service user {username} or doesn`t require testing.");
                     return 1;
                 }
+                Log.Message($"Merge request assignee: {mergeRequest.Assignee?.Name ?? "None"}.");
 
                 var changes = GetMergeRequestChanges(gitLabWrapper, mergeRequest, trackBranch);
 
                 var patch = new PatchInfo() { TimeStamp = DateTime.Now.Ticks, Items = changes };
-
-                var patchPath = Path.Combine(patchdir, patchZip);
-                using (Package zip = Package.Open(patchPath, FileMode.Create)) {
-                    SavePatchInfo(patchdir, patch);
-                    AddPart(zip, patchdir, "patch.info");
-                    foreach (var path in CalcFilesForPatch(patch)) {
-                        AddPart(zip, localGitDir, path);
-                    }
-                }
-
-                Log.Message($"Patch.info generated at {patchPath}");
+                GeneratePatch(patchdir, patch, localGitDir);
                 return 0;
             }
             else {
@@ -363,19 +355,23 @@ namespace DXVcs2Git.Console {
                 Log.Message($"Vcs commit timestamp {new DateTime(vcsCommitTimeStamp.Value).ToLocalTime()}");
                 var changes = GetCommitChanges(gitLabWrapper, sourceProject, commit.Id, searchSha, trackBranch);
                 var patch = new PatchInfo() { TimeStamp = vcsCommitTimeStamp.Value, Items = changes };
-
-                var patchPath = Path.Combine(patchdir, patchZip);
-                using (Package zip = Package.Open(patchPath, FileMode.Create)) {
-                    SavePatchInfo(patchdir, patch);
-                    AddPart(zip, patchdir, "patch.info");
-                    foreach (var path in CalcFilesForPatch(patch)) {
-                        AddPart(zip, localGitDir, path);
-                    }
-                }
-
-                Log.Message($"Patch.info generated at {patchPath}");
+                GeneratePatch(patchdir, patch, localGitDir);
                 return 0;
             }
+        }
+        static void GeneratePatch(string patchdir, PatchInfo patch, string localGitDir) {
+            var patchPath = Path.Combine(patchdir, patchZip);
+            using (var fileStream = new FileStream(patchPath, FileMode.CreateNew)) {
+                using (var archive = new ZipArchive(fileStream, ZipArchiveMode.Create, true)) {
+                    SavePatchInfo(patchdir, patch);
+                    AddPart(archive, patchdir, "patch.info");
+                    foreach (var path in CalcFilesForPatch(patch)) {
+                        AddPart(archive, localGitDir, path);
+                    }
+                }
+            }
+
+            Log.Message($"Patch.info generated at {patchPath}");
         }
         static List<PatchItem> GetCommitChanges(GitLabWrapper gitLabWrapper, Project project, Sha1 from, Sha1 to, TrackBranch trackBranch) {
             return gitLabWrapper
@@ -474,15 +470,11 @@ namespace DXVcs2Git.Console {
                 return SyncAction.Move;
             return SyncAction.Modify;
         }
-        static void AddPart(Package zip, string root, string path) {
-            Uri uri = PackUriHelper.CreatePartUri(new Uri(path, UriKind.Relative));
-            if (zip.PartExists(uri)) {
-                zip.DeletePart(uri);
-            }
-            PackagePart part = zip.CreatePart(uri, "", CompressionOption.Normal);
-            using (FileStream fileStream = new FileStream(Path.Combine(root, path), FileMode.Open, FileAccess.Read)) {
-                using (Stream dest = part.GetStream()) {
-                    CopyStream(fileStream, dest);
+        static void AddPart(ZipArchive archive, string root, string path) {
+            var entry = archive.CreateEntry(path, CompressionLevel.Optimal);
+            using (var zipStream = entry.Open()) {
+                using (FileStream fileStream = new FileStream(Path.Combine(root, path), FileMode.Open, FileAccess.Read)) {
+                    CopyStream(fileStream, zipStream);
                 }
             }
         }

@@ -55,8 +55,8 @@ namespace DXVcs2Git.Git {
                     IsDeleted = x.IsDeletedFile,
                     IsNew = x.IsNewFile,
                     IsRenamed = x.IsRenamedFile,
-                    NewPath = x.NewPath,
-                    OldPath = x.OldPath
+                    NewPath = Uri.UnescapeDataString(x.NewPath),
+                    OldPath = Uri.UnescapeDataString(x.OldPath)
                 });
             return files;
         }

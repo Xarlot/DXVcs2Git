@@ -1,4 +1,6 @@
 ﻿using System;
+using System.IO;
+using System.IO.Packaging;
 using DXVcs2Git.Git;
 using NUnit.Framework;
 
