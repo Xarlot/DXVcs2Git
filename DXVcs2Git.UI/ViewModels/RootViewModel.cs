@@ -18,7 +18,7 @@ using ProjectHookType = DXVcs2Git.Core.GitLab.ProjectHookType;
 
 namespace DXVcs2Git.UI.ViewModels {
     public class RootViewModel : ViewModelBase {
-        public const string DefaultThemeName = "Office2013";
+        public const string DefaultThemeName = "Super";
         public RepositoriesViewModel Repositories { get; private set; }
         public ICommand SettingsCommand { get; private set; }
         public ICommand ShowLogCommand { get; private set; }
@@ -239,7 +239,19 @@ namespace DXVcs2Git.UI.ViewModels {
         }
         void UpdateAppearance() {
             ScrollBarMode = (ScrollBarMode)Config.ScrollBarMode;
-            ApplicationThemeHelper.ApplicationThemeName = Config?.DefaultTheme ?? DefaultThemeName;
+            UpdateTheme();
+        }
+        static void RegisterTheme(string themeName, string fullName) {
+            var isRegistered = Theme.FindTheme(themeName);
+            if (isRegistered != null)
+                Theme.RemoveTheme(themeName);
+            var theme = new Theme(themeName);
+            theme.AssemblyName = fullName;
+            Theme.RegisterTheme(theme);
+        }
+        static void UpdateTheme() {
+            RegisterTheme("Super", $"DevExpress.Xpf.Themes.Super.v{AssemblyInfo.VersionShort}");
+            ApplicationThemeHelper.ApplicationThemeName = "Super";
         }
         public void Update() {
             Repositories.Update();

@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Threading;
-using DevExpress.Xpf.CodeView;
 using DevExpress.Xpf.Ribbon;
 using DXVcs2Git.UI.ViewModels;
 

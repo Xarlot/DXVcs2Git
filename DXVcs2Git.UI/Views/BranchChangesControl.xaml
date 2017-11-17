@@ -61,13 +61,14 @@
                     </dxmvvm:Interaction.Behaviors>
                     <dxg:GridControl.View>
                         <dxg:TableView
-                                    ShowColumnHeaders="False"
-                                    ShowIndicator="False"
-                                    ShowVerticalLines="False"
-                                    ShowHorizontalLines="False"
-                                    ShowGroupPanel="False" 
-                                    NavigationStyle="Row" 
-                                    AutoWidth="True">
+                            UseLightweightTemplates="None"                                    
+                            ShowColumnHeaders="False"
+                            ShowIndicator="False"
+                            ShowVerticalLines="False"
+                            ShowHorizontalLines="False"
+                            ShowGroupPanel="False" 
+                            NavigationStyle="Row" 
+                            AutoWidth="True">
                             <dxg:TableView.Resources>
                                 <Style TargetType="{x:Type dxg:GroupValuePresenter}">
                                     <Setter Property="VerticalAlignment" Value="Center" />

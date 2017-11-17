@@ -21,16 +21,6 @@
         <dx:DXTabControl>
             <dx:DXTabItem Header="Application">
                 <dxlc:LayoutControl Orientation="Vertical" VerticalAlignment="Top">
-                    <dxlc:LayoutItem Label="Default theme: " VerticalAlignment="Center">
-                        <dxe:ComboBoxEdit 
-                            EditValue="{Binding Path=DefaultTheme, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
-                            IsTextEditable="False"
-                            NullText="{x:Static viewModels:RootViewModel.DefaultThemeName}"
-                            ItemsSource="{x:Static dx:Theme.Themes}" 
-                            DisplayMember="FullName" 
-                            ValueMember="Name">
-                        </dxe:ComboBoxEdit>
-                    </dxlc:LayoutItem>
                     <dxlc:LayoutItem Label="Use touch scrollbars: " VerticalAlignment="Center">
                         <dxe:CheckEdit>
                                 <dxe:CheckEdit.EditValue>
@@ -83,9 +73,6 @@
             </dx:DXTabItem>
             <dx:DXTabItem Header="Repositories">
                 <dxg:GridControl ItemsSource="{Binding Path=Repositories}" SelectionMode="Row">
-                    <dxmvvm:Interaction.Behaviors>
-                        <dxg:GridDragDropManager/>
-                    </dxmvvm:Interaction.Behaviors>
                     <dxg:GridControl.Columns>
                         <dxg:GridColumn FieldName="Name" Width="*"/>
                         <dxg:GridColumn FieldName="ConfigName" Width="2*">
@@ -126,7 +113,8 @@
                             ShowDataNavigator="True" 
                             ShowGroupPanel="False"
                             AllowGrouping="False"
-                            EditorShowMode="MouseUp">
+                            EditorShowMode="MouseUp"
+                            AllowDragDrop="True">
                             <dxmvvm:Interaction.Behaviors>
                                 <behaviors:ValidateEditConfigBehavior/>
                             </dxmvvm:Interaction.Behaviors>
