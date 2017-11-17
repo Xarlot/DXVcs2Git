@@ -373,7 +373,6 @@
     <Compile Include="DefaultInitializer.cs" />
     <Compile Include="Extensions\IoCExtension.cs" />
     <Compile Include="NativeMethods\AdministratorMethods.cs" />
-    <Compile Include="Farm\DXCCTrayHelpers.cs" />
     <Compile Include="NativeMethods\EntryPoint.cs" />
     <Compile Include="NativeMethods\HotKeyHelper.cs" />
     <Compile Include="NativeMethods\NativeMethods.cs" />
