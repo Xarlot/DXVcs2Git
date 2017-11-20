@@ -1,13 +1,58 @@
 import json
 import subprocess
 import sys
+import threading
+import dotmap
+import gitlab
+import untangle
+import time
+
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from optparse import OptionParser
 from subprocess import DEVNULL
-import untangle
-import dotmap
-import gitlab
 
+class checkThread (threading.Thread):
+    def __init__(self, gl, synctasks):
+        threading.Thread.__init__(self)
+        self.gl = gl
+        self.synctasks = synctasks
+
+    def run(self):
+        while True:
+            self.do_watch()
+            time.sleep(600)
+    pass
+
+    def do_watch(self):
+        print('start watch thread sync')
+        tasks = list()
+        for branch in self.synctasks.values():
+            for task in branch:
+                tasks.append(dotmap.DotMap(task))
+        for task in tasks:
+            if not task.has_key("user"):
+                continue
+            project = self.gl.projects.get(task.ssh)
+            if project is None:
+                continue
+            mergerequests = project.mergerequests.list(state="opened")
+            for mr in mergerequests:
+                if mr.assignee is not None and mr.assignee["username"] == task.user:
+                    forced = self.ForceBuild(task.task, task.user)
+                    if (forced == 0):
+                        print("Build forced by watcher. Task " + task.task)
+                    else:
+                        print("Force build by watcher failed. Task " + task.task)
+        print ('end watch thread sync')
+    pass
+
+    def ForceBuild(self, taskname, username):
+        p = subprocess.Popen(
+            r'DXVcs2Git.FarmIntegrator.exe -t "{0}" -f "{1}"'.format(taskname, username),
+            stdout=DEVNULL, stdin=DEVNULL, shell=False)
+        p.communicate()
+        return p.wait()
+        pass
 
 class HttpHandler(BaseHTTPRequestHandler):
     def do_HEAD(self):
@@ -122,7 +167,7 @@ class HttpHandler(BaseHTTPRequestHandler):
                     p.retry()
                     break
 
-        ssh = "{0}@{1}".format(r'git', content.object_attributes.target.path_with_namespace)
+        ssh = content.object_attributes.target.path_with_namespace
         branch_path = r'branch_{0}'.format(targetbranch)
         synctasksnames = self.synctasks.get(branch_path)
         if not synctasksnames:
@@ -250,6 +295,8 @@ def main(argv):
     gl = gitlab.Gitlab(options.server, options.token, api_version=4)
     synctasks = ParseTasks(options.tasklist) if options.tasklist else {}
 
+    check = checkThread(gl, synctasks)
+    check.start()
 
     do_listener_work(('', 8080), gl, synctasks, supportsendingmessages, serviceuser, taskname)
     pass
