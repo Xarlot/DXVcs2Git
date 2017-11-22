@@ -145,4 +145,16 @@ namespace DXVcs2Git.Console {
             PatchDir = patchDir;
         }
     }
+    [Verb("dxupdate", HelpText = "Add commit sha to dxupdate db")]
+    public class DXUpdateOptions {
+        [Option('s', "sha", Required = true, HelpText = "commit sha")]
+        public string Sha { get; }
+        [Option('c', "connection", Required = false, Default = Program.DXUpdateConnectionString, HelpText = "connection string")]
+        public string ConnectionString { get; }
+
+        public DXUpdateOptions(string sha, string connectionString) {
+            Sha = sha;
+            ConnectionString = connectionString;
+        }
+    }
 }

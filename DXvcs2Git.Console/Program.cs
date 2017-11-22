@@ -39,9 +39,10 @@ namespace DXVcs2Git.Console {
         const string patchInfoName = "patch.info";
         const string vcsServer = @"net.tcp://vcsservice.devexpress.devx:9091/DXVCSService";
         const string farmServer = @"tcp://ccnet.devexpress.devx:21234/CruiseManager.rem";
+        public const string DXUpdateConnectionString = @"data source=xpf-anallytics;user id=DXUpdate;password=xVT2WkWi;MultipleActiveResultSets=True";
         const int MaxChangesCount = 1000;
         static void Main(string[] args) {
-            var result = Parser.Default.ParseArguments<SyncOptions, PatchOptions, ApplyPatchOptions, ListenerOptions, ProcessTestsOptions>(args);
+            var result = Parser.Default.ParseArguments<SyncOptions, PatchOptions, ApplyPatchOptions, ListenerOptions, ProcessTestsOptions, DXUpdateOptions>(args);
             try {
                 var exitCode = result.MapResult(
                     (SyncOptions syncOptions) => DoSyncWork(syncOptions),
@@ -49,6 +50,7 @@ namespace DXVcs2Git.Console {
                     (ApplyPatchOptions applypatch) => DoApplyPatchWork(applypatch),
                     (ListenerOptions listenerOptions) => DoListenerWork(listenerOptions),
                     (ProcessTestsOptions testOptions) => DoProcessTestResultsWork(testOptions),
+                    (DXUpdateOptions dxUpdateOptions) => DoDXUpdateWork(dxUpdateOptions),
                     err => DoErrors(args));
                 Environment.Exit(exitCode);
             }
@@ -56,6 +58,12 @@ namespace DXVcs2Git.Console {
                 Log.Error("Application crashed with exception", ex);
                 Environment.Exit(1);
             }
+        }
+        static int DoDXUpdateWork(DXUpdateOptions dxUpdateOptions) {
+            using (DXUpdateDB update = new DXUpdateDB(dxUpdateOptions.ConnectionString)) {
+                update.AddCommit(dxUpdateOptions.Sha);
+            }
+            return 0;
         }
         static int DoErrors(string[] args) {
             return 1;
