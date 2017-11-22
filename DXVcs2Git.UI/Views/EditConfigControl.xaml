@@ -21,6 +21,16 @@
         <dx:DXTabControl>
             <dx:DXTabItem Header="Application">
                 <dxlc:LayoutControl Orientation="Vertical" VerticalAlignment="Top">
+                    <dxlc:LayoutItem Label="Default theme: " VerticalAlignment="Center">
+                        <dxe:ComboBoxEdit 
+                            EditValue="{Binding Path=DefaultTheme, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
+                            IsTextEditable="False"
+                            NullText="{x:Static viewModels:RootViewModel.DefaultThemeName}"
+                            ItemsSource="{x:Static dx:Theme.Themes}" 
+                            DisplayMember="FullName" 
+                            ValueMember="Name">
+                        </dxe:ComboBoxEdit>
+                    </dxlc:LayoutItem>
                     <dxlc:LayoutItem Label="Use touch scrollbars: " VerticalAlignment="Center">
                         <dxe:CheckEdit>
                                 <dxe:CheckEdit.EditValue>

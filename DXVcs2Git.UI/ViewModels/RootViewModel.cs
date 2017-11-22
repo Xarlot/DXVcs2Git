@@ -239,7 +239,8 @@ namespace DXVcs2Git.UI.ViewModels {
         }
         void UpdateAppearance() {
             ScrollBarMode = (ScrollBarMode)Config.ScrollBarMode;
-            UpdateTheme();
+            RegisterTheme("Super", $"DevExpress.Xpf.Themes.Super.v{AssemblyInfo.VersionShort}");
+            ApplicationThemeHelper.ApplicationThemeName = Config?.DefaultTheme ?? DefaultThemeName;
         }
         static void RegisterTheme(string themeName, string fullName) {
             var isRegistered = Theme.FindTheme(themeName);
@@ -248,10 +249,6 @@ namespace DXVcs2Git.UI.ViewModels {
             var theme = new Theme(themeName);
             theme.AssemblyName = fullName;
             Theme.RegisterTheme(theme);
-        }
-        static void UpdateTheme() {
-            RegisterTheme("Super", $"DevExpress.Xpf.Themes.Super.v{AssemblyInfo.VersionShort}");
-            ApplicationThemeHelper.ApplicationThemeName = "Super";
         }
         public void Update() {
             Repositories.Update();
