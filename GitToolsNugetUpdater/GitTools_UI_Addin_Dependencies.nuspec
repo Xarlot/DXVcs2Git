@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
+    <metadata>
+        <id>GitTools_UI_Addin_Dependencies</id>
+        <version>17.2.0.69</version>
+        <title>GitTools UI Addin Dependencies</title>
+        <authors>DevExpress</authors>
+        <requireLicenseAcceptance>false</requireLicenseAcceptance>
+        <description>GitTools Addin UI dependencies</description>
+    </metadata>
+    <files>
+        <file src="files\DevExpress.Data.v17.2.dll" target="lib\net40\DevExpress.Data.v17.2.dll" />
+        <file src="files\DevExpress.CodeParser.v17.2.dll" target="lib\net40\DevExpress.CodeParser.v17.2.dll" />
+        <file src="files\DevExpress.Images.v17.2.dll" target="lib\net40\DevExpress.Images.v17.2.dll" />
+        <file src="files\DevExpress.Mvvm.v17.2.dll" target="lib\net40\DevExpress.Mvvm.v17.2.dll" />
+        <file src="files\DevExpress.Printing.v17.2.Core.dll" target="lib\net40\DevExpress.Printing.v17.2.Core.dll" />
+        <file src="files\DevExpress.Xpf.Core.v17.2.dll" target="lib\net40\DevExpress.Xpf.Core.v17.2.dll" />
+        <file src="files\DevExpress.Xpf.Layout.v17.2.Core.dll" target="lib\net40\DevExpress.Xpf.Layout.v17.2.Core.dll" />
+        <file src="files\DevExpress.Xpf.Docking.v17.2.dll" target="lib\net40\DevExpress.Xpf.Docking.v17.2.dll" />
+        <file src="files\DevExpress.Xpf.LayoutControl.v17.2.dll" target="lib\net40\DevExpress.Xpf.LayoutControl.v17.2.dll" />
+        <file src="files\DevExpress.Xpf.Grid.v17.2.Core.dll" target="lib\net40\DevExpress.Xpf.Grid.v17.2.Core.dll" />
+        <file src="files\DevExpress.Xpf.Grid.v17.2.dll" target="lib\net40\DevExpress.Xpf.Grid.v17.2.dll" />
+        <file src="files\DevExpress.Xpf.PropertyGrid.v17.2.dll" target="lib\net40\DevExpress.Xpf.PropertyGrid.v17.2.dll" />
+        <file src="files\DevExpress.Xpf.Ribbon.v17.2.dll" target="lib\net40\DevExpress.Xpf.Ribbon.v17.2.dll" />
+        <file src="files\DevExpress.Xpf.Controls.v17.2.dll" target="lib\net40\DevExpress.Xpf.Controls.v17.2.dll" />
+        <file src="files\DevExpress.Xpf.Accordion.v17.2.dll" target="lib\net40\DevExpress.Xpf.Accordion.v17.2.dll" />
+        <file src="files\DevExpress.Pdf.v17.2.Core.dll" target="lib\net40\DevExpress.Pdf.v17.2.Core.dll" />
+        <file src="files\DevExpress.Diagram.v17.2.Core.dll" target="lib\net40\DevExpress.Diagram.v17.2.Core.dll" />
+        <file src="files\DevExpress.Xpf.Diagram.v17.2.dll" target="lib\net40\DevExpress.Xpf.Diagram.v17.2.dll" />
+        <file src="files\DevExpress.Xpf.DocumentViewer.v17.2.Core.dll" target="lib\net40\DevExpress.Xpf.DocumentViewer.v17.2.Core.dll" />
+        <file src="files\DevExpress.Xpf.NavBar.v17.2.dll" target="lib\net40\DevExpress.Xpf.NavBar.v17.2.dll" />
+        <file src="files\DevExpress.Dialogs.v17.2.Core.dll" target="lib\net40\DevExpress.Dialogs.v17.2.Core.dll" />
+        <file src="files\DevExpress.Xpf.Dialogs.v17.2.dll" target="lib\net40\DevExpress.Xpf.Dialogs.v17.2.dll" />
+		<file src="files\DevExpress.Xpf.Themes.DXStyle.v17.2.dll" target="lib\net40\DevExpress.Xpf.Themes.DXStyle.v17.2.dll" />
+		<file src="files\DevExpress.Xpf.Themes.Super.v17.2.dll" target="lib\net40\DevExpress.Xpf.Themes.Super.v17.2.dll" />
+		<file src="files\DevExpress.Xpf.Themes.LightGray.v17.2.dll" target="lib\net40\DevExpress.Xpf.Themes.LightGray.v17.2.dll" />
+		<file src="files\DevExpress.Xpf.Themes.MetropolisDark.v17.2.dll" target="lib\net40\DevExpress.Xpf.Themes.MetropolisDark.v17.2.dll" />
+		<file src="files\DevExpress.Xpf.Themes.MetropolisLight.v17.2.dll" target="lib\net40\DevExpress.Xpf.Themes.MetropolisLight.v17.2.dll" />
+		<file src="files\DevExpress.Xpf.Themes.Office2007Black.v17.2.dll" target="lib\net40\DevExpress.Xpf.Themes.Office2007Black.v17.2.dll" />
+		<file src="files\DevExpress.Xpf.Themes.Office2007Blue.v17.2.dll" target="lib\net40\DevExpress.Xpf.Themes.Office2007Blue.v17.2.dll" />
+		<file src="files\DevExpress.Xpf.Themes.Office2007Silver.v17.2.dll" target="lib\net40\DevExpress.Xpf.Themes.Office2007Silver.v17.2.dll" />
+		<file src="files\DevExpress.Xpf.Themes.Office2010Black.v17.2.dll" target="lib\net40\DevExpress.Xpf.Themes.Office2010Black.v17.2.dll" />
+		<file src="files\DevExpress.Xpf.Themes.Office2010Blue.v17.2.dll" target="lib\net40\DevExpress.Xpf.Themes.Office2010Blue.v17.2.dll" />
+		<file src="files\DevExpress.Xpf.Themes.Office2010Silver.v17.2.dll" target="lib\net40\DevExpress.Xpf.Themes.Office2010Silver.v17.2.dll" />
+		<file src="files\DevExpress.Xpf.Themes.Office2013.v17.2.dll" target="lib\net40\DevExpress.Xpf.Themes.Office2013.v17.2.dll" />
+		<file src="files\DevExpress.Xpf.Themes.Office2013DarkGray.v17.2.dll" target="lib\net40\DevExpress.Xpf.Themes.Office2013DarkGray.v17.2.dll" />
+		<file src="files\DevExpress.Xpf.Themes.Office2013LightGray.v17.2.dll" target="lib\net40\DevExpress.Xpf.Themes.Office2013LightGray.v17.2.dll" />
+		<file src="files\DevExpress.Xpf.Themes.Office2016Black.v17.2.dll" target="lib\net40\DevExpress.Xpf.Themes.Office2016Black.v17.2.dll" />
+		<file src="files\DevExpress.Xpf.Themes.Office2016BlackSE.v17.2.dll" target="lib\net40\DevExpress.Xpf.Themes.Office2016BlackSE.v17.2.dll" />
+		<file src="files\DevExpress.Xpf.Themes.Office2016Colorful.v17.2.dll" target="lib\net40\DevExpress.Xpf.Themes.Office2016Colorful.v17.2.dll" />
+		<file src="files\DevExpress.Xpf.Themes.Office2016ColorfulSE.v17.2.dll" target="lib\net40\DevExpress.Xpf.Themes.Office2016ColorfulSE.v17.2.dll" />
+		<file src="files\DevExpress.Xpf.Themes.Office2016DarkGraySE.v17.2.dll" target="lib\net40\DevExpress.Xpf.Themes.Office2016DarkGraySE.v17.2.dll" />
+		<file src="files\DevExpress.Xpf.Themes.Office2016White.v17.2.dll" target="lib\net40\DevExpress.Xpf.Themes.Office2016White.v17.2.dll" />
+		<file src="files\DevExpress.Xpf.Themes.Office2016WhiteSE.v17.2.dll" target="lib\net40\DevExpress.Xpf.Themes.Office2016WhiteSE.v17.2.dll" />
+		<file src="files\DevExpress.Xpf.Themes.Seven.v17.2.dll" target="lib\net40\DevExpress.Xpf.Themes.Seven.v17.2.dll" />
+		<file src="files\DevExpress.Xpf.Themes.TouchlineDark.v17.2.dll" target="lib\net40\DevExpress.Xpf.Themes.TouchlineDark.v17.2.dll" />
+		<file src="files\DevExpress.Xpf.Themes.VS2010.v17.2.dll" target="lib\net40\DevExpress.Xpf.Themes.VS2010.v17.2.dll" />
+		<file src="files\DevExpress.Xpf.Themes.VS2017Blue.v17.2.dll" target="lib\net40\DevExpress.Xpf.Themes.VS2017Blue.v17.2.dll" />
+		<file src="files\DevExpress.Xpf.Themes.VS2017Dark.v17.2.dll" target="lib\net40\DevExpress.Xpf.Themes.VS2017Dark.v17.2.dll" />
+		<file src="files\DevExpress.Xpf.Themes.VS2017Light.v17.2.dll" target="lib\net40\DevExpress.Xpf.Themes.VS2017Light.v17.2.dll" />
+    </files>
+</package>

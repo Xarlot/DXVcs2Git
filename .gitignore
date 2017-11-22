@@ -198,3 +198,5 @@ FakesAssemblies/
 
 # Pycharm
 .idea/
+GitToolsNugetUpdater/files/
+GitToolsNugetUpdater/Nuget.exe
