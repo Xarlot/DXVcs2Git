@@ -155,9 +155,10 @@ namespace DXVcs2Git.UI.ViewModels {
         }
         public void UpdateBuilds() {
             var builds = getBuildsHandler(commit.Id);
-            Build = builds.OrderByDescending(b => b.CreatedAt).Select(x => new BuildViewModel(x)).FirstOrDefault();
-            if(Build == null)
+            var job = builds.OrderByDescending(b => b.CreatedAt).FirstOrDefault();
+            if(job == null)
                 return;
+            Build = new BuildViewModel(job);
             BuildStatus = Build.BuildStatus;
             Duration = Build.Duration;
         }
