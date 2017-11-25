@@ -43,6 +43,11 @@ namespace DXVcs2Git.DXVcs {
             result.Reverse();
             return result.ToArray();
         }
+        public FileStateInfo[] GetFilesData(string vcsPath) {
+            if (string.IsNullOrEmpty(vcsPath))
+                throw new ArgumentException("vcsPath");
+            return Service.GetFiles(vcsPath);
+        }
         public FileHistoryInfo[] GetFileHistoryEx(string vcsPath, DateTime? from = null, DateTime? to = null) {
             if (string.IsNullOrEmpty(vcsPath))
                 throw new ArgumentException("vcsPath");
