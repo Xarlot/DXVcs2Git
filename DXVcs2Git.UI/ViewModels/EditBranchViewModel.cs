@@ -96,7 +96,10 @@ namespace DXVcs2Git.UI.ViewModels {
                 MessageBoxService.Show("Can`t create merge request. Target branch not found.", "Create merge request error", MessageBoxButton.OK, MessageBoxImage.Error);
                 return;
             }
-            Branch.CreateMergeRequest(title, description, null, Branch.Name, targetBranch);
+            string user = Branch.Repositories.Config.SupportsTesting && Branch.Repository.RepoConfig.SupportsTesting && Branch.Repositories.Config.TestByDefault
+                ? Branch.Repository.RepoConfig.TestServiceName
+                : null;
+            Branch.CreateMergeRequest(title, description, user, Branch.Name, targetBranch);
         }
         string CalcMergeRequestDescription(string message) {
             if (string.IsNullOrEmpty(message))

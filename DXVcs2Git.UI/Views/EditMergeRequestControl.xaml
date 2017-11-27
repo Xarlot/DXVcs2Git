@@ -39,7 +39,7 @@
                     </dxe:TextEdit>
                 </dxlc:LayoutItem>
                 <dxlc:LayoutItem Visibility="{Binding Path=SupportsTesting, Converter={StaticResource BooleanToVisibilityConverter}}">
-                    <dxe:CheckEdit Content="{Binding Path=PerformTesting, Converter={StaticResource testingConverter}}" EditValue="{Binding Path=PerformTesting, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                    <dxe:CheckEdit Content="Test merge request" EditValue="{Binding Path=PerformTesting, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
                 </dxlc:LayoutItem>
                 <dxlc:LayoutItem>
                     <dxe:CheckEdit Content="Accept merge request" EditValue="{Binding Path=AssignedToService, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
