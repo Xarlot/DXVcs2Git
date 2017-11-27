@@ -459,6 +459,18 @@ namespace DXVcs2Git.DXVcs {
                     newTrackItem.AdditionalOffset = trackItem.AdditionalOffset;
                     result.Add(newTrackItem);
                 }
+
+                var files = repo.GetFilesData(trackRoot);
+                foreach (var info in files) {
+                    var newTrackItem = new TrackItem();
+                    newTrackItem.Branch = trackBranch;
+                    newTrackItem.GoDeeper = false;
+                    newTrackItem.IsFile = true;
+                    newTrackItem.Path = trackItem.Path + @"/" + info.Name;
+                    newTrackItem.ProjectPath = Path.Combine(trackItem.ProjectPath, info.Name).Replace(@"\", @"/");
+                    newTrackItem.AdditionalOffset = trackItem.AdditionalOffset;
+                    result.Add(newTrackItem);
+                }
                 return result;
             }
             catch (Exception ex) {
