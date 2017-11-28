@@ -163,9 +163,11 @@ namespace DXVcs2Git.UI.ViewModels {
             UpdateTokens();
         }
         ObservableCollection<EditTrackRepository> CreateEditRepositories(Config config) {
-            return config.Repositories.Return(x => new ObservableCollection<EditTrackRepository>(config.Repositories.Select(CreateEditRepository)), () => new ObservableCollection<EditTrackRepository>());
+            return config.Repositories.Return(x => new ObservableCollection<EditTrackRepository>(config.Repositories.Select(CreateEditRepository).Where(y => y != null)), () => new ObservableCollection<EditTrackRepository>());
         }
         EditTrackRepository CreateEditRepository(TrackRepository repo) {
+            if (!this.configsReader.HasConfig(repo.ConfigName))
+                return null;
             return new EditTrackRepository() {
                 Name = repo.Name,
                 ConfigName = repo.ConfigName,
