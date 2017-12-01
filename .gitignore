@@ -200,3 +200,5 @@ FakesAssemblies/
 .idea/
 GitToolsNugetUpdater/files/
 GitToolsNugetUpdater/Nuget.exe
+DXVcs2Git.Nuget/files/
+DXVcs2Git.Nuget/Nuget.exe
