@@ -208,7 +208,7 @@ namespace DXVcs2Git.DXVcs {
             sharedFiles.ForEach(x => CheckIsSingleSharedFile(list, x));
 
             list.ForEach(x => {
-                TestFileResult result = ProcessBeforeCheckout(x, ignoreSharedFiles, branch, x.Track);
+                TestFileResult result = ProcessBeforeCheckout(x, ignoreSharedFiles, branch, x.Track, x.NewTrack);
                 x.State = CalcBeforeCheckoutState(result);
             });
 
@@ -277,7 +277,7 @@ namespace DXVcs2Git.DXVcs {
 
             }
         }
-        TestFileResult ProcessBeforeCheckout(SyncItem item, bool ignoreSharedFiles, TrackBranch branch, TrackItem trackItem) {
+        TestFileResult ProcessBeforeCheckout(SyncItem item, bool ignoreSharedFiles, TrackBranch branch, TrackItem trackItem, TrackItem newTrackItem) {
             TestFileResult result;
             switch (item.SyncAction) {
                 case SyncAction.New:
@@ -291,7 +291,7 @@ namespace DXVcs2Git.DXVcs {
                     break;
                 case SyncAction.Move:
                     SyncAction newAction = SyncAction.Move;
-                    result = BeforeCheckOutMoveFile(item.VcsPath, item.NewVcsPath, item.LocalPath, item.NewLocalPath, ignoreSharedFiles, branch, trackItem, ref newAction);
+                    result = BeforeCheckOutMoveFile(item.VcsPath, item.NewVcsPath, item.LocalPath, item.NewLocalPath, ignoreSharedFiles, branch, trackItem, newTrackItem, ref newAction);
                     item.SyncAction = newAction;
                     break;
                 default:
@@ -299,9 +299,9 @@ namespace DXVcs2Git.DXVcs {
             }
             return result;
         }
-        TestFileResult BeforeCheckOutMoveFile(string vcsPath, string newVcsPath, string localPath, string newLocalPath, bool ignoreSharedFiles, TrackBranch branch, TrackItem trackItem, ref SyncAction newAction) {
+        TestFileResult BeforeCheckOutMoveFile(string vcsPath, string newVcsPath, string localPath, string newLocalPath, bool ignoreSharedFiles, TrackBranch branch, TrackItem trackItem, TrackItem newTrackItem, ref SyncAction newAction) {
             if (trackItem.IsFile) {
-                Log.Error($"Moving individually synchronized files is forbidden. Remove {trackItem.ProjectPath} from track config first.");
+                Log.Error($"Moving individually synchronized files is forbidden. Remove {trackItem.ProjectPath} from track config first or do it usimg vcs.");
                 return TestFileResult.Fail;
             }
 
@@ -520,7 +520,7 @@ namespace DXVcs2Git.DXVcs {
 
         public IList<CommitItem> GenerateCommits(IEnumerable<HistoryItem> historyItems) {
             var grouped = historyItems.AsParallel().GroupBy(x => x.ActionDate);
-            var commits = grouped.Select(x => new CommitItem() { Items = x.ToList(), TimeStamp = x.First().ActionDate }).OrderBy(x => x.TimeStamp);
+            var commits = grouped.Select(x => new CommitItem() { Items = x.ToList(), TimeStamp = x.First().ActionDate}).OrderBy(x => x.TimeStamp);
             var totalCommits = commits.ToList();
             totalCommits = totalCommits.ToList();
             return totalCommits;

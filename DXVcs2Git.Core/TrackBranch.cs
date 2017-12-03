@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Security.Cryptography;
 using DXVcs2Git.DXVcs;
 using Polenter.Serialization;
 
@@ -47,6 +48,12 @@ namespace DXVcs2Git.Core {
         }
         public string GetLocalRoot(TrackItem trackItem, string localPath) {
             return Path.Combine(localPath, trackItem.ProjectPath);
+        }
+        public string GetRepoRoot(TrackItem trackItem) {
+            if (trackItem.Branch.Name != Name)
+                throw new ArgumentException("invalid branch");
+            string result = string.IsNullOrEmpty(trackItem.AdditionalOffset) ? trackItem.ProjectPath : Path.Combine(trackItem.AdditionalOffset, trackItem.ProjectPath);
+            return result;
         }
         public string GetVcsPath(TrackItem trackItem, string path) {
             if (trackItem.IsFile)

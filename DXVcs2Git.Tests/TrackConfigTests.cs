@@ -6,6 +6,21 @@ using Polenter.Serialization;
 namespace DXVcs2Git.Tests {
     [TestFixture]
     public class TrackConfigTests {
+        [Test]
+        public void SparseCheckoutTest() {
+            string branchName = "2017.2";
+            List<TrackItem> items = new List<TrackItem>();
+            items.Add(new TrackItem() { Path = $@"$/{branchName}/XPF/DevExpress.Mvvm", ProjectPath = "DevExpress.Mvvm" });
+            items.Add(new TrackItem() { Path = $@"$/{branchName}/XPF/DevExpress.Xpf.Core", ProjectPath = "DevExpress.Xpf.Core" });
+
+            var trackBranch = new TrackBranch(branchName, "test", "test", items);
+            foreach (var trackItem in items) {
+                trackItem.Branch = trackBranch;
+            }
+
+            var result = trackBranch.GetRepoRoot(items[0]);
+        }
+
         [Test, Explicit]
         public void GenerateTestConfig() {
             List<TrackItem> items = new List<TrackItem>();

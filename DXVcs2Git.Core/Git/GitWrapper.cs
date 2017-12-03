@@ -4,6 +4,7 @@ using System.Linq;
 using DXVcs2Git.Core;
 using User = DXVcs2Git.Core.User;
 using System.Diagnostics;
+using System.IO;
 using System.Threading.Tasks;
 
 namespace DXVcs2Git {
@@ -202,6 +203,21 @@ namespace DXVcs2Git {
                 }
             ).FirstOrDefault(pred);
         }
+        public void Config(string repoPath, string property, string value) {
+            var code = WaitForProcess(gitPath, repoPath, out string output, out string errors, "config", property, value);
+            CheckFail(code, output, errors);
+        }
+        public void SparseCheckout(string repoPath, string branch, string sparseCheckoutFile) {
+            string sparseCheckoutPath = Path.Combine(repoPath, ".git", "info", "sparse-checkout");
+            File.WriteAllText(sparseCheckoutPath, sparseCheckoutFile);
+            Checkout(repoPath, branch);
+        }
+        public void ReadTree(string repoPath, string sparseCheckoutFile) {
+            string sparseCheckoutPath = Path.Combine(repoPath, ".git", "info", "sparse-checkout");
+            File.WriteAllText(sparseCheckoutPath, sparseCheckoutFile);
+            var code = WaitForProcess(gitPath, repoPath, out string output, out string errors, "read-tree -mu HEAD");
+            CheckFail(code, output, errors);
+        }
     }
 
     public class GitCommit {
@@ -292,6 +308,15 @@ namespace DXVcs2Git {
         }
         public void Merge(string upstream, string targetBranch, string sourceBranch) {
             gitCmd.Merge(localPath, upstream, targetBranch, sourceBranch);
+        }
+        public void Config(string property, string value) {
+            gitCmd.Config(localPath, property, value);
+        }
+        public void SparseCheckout(string branch, string sparseCheckoutFile) {
+            gitCmd.SparseCheckout(localPath, branch, sparseCheckoutFile);
+        }
+        public void ReadTree(string sparseCheckoutFile) {
+            gitCmd.ReadTree(localPath, sparseCheckoutFile);
         }
     }
 }

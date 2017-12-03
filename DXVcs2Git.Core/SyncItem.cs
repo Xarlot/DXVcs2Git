@@ -24,5 +24,6 @@
         public bool SingleSharedFile { get; set; }
         public bool SingleSyncFile { get; set; }
         public TrackItem Track { get; set; }
+        public TrackItem NewTrack { get; set; }
     }
 }
