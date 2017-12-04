@@ -65,7 +65,6 @@ namespace DXVcs2Git {
 
         public void ShallowClone(string localPath, string branch, string remote) {
             var args = new[] {
-                "-c", "filter.lfs.smudge=", "-c", "filter.lfs.required=false", "clone", "--depth", "1", "--branch", branch, Escape(remote), Escape(localPath)
             };
             string output, errors;
             var code = WaitForProcess(gitPath, ".", out output, out errors, args);
@@ -249,7 +248,6 @@ namespace DXVcs2Git {
             }
             else {
                 GitClone(branch);
-                LFSPull();
             }
             Log.Message("End initializing git repo");
         }
