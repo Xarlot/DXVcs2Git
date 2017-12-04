@@ -65,6 +65,7 @@ namespace DXVcs2Git {
 
         public void ShallowClone(string localPath, string branch, string remote) {
             var args = new[] {
+               "clone", "--branch", branch, Escape(remote), Escape(localPath)
             };
             string output, errors;
             var code = WaitForProcess(gitPath, ".", out output, out errors, args);
