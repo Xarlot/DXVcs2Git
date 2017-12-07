@@ -67,6 +67,7 @@
                             ShowVerticalLines="False"
                             ShowHorizontalLines="False"
                             ShowGroupPanel="False" 
+                            ShowFixedTotalSummary="True"
                             NavigationStyle="Row" 
                             AutoWidth="True">
                             <dxg:TableView.Resources>
@@ -83,9 +84,6 @@
                                     </Setter>
                                 </Style>
                             </dxg:TableView.Resources>
-                            <dxmvvm:Interaction.Behaviors>
-                                <behaviors:FixedTotalSummaryBehavior/>
-                            </dxmvvm:Interaction.Behaviors>
                         </dxg:TableView>
                     </dxg:GridControl.View>
                 </dxg:GridControl>
