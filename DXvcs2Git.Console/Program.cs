@@ -203,7 +203,7 @@ namespace DXVcs2Git.Console {
                 Log.Message("Merge request has no commits.");
                 return 0;
             }
-            
+
             if (clo.Result == 0) {
                 gitLabWrapper.AddCommentToMergeRequest(mergeRequest, pipeline);
 
@@ -264,6 +264,7 @@ namespace DXVcs2Git.Console {
             string patchdir = clo.PatchDir ?? localGitDir;
             bool testIntegration = !clo.Individual;
             string commitSha = clo.Commit;
+            string sourceRepo = clo.SourceRepo;
 
             DXVcsWrapper vcsWrapper = new DXVcsWrapper(vcsServer, username, password);
 
@@ -347,6 +348,8 @@ namespace DXVcs2Git.Console {
                 else
                     Log.Message($"Merge request not found. Testing by commits.");
 
+                GitWrapper gitWrapper = CreateGitWrapper(sourceRepo, localGitDir, sourceBranchName);
+
                 Sha1 searchSha = mergeRequest == null ? new Sha1(commitSha) : gitLabWrapper.GetMergeRequestCommits(mergeRequest).LastOrDefault()?.Id ?? new Sha1(commitSha);
                 var commit = FindSyncCommit(gitLabWrapper, sourceProject, searchSha);
                 if (commit == null) {
@@ -359,9 +362,10 @@ namespace DXVcs2Git.Console {
                     return 1;
                 }
 
-                Log.Message($"Patch based on commit {searchSha}");
+
+                Log.Message($"Patch based on commit {commit.Id}");
                 Log.Message($"Vcs commit timestamp {new DateTime(vcsCommitTimeStamp.Value).ToLocalTime()}");
-                var changes = GetCommitChanges(gitLabWrapper, sourceProject, commit.Id, searchSha, trackBranch);
+                var changes = GetCommitChanges(gitWrapper, sourceProject, commit.Id.ToString(), commitSha, trackBranch);
                 var patch = new PatchInfo() { TimeStamp = vcsCommitTimeStamp.Value, Items = changes };
                 GeneratePatch(patchdir, patch, localGitDir);
                 return 0;
@@ -381,16 +385,18 @@ namespace DXVcs2Git.Console {
 
             Log.Message($"Patch.info generated at {patchPath}");
         }
-        static List<PatchItem> GetCommitChanges(GitLabWrapper gitLabWrapper, Project project, Sha1 from, Sha1 to, TrackBranch trackBranch) {
-            return gitLabWrapper
-                .GetCommitChanges(project, from, to)
+        static List<PatchItem> GetCommitChanges(GitWrapper gitsWrapper, Project project, string from, string to, TrackBranch branch) {
+            return gitsWrapper
+                .Diff(from, to)
                 .Select(x => {
-                    var trackItem = trackBranch.TrackItems.Where(b => !b.IsFile).FirstOrDefault(track => CheckItemForChangeSet(x.OldPath, track));
-                    if (trackItem == null)
-                        trackItem = trackBranch.TrackItems.Where(b => b.IsFile).FirstOrDefault(track => CheckFileItemForChangeSet(x.OldPath, track));
-                    return new { trackItem = trackItem, item = x };
+                    var trackItem = CalcTrackItem(branch, x.OldPath);
+                    var newTrackItem = trackItem;
+                    if (x.Status == GitDiffStatus.Moved) {
+                        newTrackItem = CalcTrackItem(branch, x.NewPath);
+                    }
+                    return new { trackItem = trackItem, newTrackItem = newTrackItem, item = x };
                 })
-                .Where(x => x.trackItem != null)
+                .Where(x => x.trackItem != null || x.newTrackItem != null)
                 .Select(x => new PatchItem() {
                     SyncAction = CalcSyncAction(x.item),
                     OldPath = x.item.OldPath,
@@ -422,16 +428,18 @@ namespace DXVcs2Git.Console {
         static Commit FindSyncCommit(GitLabWrapper gitLabWrapper, Project project, Sha1 commitSha) {
             return gitLabWrapper.FindParentCommit(project, commitSha, x => CommentWrapper.IsAutoSyncComment(x.Title));
         }
-        static List<PatchItem> GetMergeRequestChanges(GitLabWrapper gitLabWrapper, MergeRequest mergeRequest, TrackBranch trackBranch) {
+        static List<PatchItem> GetMergeRequestChanges(GitLabWrapper gitLabWrapper, MergeRequest mergeRequest, TrackBranch branch) {
             return gitLabWrapper
                 .GetMergeRequestChanges(mergeRequest)
                 .Select(x => {
-                    var trackItem = trackBranch.TrackItems.Where(b => !b.IsFile).FirstOrDefault(track => CheckItemForChangeSet(x.OldPath, track));
-                    if (trackItem == null)
-                        trackItem = trackBranch.TrackItems.Where(b => b.IsFile).FirstOrDefault(track => CheckFileItemForChangeSet(x.OldPath, track));
-                    return new { trackItem = trackItem, item = x };
+                    var trackItem = CalcTrackItem(branch, x.OldPath);
+                    var newTrackItem = trackItem;
+                    if (x.IsRenamed) {
+                        newTrackItem = CalcTrackItem(branch, x.NewPath);
+                    }
+                    return new { trackItem = trackItem, newTrackItem = newTrackItem, item = x };
                 })
-                .Where(x => x.trackItem != null)
+                .Where(x => x.trackItem != null || x.newTrackItem != null)
                 .Select(x => new PatchItem() {
                     SyncAction = CalcSyncAction(x.item),
                     OldPath = x.item.OldPath,
@@ -468,6 +476,20 @@ namespace DXVcs2Git.Console {
             string nspace = match.Groups["nspace"].Value;
             string name = match.Groups["name"].Value;
             return $"http://{server}/{nspace}/{name}.git";
+        }
+        static SyncAction CalcSyncAction(GitDiff fileData) {
+            switch (fileData.Status) {
+                case GitDiffStatus.Added:
+                    return SyncAction.New;
+                case GitDiffStatus.Modified:
+                    return SyncAction.Modify;
+                case GitDiffStatus.Moved:
+                    return SyncAction.Move;
+                case GitDiffStatus.Removed:
+                    return SyncAction.Delete;
+                default:
+                    throw new Exception("GitDiffStatus");
+            }
         }
         static SyncAction CalcSyncAction(MergeRequestFileData fileData) {
             if (fileData.IsDeleted)
@@ -843,9 +865,10 @@ namespace DXVcs2Git.Console {
                 proc.WaitForExit();
             }
         }
-        static GitWrapper CreateGitWrapper(string gitRepoPath, string localGitDir, string branchName, string username, string password) {
+        static GitWrapper CreateGitWrapper(string gitRepoPath, string localGitDir, string branchName, string username = null, string password = null) {
             try {
-                var gitWrapper = new GitWrapper(localGitDir, gitRepoPath, branchName, new GitCredentials { User = username, Password = password });
+                GitCredentials credentials = username == null && password == null ? null : new GitCredentials {User = username, Password = password};
+                var gitWrapper = new GitWrapper(localGitDir, gitRepoPath, branchName, credentials);
                 Log.Message($"Branch {branchName} initialized.");
 
                 return gitWrapper;
@@ -871,7 +894,7 @@ namespace DXVcs2Git.Console {
             }
             return branch;
         }
-        static int ProcessMergeRequests(DXVcsWrapper vcsWrapper, GitWrapper gitWrapper, GitLabWrapper gitLabWrapper, RegisteredUsers users, User defaultUser, string gitRepoPath, 
+        static int ProcessMergeRequests(DXVcsWrapper vcsWrapper, GitWrapper gitWrapper, GitLabWrapper gitLabWrapper, RegisteredUsers users, User defaultUser, string gitRepoPath,
             string localGitDir, string branchName, string tracker, SyncHistoryWrapper syncHistory, string userName, bool sendNotification, string taskName) {
             var project = gitLabWrapper.FindProject(gitRepoPath);
             TrackBranch branch = GetBranch(branchName, tracker, vcsWrapper);

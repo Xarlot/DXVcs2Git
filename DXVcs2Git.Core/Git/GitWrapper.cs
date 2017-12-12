@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.Design;
 using System.Linq;
 using DXVcs2Git.Core;
 using User = DXVcs2Git.Core.User;
@@ -144,12 +145,47 @@ namespace DXVcs2Git {
             CheckFail(code, output, errors);
         }
         public void FetchRemoteBranch(string repoPath, string remote, string branch) {
-            var code = WaitForProcess(gitPath, repoPath, out string output, out string errors, "fetch", remote, $@"{branch}:refs/remotes/{remote}/{branch}" );
+            var code = WaitForProcess(gitPath, repoPath, out string output, out string errors, "fetch", remote, $@"{branch}:refs/remotes/{remote}/{branch}");
             CheckFail(code, output, errors);
         }
         public void DiffWithRemoteBranch(string repoPath, string remote, string branch) {
-            var code = WaitForProcess(gitPath, repoPath, out string output, out string errors, "diff --namestatus", branch, $@"{remote}/{branch}");
+            var code = WaitForProcess(gitPath, repoPath, out string output, out string errors, "diff --name-status", branch, $@"{remote}/{branch}");
             CheckFail(code, output, errors);
+        }
+        public GitDiff[] Diff(string repoPath, string from, string to) { 
+            var args = new[] {
+                "diff",
+                "--name-status",
+                from,
+                to
+            };
+            string output, errors;
+            var code = WaitForProcess(gitPath, repoPath, out output, out errors, args);
+            CheckFail(code, output, errors);
+            var strings = output.Split(new[] { '\n' }, StringSplitOptions.RemoveEmptyEntries);
+            var status = new List<GitDiff>(strings.Length);
+            foreach (var s in strings) {
+                string path = s.Remove(0, s.IndexOf('\t') + 1);
+                if (s.StartsWith("R")) {
+                    var paths = path.Split('\t').ToArray();
+                    status.Add(new GitDiff() {Status = GitDiffStatus.Moved, OldPath = paths[0], NewPath = paths[1]});
+                }
+                else {
+                    var gitDiff = new GitDiff() {OldPath = path, NewPath = path};
+                    gitDiff.Status = CalcGitDiffStatus(s);
+                    status.Add(gitDiff);
+                }
+            }
+            return status.ToArray();
+        }
+        GitDiffStatus CalcGitDiffStatus(string line) {
+            if (line.StartsWith("M", StringComparison.InvariantCultureIgnoreCase))
+                return GitDiffStatus.Modified;
+            if (line.StartsWith("A", StringComparison.InvariantCultureIgnoreCase))
+                return GitDiffStatus.Added;
+            if (line.StartsWith("D", StringComparison.InvariantCultureIgnoreCase))
+                return GitDiffStatus.Removed;
+            throw new ArgumentException("GitDiffStatus");
         }
         public void Fetch(string remote, string repoPath, bool tags) {
             string output, errors;
@@ -178,7 +214,7 @@ namespace DXVcs2Git {
         string GetLog(string repoPath, int from, string format) {
             var args = new[] {
                 "log",
-                
+
                 string.Format("HEAD~{0}", from),
                 "-1",
                 string.Format("--pretty=format:\"{0}\"", format)
@@ -218,6 +254,18 @@ namespace DXVcs2Git {
             var code = WaitForProcess(gitPath, repoPath, out string output, out string errors, "read-tree -mu HEAD");
             CheckFail(code, output, errors);
         }
+    }
+
+    public enum GitDiffStatus {
+        Added,
+        Modified,
+        Moved,
+        Removed,
+    }
+    public class GitDiff {
+        public GitDiffStatus Status { get; set; }
+        public string OldPath { get; set; }
+        public string NewPath { get; set; }
     }
 
     public class GitCommit {
@@ -275,7 +323,8 @@ namespace DXVcs2Git {
             gitCmd.DiffWithRemoteBranch(localPath, remote, branch);
         }
         public void Pull() {
-            gitCmd.Pull(localPath);;
+            gitCmd.Pull(localPath);
+            ;
         }
         public void LFSPull() {
             gitCmd.LFSPull(localPath);
@@ -316,6 +365,9 @@ namespace DXVcs2Git {
         }
         public void ReadTree(string sparseCheckoutFile) {
             gitCmd.ReadTree(localPath, sparseCheckoutFile);
+        }
+        public GitDiff[] Diff(string from, string to) {
+            return gitCmd.Diff(localPath, from, to);
         }
     }
 }
