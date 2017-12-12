@@ -308,6 +308,7 @@
     <Reference Include="System" />
     <Reference Include="System.ComponentModel.DataAnnotations" />
     <Reference Include="System.Data" />
+    <Reference Include="System.Deployment" />
     <Reference Include="System.Drawing" />
     <Reference Include="System.Dynamic" />
     <Reference Include="System.Runtime.Serialization" />
@@ -372,6 +373,7 @@
     <Compile Include="Selectors\MergeRequestTestsControlSelector.cs" />
     <Compile Include="Selectors\RepositoriesControlImageSelector.cs" />
     <Compile Include="Services\FolderBrowserCustomDialogService.cs" />
+    <Compile Include="Services\UpdateAppService.cs" />
     <Compile Include="UIStartupOptions.cs" />
     <Compile Include="ViewModels\ArtifactsViewModel.cs" />
     <Compile Include="ViewModels\BuildLogViewModel.cs" />

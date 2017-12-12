@@ -25,6 +25,7 @@ namespace DXVcs2Git.UI.ViewModels {
         public ICommand InitializeCommand { get; private set; }
         public ICommand UpdateCommand { get; private set; }
         public ICommand ActivateCommand { get; private set; }
+        public ICommand UpdateAppCommand { get; private set; }
         public ICommand LoadTestLogCommand { get; private set; }
         public INotificationService NotificationService => GetService<INotificationService>("notificationService");
         public IDialogService SettingsDialogService => GetService<IDialogService>("settingsDialogService");
@@ -55,6 +56,7 @@ namespace DXVcs2Git.UI.ViewModels {
             LoadTestLogCommand = DelegateCommandFactory.Create(PerformLoadTestLog, CanPerformLoadTestLog);
             InitializeCommand = DelegateCommandFactory.Create(PerformInitialize, CanPerformInitialize);
             ActivateCommand = DelegateCommandFactory.Create(PerformActivate, CanPerformActivate);
+            UpdateAppCommand = DelegateCommandFactory.Create(UpdateApp, () => true);
             LogViewModel = new LoggingViewModel();
             Version = $"Git tools {VersionInfo.Version}";
         }
@@ -254,6 +256,9 @@ namespace DXVcs2Git.UI.ViewModels {
             Repositories.Update();
         }
         public void Refresh() {
+        }
+        void UpdateApp() {
+            Services.UpdateAppService.Update(MessageBoxService);
         }
         void ShowSettings() {
             var viewModel = new EditConfigViewModel(Config);
