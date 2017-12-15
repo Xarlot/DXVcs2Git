@@ -6,10 +6,22 @@ import dotmap
 import gitlab
 import untangle
 import time
+import requests
 
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from optparse import OptionParser
 from subprocess import DEVNULL
+
+class FarmIntegrator:
+    @staticmethod
+    def Force(taskname, forcer):
+        # http://asp-git:8182/api/force/{task}/forcer/{forcer}
+        r = requests.get(f'http://asp-git:8182/api/force/{taskname}/forcer/{forcer}')
+        if r.status_code == 200:
+            return 0
+        print(f"server returns {r.status_code}")
+        return 1
+        pass
 
 class checkThread (threading.Thread):
     def __init__(self, gl, synctasks):
@@ -38,21 +50,13 @@ class checkThread (threading.Thread):
             mergerequests = project.mergerequests.list(state="opened")
             for mr in mergerequests:
                 if mr.assignee is not None and mr.assignee["username"] == task.user:
-                    forced = self.ForceBuild(task.task, task.user)
+                    forced = FarmIntegrator.Force(task.task, task.user)
                     if (forced == 0):
                         print("Build forced by watcher. Task " + task.task)
                     else:
                         print("Force build by watcher failed. Task " + task.task)
         print ('end watch thread sync')
     pass
-
-    def ForceBuild(self, taskname, username):
-        p = subprocess.Popen(
-            r'DXVcs2Git.FarmIntegrator.exe -t "{0}" -f "{1}"'.format(taskname, username),
-            stdout=DEVNULL, stdin=DEVNULL, shell=False)
-        p.communicate()
-        return p.wait()
-        pass
 
 class HttpHandler(BaseHTTPRequestHandler):
     def do_HEAD(self):
@@ -179,17 +183,12 @@ class HttpHandler(BaseHTTPRequestHandler):
                 break
 
         if forcetaskname:
-            forcebuild = self.ForceBuild(forcetaskname, user.username)
+            forcebuild = FarmIntegrator.Force(forcetaskname, user.username)
             if forcebuild == 0:
                 print("build forced")
             else:
                 print("force build failed")
 
-        pass
-    def ForceBuild(self, taskname, username):
-        p = subprocess.Popen(r'DXVcs2Git.FarmIntegrator.exe -t "{0}" -f "{1}"'.format(taskname, username), stdout=DEVNULL, stdin=DEVNULL, shell=False )
-        p.communicate()
-        return p.wait()
         pass
 
     def process_note(self, content):
