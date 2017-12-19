@@ -966,7 +966,11 @@ namespace DXVcs2Git.Console {
                 .Where(x => x.trackItem != null || x.newTrackItem != null)
                 .Select(x => ProcessMergeRequestChanges(mergeRequest, x.item, localGitDir, x.trackItem, x.newTrackItem, autoSyncToken)).ToList();
 
-            var requiredTrackItems = genericChange.Select(x => x.Track).Concat(genericChange.Select(x => x.NewTrack)).Distinct().ToList();
+            var requiredTrackItems = genericChange
+                .Where(x => x.Track != null).Select(x => x.Track)
+                .Concat(genericChange
+                    .Where(x => x.NewTrack != null).Select(x => x.NewTrack)
+                ).Distinct().ToList();
             gitWrapper.ReadTree(CalcSparseCheckoutFile(requiredTrackItems));
 
             bool ignoreValidation = gitLabWrapper.ShouldIgnoreSharedFiles(mergeRequest);
