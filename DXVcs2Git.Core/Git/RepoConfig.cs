@@ -10,5 +10,6 @@
         public string TestServiceName { get; set; }
         public string WebHook { get; set; }
         public string WebHookTask { get; set; }
+        public bool UseInstantMerge { get; set; }
     }
 }

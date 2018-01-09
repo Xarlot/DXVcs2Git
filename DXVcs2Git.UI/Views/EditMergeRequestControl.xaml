@@ -41,14 +41,17 @@
                 <dxlc:LayoutItem Visibility="{Binding Path=SupportsTesting, Converter={StaticResource BooleanToVisibilityConverter}}">
                     <dxe:CheckEdit Content="Test merge request" EditValue="{Binding Path=PerformTesting, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
                 </dxlc:LayoutItem>
-                <dxlc:LayoutItem>
+                <dxlc:LayoutItem Visibility="{Binding UseInstantMerge, Converter={dx:BooleanToVisibilityConverter Invert=True}}">
                     <dxe:CheckEdit Content="Accept merge request" EditValue="{Binding Path=AssignedToService, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
                 </dxlc:LayoutItem>
                 <dxlc:LayoutItem Visibility="{Binding Path=SupportsTesting, Converter={StaticResource BooleanToVisibilityConverter}}">
                     <dxe:CheckEdit Content="Accept merge request if build succeed" EditValue="{Binding Path=AssignedToServiceAfterTesting, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
                 </dxlc:LayoutItem>
-                <dxlc:LayoutItem>
+                <dxlc:LayoutItem Visibility="{Binding UseInstantMerge, Converter={dx:BooleanToVisibilityConverter Invert=True}}">
                     <Button Content="Apply" Command="{Binding Path=ApplyCommand}"/>
+                </dxlc:LayoutItem>
+                <dxlc:LayoutItem Visibility="{Binding UseInstantMerge, Converter={dx:BooleanToVisibilityConverter}}">
+                    <Button Content="Merge" Command="{Binding Path=MergeCommand}"/>
                 </dxlc:LayoutItem>
             </dxlc:LayoutGroup>
         </dxlc:LayoutControl>
