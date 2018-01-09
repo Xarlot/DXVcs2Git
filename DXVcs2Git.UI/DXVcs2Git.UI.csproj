@@ -678,6 +678,9 @@
     <Content Include="Configs\CrossPlatform_Utils_2017.1.config">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
+    <Content Include="Configs\WPFVisualTests_2018.1 .config">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
     <None Include="DXVcs2Git.UI_TemporaryKey.pfx" />
     <None Include="packages.config" />
     <None Include="Properties\Settings.settings">

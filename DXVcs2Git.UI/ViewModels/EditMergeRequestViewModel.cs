@@ -42,7 +42,12 @@ namespace DXVcs2Git.UI.ViewModels {
             get { return GetProperty(() => IsModified); }
             private set { SetProperty(() => IsModified, value); }
         }
+        public bool UseInstantMerge {
+            get { return GetProperty(() => UseInstantMerge); }
+            private set { SetProperty(() => UseInstantMerge, value); }
+        }
         public ICommand ApplyCommand { get; }
+        public ICommand MergeCommand { get; }
         BranchViewModel Branch { get; set; }
         void PerformTestingChanged() {
             IsModified = true;
@@ -68,10 +73,14 @@ namespace DXVcs2Git.UI.ViewModels {
         public EditMergeRequestViewModel() {
             Messenger.Default.Register<Message>(this, OnMessageReceived);
             ApplyCommand = DelegateCommandFactory.Create(PerformApply, CanPerformApply);
+            MergeCommand = DelegateCommandFactory.Create(PerformMerge, CanPerformMerge);
             RefreshSelectedBranch();
         }
         bool CanPerformApply() {
             return Branch?.MergeRequest != null && IsModified;
+        }
+        bool CanPerformMerge() {
+            return Branch?.MergeRequest != null && UseInstantMerge;
         }
         void PerformApply() {
             if (Repositories.Config.AlwaysSure || MessageBoxService.Show("Are you sure?", "Update merge request", MessageBoxButton.OKCancel) == MessageBoxResult.OK) {
@@ -80,6 +89,11 @@ namespace DXVcs2Git.UI.ViewModels {
                 IsModified = false;
                 RepositoriesViewModel.RaiseRefreshSelectedBranch();
             }
+        }
+        void PerformMerge() {
+            if(!UseInstantMerge)
+                return;
+            Branch.AcceptMergeRequest();
         }
         string CalcServiceName() {
             if (!AssignedToService && !PerformTesting)
@@ -135,6 +149,7 @@ namespace DXVcs2Git.UI.ViewModels {
                 IsModified = false;
             }
             SupportsTesting = Branch?.SupportsTesting ?? false;
+            UseInstantMerge = Branch?.Repository?.RepoConfig?.UseInstantMerge ?? false;
             RaisePropertyChanged(null);
         }
     }
