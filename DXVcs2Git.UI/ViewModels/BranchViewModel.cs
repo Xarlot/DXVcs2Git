@@ -91,11 +91,6 @@ namespace DXVcs2Git.UI.ViewModels {
         public IEnumerable<Job> GetBuilds(MergeRequest mergeRequest, Sha1 sha) {
             return gitLabWrapper.GetBuilds(mergeRequest, sha);
         }
-        public void AcceptMergeRequest() {
-            this.gitLabWrapper.ProcessMergeRequest(MergeRequest.MergeRequest, "");
-            MergeRequest = null;
-            RepositoriesViewModel.RaiseRefreshSelectedBranch();
-        }
         public void UpdateMergeRequest(string title, string description, string assignee) {
             var mergeRequest = this.gitLabWrapper.UpdateMergeRequestTitleAndDescription(MergeRequest.MergeRequest, title, description);
             mergeRequest = this.gitLabWrapper.UpdateMergeRequestAssignee(mergeRequest, assignee);
