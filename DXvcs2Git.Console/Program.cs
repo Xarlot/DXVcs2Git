@@ -204,9 +204,8 @@ namespace DXVcs2Git.Console {
                 return 0;
             }
 
+            gitLabWrapper.AddCommentToMergeRequest(mergeRequest, pipeline);
             if (clo.Result == 0) {
-                gitLabWrapper.AddCommentToMergeRequest(mergeRequest, pipeline);
-
                 if (mergeRequest.WorkInProgress ?? false) {
                     Log.Message("Work in progress. Assign on test service skipped.");
                     return 0;
@@ -227,16 +226,20 @@ namespace DXVcs2Git.Console {
                     }
                 }
 
-                var user = targetProject.Tags?.FirstOrDefault(x => x.StartsWith("dxvcs2git."));
-                if (user != null) {
-                    gitLabWrapper.UpdateMergeRequestAssignee(mergeRequest, user);
+                var autoAssigneeUser = GetAutoAssigneeUser(targetProject) ?? GetAutoAssigneeUser(sourceProject);
+                if (autoAssigneeUser != null) {
+                    gitLabWrapper.UpdateMergeRequestAssignee(mergeRequest, autoAssigneeUser);
                     Log.Message("Auto sync performed by repo tag");
                 }
-
             }
-            else
-                gitLabWrapper.AddCommentToMergeRequest(mergeRequest, pipeline);
             return 0;
+        }
+
+        const string AutoAssigneeTagPrefix = "autoAssigneeUser=";
+        static string GetAutoAssigneeUser(Project project) {
+            return project.Tags?
+                .FirstOrDefault(x => x.StartsWith(AutoAssigneeTagPrefix))?
+                .Substring(AutoAssigneeTagPrefix.Length);
         }
 
         static int DoPatchWork(PatchOptions clo) {
