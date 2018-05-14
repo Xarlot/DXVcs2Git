@@ -19,7 +19,8 @@ namespace DXVcs2Git.UI2 {
         }
         
         protected override void RegisterTypes(IContainerRegistry containerRegistry) {
-            containerRegistry.RegisterSingleton(typeof(IRepositories), typeof(Repositories));
+            containerRegistry.RegisterSingleton(typeof(IRepositoriesStorage), typeof(RepositoriesStorage));
+            containerRegistry.RegisterSingleton(typeof(ISettings), typeof(Settings));
         }
         protected override Window CreateShell() {
             return new MainWindow();
@@ -34,7 +35,8 @@ namespace DXVcs2Git.UI2 {
         protected override void OnStartup(StartupEventArgs e) {
             base.OnStartup(e);
 
-            Container.Resolve<IRepositories>().Initialize();
+            Container.Resolve<ISettings>().Initialize();
+            Container.Resolve<IRepositoriesStorage>().Initialize();
         }
     }
 }
