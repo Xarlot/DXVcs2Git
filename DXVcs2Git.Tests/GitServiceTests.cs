@@ -16,7 +16,7 @@ namespace DXVcs2Git.Tests {
         public void InitNewRepo() {
             string repoPath = InitNewRepository();
             string configPath = CreateConfigurationWithDummyUser(Constants.Identity);
-            var options = new RepositoryOptions {GlobalConfigurationLocation = configPath};
+            var options = new RepositoryOptions {};
 
             using (var repo = new Repository(repoPath, options)) {
                 string dir = repo.Info.Path;
@@ -34,36 +34,6 @@ namespace DXVcs2Git.Tests {
             string repoPath = InitNewRepository(scd.DirectoryPath);
             string repoPath2 = InitNewRepository(scd.DirectoryPath);
             Assert.AreEqual(repoPath, repoPath2);
-        }
-        [Test]
-        public void CloneRepo() {
-            var scd = BuildSelfCleaningDirectory();
-            CloneOptions options = new CloneOptions();
-            var credentials = new UsernamePasswordCredentials();
-            credentials.Username = Constants.Identity.Name;
-            credentials.Password = "q1w2e3r4t5y6";
-            options.CredentialsProvider += (url, fromUrl, types) => credentials;
-
-            string clonedRepoPath = Repository.Clone(testUrl, scd.DirectoryPath, options);
-            string file = Path.Combine(scd.DirectoryPath, "testpush.txt");
-            var rbg = new RandomBufferGenerator(30000);
-            using (var repo = new Repository(clonedRepoPath)) {
-                for (int i = 0; i < 1; i++) {
-                    var network = repo.Network.Remotes.First();
-                    FetchOptions fetchOptions = new FetchOptions();
-                    fetchOptions.CredentialsProvider += (url, fromUrl, types) => credentials;
-                    repo.Fetch(network.Name, fetchOptions);
-
-                    File.WriteAllBytes(file, rbg.GenerateBufferFromSeed(30000));
-                    repo.Stage(file);
-                    Signature author = Constants.Signature;
-
-                    Commit commit = repo.Commit($"Here's a commit {i + 1} i made!", author, author);
-                    PushOptions pushOptions = new PushOptions();
-                    pushOptions.CredentialsProvider += (url, fromUrl, types) => credentials;
-                    repo.Network.Push(repo.Branches["master"], pushOptions);
-                }
-            }
         }
         protected string CreateConfigurationWithDummyUser(string name, string email) {
             SelfCleaningDirectory scd = BuildSelfCleaningDirectory();

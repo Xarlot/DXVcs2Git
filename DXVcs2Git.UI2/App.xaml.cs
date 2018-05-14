@@ -17,7 +17,9 @@ namespace DXVcs2Git.UI2 {
             ApplicationThemeHelper.UseLegacyDefaultTheme = true;
             ApplicationThemeHelper.ApplicationThemeName = "Super";
         }
-        
+
+        public App() {
+        }
         protected override void RegisterTypes(IContainerRegistry containerRegistry) {
             containerRegistry.RegisterSingleton(typeof(IRepositoriesStorage), typeof(RepositoriesStorage));
             containerRegistry.RegisterSingleton(typeof(ISettings), typeof(Settings));
@@ -25,18 +27,14 @@ namespace DXVcs2Git.UI2 {
         protected override Window CreateShell() {
             return new MainWindow();
         }
-        protected override void ConfigureServiceLocator() {
-            base.ConfigureServiceLocator();
-        }
         protected override void ConfigureModuleCatalog(IModuleCatalog moduleCatalog) {
             base.ConfigureModuleCatalog(moduleCatalog);
             moduleCatalog.AddModule(typeof(ModuleInjector));
         }
-        protected override void OnStartup(StartupEventArgs e) {
+        protected override async void OnStartup(StartupEventArgs e) {
             base.OnStartup(e);
-
             Container.Resolve<ISettings>().Initialize();
-            Container.Resolve<IRepositoriesStorage>().Initialize();
+            await Container.Resolve<IRepositoriesStorage>().Initialize();
         }
     }
 }

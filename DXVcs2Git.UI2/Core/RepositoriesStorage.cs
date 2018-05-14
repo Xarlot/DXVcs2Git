@@ -14,6 +14,8 @@ namespace DXVcs2Git.UI2.Core {
 
     public class RepositoriesStorage : IRepositoriesStorage {
         RepoConfigsReader configReader = new RepoConfigsReader();
+        const string gitserver = @"http://gitserver";
+        const string auth = "y9SnbdMyzcYmxU-zxRY9";
 
         readonly BehaviorSubject<ImmutableArray<IRepository>> repositoriesSubject = new BehaviorSubject<ImmutableArray<IRepository>>(ImmutableArray<IRepository>.Empty);
 
@@ -28,7 +30,7 @@ namespace DXVcs2Git.UI2.Core {
             var repoName = new[] {@"c:\Work\2018.1", @"c:\Work\2017.2", @"c:\Work\2017.1"};
             List<IRepository> list = new List<IRepository>();
             foreach (var name in repoName) {
-                var repo = new Repository(this, name);
+                var repo = new Repository(this, name, gitserver, auth);
                 list.Add(repo);
                 Repositories = list.ToImmutableArray();
                 await repo.Initialize();
