@@ -10,6 +10,7 @@ namespace DXVcs2Git.UI2.ViewModels {
         readonly IDisposable repositoryStateDisposable;
         RepositoryState repositoryState;
 
+        
         public RepositoryState RepositoryState {
             get => this.repositoryState;
             private set => this.RaiseAndSetIfChanged(ref this.repositoryState, value);

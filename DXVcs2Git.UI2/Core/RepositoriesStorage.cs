@@ -25,7 +25,7 @@ namespace DXVcs2Git.UI2.Core {
         }
 
         public async Task Initialize() {
-            var repoName = new string[] {"1", "2", "3"};
+            var repoName = new[] {@"c:\Work\2018.1", @"c:\Work\2017.2", @"c:\Work\2017.1"};
             List<IRepository> list = new List<IRepository>();
             foreach (var name in repoName) {
                 var repo = new Repository(this, name);
