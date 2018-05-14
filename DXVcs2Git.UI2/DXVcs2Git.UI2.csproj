@@ -250,11 +250,13 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="Core\BranchModel.cs" />
     <Compile Include="Core\RepositoriesStorage.cs" />
-    <Compile Include="Core\Repository.cs" />
+    <Compile Include="Core\RepositoryModel.cs" />
     <Compile Include="Core\Settings.cs" />
     <Compile Include="Modules.cs" />
     <Compile Include="Regions.cs" />
+    <Compile Include="ViewModels\BranchViewModel.cs" />
     <Compile Include="ViewModels\MainViewModel.cs" />
     <Compile Include="ViewModels\RepositoriesViewModel.cs" />
     <Compile Include="ViewModels\RepositoryViewModel.cs" />

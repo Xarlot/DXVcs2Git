@@ -26,7 +26,7 @@ namespace DXVcs2Git.UI2.ViewModels {
             this.repositoriesDisposable = repositoriesStorage.RepositoriesObservable
                 .SubscribeOn(DispatcherScheduler.Current).Subscribe(HandleRepositoriesChanged);
         }
-        void HandleRepositoriesChanged(ImmutableArray<IRepository> changed) {
+        void HandleRepositoriesChanged(ImmutableArray<IRepositoryModel> changed) {
             foreach (IDisposable repositoryViewModel in Repositories)
                 repositoryViewModel.Dispose();
 
