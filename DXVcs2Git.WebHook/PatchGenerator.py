@@ -1,5 +1,6 @@
 import cgi
 import datetime
+import json
 import sys
 import re
 import threading
@@ -11,9 +12,12 @@ from queue import Queue
 from threading import Thread
 import time
 from enum import Enum
+from json import dumps
+
+import simplejson as simplejson
 
 Chunk = namedtuple('Chunk', 'hash data')
-ChunkStatusInfo = namedtuple('ChunkStatusInfo', 'hash status link dt')
+ChunkStatusInfo = namedtuple('ChunkStatusInfo', 'hash data status link dt')
 
 class ChunkStatus(Enum):
     NonRunning = 0,
@@ -33,8 +37,8 @@ class HttpHandler(BaseHTTPRequestHandler):
             ctype, pdict = cgi.parse_header(self.headers.get('content-type'))
             if (ctype == 'application/json'):
                 hash = urllib.parse.urlsplit(self.path).path.split('/')[-1]
-                length = int(self.headers.get('content-length'))
-                data = urllib.parse.parse_qs(self.rfile.read(length), keep_blank_values=1)
+                length = int(self.headers.get('content-length'), 0)
+                data = self.rfile.read(length)
                 chunk = Chunk(hash = hash, data = data)
                 self.server.queue.put(chunk)
 
@@ -73,7 +77,12 @@ class MyHttpServer(HTTPServer):
         pass
     def do_magic(self, chunkStatus):
         print("some magic")
-        return ChunkStatusInfo(hash=chunkStatus.hash, link='test', status=ChunkStatus.Success, dt = chunkStatus.dt)
+
+        data = json.loads(chunkStatus.data)
+        repo = data.get('repo')
+        branch = data.get('branch')
+
+        return ChunkStatusInfo(hash=chunkStatus.hash, link='test', status=ChunkStatus.Success, data = chunkStatus.data, dt = chunkStatus.dt)
         pass
     def process_queue(self):
         print('thread started')
@@ -83,9 +92,10 @@ class MyHttpServer(HTTPServer):
                 time.sleep(50)
                 continue
             hash = chunk.hash
+            data = chunk.data
             chunkStatus = self.get_chunkstatusinfo(hash)
             if chunkStatus == None:
-                chunkStatus = ChunkStatusInfo(hash=hash, status=ChunkStatus.NonRunning, link='', dt=datetime.datetime.now())
+                chunkStatus = ChunkStatusInfo(hash=hash, status=ChunkStatus.NonRunning, link='', data=data, dt=datetime.datetime.now())
                 self.set_chunkstatusinfo(hash, chunkStatus)
 
             if chunkStatus.status is not ChunkStatus.NonRunning:
