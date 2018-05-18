@@ -27,7 +27,9 @@
                     <dxdo:LayoutPanel
                         Caption="Selected branch"
                         dxb:MergingProperties.ElementMergingBehavior="InternalWithExternal"
-                        ItemWidth="4*" />
+                        ItemWidth="4*" >
+                        <ContentControl Focusable="False" regions:RegionManager.RegionName="{x:Static ui2:Regions.SelectedBranch}" />
+                        </dxdo:LayoutPanel>
                 </dxdo:LayoutGroup>
             </dxdo:LayoutGroup>
         </dxdo:DockLayoutManager>

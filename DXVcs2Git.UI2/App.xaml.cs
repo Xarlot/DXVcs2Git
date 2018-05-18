@@ -2,6 +2,7 @@
 using CommonServiceLocator;
 using DevExpress.Xpf.Core;
 using DXVcs2Git.UI2.Core;
+using DXVcs2Git.UI2.ViewModels;
 using DXVcs2Git.UI2.Views;
 using Prism.Ioc;
 using Prism.Modularity;
@@ -21,8 +22,6 @@ namespace DXVcs2Git.UI2 {
         public App() {
         }
         protected override void RegisterTypes(IContainerRegistry containerRegistry) {
-            containerRegistry.RegisterSingleton(typeof(IRepositoriesStorage), typeof(RepositoriesStorage));
-            containerRegistry.RegisterSingleton(typeof(ISettings), typeof(Settings));
         }
         protected override Window CreateShell() {
             return new MainWindow();
@@ -33,7 +32,10 @@ namespace DXVcs2Git.UI2 {
         }
         protected override async void OnStartup(StartupEventArgs e) {
             base.OnStartup(e);
+            Container.Resolve<IBranchSelector>().Initialize();
+            Container.Resolve<IRegionManager>().RequestNavigate(Regions.SelectedBranch, nameof(EmptyBranchView));
             Container.Resolve<ISettings>().Initialize();
+
             await Container.Resolve<IRepositoriesStorage>().Initialize();
         }
     }

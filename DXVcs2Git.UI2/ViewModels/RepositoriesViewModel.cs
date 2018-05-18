@@ -11,6 +11,7 @@ using ReactiveUI;
 namespace DXVcs2Git.UI2.ViewModels {
     public class RepositoriesViewModel : ReactiveObject, IDisposable {
         readonly IRepositoriesStorage repositoriesStorage;
+        readonly IBranchSelector branchSelector;
         readonly IDisposable repositoriesDisposable;
         ReadOnlyObservableCollection<RepositoryViewModel> repositories = new ReadOnlyObservableCollection<RepositoryViewModel>(
             new ObservableCollection<RepositoryViewModel>());
@@ -19,12 +20,24 @@ namespace DXVcs2Git.UI2.ViewModels {
             get => this.repositories;
             private set => this.RaiseAndSetIfChanged(ref this.repositories, value);
         }
+
+        public RepositoryBranchViewModel SelectedBranch {
+            get => this.selectedBranch;
+            set => this.RaiseAndSetIfChanged(ref this.selectedBranch, value);
+        }
+
+        RepositoryBranchViewModel selectedBranch;
         
-        public RepositoriesViewModel(IRepositoriesStorage repositoriesStorage) {
+        public RepositoriesViewModel(IRepositoriesStorage repositoriesStorage, IBranchSelector branchSelector) {
             this.repositoriesStorage = repositoriesStorage;
-            
+            this.branchSelector = branchSelector;
             this.repositoriesDisposable = repositoriesStorage.RepositoriesObservable
                 .SubscribeOn(DispatcherScheduler.Current).Subscribe(HandleRepositoriesChanged);
+
+            this.WhenAnyValue(x => x.SelectedBranch).Subscribe(HandleSelectedBranchChanged);
+        }
+        void HandleSelectedBranchChanged(RepositoryBranchViewModel branchViewModel) {
+            this.branchSelector.Select(branchViewModel?.Branch);
         }
         void HandleRepositoriesChanged(ImmutableArray<IRepositoryModel> changed) {
             foreach (IDisposable repositoryViewModel in Repositories)

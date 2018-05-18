@@ -168,16 +168,20 @@
       <HintPath>..\packages\Prism.Wpf.7.1.0.123-pre\lib\net45\Prism.Wpf.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="ReactiveUI, Version=8.0.1.0, Culture=neutral, PublicKeyToken=null">
-      <HintPath>..\packages\ReactiveUI.8.0.1\lib\net461\ReactiveUI.dll</HintPath>
+    <Reference Include="ReactiveUI, Version=8.2.0.0, Culture=neutral, PublicKeyToken=null">
+      <HintPath>..\packages\ReactiveUI.8.2.1\lib\net461\ReactiveUI.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="ReactiveUI.Blend, Version=8.2.0.0, Culture=neutral, PublicKeyToken=null">
+      <HintPath>..\packages\ReactiveUI.Blend.8.2.1\lib\net461\ReactiveUI.Blend.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="ReactiveUI.Events.WPF, Version=8.0.1.0, Culture=neutral, PublicKeyToken=null">
       <HintPath>..\packages\ReactiveUI.Events.WPF.8.0.1\lib\net461\ReactiveUI.Events.WPF.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="ReactiveUI.WPF, Version=8.0.1.0, Culture=neutral, PublicKeyToken=null">
-      <HintPath>..\packages\ReactiveUI.WPF.8.0.1\lib\net461\ReactiveUI.WPF.dll</HintPath>
+    <Reference Include="ReactiveUI.WPF, Version=8.2.0.0, Culture=neutral, PublicKeyToken=null">
+      <HintPath>..\packages\ReactiveUI.WPF.8.2.1\lib\net461\ReactiveUI.WPF.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="Splat, Version=4.0.0.0, Culture=neutral, PublicKeyToken=null">
@@ -226,7 +230,7 @@
     </Reference>
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Windows.Interactivity, Version=4.5.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35">
-      <HintPath>..\packages\Prism.Wpf.7.1.0.123-pre\lib\net45\System.Windows.Interactivity.dll</HintPath>
+      <HintPath>..\packages\Expression.Blend.Sdk.1.0.2\lib\net45\System.Windows.Interactivity.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="System.Xml" />
@@ -250,18 +254,25 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="Behaviors\RepositoriesBranchBindingBehavior.cs" />
     <Compile Include="Core\BranchModel.cs" />
+    <Compile Include="Core\BranchSelector.cs" />
     <Compile Include="Core\RepositoriesStorage.cs" />
     <Compile Include="Core\RepositoryModel.cs" />
     <Compile Include="Core\Settings.cs" />
+    <Compile Include="Extensions.cs" />
     <Compile Include="Modules.cs" />
     <Compile Include="Regions.cs" />
     <Compile Include="ViewModels\BranchViewModel.cs" />
+    <Compile Include="ViewModels\RepositoryBranchViewModel.cs" />
     <Compile Include="ViewModels\MainViewModel.cs" />
     <Compile Include="ViewModels\RepositoriesViewModel.cs" />
     <Compile Include="ViewModels\RepositoryViewModel.cs" />
     <Compile Include="Views\BranchView.xaml.cs">
       <DependentUpon>BranchView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\EmptyBranchView.xaml.cs">
+      <DependentUpon>EmptyBranchView.xaml</DependentUpon>
     </Compile>
     <Compile Include="Views\MainView.xaml.cs">
       <DependentUpon>MainView.xaml</DependentUpon>
@@ -282,6 +293,7 @@
       <SubType>Code</SubType>
     </Compile>
     <Page Include="Views\BranchView.xaml" />
+    <Page Include="Views\EmptyBranchView.xaml" />
     <Page Include="Views\MainView.xaml" />
     <Page Include="Views\RepositoriesView.xaml" />
   </ItemGroup>

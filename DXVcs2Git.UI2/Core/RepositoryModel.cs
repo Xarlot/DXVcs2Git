@@ -72,20 +72,17 @@ namespace DXVcs2Git.UI2.Core {
         (Project origin, Project upstream, ImmutableArray<BranchModel> branches) Parse(GitReaderWrapper wrapper) {
             string originPath = wrapper.GetOriginRepoPath();
             string upstreamPath = wrapper.GetUpstreamRepoPath();
+            
             var localBranches = wrapper.GetLocalBranches().ToArray();
 
             var origin = this.gitLabWrapper.FindProject(originPath);
             var upstream = this.gitLabWrapper.FindProject(upstreamPath);
 
-            var remoteBranches = this.gitLabWrapper.GetBranches(origin).ToArray();
-
-            List<BranchModel> branches = new List<BranchModel>();
-            foreach (var localBranch in localBranches) {
-                var name = localBranch.UpstreamBranchCanonicalName;
-                var branchCandidate = remoteBranches.FirstOrDefault(x => string.Compare($@"refs/heads/{x.Name}", name, StringComparison.InvariantCultureIgnoreCase) == 0);
-                if (branchCandidate != null && !branchCandidate.Protected)
-                    branches.Add(new BranchModel(branchCandidate));
-            }
+            var branches = this.gitLabWrapper
+                .GetBranches(origin)
+                .Where(x => !x.Protected && localBranches.Any(local => local.FriendlyName == x.Name))
+                .Select(x => new BranchModel(x))
+                .ToImmutableArray();
 
             return (origin, upstream, branches.ToImmutableArray());
         }

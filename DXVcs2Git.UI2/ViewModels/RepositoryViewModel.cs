@@ -11,10 +11,9 @@ using ReactiveUI;
 
 namespace DXVcs2Git.UI2.ViewModels {
     public class RepositoryViewModel : ReactiveObject, IDisposable {
-        readonly IRepositoryModel repository;
         readonly IDisposable repositoryStateDisposable;
         RepositoryModelState repositoryState;
-        ObservableCollection<BranchViewModel> branches;
+        ObservableCollection<RepositoryBranchViewModel> branches;
         string name;
 
         public RepositoryModelState State {
@@ -26,22 +25,24 @@ namespace DXVcs2Git.UI2.ViewModels {
             private set => this.RaiseAndSetIfChanged(ref this.name, value);
         }
 
-        public ObservableCollection<BranchViewModel> Branches {
+        public ObservableCollection<RepositoryBranchViewModel> Branches {
             get => this.branches;
             private set => this.RaiseAndSetIfChanged(ref this.branches, value);
         }
+        public IRepositoryModel Model { get; }
         public RepositoryViewModel(IRepositoryModel repository) {
-            this.repository = repository;
+            Model = repository;
             this.name = repository.Name;
             this.repositoryStateDisposable = repository.RepositoryStateObservable
-                .SubscribeOn(DispatcherScheduler.Current).Subscribe(HandleRepositoryStateChanged);
+                .SubscribeOn(DispatcherScheduler.Current)
+                .Subscribe(HandleRepositoryStateChanged);
         }
         void HandleRepositoryStateChanged(RepositoryModelState state) {
             State = state;
-            Name = this.repository.Name;
+            Name = Model.Name;
             Branches = this.repositoryState == RepositoryModelState.Initialized 
-                ? new ObservableCollection<BranchViewModel>(this.repository.Branches.Select(x => new BranchViewModel(this.repository, x))) 
-                : new ObservableCollection<BranchViewModel>();
+                ? new ObservableCollection<RepositoryBranchViewModel>(Model.Branches.Select(x => new RepositoryBranchViewModel(Model, x))) 
+                : new ObservableCollection<RepositoryBranchViewModel>();
         }
         public void Dispose() {
             this.repositoryStateDisposable?.Dispose();
