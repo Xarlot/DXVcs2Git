@@ -20,7 +20,7 @@ def __copyFilesCore(repFullPath, destination, filesStr):
     if not os.path.exists(destinationDirName):
         os.makedirs(destinationDirName)
     filesArr = __getFilesFromXml(filesStr)
-	with zipfile.ZipFile(destination, 'w') as myzip:
+    with zipfile.ZipFile(destination, 'w') as myzip:
         for file in filesArr:
             myzip.write(file)
     pass
