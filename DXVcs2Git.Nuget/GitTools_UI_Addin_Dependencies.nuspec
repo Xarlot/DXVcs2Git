@@ -2,7 +2,7 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
     <metadata>
         <id>GitTools_UI_Addin_Dependencies</id>
-        <version>17.2.0.76</version>
+        <version>17.2.0.80</version>
         <title>GitTools UI Addin Dependencies</title>
         <authors>DevExpress</authors>
         <requireLicenseAcceptance>false</requireLicenseAcceptance>
