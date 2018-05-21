@@ -1,20 +1,18 @@
 import cgi
 import datetime
 import json
-import sys
 import re
+import sys
 import threading
+import time
 import urllib
+import patchcreator
 from collections import namedtuple
+from enum import Enum
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from optparse import OptionParser
 from queue import Queue
 from threading import Thread
-import time
-from enum import Enum
-from json import dumps
-
-import simplejson as simplejson
 
 Chunk = namedtuple('Chunk', 'hash data')
 ChunkStatusInfo = namedtuple('ChunkStatusInfo', 'hash data status link dt')
@@ -41,7 +39,6 @@ class HttpHandler(BaseHTTPRequestHandler):
                 data = self.rfile.read(length)
                 chunk = Chunk(hash = hash, data = data)
                 self.server.queue.put(chunk)
-
             self.send_response(200)
             self.end_headers()
         else:
@@ -52,9 +49,35 @@ class HttpHandler(BaseHTTPRequestHandler):
         pass
 
     def do_GET(self):
-        self.send_response(200)
-        self.send_header('Content-type', 'text/html')
-        self.end_headers()
+        if None != re.search('/api/v1/getpatch/*', self.path):
+            hash = urllib.parse.urlsplit(self.path).path.split('/')[-1]
+            chunk_status = self.server.get_chunkstatusinfo(hash)
+            if chunk_status == None:
+                self.send_response(403)
+                self.send_header('Content-type', 'text/html')
+                self.end_headers()
+                return
+
+            self.send_response(200)
+            self.send_header('Content-type', 'text/html')
+            self.send_header('timestamp', chunk_status.dt)
+            status = chunk_status.status
+            if status == ChunkStatus.NonRunning:
+                self.send_header('chunk_status', 'notrunning')
+            elif status == ChunkStatus.Success:
+                self.send_header('chunk_status', 'success')
+                self.send_header('link', chunk_status.link)
+            elif status == ChunkStatus.Running:
+                self.send_header('chunk_status', 'running')
+            elif status == ChunkStatus.Failed:
+                self.send_header('chunk_status', 'failed')
+
+            self.end_headers()
+
+        else:
+            self.send_response(200)
+            self.send_header('Content-type', 'text/html')
+            self.end_headers()
 
         pass
 
@@ -81,6 +104,10 @@ class MyHttpServer(HTTPServer):
         data = json.loads(chunkStatus.data)
         repo = data.get('repo')
         branch = data.get('branch')
+        content = data.get('content')
+        hash = chunkStatus.hash
+
+        patchcreator.copyFiles(self.cache, repo, branch, hash, self.storage, content)
 
         return ChunkStatusInfo(hash=chunkStatus.hash, link='test', status=ChunkStatus.Success, data = chunkStatus.data, dt = chunkStatus.dt)
         pass
@@ -108,13 +135,20 @@ def main(argv):
     parser = OptionParser()
     (options, args) = parser.parse_args()
 
+    cache = r'c:\repo'
+    storage = r'c:\repo2'
+
     url = ('', 8000)
     httpd = MyHttpServer(url, HttpHandler)
     httpd.lock = threading.Lock()
     httpd.queue = Queue()
     httpd.tasks = {}
+    httpd.cache = cache
+    httpd.storage = storage
+
     thread = Thread(target=httpd.process_queue)
     thread.start()
+
     httpd.serve_forever()
 
     pass

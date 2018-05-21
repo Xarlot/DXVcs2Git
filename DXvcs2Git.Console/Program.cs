@@ -11,6 +11,7 @@ using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Windows.Threading;
 using CommandLine;
 using DXVcs2Git.Core;
@@ -23,6 +24,7 @@ using DXVcs2Git.UI.Farm;
 using Newtonsoft.Json;
 using NGitLab;
 using NGitLab.Models;
+using RestSharp;
 using ProjectHookType = DXVcs2Git.Core.GitLab.ProjectHookType;
 using User = DXVcs2Git.Core.User;
 
@@ -268,6 +270,8 @@ namespace DXVcs2Git.Console {
             bool testIntegration = !clo.Individual;
             string commitSha = clo.Commit;
             string sourceRepo = clo.SourceRepo;
+            bool usePatchService = clo.UsePatchService;
+            string patchServiceUrl = clo.PatchServiceUrl;
 
             DXVcsWrapper vcsWrapper = new DXVcsWrapper(vcsServer, username, password);
 
@@ -321,9 +325,9 @@ namespace DXVcs2Git.Console {
             MergeRequest mergeRequest = gitLabWrapper.GetMergeRequests(targetProject,
                 x => x.SourceBranch == sourceBranchName && x.TargetBranch == targetBranchName && x.SourceProjectId == sourceProject.Id).FirstOrDefault();
 
-            bool shouldTestIntegration = testIntegration || mergeRequest != null && mergeRequest.Assignee?.Name == username;
+            //bool shouldTestIntegration = testIntegration || mergeRequest != null && mergeRequest.Assignee?.Name == username;
 
-            if (shouldTestIntegration) {
+//            if (shouldTestIntegration) {
                 if (mergeRequest == null) {
                     Log.Error($"Can`t find merge request.");
                     return 1;
@@ -340,41 +344,102 @@ namespace DXVcs2Git.Console {
                 var changes = GetMergeRequestChanges(gitLabWrapper, mergeRequest, trackBranch);
 
                 var patch = new PatchInfo() { TimeStamp = DateTime.Now.Ticks, Items = changes };
-                GeneratePatch(patchdir, patch, localGitDir);
+                GeneratePatch(patchdir, patch, usePatchService, patchServiceUrl, localGitDir, sourceProject.SshUrl, sourceBranch.Name, commitSha);
                 return 0;
+//            }
+//            else {
+//                if (mergeRequest != null) {
+//                    Log.Message($"Merge request id: {mergeRequest.Iid}.");
+//                    Log.Message($"Merge request title: {mergeRequest.Title}.");
+//                }
+//                else
+//                    Log.Message($"Merge request not found. Testing by commits.");
+//
+//                Sha1 searchSha = mergeRequest == null ? new Sha1(commitSha) : gitLabWrapper.GetMergeRequestCommits(mergeRequest).LastOrDefault()?.Id ?? new Sha1(commitSha);
+//                var commit = FindSyncCommit(gitLabWrapper, sourceProject, searchSha);
+//                if (commit == null) {
+//                    Log.Error($"Can`t find sync commit. Try to merge with latest version.");
+//                    return 1;
+//                }
+//                long? vcsCommitTimeStamp = FindVcsCommitTimeStamp(commit, vcsWrapper, history, historyPath, trackBranch.HistoryPath);
+//                if (vcsCommitTimeStamp == null) {
+//                    Log.Error($"Can`t find vcs sync commit. Try to merge with latest version.");
+//                    return 1;
+//                }
+//
+//
+//                Log.Message($"Patch based on commit {commit.Id}");
+//                Log.Message($"Vcs commit timestamp {new DateTime(vcsCommitTimeStamp.Value).ToLocalTime()}");
+//                var changes = GetCommitChanges(sourceProject, commit.Id.ToString(), commitSha, trackBranch);
+//                var patch = new PatchInfo() { TimeStamp = vcsCommitTimeStamp.Value, Items = changes };
+//                GeneratePatch(patchdir, patch, usePatchService, patchServiceUrl, localGitDir, sourceProject.Path, sourceBranch.Name, searchSha.ToString());
+//                return 0;
+//            }
+        }
+        static void GeneratePatch(string patchdir, PatchInfo patch, bool usePatchService, string patchServiceUrl, string localGitDir, string repo, string branch, string sha1) {
+            if (usePatchService) {
+                GeneratePatchRemote(patchdir, patch, patchServiceUrl, repo, branch, sha1);
             }
             else {
-                if (mergeRequest != null) {
-                    Log.Message($"Merge request id: {mergeRequest.Iid}.");
-                    Log.Message($"Merge request title: {mergeRequest.Title}.");
-                }
-                else
-                    Log.Message($"Merge request not found. Testing by commits.");
+                GeneratePatchLocal(patchdir, patch, localGitDir);
+            }
 
-                GitWrapper gitWrapper = CreateGitWrapper(sourceRepo, localGitDir, sourceBranchName);
-
-                Sha1 searchSha = mergeRequest == null ? new Sha1(commitSha) : gitLabWrapper.GetMergeRequestCommits(mergeRequest).LastOrDefault()?.Id ?? new Sha1(commitSha);
-                var commit = FindSyncCommit(gitLabWrapper, sourceProject, searchSha);
-                if (commit == null) {
-                    Log.Error($"Can`t find sync commit. Try to merge with latest version.");
-                    return 1;
-                }
-                long? vcsCommitTimeStamp = FindVcsCommitTimeStamp(commit, vcsWrapper, history, historyPath, trackBranch.HistoryPath);
-                if (vcsCommitTimeStamp == null) {
-                    Log.Error($"Can`t find vcs sync commit. Try to merge with latest version.");
-                    return 1;
-                }
-
-
-                Log.Message($"Patch based on commit {commit.Id}");
-                Log.Message($"Vcs commit timestamp {new DateTime(vcsCommitTimeStamp.Value).ToLocalTime()}");
-                var changes = GetCommitChanges(gitWrapper, sourceProject, commit.Id.ToString(), commitSha, trackBranch);
-                var patch = new PatchInfo() { TimeStamp = vcsCommitTimeStamp.Value, Items = changes };
-                GeneratePatch(patchdir, patch, localGitDir);
-                return 0;
+        }
+        static void GeneratePatchRemote(string patchdir, PatchInfo patch, string patchServiceUrl, string repo, string branch, string sha1) {
+            string info = SavePatchInfo(patchdir, patch);
+            string content = File.ReadAllText(Path.Combine(patchdir, info));
+            
+            var client = new RestClient(patchServiceUrl);
+            var request = new RestRequest($@"/api/v1/createpatch/{sha1}", Method.POST);
+            Dictionary<string, string> values = new Dictionary<string, string>();
+            values.Add("repo", repo);
+            values.Add("branch", branch);
+            values.Add("content", content);
+            
+            string json = JsonConvert.SerializeObject(values);
+            
+            request.AddParameter("application/json; charset=utf-8", json, ParameterType.RequestBody);
+            request.RequestFormat = DataFormat.Json;
+            var result = client.ExecuteTaskAsync(request).ContinueWith(x => WaitPatch(x.Result, client, sha1));
+            if (result.Wait(30000)) {
+            }
+            else {
+                throw new ArgumentException();
             }
         }
-        static void GeneratePatch(string patchdir, PatchInfo patch, string localGitDir) {
+
+        enum ChunkStatus {
+            NotRunning,
+            Running,
+            Success,
+            Failed,
+        }
+        static async Task<string> WaitPatch(IRestResponse response, RestClient client, string sha1) {
+            if (response.ResponseStatus == ResponseStatus.Completed) {
+                while (true) {
+                    var request = new RestRequest($"/api/v1/getpatch/{sha1}");
+                    var getPatchResponse = await client.ExecuteGetTaskAsync(request);
+                    if (getPatchResponse.ResponseStatus == ResponseStatus.Completed) {
+                        var chunkStatus = getPatchResponse.Headers.FirstOrDefault(x => x.Name == "chunk_status");
+                        if (chunkStatus != null && Enum.TryParse(chunkStatus.Value.ToString(), true, out ChunkStatus status)) {
+                            if (status == ChunkStatus.Running || status == ChunkStatus.NotRunning)
+                                continue;
+                            if (status == ChunkStatus.Failed)
+                                return null;
+                            if (status == ChunkStatus.Success)
+                                return getPatchResponse.Headers.FirstOrDefault(x => x.Name == "link")?.Value?.ToString();
+                            if (status == ChunkStatus.Failed)
+                                return null;
+                            throw new ArgumentException("status");
+                        }
+                    }
+                        
+                }
+            }
+
+            return null;
+        }
+        static void GeneratePatchLocal(string patchdir, PatchInfo patch, string localGitDir) {
             var patchPath = Path.Combine(patchdir, patchZip);
             using (var fileStream = new FileStream(patchPath, FileMode.CreateNew)) {
                 using (var archive = new ZipArchive(fileStream, ZipArchiveMode.Create, true)) {
@@ -385,7 +450,6 @@ namespace DXVcs2Git.Console {
                     }
                 }
             }
-
             Log.Message($"Patch.info generated at {patchPath}");
         }
         static List<PatchItem> GetCommitChanges(GitWrapper gitsWrapper, Project project, string from, string to, TrackBranch branch) {

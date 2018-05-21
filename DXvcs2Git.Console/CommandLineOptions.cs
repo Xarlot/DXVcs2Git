@@ -134,7 +134,15 @@ namespace DXVcs2Git.Console {
         public string LocalFolder { get; }
         [Option("patchdir", Required = true, HelpText = "Location of patch.info generated in patch mode")]
         public string PatchDir { get; }
-        public PatchOptions(string branch, bool individual, string commit, string tracker, string sourceRepo, string sourceBranch, string localFolder, string patchDir, string server, string login, string repo, string password, string authToken) : base(server, login, repo, password, authToken) {
+        [Option("usepatchservice", Required = false, Default = false, HelpText = "Enable patch downloading from patch service")]
+        public bool UsePatchService { get; }
+        [Option("patchserviceurl", Required = false, Default = "http://localhost:8000", HelpText = "Patch generation service url")]
+        public string PatchServiceUrl { get; }
+        public PatchOptions(
+            string branch, bool individual, string commit, string tracker, string sourceRepo, string sourceBranch, string localFolder, string patchDir, 
+            bool usePatchService, string patchServiceUrl, string server, string login, string repo, string password, string authToken) 
+            : base(server, login, repo, password, authToken) {
+            
             Branch = branch;
             Individual = individual;
             Commit = commit;
@@ -143,6 +151,8 @@ namespace DXVcs2Git.Console {
             SourceRepo = sourceRepo;
             LocalFolder = localFolder;
             PatchDir = patchDir;
+            UsePatchService = usePatchService;
+            PatchServiceUrl = patchServiceUrl;
         }
     }
     [Verb("dxupdate", HelpText = "Add commit sha to dxupdate db")]
