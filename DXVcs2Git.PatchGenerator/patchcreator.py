@@ -1,8 +1,7 @@
 import os
 import subprocess
 import xml.etree.ElementTree as ET
-
-from sevenzutils import SevenZUtils
+import zipfile
 
 cwd = os.getcwd()
 
@@ -21,8 +20,9 @@ def __copyFilesCore(repFullPath, destination, filesStr):
     if not os.path.exists(destinationDirName):
         os.makedirs(destinationDirName)
     filesArr = __getFilesFromXml(filesStr)
-    for file in filesArr:
-        SevenZUtils.make_archive(file, destination)
+	with zipfile.ZipFile(destination, 'w') as myzip:
+        for file in filesArr:
+            myzip.write(file)
     pass
 
 def __getFilesFromXml(filesStr):

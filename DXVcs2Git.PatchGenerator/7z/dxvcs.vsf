@@ -1,9 +1,0 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<versionStorage>
-  <auxPath value="net.tcp://vcsservice.devexpress.dev:9091/DXVCSService">
-    <projectPath value="$/2018.1/Bin/7z" date="0">
-      <fileName value="7z.dll" version="2" time="5248159682277430840" hash="JtxpWo1UnRyRN8FObTuLTQ==" writeTime="5248159682277430840" />
-      <fileName value="7z.exe" version="2" time="5248159682277430840" hash="PnlxGeD9ZCl8uCeUuNaO3Q==" writeTime="5248159682277430840" />
-    </projectPath>
-  </auxPath>
-</versionStorage>
