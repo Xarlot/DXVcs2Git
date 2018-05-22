@@ -1,27 +1,37 @@
 import cgi
+import concurrent
 import datetime
 import json
+import os
 import re
 import sys
 import threading
-import time
 import urllib
-import patchcreator
 from collections import namedtuple
+from concurrent.futures import as_completed, ProcessPoolExecutor
 from enum import Enum
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from optparse import OptionParser
 from queue import Queue
 from threading import Thread
 
+import patchcreator
+
 Chunk = namedtuple('Chunk', 'hash data')
-ChunkStatusInfo = namedtuple('ChunkStatusInfo', 'hash data status link dt')
+ChunkStatusInfo = namedtuple('ChunkStatusInfo', 'hash status link dt chunk')
+DelayedTasksHash = namedtuple('DelayedTasksHash', 'repo branch')
+RunningTask = namedtuple('RunningTask', 'repo branch hash')
 
 class ChunkStatus(Enum):
     NonRunning = 0,
     Running = 1
     Failed = 2
     Success = 3
+
+def process_chunk_execute_on_git(runningtask, cache, link, content):
+    patchcreator.copyFiles(cache, runningtask.repo, runningtask.branch, runningtask.hash, link, content)
+    pass
+
 
 class HttpHandler(BaseHTTPRequestHandler):
     def do_HEAD(self):
@@ -51,7 +61,7 @@ class HttpHandler(BaseHTTPRequestHandler):
     def do_GET(self):
         if None != re.search('/api/v1/getpatch/*', self.path):
             hash = urllib.parse.urlsplit(self.path).path.split('/')[-1]
-            chunk_status = self.server.get_chunkstatusinfo(hash)
+            chunk_status = self.server.get_taskstatusinfo(hash)
             if chunk_status == None:
                 self.send_response(403)
                 self.send_header('Content-type', 'text/html')
@@ -82,57 +92,106 @@ class HttpHandler(BaseHTTPRequestHandler):
         pass
 
 class MyHttpServer(HTTPServer):
-    def get_chunkstatusinfo(self, hash):
-        self.lock.acquire()
+    def get_taskstatusinfo(self, hash):
+        self.tasks_lock.acquire()
         try:
             return self.tasks[hash]
         except:
             return None
         finally:
-            self.lock.release()
+            self.tasks_lock.release()
         pass
-    def set_chunkstatusinfo(self, hash, chunkstatus):
-        self.lock.acquire()
+    def set_taskstatusinfo(self, hash, taskstatus):
+        self.tasks_lock.acquire()
         try:
-            self.tasks[hash] = chunkstatus
+            self.tasks[hash] = taskstatus
         finally:
-            self.lock.release()
+            self.tasks_lock.release()
         pass
-    def do_magic(self, chunkStatus):
-        print("some magic")
+    def process_chunk(self, chunk):
+        hash = chunk.hash
+        print(rf"process_chunk for chunk {hash}")
 
-        data = json.loads(chunkStatus.data)
-        repo = data.get('repo')
-        branch = data.get('branch')
-        content = data.get('content')
-        hash = chunkStatus.hash
+        try:
+            dt = datetime.datetime.now()
+            link = os.path.join(self.storage, rf"{hash}.zip")
+            data = json.loads(chunk.data)
+            repo = data.get('repo')
+            branch = data.get('branch')
+            content = data.get('content')
 
-        patchcreator.copyFiles(self.cache, repo, branch, hash, self.storage, content)
+            self.synctasks_lock.acquire()
+            try:
+                taskstatus = self.get_taskstatusinfo(hash)
+                if taskstatus != None and taskstatus.status != ChunkStatus.NonRunning:
+                    print(rf"Task {hash} is already registered and executed")
+                    return taskstatus
+                taskstatus = ChunkStatusInfo(hash=hash, link=link, status=ChunkStatus.NonRunning, dt = dt, chunk=chunk)
+                self.set_taskstatusinfo(hash, taskstatus)
 
-        return ChunkStatusInfo(hash=chunkStatus.hash, link='test', status=ChunkStatus.Success, data = chunkStatus.data, dt = chunkStatus.dt)
+                runningtask_onbranchandrepo = next((x for x in self.runningtasks if x.repo == repo and x.branch == branch), None)
+                runningtask = RunningTask(repo=repo, branch=branch, hash=hash)
+                if runningtask_onbranchandrepo == None:
+                    print(rf"Task with hash {hash} on repo {repo} branch {branch} is running.")
+
+                    self.runningtasks.append(runningtask)
+                    taskstatus = taskstatus._replace(status=ChunkStatus.Running)
+                    self.set_taskstatusinfo(hash, taskstatus)
+                else:
+                    print(rf"Task with hash {hash} on repo {repo} branch {branch} is delayed.")
+                    self.delayedtasks(runningtask)
+                    return
+
+            finally:
+                self.synctasks_lock.release()
+
+            cachedpath = os.path.join(self.storage, rf"{hash}.zip")
+            if os.path.isfile(cachedpath):
+                print(rf"Task with hash {hash} found in cache")
+                return taskstatus._replace(status=ChunkStatus.Success)
+            process_on_git_future = self.pool.submit(process_chunk_execute_on_git, runningtask, self.cache, link, content)
+            try:
+                concurrent.futures.as_completed(process_on_git_future, timeout=self.git_timeout)
+            except TimeoutError:
+                return taskstatus._replace(status=ChunkStatus.Failed)
+            return taskstatus._replace(status=ChunkStatus.Success)
+        except Exception as ex:
+            return ChunkStatusInfo(hash=chunk.hash, link=link, status=ChunkStatus.Failed, data=chunk.data, dt=dt, chunk=chunk)
+        pass
+    def process_chunk_completed(self, chunkfuture):
+        chunkstatus = chunkfuture.result()
+        hash = chunkstatus.hash
+        print(rf"process_chunk_completed for chunk {hash}")
+
+        self.synctasks_lock.acquire()
+        try:
+            runningtask_onbranchandrepo = next((x for x in self.runningtasks if x.hash == hash), None)
+            if runningtask_onbranchandrepo != None:
+                self.runningtasks.remove(runningtask_onbranchandrepo)
+                delayedtask_onbranchandrepo = next((x for x in self.delayedtasks if x.repo == runningtask_onbranchandrepo.repo and x.branch == runningtask_onbranchandrepo.branch), None)
+                if delayedtask_onbranchandrepo != None:
+                    delayedtaskstatus = self.get_taskstatusinfo(delayedtask_onbranchandrepo.hash)
+                    self.queue.put(delayedtaskstatus.chunk)
+
+            self.set_taskstatusinfo(hash, chunkstatus)
+        finally:
+            self.synctasks_lock.release()
+
         pass
     def process_queue(self):
-        print('thread started')
-        while(True):
-            chunk = self.queue.get(block=True)
-            if (chunk == None):
-                time.sleep(50)
-                continue
-            hash = chunk.hash
-            data = chunk.data
-            chunkStatus = self.get_chunkstatusinfo(hash)
-            if chunkStatus == None:
-                chunkStatus = ChunkStatusInfo(hash=hash, status=ChunkStatus.NonRunning, link='', data=data, dt=datetime.datetime.now())
-                self.set_chunkstatusinfo(hash, chunkStatus)
+        print('process queue started')
 
-            if chunkStatus.status is not ChunkStatus.NonRunning:
-                continue
-
-            chunkStatus = self.do_magic(chunkStatus)
-            self.set_chunkstatusinfo(hash, chunkStatus)
+        with concurrent.futures.ThreadPoolExecutor() as executor:
+            while True:
+                chunk = self.queue.get(block=True)
+                chunk_future = executor.submit(self.process_chunk, chunk)
+                chunk_future.add_done_callback(self.process_chunk_completed)
     pass
 def main(argv):
     parser = OptionParser()
+    parser.add_option("-i", "--timeout", dest="timeout", default=30)
+    parser.add_option("-w", "--workers", dest="workers", default=5)
+
     (options, args) = parser.parse_args()
 
     cache = r'c:\repo'
@@ -140,11 +199,17 @@ def main(argv):
 
     url = ('', 8000)
     httpd = MyHttpServer(url, HttpHandler)
-    httpd.lock = threading.Lock()
+    httpd.tasks_lock = threading.Lock()
+    httpd.delayedtasks_lock = threading.Lock()
+    httpd.synctasks_lock = threading.Lock()
     httpd.queue = Queue()
     httpd.tasks = {}
+    httpd.delayedtasks = []
+    httpd.runningtasks = []
     httpd.cache = cache
     httpd.storage = storage
+    httpd.pool = ProcessPoolExecutor(max_workers=options.workers)
+    httpd.git_timeout = options.timeout
 
     thread = Thread(target=httpd.process_queue)
     thread.start()

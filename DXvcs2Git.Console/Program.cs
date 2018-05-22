@@ -24,6 +24,7 @@ using DXVcs2Git.UI.Farm;
 using Newtonsoft.Json;
 using NGitLab;
 using NGitLab.Models;
+using Nito.AsyncEx;
 using RestSharp;
 using ProjectHookType = DXVcs2Git.Core.GitLab.ProjectHookType;
 using User = DXVcs2Git.Core.User;
@@ -43,44 +44,40 @@ namespace DXVcs2Git.Console {
         const string farmServer = @"tcp://ccnet.devexpress.devx:21234/CruiseManager.rem";
         public const string DXUpdateConnectionString = @"data source=xpf-anallytics;user id=DXUpdate;password=xVT2WkWi;MultipleActiveResultSets=True";
         const int MaxChangesCount = 1000;
-        static void Main(string[] args) {
+        static async Task<int> Main(string[] args) {
             var result = Parser.Default.ParseArguments<SyncOptions, PatchOptions, ApplyPatchOptions, ListenerOptions, ProcessTestsOptions, DXUpdateOptions>(args);
             try {
-                var exitCode = result.MapResult(
-                    (SyncOptions syncOptions) => DoSyncWork(syncOptions),
-                    (PatchOptions patchOptions) => DoPatchWork(patchOptions),
-                    (ApplyPatchOptions applypatch) => DoApplyPatchWork(applypatch),
-                    (ListenerOptions listenerOptions) => DoListenerWork(listenerOptions),
-                    (ProcessTestsOptions testOptions) => DoProcessTestResultsWork(testOptions),
-                    (DXUpdateOptions dxUpdateOptions) => DoDXUpdateWork(dxUpdateOptions),
-                    err => DoErrors(args));
+                var exitCode = await result.MapResult(
+                    async (SyncOptions syncOptions) => await DoSyncWork(syncOptions),
+                    async (PatchOptions patchOptions) => await DoPatchWork(patchOptions),
+                    async (ApplyPatchOptions applypatch) => await DoApplyPatchWork(applypatch),
+                    async (ListenerOptions listenerOptions) => await DoListenerWork(listenerOptions),
+                    async (ProcessTestsOptions testOptions) => await DoProcessTestResultsWork(testOptions),
+                    err => Task.FromResult(DoErrors(args)));
                 Environment.Exit(exitCode);
             }
             catch (Exception ex) {
                 Log.Error("Application crashed with exception", ex);
                 Environment.Exit(1);
             }
-        }
-        static int DoDXUpdateWork(DXUpdateOptions dxUpdateOptions) {
-            using (DXUpdateDB update = new DXUpdateDB(dxUpdateOptions.ConnectionString)) {
-                update.AddCommit(dxUpdateOptions.Sha);
-            }
+
             return 0;
         }
         static int DoErrors(string[] args) {
             return 1;
         }
-        static int DoApplyPatchWork(ApplyPatchOptions applypatch) {
+        static Task<int> DoApplyPatchWork(ApplyPatchOptions applypatch) {
             string localDir = applypatch.LocalFolder != null && Path.IsPathRooted(applypatch.LocalFolder) ? applypatch.LocalFolder : Path.Combine(Environment.CurrentDirectory, applypatch.LocalFolder ?? repoPath);
             if (!Directory.Exists(localDir)) {
                 Log.Error($"Sources directory {localDir} was not found.");
-                return 1;
+                return Task.FromResult(1);
             }
 
             string patchPath = applypatch.Patch != null && Path.IsPathRooted(applypatch.Patch) ? applypatch.Patch : Path.Combine(Environment.CurrentDirectory, applypatch.Patch ?? patchZip);
             if (!File.Exists(patchPath)) {
                 Log.Error($"{patchZip} was not found at {patchPath} location.");
-                return 1;
+                return Task.FromResult(1);
+
             }
 
             using (Package zip = Package.Open(patchPath, FileMode.Open)) {
@@ -92,7 +89,7 @@ namespace DXVcs2Git.Console {
                 }
                 catch (Exception ex) {
                     Log.Error("Patch.info doesn`t found.", ex);
-                    return 1;
+                    return Task.FromResult(1);
                 }
                 foreach (var patchItem in patchInfo.Items) {
                     if (patchItem.SyncAction == SyncAction.Delete) {
@@ -115,7 +112,7 @@ namespace DXVcs2Git.Console {
                 }
 
             }
-            return 0;
+            return Task.FromResult(0);
         }
         static void RewriteFile(PatchItem patchItem, string localDir, Package zip) {
             var uri = PackUriHelper.CreatePartUri(new Uri(patchItem.OldPath, UriKind.Relative));
@@ -131,19 +128,19 @@ namespace DXVcs2Git.Console {
             string path = Path.Combine(localDir, patchItem.OldPath);
             File.Delete(path);
         }
-        static int DoProcessTestResultsWork(ProcessTestsOptions clo) {
+        static Task<int> DoProcessTestResultsWork(ProcessTestsOptions clo) {
             Log.Message("process test results.");
             string targetRepoPath = GetSimpleGitHttpPath(clo.Repo);
 
             if (string.IsNullOrEmpty(targetRepoPath)) {
                 Log.Error($"Can`t parse repo path {clo.Repo}");
-                return 1;
+                return Task.FromResult(1);
             }
 
             string sourceRepoPath = GetSimpleGitHttpPath(clo.SourceRepo);
             if (string.IsNullOrEmpty(sourceRepoPath)) {
                 Log.Error($"Can`t parse source repo path {clo.SourceRepo}");
-                return 1;
+                return Task.FromResult(1);
             }
 
             string username = clo.Login;
@@ -160,24 +157,25 @@ namespace DXVcs2Git.Console {
             Project targetProject = gitLabWrapper.FindProject(targetRepoPath);
             if (targetProject == null) {
                 Log.Error($"Can`t find target project {targetRepoPath}.");
-                return 1;
+                return Task.FromResult(1);
+
             }
             Branch targetBranch = gitLabWrapper.GetBranch(targetProject, targetBranchName);
             if (targetBranch == null) {
                 Log.Error($"Can`t find targetBranch branch {targetBranchName}");
-                return 1;
+                return Task.FromResult(1);
             }
 
             var sourceProject = gitLabWrapper.FindProjectFromAll(sourceRepoPath);
             if (sourceProject == null) {
                 Log.Error($"Can`t find source project {sourceRepoPath}");
-                return 1;
+                return Task.FromResult(1);
             }
 
             var sourceBranch = gitLabWrapper.GetBranch(sourceProject, sourceBranchName);
             if (sourceBranch == null) {
                 Log.Error($"Source branch {sourceBranchName} was not found.");
-                return 1;
+                return Task.FromResult(1);
             }
 
             MergeRequest mergeRequest = gitLabWrapper.GetMergeRequests(targetProject, x => x.SourceBranch == sourceBranchName && x.TargetBranch == targetBranchName && x.SourceProjectId == sourceProject.Id).FirstOrDefault();
@@ -187,10 +185,10 @@ namespace DXVcs2Git.Console {
                         Log.Message($@"Pipeline passed. http://asp-git:8181?source_id={sourceProject.Id}&path={Uri.EscapeDataString(targetProject.PathWithNamespace)}&build={jobId}");
                     else
                         Log.Message($@"Pipeline failed. http://asp-git:8181?source_id={sourceProject.Id}&path={Uri.EscapeDataString(targetProject.PathWithNamespace)}&build={jobId}");
-                    return clo.Result;
+                    return Task.FromResult(clo.Result);
                 }
                 Log.Error($"Can`t find merge request.");
-                return 1;
+                return Task.FromResult(1);
             }
 
             Log.Message($"Merge request id: {mergeRequest.Iid}.");
@@ -203,14 +201,14 @@ namespace DXVcs2Git.Console {
             var commit = gitLabWrapper.GetMergeRequestCommits(mergeRequest).FirstOrDefault();
             if (commit == null) {
                 Log.Message("Merge request has no commits.");
-                return 0;
+                return Task.FromResult(0);
             }
 
             gitLabWrapper.AddCommentToMergeRequest(mergeRequest, pipeline);
             if (clo.Result == 0) {
                 if (mergeRequest.WorkInProgress ?? false) {
                     Log.Message("Work in progress. Assign on test service skipped.");
-                    return 0;
+                    return Task.FromResult(0);
                 }
 
                 var xmlComments = gitLabWrapper.GetComments(mergeRequest).Where(x => IsXml(x.Note));
@@ -234,7 +232,7 @@ namespace DXVcs2Git.Console {
                     Log.Message("Auto sync performed by repo tag");
                 }
             }
-            return 0;
+            return Task.FromResult(0);
         }
 
         const string AutoAssigneeTagPrefix = "autoAssigneeUser=";
@@ -244,7 +242,7 @@ namespace DXVcs2Git.Console {
                 .Substring(AutoAssigneeTagPrefix.Length);
         }
 
-        static int DoPatchWork(PatchOptions clo) {
+        static async Task<int> DoPatchWork(PatchOptions clo) {
             string localGitDir = clo.LocalFolder != null && Path.IsPathRooted(clo.LocalFolder) ? clo.LocalFolder : Path.Combine(Environment.CurrentDirectory, clo.LocalFolder ?? repoPath);
 
             string targetRepoPath = GetSimpleGitHttpPath(clo.Repo);
@@ -344,8 +342,8 @@ namespace DXVcs2Git.Console {
                 var changes = GetMergeRequestChanges(gitLabWrapper, mergeRequest, trackBranch);
 
                 var patch = new PatchInfo() { TimeStamp = DateTime.Now.Ticks, Items = changes };
-                GeneratePatch(patchdir, patch, usePatchService, patchServiceUrl, localGitDir, sourceProject.SshUrl, sourceBranch.Name, commitSha);
-                return 0;
+                var result = await GeneratePatch(patchdir, patch, usePatchService, patchServiceUrl, localGitDir, sourceProject.SshUrl, sourceBranch.Name, commitSha);
+                return result ? 0 : 1;
 //            }
 //            else {
 //                if (mergeRequest != null) {
@@ -376,16 +374,15 @@ namespace DXVcs2Git.Console {
 //                return 0;
 //            }
         }
-        static void GeneratePatch(string patchdir, PatchInfo patch, bool usePatchService, string patchServiceUrl, string localGitDir, string repo, string branch, string sha1) {
+        static async Task<bool> GeneratePatch(string patchdir, PatchInfo patch, bool usePatchService, string patchServiceUrl, string localGitDir, string repo, string branch, string sha1) {
             if (usePatchService) {
-                GeneratePatchRemote(patchdir, patch, patchServiceUrl, repo, branch, sha1);
-            }
-            else {
-                GeneratePatchLocal(patchdir, patch, localGitDir);
+                return await GeneratePatchRemote(patchdir, patch, patchServiceUrl, repo, branch, sha1);
             }
 
+            return GeneratePatchLocal(patchdir, patch, localGitDir);
+
         }
-        static void GeneratePatchRemote(string patchdir, PatchInfo patch, string patchServiceUrl, string repo, string branch, string sha1) {
+        static async Task<bool> GeneratePatchRemote(string patchdir, PatchInfo patch, string patchServiceUrl, string repo, string branch, string sha1) {
             string info = SavePatchInfo(patchdir, patch);
             string content = File.ReadAllText(Path.Combine(patchdir, info));
             
@@ -400,14 +397,23 @@ namespace DXVcs2Git.Console {
             
             request.AddParameter("application/json; charset=utf-8", json, ParameterType.RequestBody);
             request.RequestFormat = DataFormat.Json;
-            var result = client.ExecuteTaskAsync(request).ContinueWith(x => WaitPatch(x.Result, client, sha1));
-            if (result.Wait(30000)) {
+            var response = await client.ExecuteTaskAsync(request);
+            var waitPatchTask = WaitPatch(response, client, sha1);
+            TimeSpan timeout = TimeSpan.FromSeconds(60);
+
+            try {
+                using (var cts = new CancellationTokenSource(timeout)) {
+                    var link = await waitPatchTask.WaitAsync(cts.Token);
+                    if (string.IsNullOrEmpty(link))
+                        return false;
+                    File.Copy(link, Path.Combine(patchdir, "patch.zip"), true);
+                    return true;
+                }
             }
-            else {
-                throw new ArgumentException();
+            catch (TaskCanceledException) {
+                return false;
             }
         }
-
         enum ChunkStatus {
             NotRunning,
             Running,
@@ -433,13 +439,14 @@ namespace DXVcs2Git.Console {
                             throw new ArgumentException("status");
                         }
                     }
-                        
+
+                    await Task.Delay(1000);
                 }
             }
 
             return null;
         }
-        static void GeneratePatchLocal(string patchdir, PatchInfo patch, string localGitDir) {
+        static bool GeneratePatchLocal(string patchdir, PatchInfo patch, string localGitDir) {
             var patchPath = Path.Combine(patchdir, patchZip);
             using (var fileStream = new FileStream(patchPath, FileMode.CreateNew)) {
                 using (var archive = new ZipArchive(fileStream, ZipArchiveMode.Create, true)) {
@@ -451,6 +458,7 @@ namespace DXVcs2Git.Console {
                 }
             }
             Log.Message($"Patch.info generated at {patchPath}");
+            return true;
         }
         static List<PatchItem> GetCommitChanges(GitWrapper gitsWrapper, Project project, string from, string to, TrackBranch branch) {
             return gitsWrapper
@@ -598,7 +606,7 @@ namespace DXVcs2Git.Console {
             return "patch.info";
         }
 
-        static int DoListenerWork(ListenerOptions clo) {
+        static Task<int> DoListenerWork(ListenerOptions clo) {
             string gitServer = clo.Server;
             string gitlabauthtoken = clo.AuthToken;
             string sharedWebHookPath = clo.WebHook;
@@ -619,7 +627,7 @@ namespace DXVcs2Git.Console {
                 ProcessWebHook(gitLabWrapper, serviceUser, request, supportsSendingMessages, taskName);
             }
 
-            return 0;
+            return Task.FromResult(0);
         }
         static void ProcessWebHook(GitLabWrapper gitLabWrapper, string serviceUser, WebHookRequest request, bool supportSendingMessages, string farmTaskName) {
             var hookType = ProjectHookClient.ParseHookType(request);
@@ -789,7 +797,7 @@ namespace DXVcs2Git.Console {
         }
         static void ProcessPushHook(PushHookClient hook) {
         }
-        static int DoSyncWork(SyncOptions clo) {
+        static Task<int> DoSyncWork(SyncOptions clo) {
             string localGitDir = clo.LocalFolder != null && Path.IsPathRooted(clo.LocalFolder) ? clo.LocalFolder : Path.Combine(Environment.CurrentDirectory, clo.LocalFolder ?? repoPath);
             //EnsureGitDir(localGitDir);
 
@@ -812,47 +820,47 @@ namespace DXVcs2Git.Console {
 
             TrackBranch branch = FindBranch(branchName, trackerPath, vcsWrapper);
             if (branch == null)
-                return 1;
+                return Task.FromResult(1);
 
             string historyPath = GetVcsSyncHistory(vcsWrapper, branch.HistoryPath);
             if (historyPath == null)
-                return 1;
+                return Task.FromResult(1);
             SyncHistory history = SyncHistory.Deserialize(historyPath);
             if (history == null)
-                return 1;
+                return Task.FromResult(1);
 
             SyncHistoryWrapper syncHistory = new SyncHistoryWrapper(history, vcsWrapper, branch.HistoryPath, historyPath);
             var head = syncHistory.GetHistoryHead();
             if (head == null)
-                return 1;
+                return Task.FromResult(1);
 
             GitLabWrapper gitLabWrapper = new GitLabWrapper(gitServer, gitlabauthtoken);
             RegisteredUsers registeredUsers = new RegisteredUsers(gitLabWrapper, vcsWrapper);
             User defaultUser = registeredUsers.GetUser(username);
             if (!defaultUser.IsRegistered) {
                 Log.Error($"default user {username} is not registered in the active directory.");
-                return 1;
+                return Task.FromResult(1);
             }
 
             var checkMergeChangesResult = CheckChangesForMerging(gitLabWrapper, gitRepoPath, branchName, head, vcsWrapper, branch, syncHistory, defaultUser);
             if (checkMergeChangesResult == CheckMergeChangesResult.NoChanges)
-                return 0;
+                return Task.FromResult(0);
             if (checkMergeChangesResult == CheckMergeChangesResult.Error)
-                return 1;
+                return Task.FromResult(1);
 
             SendMessageToGitTools(sendNotifications, syncTask, username, "Initializing git repo.");
             GitWrapper gitWrapper = CreateGitWrapper(gitRepoPath, localGitDir, "master", username, password);
             if (gitWrapper == null)
-                return 1;
+                return Task.FromResult(1);
 
             SendMessageToGitTools(sendNotifications, syncTask, username, "Adding vcs commits to git.");
 
             var historyResult = ProcessHistory(vcsWrapper, gitWrapper, registeredUsers, defaultUser, gitRepoPath, localGitDir, branch, commitsCount, syncHistory);
 
             if (historyResult == ProcessHistoryResult.NotEnough)
-                return 0;
+                return Task.FromResult(0);
             if (historyResult == ProcessHistoryResult.Failed)
-                return 1;
+                return Task.FromResult(1);
 
             SendMessageToGitTools(sendNotifications, syncTask, username, "Process merge requests.");
 
@@ -860,8 +868,8 @@ namespace DXVcs2Git.Console {
 
             SendMessageToGitTools(sendNotifications, syncTask, username, "Shutting down.");
             if (result != 0)
-                return result;
-            return 0;
+                return Task.FromResult(result);
+            return Task.FromResult(0);
         }
         static ProcessHistoryResult ProcessHistory(DXVcsWrapper vcsWrapper, GitWrapper gitWrapper, RegisteredUsers registeredUsers, User defaultUser, string gitRepoPath, string localGitDir, TrackBranch branch, int commitsCount, SyncHistoryWrapper syncHistory) {
             var (commits, historyResult) = GenerateHistory(vcsWrapper, gitWrapper, registeredUsers, defaultUser, gitRepoPath, localGitDir, branch, commitsCount, syncHistory, true);
