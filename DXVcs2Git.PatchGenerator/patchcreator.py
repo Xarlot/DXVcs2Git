@@ -1,7 +1,12 @@
 import os
+import stat
+import signal
 import subprocess
 import xml.etree.ElementTree as ET
 import zipfile
+
+import shutil
+import errno
 
 cwd = os.getcwd()
 
@@ -35,8 +40,21 @@ def __getFilesFromXml(filesStr):
             result.append(simpe.get('value'))
     return result
 
+def errorRemoveReadonly(func, path, exc):
+    excvalue = exc[1]
+    if excvalue.errno == errno.EACCES:
+        # change the file to be readable,writable,executable: 0777
+        os.chmod(path, stat.S_IRWXU | stat.S_IRWXG | stat.S_IRWXO)
+        # retry
+        func(path)
+    pass
+
 def __prepareRepository(repFullPath, branch, hash, repository):
     if not os.path.exists(repFullPath):
+        os.makedirs(repFullPath)
+        __createNewRep(repFullPath, repository, branch)
+    elif not os.path.exists(os.path.join(repFullPath, '.git', 'index')):
+        shutil.rmtree(repFullPath, ignore_errors=False, onerror=errorRemoveReadonly)
         os.makedirs(repFullPath)
         __createNewRep(repFullPath, repository, branch)
     else:
@@ -48,6 +66,7 @@ def __getRepositoryFolder(repository):
     return repository.split(':')[-1].rsplit('.git', 1)[0]
     
 def __updateRep(repFullPath, branch, hash):
+    __rungit(rf"clean -d -f -x")
     __rungit(rf"fetch origin {branch}")
     __rungit("checkout -f " + hash)
     pass

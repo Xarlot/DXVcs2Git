@@ -399,7 +399,7 @@ namespace DXVcs2Git.Console {
             request.RequestFormat = DataFormat.Json;
             var response = await client.ExecuteTaskAsync(request);
             var waitPatchTask = WaitPatch(response, client, sha1);
-            TimeSpan timeout = TimeSpan.FromSeconds(60);
+            TimeSpan timeout = TimeSpan.FromSeconds(600);
 
             try {
                 using (var cts = new CancellationTokenSource(timeout)) {
@@ -428,10 +428,15 @@ namespace DXVcs2Git.Console {
                     if (getPatchResponse.ResponseStatus == ResponseStatus.Completed) {
                         var chunkStatus = getPatchResponse.Headers.FirstOrDefault(x => x.Name == "chunk_status");
                         if (chunkStatus != null && Enum.TryParse(chunkStatus.Value.ToString(), true, out ChunkStatus status)) {
-                            if (status == ChunkStatus.Running || status == ChunkStatus.NotRunning)
+                            if (status == ChunkStatus.Running || status == ChunkStatus.NotRunning) {
+                                await Task.Delay(5000);
                                 continue;
-                            if (status == ChunkStatus.Failed)
+                            }
+
+                            if (status == ChunkStatus.Failed) {
+                                var error = getPatchResponse.Headers.FirstOrDefault(x => x.Name == "error")?.Value?.ToString();
                                 return null;
+                            }
                             if (status == ChunkStatus.Success)
                                 return getPatchResponse.Headers.FirstOrDefault(x => x.Name == "link")?.Value?.ToString();
                             if (status == ChunkStatus.Failed)
@@ -439,8 +444,6 @@ namespace DXVcs2Git.Console {
                             throw new ArgumentException("status");
                         }
                     }
-
-                    await Task.Delay(1000);
                 }
             }
 

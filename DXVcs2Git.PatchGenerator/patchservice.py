@@ -2,23 +2,25 @@ import cgi
 import concurrent
 import datetime
 import json
-import os
 import re
-import sys
 import threading
 import urllib
 from collections import namedtuple
-from concurrent.futures import as_completed, ProcessPoolExecutor
+from concurrent.futures import as_completed
 from enum import Enum
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from optparse import OptionParser
 from queue import Queue
 from threading import Thread
 
+import sys
+
+import os
+from pebble import ProcessPool, ProcessExpired
 import patchcreator
 
 Chunk = namedtuple('Chunk', 'hash data')
-ChunkStatusInfo = namedtuple('ChunkStatusInfo', 'hash status link dt chunk')
+ChunkStatusInfo = namedtuple('ChunkStatusInfo', 'hash status link dt chunk error')
 DelayedTasksHash = namedtuple('DelayedTasksHash', 'repo branch')
 RunningTask = namedtuple('RunningTask', 'repo branch hash')
 
@@ -81,6 +83,7 @@ class HttpHandler(BaseHTTPRequestHandler):
                 self.send_header('chunk_status', 'running')
             elif status == ChunkStatus.Failed:
                 self.send_header('chunk_status', 'failed')
+                self.send_header('error', chunk_status.error)
 
             self.end_headers()
 
@@ -126,7 +129,7 @@ class MyHttpServer(HTTPServer):
                 if taskstatus != None and taskstatus.status != ChunkStatus.NonRunning:
                     print(rf"Task {hash} is already registered and executed")
                     return taskstatus
-                taskstatus = ChunkStatusInfo(hash=hash, link=link, status=ChunkStatus.NonRunning, dt = dt, chunk=chunk)
+                taskstatus = ChunkStatusInfo(hash=hash, link=link, status=ChunkStatus.NonRunning, dt = dt, chunk=chunk, error=None)
                 self.set_taskstatusinfo(hash, taskstatus)
 
                 runningtask_onbranchandrepo = next((x for x in self.runningtasks if x.repo == repo and x.branch == branch), None)
@@ -149,19 +152,34 @@ class MyHttpServer(HTTPServer):
             if os.path.isfile(cachedpath):
                 print(rf"Task with hash {hash} found in cache")
                 return taskstatus._replace(status=ChunkStatus.Success)
-            process_on_git_future = self.pool.submit(process_chunk_execute_on_git, runningtask, self.cache, link, content)
+            process_on_git_future = self.pool.schedule(process_chunk_execute_on_git, args=[runningtask, self.cache, link, content], timeout=self.git_timeout)
             try:
-                concurrent.futures.as_completed(process_on_git_future, timeout=self.git_timeout)
-            except TimeoutError:
-                return taskstatus._replace(status=ChunkStatus.Failed)
-            return taskstatus._replace(status=ChunkStatus.Success)
+                process_on_git_future.result()
+                return taskstatus._replace(status=ChunkStatus.Success)
+            except TimeoutError as ex:
+                return taskstatus._replace(status=ChunkStatus.Failed, error=ex)
+            except ProcessExpired as ex:
+                return taskstatus._replace(status=ChunkStatus.Failed, error=ex)
+            except Exception as ex:
+                return taskstatus._replace(status=ChunkStatus.Failed, error=ex)
         except Exception as ex:
-            return ChunkStatusInfo(hash=chunk.hash, link=link, status=ChunkStatus.Failed, data=chunk.data, dt=dt, chunk=chunk)
+            return ChunkStatusInfo(hash=chunk.hash, link=link, status=ChunkStatus.Failed, data=chunk.data, dt=dt, chunk=chunk, error=ex)
         pass
     def process_chunk_completed(self, chunkfuture):
         chunkstatus = chunkfuture.result()
         hash = chunkstatus.hash
-        print(rf"process_chunk_completed for chunk {hash}")
+
+        if chunkstatus.status == ChunkStatus.Running:
+            print(rf"Task processing for hash {hash} is running already.")
+            return
+        if (chunkstatus.status == ChunkStatus.NonRunning):
+            print(rf"Task processing for hash {hash} is delayed already.")
+            return
+
+        if (chunkstatus.status == ChunkStatus.Failed):
+            print(rf"Task processing for hash {hash} is failed.")
+        if (chunkstatus.status == ChunkStatus.Success):
+            print(rf"Task processing for hash {hash} is completed.")
 
         self.synctasks_lock.acquire()
         try:
@@ -189,7 +207,7 @@ class MyHttpServer(HTTPServer):
     pass
 def main(argv):
     parser = OptionParser()
-    parser.add_option("-i", "--timeout", dest="timeout", default=30)
+    parser.add_option("-i", "--timeout", dest="timeout", default=600)
     parser.add_option("-w", "--workers", dest="workers", default=5)
 
     (options, args) = parser.parse_args()
@@ -208,7 +226,7 @@ def main(argv):
     httpd.runningtasks = []
     httpd.cache = cache
     httpd.storage = storage
-    httpd.pool = ProcessPoolExecutor(max_workers=options.workers)
+    httpd.pool = ProcessPool(max_workers=options.workers)
     httpd.git_timeout = options.timeout
 
     thread = Thread(target=httpd.process_queue)
