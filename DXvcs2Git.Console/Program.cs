@@ -435,6 +435,7 @@ namespace DXVcs2Git.Console {
 
                             if (status == ChunkStatus.Failed) {
                                 var error = getPatchResponse.Headers.FirstOrDefault(x => x.Name == "error")?.Value?.ToString();
+                                Log.Error(error);
                                 return null;
                             }
                             if (status == ChunkStatus.Success)

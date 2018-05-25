@@ -132,9 +132,9 @@ class MyHttpServer(HTTPServer):
                 taskstatus = ChunkStatusInfo(hash=hash, link=link, status=ChunkStatus.NonRunning, dt = dt, chunk=chunk, error=None)
                 self.set_taskstatusinfo(hash, taskstatus)
 
-                runningtask_onbranchandrepo = next((x for x in self.runningtasks if x.repo == repo and x.branch == branch), None)
+                runningtask_onrepo = next((x for x in self.runningtasks if x.repo == repo), None)
                 runningtask = RunningTask(repo=repo, branch=branch, hash=hash)
-                if runningtask_onbranchandrepo == None:
+                if runningtask_onrepo == None:
                     print(rf"Task with hash {hash} on repo {repo} branch {branch} is running.")
 
                     self.runningtasks.append(runningtask)
@@ -183,12 +183,12 @@ class MyHttpServer(HTTPServer):
 
         self.synctasks_lock.acquire()
         try:
-            runningtask_onbranchandrepo = next((x for x in self.runningtasks if x.hash == hash), None)
-            if runningtask_onbranchandrepo != None:
-                self.runningtasks.remove(runningtask_onbranchandrepo)
-                delayedtask_onbranchandrepo = next((x for x in self.delayedtasks if x.repo == runningtask_onbranchandrepo.repo and x.branch == runningtask_onbranchandrepo.branch), None)
-                if delayedtask_onbranchandrepo != None:
-                    delayedtaskstatus = self.get_taskstatusinfo(delayedtask_onbranchandrepo.hash)
+            runningtask_onrepo = next((x for x in self.runningtasks if x.hash == hash), None)
+            if runningtask_onrepo != None:
+                self.runningtasks.remove(runningtask_onrepo)
+                delayedtask_onrepo = next((x for x in self.delayedtasks if x.repo == runningtask_onrepo.repo), None)
+                if delayedtask_onrepo != None:
+                    delayedtaskstatus = self.get_taskstatusinfo(delayedtask_onrepo.hash)
                     self.queue.put(delayedtaskstatus.chunk)
 
             self.set_taskstatusinfo(hash, chunkstatus)

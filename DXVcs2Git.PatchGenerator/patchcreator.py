@@ -13,20 +13,20 @@ cwd = os.getcwd()
 def copyFiles(storage, repository, branch, hash, destination, filesStr):
     filesStr = filesStr.replace('п»ї', '')
     __createStorageDir(storage)
-    repFullPath = os.path.join(storage, __getRepositoryFolder(repository), branch)
-    __prepareRepository(repFullPath, branch, hash, repository)
-    __copyFilesCore(repFullPath, destination, filesStr)
+    repFullPath = os.path.join(storage, __getRepositoryFolder(repository))
+    files = __getFilesFromXml(filesStr)
+    __prepareRepository(repFullPath, branch, hash, repository, files)
+    __copyFilesCore(repFullPath, destination, files)
     os.chdir(cwd)
     pass
 
-def __copyFilesCore(repFullPath, destination, filesStr):
+def __copyFilesCore(repFullPath, destination, files):
     os.chdir(repFullPath)
     destinationDirName = os.path.dirname(destination)
     if not os.path.exists(destinationDirName):
         os.makedirs(destinationDirName)
-    filesArr = __getFilesFromXml(filesStr)
     with zipfile.ZipFile(destination, 'w') as myzip:
-        for file in filesArr:
+        for file in files:
             myzip.write(file)
     pass
 
@@ -49,31 +49,35 @@ def errorRemoveReadonly(func, path, exc):
         func(path)
     pass
 
-def __prepareRepository(repFullPath, branch, hash, repository):
+def __prepareRepository(repFullPath, branch, hash, repository, files):
     if not os.path.exists(repFullPath):
         os.makedirs(repFullPath)
-        __createNewRep(repFullPath, repository, branch)
+        __createNewRep(repFullPath, repository)
     elif not os.path.exists(os.path.join(repFullPath, '.git', 'index')):
         shutil.rmtree(repFullPath, ignore_errors=False, onerror=errorRemoveReadonly)
         os.makedirs(repFullPath)
         __createNewRep(repFullPath, repository, branch)
-    else:
-        os.chdir(repFullPath)
-        __updateRep(repFullPath, branch, hash)
+    os.chdir(repFullPath)
+    __updateRep(repFullPath, branch, hash, files)
     pass
 
 def __getRepositoryFolder(repository):
     return repository.split(':')[-1].rsplit('.git', 1)[0]
     
-def __updateRep(repFullPath, branch, hash):
+def __updateRep(repFullPath, branch, hash, files):
     __rungit(rf"clean -d -f -x")
     __rungit(rf"fetch origin {branch}")
-    __rungit("checkout -f " + hash)
+
+    sparsecheckoutpath = os.path.join(repFullPath, '.git', 'info', 'sparse-checkout')
+    with open(sparsecheckoutpath, 'w', encoding='utf-8') as sparsecheckoutfile:
+        sparsecheckoutfile.writelines(files)
+    __rungit(rf"read-tree -mu {hash}")
     pass
 
-def __createNewRep(repFullPath, repository, branch):
+def __createNewRep(repFullPath, repository):
     os.chdir(repFullPath)
-    __rungit(rf"clone -b {branch} --single-branch {repository} .")
+    __rungit(rf"clone -b master {repository} .")
+    __rungit(rf"config core.sparsecheckout true")
     pass
 
 def __createStorageDir(storage):
