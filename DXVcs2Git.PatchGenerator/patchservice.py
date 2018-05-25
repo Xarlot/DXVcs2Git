@@ -209,11 +209,10 @@ def main(argv):
     parser = OptionParser()
     parser.add_option("-i", "--timeout", dest="timeout", default=600)
     parser.add_option("-w", "--workers", dest="workers", default=5)
+    parser.add_option("-c", "--cache", dest="cache", default='cache')
+    parser.add_option("-s", "--storage", dest="storage", default='storage')
 
     (options, args) = parser.parse_args()
-
-    cache = r'c:\repo'
-    storage = r'c:\repo2'
 
     url = ('', 8000)
     httpd = MyHttpServer(url, HttpHandler)
@@ -224,8 +223,8 @@ def main(argv):
     httpd.tasks = {}
     httpd.delayedtasks = []
     httpd.runningtasks = []
-    httpd.cache = cache
-    httpd.storage = storage
+    httpd.cache = options.cache
+    httpd.storage = options.storage
     httpd.pool = ProcessPool(max_workers=options.workers)
     httpd.git_timeout = options.timeout
 
