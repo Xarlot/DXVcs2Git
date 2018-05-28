@@ -15,8 +15,7 @@ def copyFiles(storage, repository, branch, hash, destination, filesStr):
     __createStorageDir(storage)
     repFullPath = os.path.join(storage, __getRepositoryFolder(repository))
     files = __getFilesFromXml(filesStr)
-    if len(files) > 0:
-        __prepareRepository(repFullPath, branch, hash, repository, files)
+    __prepareRepository(repFullPath, branch, hash, repository, files)
     __copyFilesCore(repFullPath, destination, filesStr, files)
     os.chdir(cwd)
     pass
@@ -67,12 +66,15 @@ def __getRepositoryFolder(repository):
     return repository.split(':')[-1].rsplit('.git', 1)[0]
     
 def __updateRep(repFullPath, branch, hash, files):
+    if len(files) == 0:
+        return
     __rungit(rf"clean -d -f -x")
     __rungit(rf"fetch origin {branch}")
 
     sparsecheckoutpath = os.path.join(repFullPath, '.git', 'info', 'sparse-checkout')
     with open(sparsecheckoutpath, 'w', encoding='utf-8') as sparsecheckoutfile:
         sparsecheckoutfile.writelines(files)
+
     __rungit(rf"read-tree -mu {hash}")
     pass
 
