@@ -406,8 +406,11 @@ namespace DXVcs2Git.Console {
             try {
                 using (var cts = new CancellationTokenSource(timeout)) {
                     var link = await waitPatchTask.WaitAsync(cts.Token);
-                    if (string.IsNullOrEmpty(link))
+                    if (string.IsNullOrEmpty(link)) {
+                        Log.Message($"Patch.info generation failed");
                         return false;
+                    }
+
                     var patchPath = Path.Combine(patchdir, patchZip);
 
                     File.Copy(link, patchPath, true);
