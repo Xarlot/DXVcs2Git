@@ -58,7 +58,7 @@ def __prepareRepository(repFullPath, branch, hash, repository, files):
     elif not os.path.exists(os.path.join(repFullPath, '.git', 'index')):
         shutil.rmtree(repFullPath, ignore_errors=False, onerror=errorRemoveReadonly)
         os.makedirs(repFullPath)
-        __createNewRep(repFullPath, repository, branch)
+        __createNewRep(repFullPath, repository)
     os.chdir(repFullPath)
     __updateRep(repFullPath, branch, hash, files)
     pass
