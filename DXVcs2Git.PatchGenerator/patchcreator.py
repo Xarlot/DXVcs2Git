@@ -15,17 +15,19 @@ def copyFiles(storage, repository, branch, hash, destination, filesStr):
     __createStorageDir(storage)
     repFullPath = os.path.join(storage, __getRepositoryFolder(repository))
     files = __getFilesFromXml(filesStr)
-    __prepareRepository(repFullPath, branch, hash, repository, files)
-    __copyFilesCore(repFullPath, destination, files)
+    if len(files) > 0:
+        __prepareRepository(repFullPath, branch, hash, repository, files)
+    __copyFilesCore(repFullPath, destination, filesStr, files)
     os.chdir(cwd)
     pass
 
-def __copyFilesCore(repFullPath, destination, files):
+def __copyFilesCore(repFullPath, destination, filesStr, files):
     os.chdir(repFullPath)
     destinationDirName = os.path.dirname(destination)
     if not os.path.exists(destinationDirName):
         os.makedirs(destinationDirName)
     with zipfile.ZipFile(destination, 'w') as myzip:
+        myzip.writestr(f"patch.info", filesStr)
         for file in files:
             myzip.write(file)
     pass

@@ -383,6 +383,8 @@ namespace DXVcs2Git.Console {
 
         }
         static async Task<bool> GeneratePatchRemote(string patchdir, PatchInfo patch, string patchServiceUrl, string repo, string branch, string sha1) {
+            Log.Message($"Start generating patch by remote service.");
+
             string info = SavePatchInfo(patchdir, patch);
             string content = File.ReadAllText(Path.Combine(patchdir, info));
             
@@ -406,7 +408,10 @@ namespace DXVcs2Git.Console {
                     var link = await waitPatchTask.WaitAsync(cts.Token);
                     if (string.IsNullOrEmpty(link))
                         return false;
-                    File.Copy(link, Path.Combine(patchdir, "patch.zip"), true);
+                    var patchPath = Path.Combine(patchdir, patchZip);
+
+                    File.Copy(link, patchPath, true);
+                    Log.Message($"Patch.info generated at {patchPath}");
                     return true;
                 }
             }
@@ -451,6 +456,7 @@ namespace DXVcs2Git.Console {
             return null;
         }
         static bool GeneratePatchLocal(string patchdir, PatchInfo patch, string localGitDir) {
+            Log.Message($"Start generating patch by local sources.");
             var patchPath = Path.Combine(patchdir, patchZip);
             using (var fileStream = new FileStream(patchPath, FileMode.CreateNew)) {
                 using (var archive = new ZipArchive(fileStream, ZipArchiveMode.Create, true)) {
