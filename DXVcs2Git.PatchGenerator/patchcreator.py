@@ -73,7 +73,7 @@ def __updateRep(repFullPath, branch, hash, files):
 
     sparsecheckoutpath = os.path.join(repFullPath, '.git', 'info', 'sparse-checkout')
     with open(sparsecheckoutpath, 'w', encoding='utf-8') as sparsecheckoutfile:
-        sparsecheckoutfile.writelines(files)
+        sparsecheckoutfile.writelines(map(lambda s: s + '\n', files))
 
     __rungit(rf"read-tree -mu {hash}")
     pass
