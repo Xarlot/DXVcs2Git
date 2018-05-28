@@ -53,11 +53,11 @@ def errorRemoveReadonly(func, path, exc):
 def __prepareRepository(repFullPath, branch, hash, repository, files):
     if not os.path.exists(repFullPath):
         os.makedirs(repFullPath)
-        __createNewRep(repFullPath, repository)
+        __createNewRep(repFullPath, repository, branch)
     elif not os.path.exists(os.path.join(repFullPath, '.git', 'index')):
         shutil.rmtree(repFullPath, ignore_errors=False, onerror=errorRemoveReadonly)
         os.makedirs(repFullPath)
-        __createNewRep(repFullPath, repository)
+        __createNewRep(repFullPath, repository, branch)
     os.chdir(repFullPath)
     __updateRep(repFullPath, branch, hash, files)
     pass
@@ -78,9 +78,9 @@ def __updateRep(repFullPath, branch, hash, files):
     __rungit(rf"read-tree -mu {hash}")
     pass
 
-def __createNewRep(repFullPath, repository):
+def __createNewRep(repFullPath, repository, branch):
     os.chdir(repFullPath)
-    __rungit(rf"clone -b master {repository} .")
+    __rungit(rf"clone -b {branch} {repository} .")
     __rungit(rf"config core.sparsecheckout true")
     pass
 
