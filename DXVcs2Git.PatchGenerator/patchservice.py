@@ -163,7 +163,7 @@ class MyHttpServer(HTTPServer):
             except Exception as ex:
                 return taskstatus._replace(status=ChunkStatus.Failed, error=ex)
         except Exception as ex:
-            return ChunkStatusInfo(hash=chunk.hash, link=link, status=ChunkStatus.Failed, data=chunk.data, dt=dt, chunk=chunk, error=ex)
+            return ChunkStatusInfo(hash=chunk.hash, link=link, status=ChunkStatus.Failed, dt=dt, chunk=chunk, error=ex)
         pass
     def process_chunk_completed(self, chunkfuture):
         chunkstatus = chunkfuture.result()

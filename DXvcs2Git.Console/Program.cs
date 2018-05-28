@@ -419,6 +419,7 @@ namespace DXVcs2Git.Console {
                 }
             }
             catch (TaskCanceledException) {
+                Log.Error("Get patch timeout.");
                 return false;
             }
         }
@@ -437,24 +438,29 @@ namespace DXVcs2Git.Console {
                         var chunkStatus = getPatchResponse.Headers.FirstOrDefault(x => x.Name == "chunk_status");
                         if (chunkStatus != null && Enum.TryParse(chunkStatus.Value.ToString(), true, out ChunkStatus status)) {
                             if (status == ChunkStatus.Running || status == ChunkStatus.NotRunning) {
-                                await Task.Delay(5000);
+                                await Task.Delay(10000);
                                 continue;
                             }
 
                             if (status == ChunkStatus.Failed) {
+                                Log.Message($"Get patch returns error.");
                                 var error = getPatchResponse.Headers.FirstOrDefault(x => x.Name == "error")?.Value?.ToString();
                                 Log.Error(error);
                                 return null;
                             }
                             if (status == ChunkStatus.Success)
                                 return getPatchResponse.Headers.FirstOrDefault(x => x.Name == "link")?.Value?.ToString();
-                            if (status == ChunkStatus.Failed)
-                                return null;
                             throw new ArgumentException("status");
                         }
                     }
+                    else {
+                        Log.Message($"Get patch failed with {getPatchResponse.ResponseStatus}");
+                        return null;
+                    }
                 }
             }
+
+            Log.Message($"Create patch failed with {response.ResponseStatus}");
 
             return null;
         }
