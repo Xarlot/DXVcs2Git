@@ -2,7 +2,7 @@ import os
 import stat
 import signal
 import subprocess
-import xml.etree.ElementTree as ET
+from lxml import etree
 import zipfile
 
 import shutil
@@ -32,26 +32,25 @@ def __copyFilesCore(repFullPath, destination, filesStr, files):
     pass
 
 def __getFilesFromXml(filesStr):
-    parser = ET.XMLParser(encoding="utf-8")
-    root = ET.fromstring(filesStr, parser=parser)
+    root = etree.XML(filesStr)
 
     result = []
-    for properties in root.iter('Properties'):
-        simpe = __getFileFromProperiesNode(properties)
-        if simpe != None:
+    for simpe in root.xpath('.//Items/Complex/Properties/Simple[@name="NewPath"]'):
+        if __isFileNeeded(simpe) == True:
             result.append(simpe.get('value'))
     return result
 
-def __getFileFromProperiesNode(properties):
-    cachedSimple = None
-    for simpe in properties.iter('Simple'):
-        name = simpe.get('name')
-        if name == 'SyncAction':
-            if simpe.get('value') == 'Delete':
-                return None
-        if name == 'NewPath':
-            cachedSimple = simpe
-    return cachedSimple
+def __isFileNeeded(node):
+    parentnode = node.getparent()
+    for simpe in parentnode.iter('Simple'):
+        if simpe.get('name') == 'SyncAction':
+            value = simpe.get('value')
+            if value == None or value == 'Delete':
+                return False
+            return True
+    return False
+    pass
+
 
 def errorRemoveReadonly(func, path, exc):
     excvalue = exc[1]
