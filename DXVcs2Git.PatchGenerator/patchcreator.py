@@ -36,10 +36,22 @@ def __getFilesFromXml(filesStr):
     root = ET.fromstring(filesStr, parser=parser)
 
     result = []
-    for simpe in root.iter('Simple'):
-        if simpe.get('name') == 'NewPath':
+    for properties in root.iter('Properties'):
+        simpe = __getFileFromProperiesNode(properties)
+        if simpe != None:
             result.append(simpe.get('value'))
     return result
+
+def __getFileFromProperiesNode(properties):
+    cachedSimple = None
+    for simpe in properties.iter('Simple'):
+        name = simpe.get('name')
+        if name == 'SyncAction':
+            if simpe.get('value') == 'Delete':
+                return None
+        if name == 'NewPath':
+            cachedSimple = simpe
+    return cachedSimple
 
 def errorRemoveReadonly(func, path, exc):
     excvalue = exc[1]
