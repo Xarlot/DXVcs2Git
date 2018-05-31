@@ -27,6 +27,7 @@ def __copyFilesCore(repFullPath, destination, filesStr, files):
         os.makedirs(destinationDirName)
     with zipfile.ZipFile(destination, 'w') as myzip:
         myzip.writestr(f"patch.info", filesStr)
+        myzip.writestr(f"files.txt", os.linesep.join([str(x) for x in files]))
         for file in files:
             myzip.write(file)
     pass
