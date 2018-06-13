@@ -80,14 +80,17 @@ def __getRepositoryFolder(repository):
 def __updateRep(repFullPath, branch, hash, files):
     if len(files) == 0:
         return
-    __rungit(rf"clean -d -f -x")
-    __rungit(rf"fetch origin {branch}")
 
     sparsecheckoutpath = os.path.join(repFullPath, '.git', 'info', 'sparse-checkout')
-    with open(sparsecheckoutpath, 'w', encoding='utf-8') as sparsecheckoutfile:
-        sparsecheckoutfile.writelines(map(lambda s: s + '\n', files))
+    if os.path.isfile(sparsecheckoutpath):
+        os.remove(sparsecheckoutpath)
 
-    __rungit(rf"read-tree -mu {hash}")
+    __rungit(rf"fetch origin {branch}")
+
+    for file in files:
+        __rungit(rf"checkout -f {hash} {file}")
+
+    __rungit(rf"clean -dfx")
     pass
 
 def __createNewRep(repFullPath, repository, branch):
