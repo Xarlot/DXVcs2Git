@@ -26,6 +26,7 @@ namespace DXVcs2Git.UI2.Core {
 
         public void Select(IBranchModel selectedBranch) {
             this.selectedBranchSubject.OnNext(selectedBranch);
+            //this.regionManager.AddToRegion(Regions.SelectedBranch, new BranchView());
             this.regionManager.Navigate(Regions.SelectedBranch, selectedBranch != null ? typeof(BranchView) : typeof(EmptyBranchView));
         }
     }

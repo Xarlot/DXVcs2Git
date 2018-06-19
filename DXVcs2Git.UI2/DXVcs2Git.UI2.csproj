@@ -264,6 +264,7 @@
     <Compile Include="Modules.cs" />
     <Compile Include="Regions.cs" />
     <Compile Include="ViewModels\BranchViewModel.cs" />
+    <Compile Include="ViewModels\EmptyBranchViewModel.cs" />
     <Compile Include="ViewModels\RepositoryBranchViewModel.cs" />
     <Compile Include="ViewModels\MainViewModel.cs" />
     <Compile Include="ViewModels\RepositoriesViewModel.cs" />
