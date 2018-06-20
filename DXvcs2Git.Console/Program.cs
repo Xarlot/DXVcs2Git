@@ -285,11 +285,6 @@ namespace DXVcs2Git.Console {
             if (history == null)
                 return 1;
 
-            SyncHistoryWrapper syncHistory = new SyncHistoryWrapper(history, vcsWrapper, trackBranch.HistoryPath, historyPath);
-            var head = syncHistory.GetHistoryHead();
-            if (head == null)
-                return 1;
-
             GitLabWrapper gitLabWrapper = new GitLabWrapper(gitServer, gitlabauthtoken);
 
             Project targetProject = gitLabWrapper.FindProject(targetRepoPath);
@@ -433,6 +428,7 @@ namespace DXVcs2Git.Console {
             if (response.ResponseStatus == ResponseStatus.Completed) {
                 while (true) {
                     var request = new RestRequest($"/api/v1/getpatch/{sha1}");
+                    
                     var getPatchResponse = await client.ExecuteGetTaskAsync(request);
                     if (getPatchResponse.ResponseStatus == ResponseStatus.Completed) {
                         var chunkStatus = getPatchResponse.Headers.FirstOrDefault(x => x.Name == "chunk_status");
@@ -445,7 +441,8 @@ namespace DXVcs2Git.Console {
                             if (status == ChunkStatus.Failed) {
                                 Log.Message($"Get patch returns error.");
                                 var error = getPatchResponse.Headers.FirstOrDefault(x => x.Name == "error")?.Value?.ToString();
-                                Log.Error(error);
+                                if (!string.IsNullOrEmpty(error))
+                                    Log.Error(Base64Decode(error));
                                 return null;
                             }
                             if (status == ChunkStatus.Success)
@@ -463,6 +460,10 @@ namespace DXVcs2Git.Console {
             Log.Message($"Create patch failed with {response.ResponseStatus}");
 
             return null;
+        }
+        static string Base64Decode(string base64EncodedData) {
+            var base64EncodedBytes = System.Convert.FromBase64String(base64EncodedData);
+            return System.Text.Encoding.UTF8.GetString(base64EncodedBytes);
         }
         static bool GeneratePatchLocal(string patchdir, PatchInfo patch, string localGitDir) {
             Log.Message($"Start generating patch by local sources.");

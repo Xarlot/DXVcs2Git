@@ -5,6 +5,7 @@ import json
 import re
 import threading
 import urllib
+import traceback
 from collections import namedtuple
 from concurrent.futures import as_completed
 from enum import Enum
@@ -12,12 +13,11 @@ from http.server import HTTPServer, BaseHTTPRequestHandler
 from optparse import OptionParser
 from queue import Queue
 from threading import Thread
-
 import sys
-
 import os
 from pebble import ProcessPool, ProcessExpired
 import patchcreator
+import base64
 
 Chunk = namedtuple('Chunk', 'hash data')
 ChunkStatusInfo = namedtuple('ChunkStatusInfo', 'hash status link dt chunk error')
@@ -29,6 +29,9 @@ class ChunkStatus(Enum):
     Running = 1
     Failed = 2
     Success = 3
+
+def string2base64(s):
+    return base64.b64encode(s.encode('utf-8')).decode('utf-8')
 
 def process_chunk_execute_on_git(runningtask, cache, link, content):
     patchcreator.copyFiles(cache, runningtask.repo, runningtask.branch, runningtask.hash, link, content)
@@ -42,6 +45,7 @@ class HttpHandler(BaseHTTPRequestHandler):
         self.end_headers()
         print("do_head")
         pass
+
     def do_POST(self):
         if None != re.search('/api/v1/createpatch/*', self.path):
             ctype, pdict = cgi.parse_header(self.headers.get('content-type'))
@@ -49,7 +53,7 @@ class HttpHandler(BaseHTTPRequestHandler):
                 hash = urllib.parse.urlsplit(self.path).path.split('/')[-1]
                 length = int(self.headers.get('content-length'), 0)
                 data = self.rfile.read(length)
-                chunk = Chunk(hash = hash, data = data)
+                chunk = Chunk(hash=hash, data=data)
                 self.server.queue.put(chunk)
             self.send_response(200)
             self.end_headers()
@@ -83,7 +87,7 @@ class HttpHandler(BaseHTTPRequestHandler):
                 self.send_header('chunk_status', 'running')
             elif status == ChunkStatus.Failed:
                 self.send_header('chunk_status', 'failed')
-                self.send_header('error', chunk_status.error)
+                self.send_header('error', string2base64(chunk_status.error))
 
             self.end_headers()
 
@@ -91,8 +95,8 @@ class HttpHandler(BaseHTTPRequestHandler):
             self.send_response(200)
             self.send_header('Content-type', 'text/html')
             self.end_headers()
-
         pass
+
 
 class MyHttpServer(HTTPServer):
     def get_taskstatusinfo(self, hash):
@@ -104,6 +108,7 @@ class MyHttpServer(HTTPServer):
         finally:
             self.tasks_lock.release()
         pass
+
     def set_taskstatusinfo(self, hash, taskstatus):
         self.tasks_lock.acquire()
         try:
@@ -111,6 +116,7 @@ class MyHttpServer(HTTPServer):
         finally:
             self.tasks_lock.release()
         pass
+
     def process_chunk(self, chunk):
         hash = chunk.hash
         print(rf"process_chunk for chunk {hash}")
@@ -129,7 +135,8 @@ class MyHttpServer(HTTPServer):
                 if taskstatus != None and taskstatus.status != ChunkStatus.NonRunning:
                     print(rf"Task {hash} is already registered and executed")
                     return taskstatus
-                taskstatus = ChunkStatusInfo(hash=hash, link=link, status=ChunkStatus.NonRunning, dt = dt, chunk=chunk, error=None)
+                taskstatus = ChunkStatusInfo(hash=hash, link=link, status=ChunkStatus.NonRunning, dt=dt, chunk=chunk,
+                                             error=None)
                 self.set_taskstatusinfo(hash, taskstatus)
 
                 runningtask_onrepo = next((x for x in self.runningtasks if x.repo == repo), None)
@@ -152,19 +159,23 @@ class MyHttpServer(HTTPServer):
             if os.path.isfile(cachedpath):
                 print(rf"Task with hash {hash} found in cache")
                 return taskstatus._replace(status=ChunkStatus.Success)
-            process_on_git_future = self.pool.schedule(process_chunk_execute_on_git, args=[runningtask, self.cache, link, content], timeout=self.git_timeout)
+            process_on_git_future = self.pool.schedule(process_chunk_execute_on_git,
+                                                       args=[runningtask, self.cache, link, content],
+                                                       timeout=self.git_timeout)
             try:
                 process_on_git_future.result()
                 return taskstatus._replace(status=ChunkStatus.Success)
             except TimeoutError as ex:
-                return taskstatus._replace(status=ChunkStatus.Failed, error=ex)
+                stack = traceback.print_stack()
+                return taskstatus._replace(status=ChunkStatus.Failed, error='Task TimeOut'.join(traceback.format_exception(etype=type(ex), value=ex, tb=ex.__traceback__)))
             except ProcessExpired as ex:
-                return taskstatus._replace(status=ChunkStatus.Failed, error=ex)
+                return taskstatus._replace(status=ChunkStatus.Failed, error='Process Expired'.join(traceback.format_exception(etype=type(ex), value=ex, tb=ex.__traceback__)))
             except Exception as ex:
-                return taskstatus._replace(status=ChunkStatus.Failed, error=ex)
+                return taskstatus._replace(status=ChunkStatus.Failed, error=''.join(traceback.format_exception(etype=type(ex), value=ex, tb=ex.__traceback__)))
         except Exception as ex:
-            return ChunkStatusInfo(hash=chunk.hash, link=link, status=ChunkStatus.Failed, dt=dt, chunk=chunk, error=ex)
+            return ChunkStatusInfo(hash=chunk.hash, link=link, status=ChunkStatus.Failed, dt=dt, chunk=chunk, error=''.join(traceback.format_exception(etype=type(ex), value=ex, tb=ex.__traceback__)))
         pass
+
     def process_chunk_completed(self, chunkfuture):
         chunkstatus = chunkfuture.result()
         hash = chunkstatus.hash
@@ -196,6 +207,7 @@ class MyHttpServer(HTTPServer):
             self.synctasks_lock.release()
 
         pass
+
     def process_queue(self):
         print('process queue started')
 
@@ -204,10 +216,13 @@ class MyHttpServer(HTTPServer):
                 chunk = self.queue.get(block=True)
                 chunk_future = executor.submit(self.process_chunk, chunk)
                 chunk_future.add_done_callback(self.process_chunk_completed)
+
     pass
+
+
 def main(argv):
     parser = OptionParser()
-    parser.add_option("-i", "--timeout", dest="timeout", default=600)
+    parser.add_option("-i", "--timeout", dest="timeout", default=10)
     parser.add_option("-w", "--workers", dest="workers", default=5)
     parser.add_option("-c", "--cache", dest="cache", default='cache')
     parser.add_option("-s", "--storage", dest="storage", default='storage')
@@ -235,5 +250,6 @@ def main(argv):
 
     pass
 
+
 if __name__ == "__main__":
-   main(sys.argv[1:])
+    main(sys.argv[1:])

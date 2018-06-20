@@ -8,6 +8,8 @@ import zipfile
 import shutil
 import errno
 
+from typing import List
+
 cwd = os.getcwd()
 
 def copyFiles(storage, repository, branch, hash, destination, filesStr):
@@ -20,7 +22,7 @@ def copyFiles(storage, repository, branch, hash, destination, filesStr):
     os.chdir(cwd)
     pass
 
-def __copyFilesCore(repFullPath, destination, filesStr, files):
+def __copyFilesCore(repFullPath, destination, filesStr, files: []):
     os.chdir(repFullPath)
     destinationDirName = os.path.dirname(destination)
     if not os.path.exists(destinationDirName):
@@ -32,13 +34,13 @@ def __copyFilesCore(repFullPath, destination, filesStr, files):
             myzip.write(file)
     pass
 
-def __getFilesFromXml(filesStr):
+def __getFilesFromXml(filesStr) -> []:
     root = etree.XML(filesStr)
 
     result = []
-    for simpe in root.xpath('.//Items/Complex/Properties/Simple[@name="NewPath"]'):
-        if __isFileNeeded(simpe) == True:
-            result.append(simpe.get('value'))
+    for simple in root.xpath('.//Items/Complex/Properties/Simple[@name="NewPath"]'):
+        if __isFileNeeded(simple) == True:
+            result = result + [simple.get('value')]
     return result
 
 def __isFileNeeded(node):
@@ -62,7 +64,7 @@ def errorRemoveReadonly(func, path, exc):
         func(path)
     pass
 
-def __prepareRepository(repFullPath, branch, hash, repository, files):
+def __prepareRepository(repFullPath, branch, hash, repository, files: []):
     if not os.path.exists(repFullPath):
         os.makedirs(repFullPath)
         __createNewRep(repFullPath, repository, branch)
@@ -76,8 +78,8 @@ def __prepareRepository(repFullPath, branch, hash, repository, files):
 
 def __getRepositoryFolder(repository):
     return repository.split(':')[-1].rsplit('.git', 1)[0]
-    
-def __updateRep(repFullPath, branch, hash, files):
+
+def __updateRep(repFullPath, branch, hash, files: []):
     if len(files) == 0:
         return
 
@@ -101,7 +103,7 @@ def __createNewRep(repFullPath, repository, branch):
 
 def __createStorageDir(storage):
     if not os.path.isdir(storage):
-        os.mkdir(storage);
+        os.mkdir(storage)
     pass
 
 def __rungit(gitargs):
