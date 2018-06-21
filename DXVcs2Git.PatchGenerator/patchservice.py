@@ -222,7 +222,7 @@ class MyHttpServer(HTTPServer):
 
 def main(argv):
     parser = OptionParser()
-    parser.add_option("-i", "--timeout", dest="timeout", default=10)
+    parser.add_option("-i", "--timeout", dest="timeout", default=600)
     parser.add_option("-w", "--workers", dest="workers", default=5)
     parser.add_option("-c", "--cache", dest="cache", default='cache')
     parser.add_option("-s", "--storage", dest="storage", default='storage')
