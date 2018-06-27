@@ -90,7 +90,8 @@ def __updateRep(repFullPath, branch, hash, files: []):
     __rungit(rf"fetch origin {branch}")
 
     for file in files:
-        __rungit(rf"checkout -f {hash} {file}")
+        fileName = f"\"{file}\""
+        __rungit(rf"checkout -f {hash} {fileName}")
 
     __rungit(rf"clean -dfx")
     pass
