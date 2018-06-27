@@ -540,7 +540,7 @@ namespace DXVcs2Git.Console {
                     OldPath = x.item.OldPath,
                     NewPath = x.item.NewPath,
                     OldVcsPath = CalcVcsPath(x.trackItem, x.item.OldPath),
-                    NewVcsPath = CalcVcsPath(x.trackItem, x.item.NewPath),
+                    NewVcsPath = CalcVcsPath(x.newTrackItem, x.item.NewPath),
                 }).ToList();
         }
         static MergeRequestSyncAction CalcMergeRequestSyncOptions(IEnumerable<Comment> comments) {
