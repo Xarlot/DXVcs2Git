@@ -149,7 +149,7 @@ class MyHttpServer(HTTPServer):
                     self.set_taskstatusinfo(hash, taskstatus)
                 else:
                     print(rf"Task with hash {hash} on repo {repo} branch {branch} is delayed.")
-                    self.delayedtasks(runningtask)
+                    self.delayedtasks.append(runningtask)
                     return
 
             finally:
@@ -200,6 +200,7 @@ class MyHttpServer(HTTPServer):
                 delayedtask_onrepo = next((x for x in self.delayedtasks if x.repo == runningtask_onrepo.repo), None)
                 if delayedtask_onrepo != None:
                     delayedtaskstatus = self.get_taskstatusinfo(delayedtask_onrepo.hash)
+                    self.delayedtasks.remove(delayedtask_onrepo)
                     self.queue.put(delayedtaskstatus.chunk)
 
             self.set_taskstatusinfo(hash, chunkstatus)
