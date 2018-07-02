@@ -83,22 +83,18 @@ def __updateRep(repFullPath, branch, hash, files: []):
     if len(files) == 0:
         return
 
-    sparsecheckoutpath = os.path.join(repFullPath, '.git', 'info', 'sparse-checkout')
-    if os.path.isfile(sparsecheckoutpath):
-        os.remove(sparsecheckoutpath)
-
     __rungit(rf"fetch origin {branch}")
 
-    for file in files:
-        fileName = f"\"{file}\""
-        __rungit(rf"checkout -f {hash} {fileName}")
+    sparsecheckoutpath = os.path.join(repFullPath, '.git', 'info', 'sparse-checkout')
+    with open(sparsecheckoutpath, 'w', encoding='utf-8') as sparsecheckoutfile:
+        sparsecheckoutfile.writelines(map(lambda s: s + '\n', files))
 
-    __rungit(rf"clean -dfx")
+    __rungit(rf"checkout {hash}")
     pass
 
 def __createNewRep(repFullPath, repository, branch):
     os.chdir(repFullPath)
-    __rungit(rf"clone -b {branch} {repository} .")
+    __rungit(rf"clone -n {repository} .")
     __rungit(rf"config core.sparsecheckout true")
     pass
 
