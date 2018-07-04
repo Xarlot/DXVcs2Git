@@ -105,7 +105,7 @@ namespace DXVcs2Git.UI.ViewModels {
             string comment = MergeRequestOptions.ConvertToString(mergeRequestOptions);
             var mergeRequest = MergeRequest.MergeRequest;
             gitLabWrapper.AddCommentToMergeRequest(mergeRequest, comment);
-            UpdateWebHook();
+            //UpdateWebHook();
         }
         public void RefreshFarm() {
             FarmStatus = FarmIntegrator.GetTaskStatus(Repository.RepoConfig.FarmSyncTaskName);
