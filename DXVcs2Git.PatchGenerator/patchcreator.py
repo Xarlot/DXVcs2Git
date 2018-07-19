@@ -107,7 +107,8 @@ def __createNewRep(repFullPath, repository):
     pass
 
 def __CloneRep(repFullPathSource, repFullPathClone):
-    __rungit(rf"clone -n {repFullPathSource} {repFullPathClone}")
+    shutil.copytree(repFullPathSource, repFullPathClone)
+    #__rungit(rf"clone -n {repFullPathSource} {repFullPathClone}")
     pass
 
 def __createStorageDir(storage):
