@@ -894,10 +894,17 @@ namespace DXVcs2Git.Console {
         static ProcessHistoryResult ProcessHistory(DXVcsWrapper vcsWrapper, GitWrapper gitWrapper, RegisteredUsers registeredUsers, User defaultUser, string gitRepoPath, string localGitDir, TrackBranch branch, int commitsCount, SyncHistoryWrapper syncHistory) {
             var (commits, historyResult) = GenerateHistory(vcsWrapper, gitWrapper, registeredUsers, defaultUser, gitRepoPath, localGitDir, branch, commitsCount, syncHistory, true);
             var requiredTrackItems = commits.SelectMany(x => x.Items).Select(x => x.Track).Distinct().ToList();
-            gitWrapper.Config("core.sparsecheckout", "true");
-            Log.Message("Sparse checkout enabled");
-            gitWrapper.SparseCheckout(branch.Name, CalcSparseCheckoutFile(requiredTrackItems));
-            Log.Message($"Sparse checkout branch {branch.Name}");
+            if (requiredTrackItems.Count > 10) {
+                Log.Message($@"Sparse checkout disabled because it`s a lot of checkout roots - {requiredTrackItems.Count}");
+                gitWrapper.CheckOut(branch.Name);
+                Log.Message($"Checkout branch branch {branch.Name}");
+            }
+            else {
+                gitWrapper.Config("core.sparsecheckout", "true");
+                Log.Message("Sparse checkout enabled");
+                gitWrapper.SparseCheckout(branch.Name, CalcSparseCheckoutFile(requiredTrackItems));
+                Log.Message($"Sparse checkout branch {branch.Name}");
+            }
             ProcessHistoryInternal(vcsWrapper, gitWrapper, registeredUsers, defaultUser, localGitDir, branch, commits, syncHistory);
             Log.Message($"Importing history from vcs completed.");
             return historyResult;
