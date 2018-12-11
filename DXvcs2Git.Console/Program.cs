@@ -425,12 +425,12 @@ namespace DXVcs2Git.Console {
             Failed,
         }
         static async Task<string> WaitPatch(IRestResponse response, RestClient client, string sha1) {
-            if (response.ResponseStatus == ResponseStatus.Completed) {
+            if (response.ResponseStatus == ResponseStatus.Completed && response.StatusCode == HttpStatusCode.OK) {
                 while (true) {
                     var request = new RestRequest($"/api/v1/getpatch/{sha1}");
                     
                     var getPatchResponse = await client.ExecuteGetTaskAsync(request);
-                    if (getPatchResponse.ResponseStatus == ResponseStatus.Completed) {
+                    if (getPatchResponse.ResponseStatus == ResponseStatus.Completed && getPatchResponse.StatusCode == HttpStatusCode.OK) {
                         var chunkStatus = getPatchResponse.Headers.FirstOrDefault(x => x.Name == "chunk_status");
                         if (chunkStatus != null && Enum.TryParse(chunkStatus.Value.ToString(), true, out ChunkStatus status)) {
                             if (status == ChunkStatus.Running || status == ChunkStatus.NotRunning) {
@@ -451,13 +451,13 @@ namespace DXVcs2Git.Console {
                         }
                     }
                     else {
-                        Log.Message($"Get patch failed with {getPatchResponse.ResponseStatus}");
+                        Log.Message($"Get patch failed with response status {getPatchResponse.ResponseStatus} and status code {getPatchResponse.StatusCode}");
                         return null;
                     }
                 }
             }
 
-            Log.Message($"Create patch failed with {response.ResponseStatus}");
+            Log.Message($"Create patch failed with response status {response.ResponseStatus} and status code {response.StatusCode}");
 
             return null;
         }
