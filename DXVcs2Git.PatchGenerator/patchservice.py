@@ -151,7 +151,7 @@ class MyHttpServer(HTTPServer):
                 else:
                     print(rf"Task with hash {hash} on repo {repo} branch {branch} is delayed.")
                     self.delayedtasks.append(runningtask)
-                    return
+                    return taskstatus
 
             finally:
                 self.synctasks_lock.release()
@@ -182,10 +182,10 @@ class MyHttpServer(HTTPServer):
         hash = chunkstatus.hash
 
         if chunkstatus.status == ChunkStatus.Running:
-            print(rf"Task processing for hash {hash} is running already.")
+            print(rf"Task processing for hash {hash} is running.")
             return
         if (chunkstatus.status == ChunkStatus.NonRunning):
-            print(rf"Task processing for hash {hash} is delayed already.")
+            print(rf"Task processing for hash {hash} is delayed.")
             return
 
         if (chunkstatus.status == ChunkStatus.Failed):
