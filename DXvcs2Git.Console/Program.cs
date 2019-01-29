@@ -452,6 +452,9 @@ namespace DXVcs2Git.Console {
                     }
                     else {
                         Log.Message($"Get patch failed with response status {getPatchResponse.ResponseStatus} and status code {getPatchResponse.StatusCode}");
+                        var error = getPatchResponse.Headers.FirstOrDefault(x => x.Name == "error")?.Value?.ToString();
+                        if (!string.IsNullOrEmpty(error))
+                            Log.Error(Base64Decode(error));
                         return null;
                     }
                 }

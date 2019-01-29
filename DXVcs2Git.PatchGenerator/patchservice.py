@@ -71,6 +71,7 @@ class HttpHandler(BaseHTTPRequestHandler):
             if chunk_status == None:
                 self.send_response(403)
                 self.send_header('Content-type', 'text/html')
+                self.send_header("error", string2base64("chunk is not found"))
                 self.end_headers()
                 return
 
