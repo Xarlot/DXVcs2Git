@@ -353,7 +353,7 @@ namespace DevExpress.DXCCTray {
                     alreadyReloadGridTestsLayout = LoadBoolean(doc, "alreadyReloadGridTestsLayout", defaultAlreadyReloadGridTestsLayout);
                     skinName = LoadString(doc, "skinName", defaultSkinName);
                     popupHideTimeout = LoadInt(doc, "popupHideTimeout", defaultPopupHideTimeout);
-                    string tempString;
+                    
                     //if(TryLoadString(doc, "volunteerColorString", out tempString)) {
                     //    VolunteerColorString = tempString;
                     //} else {

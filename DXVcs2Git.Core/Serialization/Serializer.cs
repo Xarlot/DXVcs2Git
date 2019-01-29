@@ -33,7 +33,7 @@ namespace DXVcs2Git.Core {
                 SharpSerializer serializer = new SharpSerializer(settings);
                 return (T)serializer.Deserialize(stream);
             }
-            catch (Exception ex) {
+            catch (Exception) {
                 return default(T);
             }
         }
