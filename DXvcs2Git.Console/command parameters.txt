@@ -7,3 +7,5 @@ patch -s http://gitserver -l dxvcs2git.tester -b 2017.2 -r http://gitserver/XPF/
 sync -s http://gitserver -l dxvcs2git.xaf -b 2017.1 -r git@gitserver:XAF/XAF.git -c 150 -d c:\repo\XAF\XAF -t trackconfig_XAF_2017.1.config -p LF3SaqFx -a zZzDHyx3q1jwzZNYLKL7
 
 sync -s http://gitserver -l dxvcs2git.common -b 2017.2 -r http://gitserver/XPF/Common.git -c 150 -d c:\repo -t trackconfig_Common_2017.2.config -p l9SfqA9x -a FZ8YxktKW95wsxybykxs
+
+sync -s http://gitlabtest -l dxvcs2git.xpf -b 2019.1 -r http://gitlabtest/asp/test1.git -c 150 -d c:\repo -t trackconfig_test1_2019.1.config -p dJ3l_dSA -a MWiZt_mkEAGAXfmsz4Fy
