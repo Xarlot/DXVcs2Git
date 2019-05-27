@@ -70,7 +70,7 @@ namespace DXVcs2Git.UI.ViewModels {
             var localBranches = GitReader.GetLocalBranches();
 
             Branches = branches.Where(x => !x.Protected && localBranches.Any(local => local.FriendlyName == x.Name))
-                .Select(x => new RepositoryBranchViewModel(GitLabWrapper, this, x.Name)).ToList();
+                .Select(x => new BranchViewModel(GitLabWrapper, this, x.Name)).ToList();
         }
         public void ForceBuild() {
             FarmIntegrator.ForceBuild(RepoConfig.FarmSyncTaskName);

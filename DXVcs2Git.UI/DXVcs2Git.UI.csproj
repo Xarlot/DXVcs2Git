@@ -440,6 +440,12 @@
       <DependentUpon>Settings.settings</DependentUpon>
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
     </Compile>
+    <Content Include="..\packages\LibGit2Sharp.NativeBinaries.2.0.267\runtimes\win-x64\native\git2-572e4d8.dll">
+      <Link>costura64\git2-572e4d8.dll</Link>
+    </Content>
+    <Content Include="..\packages\LibGit2Sharp.NativeBinaries.2.0.267\runtimes\win-x86\native\git2-572e4d8.dll">
+      <Link>costura32\git2-572e4d8.dll</Link>
+    </Content>
     <Content Include="Configs\Office_2017.2.config">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
@@ -465,12 +471,6 @@
     <None Include="app.manifest" Condition="'$(Configuration)'=='Release'">
       <SubType>Designer</SubType>
     </None>
-    <EmbeddedResource Include="..\packages\libgit2sharp.nativebinaries.1.0.72\libgit2\windows\x86\git2-4d6362b.dll">
-      <Link>costura32\git2-4d6362b.dll</Link>
-    </EmbeddedResource>
-    <EmbeddedResource Include="..\packages\libgit2sharp.nativebinaries.1.0.72\libgit2\windows\amd64\git2-4d6362b.dll">
-      <Link>costura64\git2-4d6362b.dll</Link>
-    </EmbeddedResource>
     <Content Include="Configs\Dashboard_2016.1.config">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
@@ -943,6 +943,7 @@
       <FileType>Assembly</FileType>
     </PublishFile>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>
