@@ -1,6 +1,6 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="..\packages\LibGit2Sharp.NativeBinaries.1.0.72\build\LibGit2Sharp.NativeBinaries.props" Condition="Exists('..\packages\LibGit2Sharp.NativeBinaries.1.0.72\build\LibGit2Sharp.NativeBinaries.props')" />
+  <Import Project="..\packages\LibGit2Sharp.NativeBinaries.2.0.267\build\net46\LibGit2Sharp.NativeBinaries.props" Condition="Exists('..\packages\LibGit2Sharp.NativeBinaries.2.0.267\build\net46\LibGit2Sharp.NativeBinaries.props')" />
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
@@ -36,7 +36,7 @@
     <PublisherName>Xarlot</PublisherName>
     <SuiteName>Git Tools</SuiteName>
     <MinimumRequiredVersion>1.3.1.0</MinimumRequiredVersion>
-    <ApplicationRevision>3</ApplicationRevision>
+    <ApplicationRevision>1</ApplicationRevision>
     <ApplicationVersion>1.4.40.%2a</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <CreateDesktopShortcut>true</CreateDesktopShortcut>
@@ -68,7 +68,7 @@
     <ApplicationIcon>Icon.ico</ApplicationIcon>
   </PropertyGroup>
   <PropertyGroup>
-    <StartupObject>DXVcs2Git.UI.NativeMethods.EntryPoint</StartupObject>
+    <StartupObject>DXVcs2Git.UI.App</StartupObject>
   </PropertyGroup>
   <PropertyGroup>
     <ApplicationManifest>app.manifest</ApplicationManifest>
@@ -92,97 +92,77 @@
     <Reference Include="CommandLine, Version=2.0.275.0, Culture=neutral, PublicKeyToken=de6f01bd326f8c32, processorArchitecture=MSIL">
       <HintPath>..\packages\CommandLineParser.2.1.1-beta\lib\net45\CommandLine.dll</HintPath>
     </Reference>
-    <Reference Include="DevExpress.CodeParser.v18.1, Version=18.1.202.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a">
-      <HintPath>..\packages\ThemeRush_UI_Addin_Dependencies.18.1.0.6\lib\net40\DevExpress.CodeParser.v18.1.dll</HintPath>
-      <Private>True</Private>
+    <Reference Include="DevExpress.CodeParser.v19.1, Version=19.1.203.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
+      <HintPath>..\packages\ThemeDesigner_UI_Dependencies.19.1.0.16\lib\net40\DevExpress.CodeParser.v19.1.dll</HintPath>
     </Reference>
-    <Reference Include="DevExpress.Data.v18.1, Version=18.1.202.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a">
-      <HintPath>..\packages\ThemeRush_UI_Addin_Dependencies.18.1.0.6\lib\net40\DevExpress.Data.v18.1.dll</HintPath>
-      <Private>True</Private>
+    <Reference Include="DevExpress.Data.v19.1, Version=19.1.203.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
+      <HintPath>..\packages\ThemeDesigner_UI_Dependencies.19.1.0.16\lib\net40\DevExpress.Data.v19.1.dll</HintPath>
     </Reference>
-    <Reference Include="DevExpress.Diagram.v18.1.Core, Version=18.1.202.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a">
-      <HintPath>..\packages\ThemeRush_UI_Addin_Dependencies.18.1.0.6\lib\net40\DevExpress.Diagram.v18.1.Core.dll</HintPath>
-      <Private>True</Private>
+    <Reference Include="DevExpress.Diagram.v19.1.Core, Version=19.1.203.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
+      <HintPath>..\packages\ThemeDesigner_UI_Dependencies.19.1.0.16\lib\net40\DevExpress.Diagram.v19.1.Core.dll</HintPath>
     </Reference>
-    <Reference Include="DevExpress.Dialogs.v18.1.Core, Version=18.1.202.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a">
-      <HintPath>..\packages\ThemeRush_UI_Addin_Dependencies.18.1.0.6\lib\net40\DevExpress.Dialogs.v18.1.Core.dll</HintPath>
-      <Private>True</Private>
+    <Reference Include="DevExpress.Dialogs.v19.1.Core, Version=19.1.203.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
+      <HintPath>..\packages\ThemeDesigner_UI_Dependencies.19.1.0.16\lib\net40\DevExpress.Dialogs.v19.1.Core.dll</HintPath>
     </Reference>
-    <Reference Include="DevExpress.Images.v18.1, Version=18.1.202.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a">
-      <HintPath>..\packages\ThemeRush_UI_Addin_Dependencies.18.1.0.6\lib\net40\DevExpress.Images.v18.1.dll</HintPath>
-      <Private>True</Private>
+    <Reference Include="DevExpress.Images.v19.1, Version=19.1.203.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
+      <HintPath>..\packages\ThemeDesigner_UI_Dependencies.19.1.0.16\lib\net40\DevExpress.Images.v19.1.dll</HintPath>
     </Reference>
-    <Reference Include="DevExpress.Mvvm.v18.1, Version=18.1.202.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a">
-      <HintPath>..\packages\ThemeRush_UI_Addin_Dependencies.18.1.0.6\lib\net40\DevExpress.Mvvm.v18.1.dll</HintPath>
-      <Private>True</Private>
+    <Reference Include="DevExpress.Mvvm.v19.1, Version=19.1.203.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
+      <HintPath>..\packages\ThemeDesigner_UI_Dependencies.19.1.0.16\lib\net40\DevExpress.Mvvm.v19.1.dll</HintPath>
     </Reference>
-    <Reference Include="DevExpress.Pdf.v18.1.Core, Version=18.1.202.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a">
-      <HintPath>..\packages\ThemeRush_UI_Addin_Dependencies.18.1.0.6\lib\net40\DevExpress.Pdf.v18.1.Core.dll</HintPath>
-      <Private>True</Private>
+    <Reference Include="DevExpress.Pdf.v19.1.Core, Version=19.1.203.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
+      <HintPath>..\packages\ThemeDesigner_UI_Dependencies.19.1.0.16\lib\net40\DevExpress.Pdf.v19.1.Core.dll</HintPath>
     </Reference>
-    <Reference Include="DevExpress.Printing.v18.1.Core, Version=18.1.202.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a">
-      <HintPath>..\packages\ThemeRush_UI_Addin_Dependencies.18.1.0.6\lib\net40\DevExpress.Printing.v18.1.Core.dll</HintPath>
-      <Private>True</Private>
+    <Reference Include="DevExpress.Printing.v19.1.Core, Version=19.1.203.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
+      <HintPath>..\packages\ThemeDesigner_UI_Dependencies.19.1.0.16\lib\net40\DevExpress.Printing.v19.1.Core.dll</HintPath>
     </Reference>
-    <Reference Include="DevExpress.Xpf.Accordion.v18.1, Version=18.1.202.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a">
-      <HintPath>..\packages\ThemeRush_UI_Addin_Dependencies.18.1.0.6\lib\net40\DevExpress.Xpf.Accordion.v18.1.dll</HintPath>
-      <Private>True</Private>
+    <Reference Include="DevExpress.Xpf.Accordion.v19.1, Version=19.1.203.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
+      <HintPath>..\packages\ThemeDesigner_UI_Dependencies.19.1.0.16\lib\net40\DevExpress.Xpf.Accordion.v19.1.dll</HintPath>
     </Reference>
-    <Reference Include="DevExpress.Xpf.Controls.v18.1, Version=18.1.202.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a">
-      <HintPath>..\packages\ThemeRush_UI_Addin_Dependencies.18.1.0.6\lib\net40\DevExpress.Xpf.Controls.v18.1.dll</HintPath>
-      <Private>True</Private>
+    <Reference Include="DevExpress.Xpf.Controls.v19.1, Version=19.1.203.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
+      <HintPath>..\packages\ThemeDesigner_UI_Dependencies.19.1.0.16\lib\net40\DevExpress.Xpf.Controls.v19.1.dll</HintPath>
     </Reference>
-    <Reference Include="DevExpress.Xpf.Core.v18.1, Version=18.1.202.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a">
-      <HintPath>..\packages\ThemeRush_UI_Addin_Dependencies.18.1.0.6\lib\net40\DevExpress.Xpf.Core.v18.1.dll</HintPath>
-      <Private>True</Private>
+    <Reference Include="DevExpress.Xpf.Core.v19.1, Version=19.1.203.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
+      <HintPath>..\packages\ThemeDesigner_UI_Dependencies.19.1.0.16\lib\net40\DevExpress.Xpf.Core.v19.1.dll</HintPath>
     </Reference>
-    <Reference Include="DevExpress.Xpf.Diagram.v18.1, Version=18.1.202.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a">
-      <HintPath>..\packages\ThemeRush_UI_Addin_Dependencies.18.1.0.6\lib\net40\DevExpress.Xpf.Diagram.v18.1.dll</HintPath>
-      <Private>True</Private>
+    <Reference Include="DevExpress.Xpf.Diagram.v19.1, Version=19.1.203.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
+      <HintPath>..\packages\ThemeDesigner_UI_Dependencies.19.1.0.16\lib\net40\DevExpress.Xpf.Diagram.v19.1.dll</HintPath>
     </Reference>
-    <Reference Include="DevExpress.Xpf.Dialogs.v18.1, Version=18.1.202.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a">
-      <HintPath>..\packages\ThemeRush_UI_Addin_Dependencies.18.1.0.6\lib\net40\DevExpress.Xpf.Dialogs.v18.1.dll</HintPath>
-      <Private>True</Private>
+    <Reference Include="DevExpress.Xpf.Dialogs.v19.1, Version=19.1.203.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
+      <HintPath>..\packages\ThemeDesigner_UI_Dependencies.19.1.0.16\lib\net40\DevExpress.Xpf.Dialogs.v19.1.dll</HintPath>
     </Reference>
-    <Reference Include="DevExpress.Xpf.Docking.v18.1, Version=18.1.202.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a">
-      <HintPath>..\packages\ThemeRush_UI_Addin_Dependencies.18.1.0.6\lib\net40\DevExpress.Xpf.Docking.v18.1.dll</HintPath>
-      <Private>True</Private>
+    <Reference Include="DevExpress.Xpf.Docking.v19.1, Version=19.1.203.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
+      <HintPath>..\packages\ThemeDesigner_UI_Dependencies.19.1.0.16\lib\net40\DevExpress.Xpf.Docking.v19.1.dll</HintPath>
     </Reference>
-    <Reference Include="DevExpress.Xpf.DocumentViewer.v18.1.Core, Version=18.1.202.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a">
-      <HintPath>..\packages\ThemeRush_UI_Addin_Dependencies.18.1.0.6\lib\net40\DevExpress.Xpf.DocumentViewer.v18.1.Core.dll</HintPath>
-      <Private>True</Private>
+    <Reference Include="DevExpress.Xpf.DocumentViewer.v19.1.Core, Version=19.1.203.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
+      <HintPath>..\packages\ThemeDesigner_UI_Dependencies.19.1.0.16\lib\net40\DevExpress.Xpf.DocumentViewer.v19.1.Core.dll</HintPath>
     </Reference>
-    <Reference Include="DevExpress.Xpf.Grid.v18.1, Version=18.1.202.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a">
-      <HintPath>..\packages\ThemeRush_UI_Addin_Dependencies.18.1.0.6\lib\net40\DevExpress.Xpf.Grid.v18.1.dll</HintPath>
-      <Private>True</Private>
+    <Reference Include="DevExpress.Xpf.Grid.v19.1, Version=19.1.203.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
+      <HintPath>..\packages\ThemeDesigner_UI_Dependencies.19.1.0.16\lib\net40\DevExpress.Xpf.Grid.v19.1.dll</HintPath>
     </Reference>
-    <Reference Include="DevExpress.Xpf.Grid.v18.1.Core, Version=18.1.202.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a">
-      <HintPath>..\packages\ThemeRush_UI_Addin_Dependencies.18.1.0.6\lib\net40\DevExpress.Xpf.Grid.v18.1.Core.dll</HintPath>
-      <Private>True</Private>
+    <Reference Include="DevExpress.Xpf.Grid.v19.1.Core, Version=19.1.203.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
+      <HintPath>..\packages\ThemeDesigner_UI_Dependencies.19.1.0.16\lib\net40\DevExpress.Xpf.Grid.v19.1.Core.dll</HintPath>
     </Reference>
-    <Reference Include="DevExpress.Xpf.Layout.v18.1.Core, Version=18.1.202.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a">
-      <HintPath>..\packages\ThemeRush_UI_Addin_Dependencies.18.1.0.6\lib\net40\DevExpress.Xpf.Layout.v18.1.Core.dll</HintPath>
-      <Private>True</Private>
+    <Reference Include="DevExpress.Xpf.Layout.v19.1.Core, Version=19.1.203.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
+      <HintPath>..\packages\ThemeDesigner_UI_Dependencies.19.1.0.16\lib\net40\DevExpress.Xpf.Layout.v19.1.Core.dll</HintPath>
     </Reference>
-    <Reference Include="DevExpress.Xpf.LayoutControl.v18.1, Version=18.1.202.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a">
-      <HintPath>..\packages\ThemeRush_UI_Addin_Dependencies.18.1.0.6\lib\net40\DevExpress.Xpf.LayoutControl.v18.1.dll</HintPath>
-      <Private>True</Private>
+    <Reference Include="DevExpress.Xpf.LayoutControl.v19.1, Version=19.1.203.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
+      <HintPath>..\packages\ThemeDesigner_UI_Dependencies.19.1.0.16\lib\net40\DevExpress.Xpf.LayoutControl.v19.1.dll</HintPath>
     </Reference>
-    <Reference Include="DevExpress.Xpf.NavBar.v18.1, Version=18.1.202.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a">
-      <HintPath>..\packages\ThemeRush_UI_Addin_Dependencies.18.1.0.6\lib\net40\DevExpress.Xpf.NavBar.v18.1.dll</HintPath>
-      <Private>True</Private>
+    <Reference Include="DevExpress.Xpf.NavBar.v19.1, Version=19.1.203.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
+      <HintPath>..\packages\ThemeDesigner_UI_Dependencies.19.1.0.16\lib\net40\DevExpress.Xpf.NavBar.v19.1.dll</HintPath>
     </Reference>
-    <Reference Include="DevExpress.Xpf.PropertyGrid.v18.1, Version=18.1.202.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a">
-      <HintPath>..\packages\ThemeRush_UI_Addin_Dependencies.18.1.0.6\lib\net40\DevExpress.Xpf.PropertyGrid.v18.1.dll</HintPath>
-      <Private>True</Private>
+    <Reference Include="DevExpress.Xpf.Printing.v19.1, Version=19.1.203.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
+      <HintPath>..\packages\ThemeDesigner_UI_Dependencies.19.1.0.16\lib\net40\DevExpress.Xpf.Printing.v19.1.dll</HintPath>
     </Reference>
-    <Reference Include="DevExpress.Xpf.Ribbon.v18.1, Version=18.1.202.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a">
-      <HintPath>..\packages\ThemeRush_UI_Addin_Dependencies.18.1.0.6\lib\net40\DevExpress.Xpf.Ribbon.v18.1.dll</HintPath>
-      <Private>True</Private>
+    <Reference Include="DevExpress.Xpf.PropertyGrid.v19.1, Version=19.1.203.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
+      <HintPath>..\packages\ThemeDesigner_UI_Dependencies.19.1.0.16\lib\net40\DevExpress.Xpf.PropertyGrid.v19.1.dll</HintPath>
     </Reference>
-    <Reference Include="DevExpress.Xpf.Themes.Super.v18.1, Version=18.1.202.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a">
-      <HintPath>..\packages\ThemeRush_UI_Addin_Dependencies.18.1.0.6\lib\net40\DevExpress.Xpf.Themes.Super.v18.1.dll</HintPath>
-      <Private>True</Private>
+    <Reference Include="DevExpress.Xpf.Ribbon.v19.1, Version=19.1.203.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
+      <HintPath>..\packages\ThemeDesigner_UI_Dependencies.19.1.0.16\lib\net40\DevExpress.Xpf.Ribbon.v19.1.dll</HintPath>
+    </Reference>
+    <Reference Include="DevExpress.Xpf.Themes.Super.v19.1, Version=19.1.203.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
+      <HintPath>..\packages\ThemeDesigner_UI_Dependencies.19.1.0.16\lib\net40\DevExpress.Xpf.Themes.Super.v19.1.dll</HintPath>
     </Reference>
     <Reference Include="DXVCS, Version=1.0.0.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
@@ -206,9 +186,8 @@
     <Reference Include="Ionic.Zlib">
       <HintPath>..\Lib\DXFarm\Ionic.Zlib.dll</HintPath>
     </Reference>
-    <Reference Include="LibGit2Sharp, Version=0.22.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\LibGit2Sharp.0.22.0-pre20150716071016\lib\net40\LibGit2Sharp.dll</HintPath>
-      <Private>True</Private>
+    <Reference Include="LibGit2Sharp, Version=0.26.0.0, Culture=neutral, PublicKeyToken=7cbde695407f0333, processorArchitecture=MSIL">
+      <HintPath>..\packages\LibGit2Sharp.0.26.0\lib\net46\LibGit2Sharp.dll</HintPath>
     </Reference>
     <Reference Include="log4net, Version=1.2.14.0, Culture=neutral, PublicKeyToken=669e0ddf0bb1aa2a, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
@@ -525,15 +504,6 @@
     <Content Include="Configs\XAF_2017.1.config">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <Content Include="Configs\Reports_2017.1.config">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Configs\Reports_2016.2.config">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Configs\Reports_2016.1.config">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
     <Content Include="Configs\ASP_2017.1.config">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
@@ -544,9 +514,6 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="Configs\Dashboard_2017.2.config">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Configs\Reports_2017.2.config">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="Configs\UWP_2017.2.config">
@@ -588,9 +555,6 @@
       <SubType>Designer</SubType>
     </Content>
     <Content Include="Configs\Office_2018.1.config">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Configs\Reports_2018.1.config">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="Configs\UWP_2018.1.config">
@@ -639,6 +603,42 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="Configs\XAF_2019.1.config">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Configs\ASP_2019.2.config">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Configs\Common_2019.2.config">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Configs\Common_2018.2.config">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Configs\CrossPlatform_2018.2.config">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Configs\CrossPlatform_2019.2.config">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Configs\CrossPlatform_Utils_2018.2.config">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Configs\CrossPlatform_Utils_2019.2.config">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Configs\DemosCrossPlatform_2018.2.config">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Configs\DemosCrossPlatform_2019.2.config">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Configs\XAF_2018.2.config">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Configs\XAF_2019.2.config">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Configs\ASP_2018.2.config">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <None Include="DXVcs2Git.UI_TemporaryKey.pfx" />
@@ -948,8 +948,8 @@
     <PropertyGroup>
       <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
     </PropertyGroup>
-    <Error Condition="!Exists('..\packages\LibGit2Sharp.NativeBinaries.1.0.72\build\LibGit2Sharp.NativeBinaries.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\LibGit2Sharp.NativeBinaries.1.0.72\build\LibGit2Sharp.NativeBinaries.props'))" />
     <Error Condition="!Exists('..\packages\Fody.2.1.2\build\netstandard1.0\Fody.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Fody.2.1.2\build\netstandard1.0\Fody.targets'))" />
+    <Error Condition="!Exists('..\packages\LibGit2Sharp.NativeBinaries.2.0.267\build\net46\LibGit2Sharp.NativeBinaries.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\LibGit2Sharp.NativeBinaries.2.0.267\build\net46\LibGit2Sharp.NativeBinaries.props'))" />
   </Target>
   <Import Project="..\packages\Fody.2.1.2\build\netstandard1.0\Fody.targets" Condition="Exists('..\packages\Fody.2.1.2\build\netstandard1.0\Fody.targets')" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
