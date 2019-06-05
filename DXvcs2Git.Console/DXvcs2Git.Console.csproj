@@ -270,12 +270,12 @@
         </None>
     </ItemGroup>
     <ItemGroup>
-        <EmbeddedResource Include="..\packages\LibGit2Sharp.NativeBinaries.1.0.72\libgit2\windows\x86\git2-4d6362b.dll">
-            <Link>costura32\git2-4d6362b.dll</Link>
-        </EmbeddedResource>
-        <EmbeddedResource Include="..\packages\LibGit2Sharp.NativeBinaries.1.0.72\libgit2\windows\amd64\git2-4d6362b.dll">
-            <Link>costura64\git2-4d6362b.dll</Link>
-        </EmbeddedResource>
+        <Content Include="..\packages\LibGit2Sharp.NativeBinaries.2.0.267\runtimes\win-x64\native\git2-572e4d8.dll">
+            <Link>costura64\git2-572e4d8.dll</Link>
+        </Content>
+        <Content Include="..\packages\LibGit2Sharp.NativeBinaries.2.0.267\runtimes\win-x86\native\git2-572e4d8.dll">
+            <Link>costura32\git2-572e4d8.dll</Link>
+        </Content>
         <None Include="FodyWeavers.xml">
             <SubType>Designer</SubType>
         </None>
@@ -295,7 +295,7 @@
         <PropertyGroup>
             <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them. For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
         </PropertyGroup>
-        <Error Condition="!Exists('..\packages\LibGit2Sharp.NativeBinaries.1.0.72\build\LibGit2Sharp.NativeBinaries.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\LibGit2Sharp.NativeBinaries.1.0.72\build\LibGit2Sharp.NativeBinaries.props'))" />
+        <Error Condition="!Exists('..\packages\LibGit2Sharp.NativeBinaries.2.0.267\build\net46\LibGit2Sharp.NativeBinaries.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\LibGit2Sharp.NativeBinaries.2.0.267\build\net46\LibGit2Sharp.NativeBinaries.props'))" />
         <Error Condition="!Exists('..\packages\Fody.2.1.2\build\netstandard1.0\Fody.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Fody.2.1.2\build\netstandard1.0\Fody.targets'))" />
         <Error Condition="!Exists('..\packages\Costura.Fody.1.6.2\build\dotnet\Costura.Fody.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Costura.Fody.1.6.2\build\dotnet\Costura.Fody.targets'))" />
         <Error Condition="!Exists('..\packages\Microsoft.Bcl.Build.1.0.21\build\Microsoft.Bcl.Build.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.Bcl.Build.1.0.21\build\Microsoft.Bcl.Build.targets'))" />
