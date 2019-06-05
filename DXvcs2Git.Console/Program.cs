@@ -207,7 +207,7 @@ namespace DXVcs2Git.Console {
             gitLabWrapper.AddCommentToMergeRequest(mergeRequest, pipeline);
             if (clo.Result == 0) {
                 if (mergeRequest.WorkInProgress ?? false) {
-                    Log.Message("Work in progress. Assign on test service skipped.");
+                    Log.Message("Work in progress. Assign on sync service skipped.");
                     return Task.FromResult(0);
                 }
 
@@ -224,12 +224,17 @@ namespace DXVcs2Git.Console {
                             Log.Message("Auto sync by gittools config rejected because testing commit is not head.");
                         }
                     }
+
+                    return Task.FromResult(0);
                 }
 
                 var autoAssigneeUser = GetAutoAssigneeUser(targetProject) ?? GetAutoAssigneeUser(sourceProject);
                 if (autoAssigneeUser != null) {
                     gitLabWrapper.UpdateMergeRequestAssignee(mergeRequest, autoAssigneeUser);
                     Log.Message("Auto sync performed by repo tag");
+                }
+                else {
+                    Log.Message("Auto sync disabled in repo");
                 }
             }
             return Task.FromResult(0);
