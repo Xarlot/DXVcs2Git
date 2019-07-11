@@ -902,8 +902,6 @@ namespace DXVcs2Git.Console {
         static ProcessHistoryResult ProcessHistory(DXVcsWrapper vcsWrapper, GitWrapper gitWrapper, RegisteredUsers registeredUsers, User defaultUser, string gitRepoPath, string localGitDir, TrackBranch branch, int commitsCount, SyncHistoryWrapper syncHistory) {
             var (commits, historyResult) = GenerateHistory(vcsWrapper, gitWrapper, registeredUsers, defaultUser, gitRepoPath, localGitDir, branch, commitsCount, syncHistory, true);
             var requiredTrackItems = commits.SelectMany(x => x.Items).Select(x => x.Track).Distinct().ToList();
-            if (!requiredTrackItems.Any())
-                return ProcessHistoryResult.Success;
             if (requiredTrackItems.Count > 10) {
                 Log.Message($@"Sparse checkout disabled because it`s a lot of checkout roots - {requiredTrackItems.Count}");
                 gitWrapper.CheckOut(branch.Name);
@@ -1083,13 +1081,6 @@ namespace DXVcs2Git.Console {
                 .Concat(genericChange
                     .Where(x => x.NewTrack != null).Select(x => x.NewTrack)
                 ).Distinct().ToList();
-            
-            if (!requiredTrackItems.Any()) {
-                Log.Message("Exit without processing merge request. ");
-                gitLabWrapper.ProcessMergeRequest(mergeRequest, CalcComment(mergeRequest, branch, autoSyncToken).ToString());
-                return MergeRequestResult.Success;
-            }
-                
             gitWrapper.ReadTree(CalcSparseCheckoutFile(requiredTrackItems));
 
             bool ignoreValidation = gitLabWrapper.ShouldIgnoreSharedFiles(mergeRequest);
