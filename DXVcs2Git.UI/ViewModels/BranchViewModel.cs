@@ -139,7 +139,7 @@ namespace DXVcs2Git.UI.ViewModels {
         public void UpdateWebHook() {
             if (!SupportsTesting)
                 return;
-            var sourceProject = gitLabWrapper.GetProject(MergeRequest.MergeRequest.SourceProjectId);
+            var sourceProject = gitLabWrapper.GetProject(MergeRequest.MergeRequest.SourceProjectId.GetValueOrDefault());
             var webHook = gitLabWrapper.FindProjectHook(sourceProject, x => WebHookHelper.IsSharedHook(WebHook, x.Url));
             if (webHook != null && WebHookHelper.EnsureWebHook(webHook))
                 return;

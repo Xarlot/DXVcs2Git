@@ -256,7 +256,7 @@ namespace DXVcs2Git.Git {
             return changes.Changes.Files;
         }
         public IEnumerable<Job> GetBuilds(MergeRequest mergeRequest, Sha1 sha) {
-            var projectClient = client.GetRepository(mergeRequest.SourceProjectId);
+            var projectClient = client.GetRepository(mergeRequest.SourceProjectId.Value);
             var pipelinesClient = projectClient.Pipelines;
             var pipelines = pipelinesClient.All();
             var pipeline = pipelines.FirstOrDefault(x => object.Equals(x.Sha1, sha));
@@ -287,13 +287,13 @@ namespace DXVcs2Git.Git {
             return DownloadArtifactsCore(projectClient, build);
         }
         public byte[] DownloadArtifacts(MergeRequest mergeRequest, Job build) {
-            var projectClient = client.GetRepository(mergeRequest.SourceProjectId);
+            var projectClient = client.GetRepository(mergeRequest.SourceProjectId.Value);
             return DownloadArtifactsCore(projectClient, build);
         }
         public byte[] DownloadTrace(MergeRequest mergeRequest, Job job) {
             byte[] result = null;
             try {
-                var projectClient = client.GetRepository(mergeRequest.SourceProjectId);
+                var projectClient = client.GetRepository(mergeRequest.SourceProjectId.Value);
                 projectClient.Jobs.DownloadTrace(job, stream => {
                     if (stream == null)
                         return;
