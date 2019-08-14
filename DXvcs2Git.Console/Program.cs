@@ -1284,7 +1284,7 @@ namespace DXVcs2Git.Console {
                         vcsWrapper.GetProject(vcsServer, trackPath, localPath, item.TimeStamp);
                     }
                     Log.Message($"git stage {localCommit.Track.ProjectPath}");
-                    gitWrapper.Stage(localCommit.Track.ProjectPath);
+                    gitWrapper.Stage(localCommit.Track.ProjectPath, localCommit.Track.Force);
                 }
                 var syncCommitItem = localCommits.Last();
                 string syncCommitAuthor = CalcAuthor(syncCommitItem, defaultUser);

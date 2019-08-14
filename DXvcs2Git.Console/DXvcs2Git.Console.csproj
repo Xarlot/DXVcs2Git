@@ -274,6 +274,9 @@
         <Content Include="..\packages\LibGit2Sharp.NativeBinaries.2.0.267\runtimes\win-x86\native\git2-572e4d8.dll">
             <Link>costura32\git2-572e4d8.dll</Link>
         </Content>
+        <None Include="trackconfig_common_2019.2.config">
+          <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </None>
         <None Include="FodyWeavers.xml">
             <SubType>Designer</SubType>
         </None>

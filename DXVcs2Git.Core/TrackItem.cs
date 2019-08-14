@@ -24,6 +24,7 @@ namespace DXVcs2Git.Core {
                 hashCode = (hashCode * 397) ^ (ProjectPath != null ? ProjectPath.GetHashCode() : 0);
                 hashCode = (hashCode * 397) ^ (AdditionalOffset != null ? AdditionalOffset.GetHashCode() : 0);
                 hashCode = (hashCode * 397) ^ IsFile.GetHashCode();
+                hashCode = (hashCode * 397) ^ Force.GetHashCode();
                 return hashCode;
             }
         }
@@ -31,5 +32,6 @@ namespace DXVcs2Git.Core {
         public string ProjectPath { get; set; }
         public string AdditionalOffset { get; set; }
         public bool IsFile { get; set; }
+        public bool Force { get; set; }
     }
 }

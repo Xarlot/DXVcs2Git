@@ -72,10 +72,11 @@ namespace DXVcs2Git {
             var code = WaitForProcess(gitPath, ".", out output, out errors, args);
             CheckFail(code, output, errors);
         }
-        public void Add(string repoPath, string relativePath) {
+        public void Add(string repoPath, string relativePath, bool force) {
             string output, errors;
             try {
-                var code = WaitForProcess(gitPath, repoPath, out output, out errors, "add", relativePath);
+                var opt = force ? new[] {"add", "-f", relativePath} : new[] {"add", relativePath};
+                var code = WaitForProcess(gitPath, repoPath, out output, out errors, opt);
                 CheckFail(code, output, errors);
             }
             catch {
@@ -329,8 +330,8 @@ namespace DXVcs2Git {
         public void LFSPull() {
             gitCmd.LFSPull(localPath);
         }
-        public void Stage(string path) {
-            gitCmd.Add(localPath, path);
+        public void Stage(string path, bool force) {
+            gitCmd.Add(localPath, path, force);
             Log.Message($"Git stage performed.");
         }
         public void Commit(string comment, User user, DateTime timeStamp, bool allowEmpty = true) {

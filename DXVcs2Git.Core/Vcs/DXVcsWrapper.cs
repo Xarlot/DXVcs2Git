@@ -454,6 +454,7 @@ namespace DXVcs2Git.DXVcs {
                     var newTrackItem = new TrackItem();
                     newTrackItem.Branch = trackBranch;
                     newTrackItem.GoDeeper = false;
+                    newTrackItem.Force = trackItem.Force;
                     newTrackItem.Path = trackItem.Path + @"/" + info.Name;
                     newTrackItem.ProjectPath = Path.Combine(trackItem.ProjectPath, info.Name).Replace(@"\", @"/");
                     newTrackItem.AdditionalOffset = trackItem.AdditionalOffset;
@@ -466,6 +467,7 @@ namespace DXVcs2Git.DXVcs {
                     newTrackItem.Branch = trackBranch;
                     newTrackItem.GoDeeper = false;
                     newTrackItem.IsFile = true;
+                    newTrackItem.Force = trackItem.Force;
                     newTrackItem.Path = trackItem.Path + @"/" + info.Name;
                     newTrackItem.ProjectPath = Path.Combine(trackItem.ProjectPath, info.Name).Replace(@"\", @"/");
                     newTrackItem.AdditionalOffset = trackItem.AdditionalOffset;
