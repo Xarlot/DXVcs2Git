@@ -138,7 +138,7 @@ namespace DXVcs2Git.UI.ViewModels {
 
         public EditConfigViewModel(Config config) {
             this.config = config;
-            this.configsReader = new RepoConfigsReader();
+            this.configsReader = new RepoConfigsReader(UIStartupOptions.AppDir);
             KeyGesture = config.KeyGesture;
             SupportsTesting = config.SupportsTesting;
             DefaultTheme = config.DefaultTheme;

@@ -1,4 +1,5 @@
-﻿using CommandLine;
+﻿using System.IO;
+using CommandLine;
 
 namespace DXVcs2Git.UI {
     public class UIStartupOptions {
@@ -12,5 +13,6 @@ namespace DXVcs2Git.UI {
                 State = System.Windows.WindowState.Normal
             };
         }
+        public static string AppDir => Path.GetDirectoryName(typeof(UIStartupOptions).Assembly.Location);
     }
 }

@@ -9,11 +9,10 @@ namespace DXVcs2Git.Core.Git {
         public IEnumerable<RepoConfig> RegisteredConfigs => configs.Values;
         public RepoConfig this[string name] => configs[name];
 
-        public RepoConfigsReader() {
-            configs = GetRegisteredConfigs().ToDictionary(x => x.Name, config => config);
+        public RepoConfigsReader(string appDir) {
+            configs = GetRegisteredConfigs(appDir).ToDictionary(x => x.Name, config => config);
         }
-        static IEnumerable<RepoConfig> GetRegisteredConfigs() {
-            string appDir = Path.GetDirectoryName(typeof (RepoConfigsReader).Assembly.Location);
+        public IEnumerable<RepoConfig> GetRegisteredConfigs(string appDir) {
             var dir = Path.Combine(appDir, ConfigFolder);
             if(Directory.Exists(dir))
                 return Directory.GetFiles(dir, "*.config", SearchOption.AllDirectories).Select(Serializer.Deserialize<RepoConfig>).ToList();

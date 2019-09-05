@@ -46,7 +46,7 @@ namespace DXVcs2Git.UI.ViewModels {
         public void Update() {
             IsInitialized = false;
             SendBeforeUpdateMessage();
-            RepoConfigs = new RepoConfigsReader();
+            RepoConfigs = new RepoConfigsReader(UIStartupOptions.AppDir);
             TestConfigs = new TestConfigsReader();
             Repositories = Config.Repositories.With(x => x.Where(IsValidConfig).Select(repo => new RepositoryViewModel(repo.Name, repo, this))).With(x => x.ToList());
             IsInitialized = true;
