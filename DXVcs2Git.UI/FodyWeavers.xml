@@ -2,13 +2,13 @@
 <Weavers xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="FodyWeavers.xsd">
   <Costura CreateTemporaryAssemblies="true" IncludeDebugSymbols="false">
     <Unmanaged32Assemblies>
-      git2-4d6362b.dll
+      git2-572e4d8.dll
     </Unmanaged32Assemblies>
     <Unmanaged64Assemblies>
-      git2-4d6362b.dll
+      git2-572e4d8.dll
     </Unmanaged64Assemblies>
     <PreloadOrder>
-      git2-4d6362b.dll
+      git2-572e4d8.dll
     </PreloadOrder>
   </Costura>
 </Weavers>

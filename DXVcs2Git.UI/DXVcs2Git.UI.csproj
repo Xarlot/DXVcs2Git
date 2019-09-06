@@ -37,8 +37,8 @@
     <PublisherName>Xarlot</PublisherName>
     <SuiteName>Git Tools</SuiteName>
     <MinimumRequiredVersion>1.3.1.0</MinimumRequiredVersion>
-    <ApplicationRevision>2</ApplicationRevision>
-    <ApplicationVersion>1.4.46.%2a</ApplicationVersion>
+    <ApplicationRevision>1</ApplicationRevision>
+    <ApplicationVersion>1.4.50.%2a</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <CreateDesktopShortcut>true</CreateDesktopShortcut>
     <PublishWizardCompleted>true</PublishWizardCompleted>
@@ -445,12 +445,12 @@
       <DependentUpon>Settings.settings</DependentUpon>
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
     </Compile>
-    <Content Include="..\packages\LibGit2Sharp.NativeBinaries.2.0.267\runtimes\win-x64\native\git2-572e4d8.dll">
+    <EmbeddedResource Include="..\packages\LibGit2Sharp.NativeBinaries.2.0.267\runtimes\win-x64\native\git2-572e4d8.dll">
       <Link>costura64\git2-572e4d8.dll</Link>
-    </Content>
-    <Content Include="..\packages\LibGit2Sharp.NativeBinaries.2.0.267\runtimes\win-x86\native\git2-572e4d8.dll">
+    </EmbeddedResource>
+    <EmbeddedResource Include="..\packages\LibGit2Sharp.NativeBinaries.2.0.267\runtimes\win-x86\native\git2-572e4d8.dll">
       <Link>costura32\git2-572e4d8.dll</Link>
-    </Content>
+    </EmbeddedResource>
     <Content Include="Configs\Office_2017.2.config">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
@@ -464,6 +464,9 @@
     <Content Include="Configs\Office_2016.2.config">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
+    <None Include="FodyWeavers.xml">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <Resource Include="Images\PipelineStatus\canceled.svg" />
     <Resource Include="Images\PipelineStatus\failed.svg" />
     <Resource Include="Images\PipelineStatus\pending.svg" />
