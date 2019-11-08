@@ -37,8 +37,8 @@
     <PublisherName>Xarlot</PublisherName>
     <SuiteName>Git Tools</SuiteName>
     <MinimumRequiredVersion>1.3.1.0</MinimumRequiredVersion>
-    <ApplicationRevision>1</ApplicationRevision>
-    <ApplicationVersion>1.4.50.%2a</ApplicationVersion>
+    <ApplicationRevision>0</ApplicationRevision>
+    <ApplicationVersion>1.4.51.%2a</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <CreateDesktopShortcut>true</CreateDesktopShortcut>
     <PublishWizardCompleted>true</PublishWizardCompleted>
@@ -464,6 +464,24 @@
     <Content Include="Configs\Office_2016.2.config">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
+    <Content Include="Configs\ASP_2020.1.config">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Configs\Common_2020.1.config">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Configs\CrossPlatform_2020.1.config">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Configs\CrossPlatform_Utils_2020.1.config">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Configs\DemosCrossPlatform_2020.1.config">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Configs\XAF_2020.1.config">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
     <None Include="FodyWeavers.xml">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
@@ -700,7 +718,9 @@
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Xsl\cruisecontrol.css" />
-    <EmbeddedResource Include="Xsl\dxbuild.xsl" />
+    <EmbeddedResource Include="Xsl\dxbuild.xsl">
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
     <Resource Include="Images\FileChangeMode\Deleted.png" />
     <Resource Include="Images\FileChangeMode\Modified.png" />
     <Resource Include="Images\FileChangeMode\New.png" />
