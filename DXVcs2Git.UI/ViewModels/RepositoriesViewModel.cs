@@ -22,7 +22,7 @@ namespace DXVcs2Git.UI.ViewModels {
         public RepoConfigsReader RepoConfigs { get; private set; }
         public TestConfigsReader TestConfigs { get; private set; }
         public BranchViewModel SelectedBranch {
-            get { return this.selectedBranch; }
+            get => this.selectedBranch;
             set { SetProperty(ref this.selectedBranch, value, () => SelectedBranch, SelectedBranchChanged); }
         }
         void SelectedBranchChanged() {
@@ -36,7 +36,7 @@ namespace DXVcs2Git.UI.ViewModels {
             set { SetProperty(() => Repositories, value); }
         }
         public RepositoryViewModel SelectedRepository {
-            get { return this.selectedRepository; }
+            get => this.selectedRepository;
             set { SetProperty(ref this.selectedRepository, value, () => SelectedRepository); }
         }
 

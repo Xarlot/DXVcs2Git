@@ -41,6 +41,9 @@
                 <dxlc:LayoutItem Visibility="{Binding Path=SupportsTesting, Converter={StaticResource BooleanToVisibilityConverter}}">
                     <dxe:CheckEdit Content="Test merge request" EditValue="{Binding Path=PerformTesting, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
                 </dxlc:LayoutItem>
+                <dxlc:LayoutItem Visibility="{DXBinding Expr='(SupportsTesting and PerformTesting) ? $Visibility.Visible : $Visibility.Collapsed'}">
+                    <dxe:CheckEdit Content="Perform visual testing" EditValue="{Binding Path=PerformVisualTesting, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                </dxlc:LayoutItem>
                 <dxlc:LayoutItem>
                     <dxe:CheckEdit Content="Accept merge request" EditValue="{Binding Path=AssignedToService, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
                 </dxlc:LayoutItem>

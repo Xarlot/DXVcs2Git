@@ -15,6 +15,7 @@ using NGitLab.Models;
 
 namespace DXVcs2Git.UI.ViewModels {
     public class BranchViewModel : BindableBase {
+        const string VisualTestsLabel = "VisualTests";
         protected bool Equals(BranchViewModel other) {
             return this.Repository.Equals(other.Repository) && Name == other.Name;
         }
@@ -99,13 +100,25 @@ namespace DXVcs2Git.UI.ViewModels {
         public void UpdateMergeRequest(string comment) {
             this.gitLabWrapper.AddCommentToMergeRequest(MergeRequest.MergeRequest, comment);
         }
-        public void AddMergeRequestSyncInfo(bool testIntegration, bool assignToService) {
+        public void AddMergeRequestSyncInfo(bool testIntegration, bool testVisualIntegration, bool assignToService) {
             var mergeRequestAction = new MergeRequestSyncAction(SyncTaskName, SyncServiceName, testIntegration, assignToService);
             var mergeRequestOptions = new MergeRequestOptions(mergeRequestAction);
             string comment = MergeRequestOptions.ConvertToString(mergeRequestOptions);
             var mergeRequest = MergeRequest.MergeRequest;
-            gitLabWrapper.AddCommentToMergeRequest(mergeRequest, comment);
-            //UpdateWebHook();
+            this.gitLabWrapper.AddCommentToMergeRequest(mergeRequest, comment);
+            UpdateVisualTestsLabel(mergeRequest, testVisualIntegration);
+        }
+        void UpdateVisualTestsLabel(MergeRequest mergeRequest, bool testVisualIntegration) {
+            bool visualTestingStatus =  GetVisualTestingStatus(mergeRequest);
+            if (visualTestingStatus == testVisualIntegration)
+                return;
+            var newMergeRequest = this.gitLabWrapper.UpdateMergeRequestLabels(mergeRequest, CalcLabels(mergeRequest, testVisualIntegration));
+            MergeRequest = new MergeRequestViewModel(this, newMergeRequest);
+        }
+        string CalcLabels(MergeRequest mergeRequest, bool testVisualIntegration) {
+            if (testVisualIntegration)
+                return mergeRequest.Labels.Concat(VisualTestsLabel.Yield()).ConcatStringsWithDelimiter(";");
+            return mergeRequest.Labels?.Except(VisualTestsLabel.Yield()).ConcatStringsWithDelimiter(";");
         }
         public void RefreshFarm() {
             FarmStatus = FarmIntegrator.GetTaskStatus(Repository.RepoConfig.FarmSyncTaskName);
@@ -159,6 +172,11 @@ namespace DXVcs2Git.UI.ViewModels {
         }
         public IEnumerable<MergeRequestFileData> GetMergeRequestChanges(MergeRequest mergeRequest) {
             return gitLabWrapper.GetMergeRequestChanges(mergeRequest);
+        }
+        public bool GetVisualTestingStatus(MergeRequest mergeRequest) {
+            if (mergeRequest == null)
+                return false;
+            return mergeRequest.Labels.Any(x => string.Compare(x, VisualTestsLabel, StringComparison.InvariantCultureIgnoreCase) == 0);
         }
     }
 }

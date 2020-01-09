@@ -17,6 +17,7 @@ namespace DXVcs2Git.UI.ViewModels {
         bool assignedToService;
         bool assignedToServiceAfterTesting;
         bool performTesting;
+        bool performVisualTesting;
 
         public bool SupportsTesting {
             get { return GetProperty(() => SupportsTesting); }
@@ -29,6 +30,10 @@ namespace DXVcs2Git.UI.ViewModels {
         public bool PerformTesting {
             get { return performTesting; }
             set { SetProperty(ref performTesting, value, () => PerformTesting, PerformTestingChanged); }
+        }
+        public bool PerformVisualTesting {
+            get { return this.performVisualTesting; }
+            set { SetProperty(ref performVisualTesting, value, () => PerformVisualTesting, PerformVisualTestingChanged); }
         }
         public bool AssignedToService {
             get { return assignedToService; }
@@ -44,6 +49,11 @@ namespace DXVcs2Git.UI.ViewModels {
         }
         public ICommand ApplyCommand { get; }
         BranchViewModel Branch { get; set; }
+        void PerformVisualTestingChanged() {
+            IsModified = true;
+            assignedToService = false;
+            RaisePropertyChanged("AssignedToService");
+        }
         void PerformTestingChanged() {
             IsModified = true;
             assignedToService = false;
@@ -52,8 +62,10 @@ namespace DXVcs2Git.UI.ViewModels {
         void AssignedToServiceChanged() {
             IsModified = true;
             performTesting = false;
+            performVisualTesting = false;
             assignedToServiceAfterTesting = false;
             RaisePropertyChanged("PerformTesting");
+            RaisePropertiesChanged("PerformVisualTesting");
             RaisePropertyChanged("AssignedToServiceAfterTesting");
         }
         void AssignedToServiceAfterTestingChanged() {
@@ -76,7 +88,7 @@ namespace DXVcs2Git.UI.ViewModels {
         void PerformApply() {
             if (Repositories.Config.AlwaysSure || MessageBoxService.Show("Are you sure?", "Update merge request", MessageBoxButton.OKCancel) == MessageBoxResult.OK) {
                 Branch.UpdateMergeRequest(CalcMergeRequestTitle(Comment), CalcMergeRequestDescription(Comment), CalcServiceName());
-                Branch.AddMergeRequestSyncInfo(PerformTesting, AssignedToServiceAfterTesting);
+                Branch.AddMergeRequestSyncInfo(PerformTesting, PerformVisualTesting, AssignedToServiceAfterTesting);
                 IsModified = false;
                 RepositoriesViewModel.RaiseRefreshSelectedBranch();
             }
@@ -118,18 +130,21 @@ namespace DXVcs2Git.UI.ViewModels {
                 comment = null;
                 assignedToService = false;
                 performTesting = false;
+                performVisualTesting = false;
                 IsModified = false;
             }
             else {
                 if (Branch.SupportsTesting) {
                     var syncOptions = Branch.GetSyncOptions(mergeRequest.MergeRequest);
-                    performTesting = syncOptions?.TestIntegration ?? false;
+                    this.performTesting = syncOptions?.TestIntegration ?? false;
+                    this.performVisualTesting = Branch.GetVisualTestingStatus(mergeRequest.MergeRequest);
                     assignedToServiceAfterTesting = syncOptions?.AssignToSyncService ?? false;
                     assignedToService = !assignedToServiceAfterTesting && mergeRequest.Assignee == Branch.SyncServiceName;
                 }
                 else {
                     assignedToService = mergeRequest.Assignee == Branch.SyncServiceName;
                     performTesting = false;
+                    this.performVisualTesting = false;
                 }
                 comment = mergeRequest.Title;
                 IsModified = false;

@@ -102,6 +102,19 @@ namespace DXVcs2Git.Git {
                 return mergeRequest;
             }
         }
+        public MergeRequest UpdateMergeRequestLabels(MergeRequest mergeRequest, string labels) {
+            var mergeRequestsClient = client.GetMergeRequest(mergeRequest.ProjectId);
+            try {
+                return mergeRequestsClient.Update(mergeRequest.Iid, new MergeRequestUpdate() {
+                    SourceBranch = mergeRequest.SourceBranch,
+                    TargetBranch = mergeRequest.TargetBranch,
+                    Labels = labels,
+                });
+            }
+            catch {
+                return mergeRequestsClient.Get(mergeRequest.Iid);
+            }
+        }
         public MergeRequest UpdateMergeRequestTitleAndDescription(MergeRequest mergeRequest, string title, string description) {
             var mergeRequestsClient = client.GetMergeRequest(mergeRequest.ProjectId);
             try {
