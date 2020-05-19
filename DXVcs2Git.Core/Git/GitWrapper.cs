@@ -115,7 +115,7 @@ namespace DXVcs2Git {
         }
         public void Pull(string repoPath) {
             var args = new[] {
-                "pull", "--depth", "2"
+                "pull",
             };
 
             string output, errors;
