@@ -902,31 +902,21 @@ namespace DXVcs2Git.Console {
         static ProcessHistoryResult ProcessHistory(DXVcsWrapper vcsWrapper, GitWrapper gitWrapper, RegisteredUsers registeredUsers, User defaultUser, string gitRepoPath, string localGitDir, TrackBranch branch, int commitsCount, SyncHistoryWrapper syncHistory) {
             var (commits, historyResult) = GenerateHistory(vcsWrapper, gitWrapper, registeredUsers, defaultUser, gitRepoPath, localGitDir, branch, commitsCount, syncHistory, true);
             var requiredTrackItems = commits.SelectMany(x => x.Items).Select(x => x.Track).Distinct().ToList();
-            if (requiredTrackItems.Count > 10) {
-                Log.Message($@"Sparse checkout disabled because it`s a lot of checkout roots - {requiredTrackItems.Count}");
-                gitWrapper.CheckOut(branch.Name);
-                Log.Message($"Checkout branch branch {branch.Name}");
-            }
-            else {
-                gitWrapper.Config("core.sparsecheckout", "true");
-                Log.Message("Sparse checkout enabled");
-                gitWrapper.SparseCheckout(branch.Name, CalcSparseCheckoutFile(requiredTrackItems));
-                Log.Message($"Sparse checkout branch {branch.Name}");
-            }
+            gitWrapper.SparseCheckout(branch.Name, CalcSparseCheckout(requiredTrackItems));
+            Log.Message($"Sparse checkout branch {branch.Name}");
+
             ProcessHistoryInternal(vcsWrapper, gitWrapper, registeredUsers, defaultUser, localGitDir, branch, commits, syncHistory);
             Log.Message($"Importing history from vcs completed.");
             return historyResult;
         }
-        static string CalcSparseCheckoutFile(List<TrackItem> items) {
+        static string CalcSparseCheckout(List<TrackItem> items) {
             StringBuilder builder = new StringBuilder();
-            builder.AppendLine(".gitignore");
-            builder.AppendLine(".gitattributes");
             foreach (var trackItem in items) {
                 string trackRoot = trackItem.Branch.GetRepoRoot(trackItem);
                 if (trackItem.IsFile)
-                    builder.AppendLine(trackRoot);
+                    builder.Append($@"""{trackRoot}"" ");
                 else {
-                    builder.AppendLine($@"/{trackRoot}/");
+                    builder.Append($@"/{trackRoot}/ ");
                 }
             }
             return builder.ToString();
@@ -1081,7 +1071,7 @@ namespace DXVcs2Git.Console {
                 .Concat(genericChange
                     .Where(x => x.NewTrack != null).Select(x => x.NewTrack)
                 ).Distinct().ToList();
-            gitWrapper.ReadTree(CalcSparseCheckoutFile(requiredTrackItems));
+            gitWrapper.SparseCheckoutSet(CalcSparseCheckout(requiredTrackItems));
 
             bool ignoreValidation = gitLabWrapper.ShouldIgnoreSharedFiles(mergeRequest);
 

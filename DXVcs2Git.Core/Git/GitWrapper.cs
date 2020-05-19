@@ -66,7 +66,7 @@ namespace DXVcs2Git {
 
         public void ShallowClone(string localPath, string branch, string remote) {
             var args = new[] {
-               "clone", "--branch", branch, Escape(remote), Escape(localPath)
+               "clone", "--filter=blob:none", "--no-checkout", "--branch", branch, Escape(remote), Escape(localPath)
             };
             string output, errors;
             var code = WaitForProcess(gitPath, ".", out output, out errors, args);
@@ -249,12 +249,21 @@ namespace DXVcs2Git {
             File.WriteAllText(sparseCheckoutPath, sparseCheckoutFile);
             Checkout(repoPath, branch);
         }
+        public void SparseCheckoutSet(string repoPath, string dirs) {
+            var code = WaitForProcess(gitPath, repoPath, out var output, out var errors, "sparse-checkout", "set", dirs);
+            CheckFail(code, output, errors);
+        }
+        public void SparseCheckoutInit(string repoPath) {
+            var code = WaitForProcess(gitPath, repoPath, out var output, out var errors, "sparse-checkout", "init", "--cone");
+            CheckFail(code, output, errors);
+        }
         public void ReadTree(string repoPath, string sparseCheckoutFile) {
             string sparseCheckoutPath = Path.Combine(repoPath, ".git", "info", "sparse-checkout");
             File.WriteAllText(sparseCheckoutPath, sparseCheckoutFile);
             var code = WaitForProcess(gitPath, repoPath, out string output, out string errors, "read-tree -mu HEAD");
             CheckFail(code, output, errors);
         }
+        
     }
 
     public enum GitDiffStatus {
@@ -292,18 +301,17 @@ namespace DXVcs2Git {
             this.remotePath = remotePath;
             gitCmd = new GitCmdWrapper(@"C:\Program Files\Git\cmd\git.exe");
             Log.Message("Start initializing git repo");
-            this.GitDirectory = localPath;
-            if (DirectoryHelper.IsGitDir(localPath)) {
-                GitInit(branch);
-            }
-            else {
+            GitDirectory = localPath;
+            if (!DirectoryHelper.IsGitDir(localPath))
                 GitClone(branch);
-            }
+            GitInit(branch);
+
             Log.Message("End initializing git repo");
         }
         public void GitInit(string branch) {
-            Fetch();
-            CheckOut(branch, false);
+            Fetch(branch);
+            SparseCheckoutInit();
+            SparseCheckout(branch, string.Empty);
         }
         void GitClone(string branch) {
             gitCmd.ShallowClone(localPath, branch, remotePath);
@@ -346,7 +354,7 @@ namespace DXVcs2Git {
             return $"origin/{name}";
         }
         public void CheckOut(string branch, bool track = true) {
-            gitCmd.Checkout(localPath, branch);
+            gitCmd.Checkout(localPath, branch, track);
             Log.Message($"Git repo {localPath} was checked out for branch {branch}.");
         }
         public void Reset() {
@@ -361,8 +369,16 @@ namespace DXVcs2Git {
         public void Config(string property, string value) {
             gitCmd.Config(localPath, property, value);
         }
-        public void SparseCheckout(string branch, string sparseCheckoutFile) {
-            gitCmd.SparseCheckout(localPath, branch, sparseCheckoutFile);
+        public void SparseCheckout(string branch, string sparseCheckoutConfig) {
+            SparseCheckoutSet(sparseCheckoutConfig);
+            CheckOut(branch);
+        }
+        public void SparseCheckoutSet(string content) {
+            gitCmd.SparseCheckoutSet(localPath, content);
+        }
+        //git sparse-checkout init --cone
+        public void SparseCheckoutInit() {
+            gitCmd.SparseCheckoutInit(localPath);
         }
         public void ReadTree(string sparseCheckoutFile) {
             gitCmd.ReadTree(localPath, sparseCheckoutFile);
