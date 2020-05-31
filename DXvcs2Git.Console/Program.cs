@@ -875,12 +875,18 @@ namespace DXVcs2Git.Console {
                 return Task.FromResult(0);
             if (checkMergeChangesResult == CheckMergeChangesResult.Error)
                 return Task.FromResult(1);
-
+            
             SendMessageToGitTools(sendNotifications, syncTask, username, "Initializing git repo.");
             GitWrapper gitWrapper = CreateGitWrapper(gitRepoPath, localGitDir, "master", username, password);
             if (gitWrapper == null)
                 return Task.FromResult(1);
 
+            if (head.Status == SyncHistoryStatus.Sync) {
+                var cleanBranch = FindCleanBranch(branchName, trackerPath, vcsWrapper);
+                ProcessSync(vcsWrapper, gitWrapper, registeredUsers, defaultUser, gitRepoPath, localGitDir, branch, cleanBranch, syncHistory);
+                return Task.FromResult(0);
+            } 
+            
             SendMessageToGitTools(sendNotifications, syncTask, username, "Adding vcs commits to git.");
 
             var historyResult = ProcessHistory(vcsWrapper, gitWrapper, registeredUsers, defaultUser, gitRepoPath, localGitDir, branch, commitsCount, syncHistory);
@@ -898,6 +904,42 @@ namespace DXVcs2Git.Console {
             if (result != 0)
                 return Task.FromResult(result);
             return Task.FromResult(0);
+        }
+        static void ProcessSync(
+            DXVcsWrapper vcsWrapper, GitWrapper gitWrapper, RegisteredUsers registeredUsers, User defaultUser, string gitRepoPath, string localGitDir, TrackBranch branch, TrackBranch cleanBranch,
+            SyncHistoryWrapper syncHistory) {
+            DateTime lastCommitDate = CalcLastCommitDate(syncHistory);
+            string token = syncHistory.CreateNewToken();
+            GitCommit last = gitWrapper.FindCommit(x => true);
+            gitWrapper.SparseCheckout(cleanBranch.Name, CalcSparseCheckout(cleanBranch.TrackItems.Where(x => !x.IsFile).ToList()));
+            foreach (var trackItem in cleanBranch.TrackItems) {
+                string localPath = branch.GetLocalRoot(trackItem, localGitDir);
+                if (trackItem.IsFile) {
+                    if (File.Exists(localPath))
+                        File.Delete(localPath);
+                    string trackPath = branch.GetTrackRoot(trackItem);
+                    vcsWrapper.GetFile(trackPath, localPath, lastCommitDate);
+                }
+                else {
+                    DirectoryHelper.DeleteDirectory(localPath);
+                    string trackPath = branch.GetTrackRoot(trackItem);
+                    vcsWrapper.GetProject(vcsServer, trackPath, localPath, lastCommitDate);
+                }
+                Log.Message($"git stage {trackItem.ProjectPath}");
+                gitWrapper.Stage(trackItem.ProjectPath, trackItem.Force);
+                string syncCommitAuthor = defaultUser.UserName;
+                var comment = CalcComment("sync commit", lastCommitDate.Ticks, branch.Name, syncCommitAuthor, token);
+                try {
+                    gitWrapper.Commit(comment.ToString(), defaultUser, lastCommitDate, false);
+                    last = gitWrapper.FindCommit(x => true);
+                }
+                catch (Exception) {
+                    Log.Message($"Empty commit detected for {defaultUser.DisplayName}");
+                }
+            }
+            gitWrapper.PushEverything();
+            syncHistory.Add(last.Sha, lastCommitDate.Ticks, token);
+            syncHistory.Save();
         }
         static ProcessHistoryResult ProcessHistory(DXVcsWrapper vcsWrapper, GitWrapper gitWrapper, RegisteredUsers registeredUsers, User defaultUser, string gitRepoPath, string localGitDir, TrackBranch branch, int commitsCount, SyncHistoryWrapper syncHistory) {
             var (commits, historyResult) = GenerateHistory(vcsWrapper, gitWrapper, registeredUsers, defaultUser, gitRepoPath, localGitDir, branch, commitsCount, syncHistory, true);
@@ -988,6 +1030,22 @@ namespace DXVcs2Git.Console {
             }
 
             var branch = GetBranch(branchName, configPath, vcsWrapper);
+            if (branch == null) {
+                Log.Error($"Specified branch {branchName} not found.");
+                return null;
+            }
+            return branch;
+        }
+        static TrackBranch FindCleanBranch(string branchName, string trackerPath, DXVcsWrapper vcsWrapper) {
+            string configPath;
+            if (Path.IsPathRooted(trackerPath))
+                configPath = trackerPath;
+            else {
+                string localPath = Path.GetDirectoryName(Assembly.GetEntryAssembly().Location);
+                configPath = Path.Combine(localPath, trackerPath);
+            }
+
+            var branch = GetBranchClean(branchName, configPath, vcsWrapper);
             if (branch == null) {
                 Log.Error($"Specified branch {branchName} not found.");
                 return null;
@@ -1332,6 +1390,16 @@ namespace DXVcs2Git.Console {
                 return null;
             }
         }
+        static TrackBranch GetBranchClean(string branchName, string configPath, DXVcsWrapper vcsWrapper) {
+            try {
+                var branches = TrackBranch.DeserializeClean(configPath, vcsWrapper);
+                return branches.FirstOrDefault(x => x.Name == branchName);
+            }
+            catch (Exception ex) {
+                Log.Error("Loading items for track failed", ex);
+                return null;
+            }
+        }
         static bool IsLabel(CommitItem item) {
             return item.Items.Any(x => !string.IsNullOrEmpty(x.Label));
         }
@@ -1352,6 +1420,15 @@ namespace DXVcs2Git.Console {
                 sb.AppendLine();
             }
             return sb.ToString();
+        }
+        static CommentWrapper CalcComment(string message, long ticks, string branch,  string author, string token) {
+            CommentWrapper comment = new CommentWrapper();
+            comment.TimeStamp = ticks.ToString();
+            comment.Author = author;
+            comment.Branch = branch;
+            comment.Token = token;
+            comment.Comment = message;
+            return comment;
         }
         static CommentWrapper CalcComment(CommitItem item, string author, string token) {
             CommentWrapper comment = new CommentWrapper();

@@ -8,21 +8,31 @@ using Polenter.Serialization;
 
 namespace DXVcs2Git.Core {
     public class TrackBranch {
-        public static IList<TrackBranch> Deserialize(string path, DXVcsWrapper vcsWrapper) {
+        static IList<TrackBranch> DeserializeCore(string path) {
             if (!File.Exists(path)) {
                 Log.Error($"Track branch config with path {path} was not found.");
                 return new List<TrackBranch>();
             }
             SharpSerializer serializer = new SharpSerializer();
             var branches = (IList<TrackBranch>)serializer.Deserialize(path);
-            ProcessTrackItems(branches, vcsWrapper);
             return branches;
         }
-        static void ProcessTrackItems(IList<TrackBranch> branches, DXVcsWrapper vcsWrapper) {
+        public static IList<TrackBranch> Deserialize(string path, DXVcsWrapper vcsWrapper) {
+            var branches = DeserializeCore(path);
+            ProcessTrackItems(branches, vcsWrapper, true);
+            return branches;
+        }
+        public static IList<TrackBranch> DeserializeClean(string path, DXVcsWrapper vcsWrapper) {
+            var branches = DeserializeCore(path);
+            ProcessTrackItems(branches, vcsWrapper, false);
+            return branches;
+        }
+        static void ProcessTrackItems(IList<TrackBranch> branches, DXVcsWrapper vcsWrapper, bool calcTrackItems) {
             foreach (var branch in branches) {
                 foreach (var trackItem in branch.TrackItems)
                     trackItem.Branch = branch;
-                branch.TrackItems = CalcTrackItems(branch, branch.TrackItems, vcsWrapper);
+                if (calcTrackItems)
+                    branch.TrackItems = CalcTrackItems(branch, branch.TrackItems, vcsWrapper);
             }
         }
         static IList<TrackItem> CalcTrackItems(TrackBranch branch, IEnumerable<TrackItem> trackItems, DXVcsWrapper vcsWrapper) {

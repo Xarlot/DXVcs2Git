@@ -61,7 +61,7 @@ namespace DXVcs2Git.Core.Serialization {
                     Log.Error("Failed sync detected. Repair repo.");
                     return null;
                 }
-                if (head.Status == SyncHistoryStatus.Success)
+                if (head.Status == SyncHistoryStatus.Success || head.Status == SyncHistoryStatus.Sync)
                     break;
                 head = GetPrevious(head);
             }

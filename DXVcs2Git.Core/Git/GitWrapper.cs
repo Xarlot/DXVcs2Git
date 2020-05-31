@@ -305,6 +305,7 @@ namespace DXVcs2Git {
             if (!DirectoryHelper.IsGitDir(localPath))
                 GitClone(branch);
             GitInit(branch);
+            Pull();
 
             Log.Message("End initializing git repo");
         }

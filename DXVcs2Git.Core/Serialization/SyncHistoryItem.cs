@@ -5,6 +5,7 @@ namespace DXVcs2Git.Core {
         Success,
         Failed,
         Mixed,
+        Sync,
     }
     public class SyncHistoryItem {
         public string GitCommitSha { get; set; }
