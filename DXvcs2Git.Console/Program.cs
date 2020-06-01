@@ -976,6 +976,9 @@ namespace DXVcs2Git.Console {
                 return CheckMergeChangesResult.Error;
             }
 
+            if (head.Status == SyncHistoryStatus.Sync)
+                return CheckMergeChangesResult.HasChanges;
+            
             var gitlabBranch = gitLabWrapper.GetBranches(project).Single(x => x.Name == branchName);
             if (gitlabBranch.Commit.Id.Equals(new Sha1(head.GitCommitSha))) {
                 var commits = GenerateCommits(vcsWrapper, branch, syncHistory, false);
