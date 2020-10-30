@@ -113,9 +113,11 @@ namespace DXVcs2Git {
             var code = WaitForProcess(gitPath, repoPath, out output, out errors, "reset", "--hard");
             CheckFail(code, output, errors);
         }
-        public void Pull(string repoPath) {
+        public void Pull(string repoPath, string remote) {
             var args = new[] {
                 "pull",
+                "origin",
+                remote,
             };
 
             string output, errors;
@@ -305,7 +307,7 @@ namespace DXVcs2Git {
             if (!DirectoryHelper.IsGitDir(localPath))
                 GitClone(branch);
             GitInit(branch);
-            Pull();
+            Pull(branch);
 
             Log.Message("End initializing git repo");
         }
@@ -332,9 +334,8 @@ namespace DXVcs2Git {
         public void DiffWithRemoteBranch(string remote, string branch) {
             gitCmd.DiffWithRemoteBranch(localPath, remote, branch);
         }
-        public void Pull() {
-            gitCmd.Pull(localPath);
-            ;
+        public void Pull(string branch) {
+            gitCmd.Pull(localPath, branch);
         }
         public void LFSPull() {
             gitCmd.LFSPull(localPath);
