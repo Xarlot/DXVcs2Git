@@ -1147,7 +1147,7 @@ namespace DXVcs2Git.Console {
             if (mergeRequest.State == MergeRequestState.merged) {
                 Log.Message("Merge request merged successfully.");
 
-                gitWrapper.Pull(branch.Name);
+                gitWrapper.Pull();
 
                 var gitCommit = gitWrapper.FindCommit(x => CommentWrapper.Parse(x.Message).Token == autoSyncToken);
                 long timeStamp = lastHistoryItem.VcsCommitTimeStamp;
