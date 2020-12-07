@@ -944,8 +944,17 @@ namespace DXVcs2Git.Console {
         static ProcessHistoryResult ProcessHistory(DXVcsWrapper vcsWrapper, GitWrapper gitWrapper, RegisteredUsers registeredUsers, User defaultUser, string gitRepoPath, string localGitDir, TrackBranch branch, int commitsCount, SyncHistoryWrapper syncHistory) {
             var (commits, historyResult) = GenerateHistory(vcsWrapper, gitWrapper, registeredUsers, defaultUser, gitRepoPath, localGitDir, branch, commitsCount, syncHistory, true);
             var requiredTrackItems = commits.SelectMany(x => x.Items).Select(x => x.Track).Distinct().ToList();
-            gitWrapper.SparseCheckout(branch.Name, CalcSparseCheckout(requiredTrackItems));
-            Log.Message($"Sparse checkout branch {branch.Name}");
+            if (requiredTrackItems.Count > 20) {
+                Log.Message($"Sparse checkout set");
+                gitWrapper.CheckOut(branch.Name);
+                Log.Message($"Sparse checkout branch {branch.Name}");
+            }
+            else {
+                Log.Message($"Sparse checkout set");
+                var sparseCheckout = CalcSparseCheckout(requiredTrackItems);
+                gitWrapper.SparseCheckout(branch.Name, sparseCheckout);
+                Log.Message($"Sparse checkout branch {branch.Name}");
+            }
 
             ProcessHistoryInternal(vcsWrapper, gitWrapper, registeredUsers, defaultUser, localGitDir, branch, commits, syncHistory);
             Log.Message($"Importing history from vcs completed.");
