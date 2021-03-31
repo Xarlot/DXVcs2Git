@@ -1,5 +1,6 @@
 using System;
 using Microsoft.Win32;
+using Zabbix_Sender;
 
 namespace DXVcs2Git.Core.Zabbix {
     public static class ZabbixHelper {
@@ -7,7 +8,7 @@ namespace DXVcs2Git.Core.Zabbix {
             try {
                 string hostName = GetHostName();
                 Log.Message($" Send info to zabbix - {hostName}.{branch}.git_checkout_time - {message}");
-                var r2 = new ZsRequest("ciserver", $"{hostName}.{branch}.git_checkout_time", message.Replace(" ", "_"));
+                var r2 = new ZS_Request("ciserver", $"{hostName}.{branch}.git_checkout_time", message.Replace(" ", "_"));
                 r2.Send("zabbix");
             }
             catch (Exception ex) {
