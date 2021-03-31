@@ -29,7 +29,7 @@ namespace DXVcs2Git.Core.Zabbix {
             Data = new ZsData[] {new ZsData(zbxHost, zbxKey, zbxVal)};
         }
 
-        public ZsResponse Send(string zbxServer, int zbxPort = 10051, int zbxTimeOut = 500) {
+        public ZsResponse Send(string zbxServer, int zbxPort = 10051, int zbxTimeOut = 5000) {
             var jr = JsonConvert.SerializeObject(new ZsRequest(Data[0].Host, Data[0].Key, Data[0].Value));
             using var lTcPc = new TcpClient(zbxServer, zbxPort);
             using var lStream = lTcPc.GetStream();
