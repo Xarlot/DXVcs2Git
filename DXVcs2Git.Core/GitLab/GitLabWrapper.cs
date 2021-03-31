@@ -98,7 +98,7 @@ namespace DXVcs2Git.Git {
                 return mergeRequestsClient.Accept(mergeRequest.Iid, new MergeCommitMessage() { Message = comment });
             }
             catch (Exception ex) {
-                Log.Error("Merging has thrown exception", ex);
+                Log.Message("Merging has thrown exception", ex);
                 return mergeRequest;
             }
         }
