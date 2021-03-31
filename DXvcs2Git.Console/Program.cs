@@ -18,6 +18,7 @@ using DXVcs2Git.Core;
 using DXVcs2Git.Core.Farm;
 using DXVcs2Git.Core.GitLab;
 using DXVcs2Git.Core.Serialization;
+using DXVcs2Git.Core.Zabbix;
 using DXVcs2Git.DXVcs;
 using DXVcs2Git.Git;
 using DXVcs2Git.UI.Farm;
@@ -387,16 +388,16 @@ namespace DXVcs2Git.Console {
 
             string info = SavePatchInfo(patchdir, patch);
             string content = File.ReadAllText(Path.Combine(patchdir, info));
-            
+
             var client = new RestClient(patchServiceUrl);
             var request = new RestRequest($@"/api/v1/createpatch/{sha1}", Method.POST);
             Dictionary<string, string> values = new Dictionary<string, string>();
             values.Add("repo", repo);
             values.Add("branch", branch);
             values.Add("content", content);
-            
+
             string json = JsonConvert.SerializeObject(values);
-            
+
             request.AddParameter("application/json; charset=utf-8", json, ParameterType.RequestBody);
             request.RequestFormat = DataFormat.Json;
             var response = await client.ExecuteTaskAsync(request);
@@ -433,7 +434,7 @@ namespace DXVcs2Git.Console {
             if (response.ResponseStatus == ResponseStatus.Completed && response.StatusCode == HttpStatusCode.OK) {
                 while (true) {
                     var request = new RestRequest($"/api/v1/getpatch/{sha1}");
-                    
+
                     var getPatchResponse = await client.ExecuteGetTaskAsync(request);
                     if (getPatchResponse.ResponseStatus == ResponseStatus.Completed && getPatchResponse.StatusCode == HttpStatusCode.OK) {
                         var chunkStatus = getPatchResponse.Headers.FirstOrDefault(x => x.Name == "chunk_status");
@@ -841,9 +842,6 @@ namespace DXVcs2Git.Console {
 
             bool sendNotifications = !string.IsNullOrEmpty(clo.SyncTask) && !string.IsNullOrWhiteSpace(clo.SyncTask);
 
-            if (sendNotifications)
-                FarmIntegrator.Start(null);
-
             DXVcsWrapper vcsWrapper = new DXVcsWrapper(vcsServer, username, password);
 
             TrackBranch branch = FindBranch(branchName, trackerPath, vcsWrapper);
@@ -875,19 +873,19 @@ namespace DXVcs2Git.Console {
                 return Task.FromResult(0);
             if (checkMergeChangesResult == CheckMergeChangesResult.Error)
                 return Task.FromResult(1);
-            
-            SendMessageToGitTools(sendNotifications, syncTask, username, "Initializing git repo.");
+
+            Stopwatch gitInitWatch = Stopwatch.StartNew();
             GitWrapper gitWrapper = CreateGitWrapper(gitRepoPath, localGitDir, "master", username, password);
             if (gitWrapper == null)
                 return Task.FromResult(1);
+
+            ZabbixHelper.Send(branchName, gitInitWatch.ElapsedMilliseconds.ToString());
 
             if (head.Status == SyncHistoryStatus.Sync) {
                 var cleanBranch = FindCleanBranch(branchName, trackerPath, vcsWrapper);
                 ProcessSync(vcsWrapper, gitWrapper, registeredUsers, defaultUser, gitRepoPath, localGitDir, branch, cleanBranch, syncHistory);
                 return Task.FromResult(0);
-            } 
-            
-            SendMessageToGitTools(sendNotifications, syncTask, username, "Adding vcs commits to git.");
+            }
 
             var historyResult = ProcessHistory(vcsWrapper, gitWrapper, registeredUsers, defaultUser, gitRepoPath, localGitDir, branch, commitsCount, syncHistory);
 
@@ -896,14 +894,9 @@ namespace DXVcs2Git.Console {
             if (historyResult == ProcessHistoryResult.Failed)
                 return Task.FromResult(1);
 
-            SendMessageToGitTools(sendNotifications, syncTask, username, "Process merge requests.");
-
             int result = ProcessMergeRequests(vcsWrapper, gitWrapper, gitLabWrapper, registeredUsers, defaultUser, gitRepoPath, localGitDir, clo.Branch, clo.Tracker, syncHistory, username, sendNotifications, syncTask);
 
-            SendMessageToGitTools(sendNotifications, syncTask, username, "Shutting down.");
-            if (result != 0)
-                return Task.FromResult(result);
-            return Task.FromResult(0);
+            return Task.FromResult(result != 0 ? result : 0);
         }
         static void ProcessSync(
             DXVcsWrapper vcsWrapper, GitWrapper gitWrapper, RegisteredUsers registeredUsers, User defaultUser, string gitRepoPath, string localGitDir, TrackBranch branch, TrackBranch cleanBranch,
@@ -972,12 +965,6 @@ namespace DXVcs2Git.Console {
             }
             return builder.ToString();
         }
-        static void SendMessageToGitTools(bool sendMessage, string task, string user, string message) {
-            if (!sendMessage)
-                return;
-            var notification = new FarmSyncTaskNotification(FarmNotificationType.synctask, task, message);
-            FarmIntegrator.SendNotification(farmServer, task, user, JsonConvert.SerializeObject(notification));
-        }
         static CheckMergeChangesResult CheckChangesForMerging(GitLabWrapper gitLabWrapper, string gitRepoPath, string branchName, SyncHistoryItem head, DXVcsWrapper vcsWrapper, TrackBranch branch, SyncHistoryWrapper syncHistory, User defaultUser) {
             var project = gitLabWrapper.FindProject(gitRepoPath);
             if (project == null) {
@@ -987,7 +974,7 @@ namespace DXVcs2Git.Console {
 
             if (head.Status == SyncHistoryStatus.Sync)
                 return CheckMergeChangesResult.HasChanges;
-            
+
             var gitlabBranch = gitLabWrapper.GetBranches(project).Single(x => x.Name == branchName);
             if (gitlabBranch.Commit.Id.Equals(new Sha1(head.GitCommitSha))) {
                 var commits = GenerateCommits(vcsWrapper, branch, syncHistory, false);
@@ -1113,8 +1100,6 @@ namespace DXVcs2Git.Console {
             string autoSyncToken = syncHistory.CreateNewToken();
             var lastHistoryItem = syncHistory.GetHead();
 
-            SendMessageToGitTools(sendNotifications, syncTask, defaultUser.UserName, $"Processing merge {mergeRequest.Title}");
-
             Log.Message($"Start merging mergerequest {mergeRequest.Title}");
 
             Log.ResetErrorsAccumulator();
@@ -1146,7 +1131,7 @@ namespace DXVcs2Git.Console {
             bool ignoreValidation = gitLabWrapper.ShouldIgnoreSharedFiles(mergeRequest);
 
             if (!ValidateMergeRequestChanges(gitLabWrapper, mergeRequest, ignoreValidation) || !vcsWrapper.ProcessCheckout(genericChange, ignoreValidation, branch)) {
-                Log.Error("Merging merge request failed because failed validation.");
+                Log.Error("Merging merge request failed.");
                 AssignBackConflictedMergeRequest(gitLabWrapper, users, mergeRequest, CalcCommentForFailedCheckoutMergeRequest(genericChange));
                 vcsWrapper.ProcessUndoCheckout(genericChange);
                 return MergeRequestResult.CheckoutFailed;
@@ -1236,7 +1221,7 @@ namespace DXVcs2Git.Console {
         }
         static string CalcCommentForFailedCheckoutMergeRequest(List<SyncItem> genericChange) {
             StringBuilder sb = new StringBuilder();
-            sb.AppendLine("Merge request has been assigned back because of changed validation.");
+            sb.AppendLine("Merging merge request failed. This is the result of either a merge conflict of a gitlab bug. I recommend that you merge latest changes into your branch to ensure there are no merge conflicts and assign merge request to bot again. Maybe several times.");
             sb.AppendLine(Log.GetErrorsAccumulatorContent());
             return sb.ToString();
         }

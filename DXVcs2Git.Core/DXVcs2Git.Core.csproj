@@ -184,6 +184,8 @@
     <Compile Include="Vcs\WCFServiceHelper.cs" />
     <Compile Include="Properties\Version.cs" />
     <Compile Include="GitLab\WebServer.cs" />
+    <Compile Include="Zabbix\ZabbitSender.cs" />
+    <Compile Include="Zabbix\ZabbixHelper.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />
@@ -194,7 +196,6 @@
     <EmbeddedResource Include="dxcctray.config" />
     <None Include="PublishVersionSynchronizer.targets" />
   </ItemGroup>
-  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="PublishVersionSynchronizer.targets" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
