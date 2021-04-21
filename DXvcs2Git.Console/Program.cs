@@ -45,6 +45,7 @@ namespace DXVcs2Git.Console {
         const string farmServer = @"tcp://ccnet.devexpress.devx:21234/CruiseManager.rem";
         public const string DXUpdateConnectionString = @"data source=xpf-anallytics;user id=DXUpdate;password=xVT2WkWi;MultipleActiveResultSets=True";
         const int MaxChangesCount = 1000;
+        const int CheckMergeTimeout = 60;
         static async Task<int> Main(string[] args) {
             var result = Parser.Default.ParseArguments<SyncOptions, PatchOptions, ApplyPatchOptions, ListenerOptions, ProcessTestsOptions, DXUpdateOptions>(args);
             try {
@@ -1103,6 +1104,16 @@ namespace DXVcs2Git.Console {
             Log.Message($"Start merging mergerequest {mergeRequest.Title}");
 
             Log.ResetErrorsAccumulator();
+
+            var (skipped, assignBack) = IsMergeRequestReadyToMerge(gitLabWrapper, mergeRequest);
+            if (assignBack) {
+                AssignBackConflictedMergeRequest(gitLabWrapper, users, mergeRequest, CalcCommentForFailedCheckoutMergeRequest(null));
+                return MergeRequestResult.Failed;
+            }
+
+            if (skipped)
+                return MergeRequestResult.Skipped;
+
             var changes = gitLabWrapper.GetMergeRequestChanges(mergeRequest).ToList();
             if (changes.Count >= MaxChangesCount) {
                 Log.Error($"Merge request contains more than {MaxChangesCount} changes and cannot be processed. Split it into smaller merge requests");
@@ -1175,6 +1186,42 @@ namespace DXVcs2Git.Console {
 
             return MergeRequestResult.Conflicts;
         }
+        static (bool skipped, bool assignBack) IsMergeRequestReadyToMerge(GitLabWrapper gitLabWrapper, MergeRequest mergeRequest) {
+            var project = gitLabWrapper.GetProject(mergeRequest.ProjectId);
+
+            Stopwatch timer = Stopwatch.StartNew();
+            do {
+                var currentMergeRequest = gitLabWrapper.GetMergeRequest(project, mergeRequest.Iid);
+
+                var mergeStatus = currentMergeRequest.MergeStatus;
+                if (mergeStatus == null) {
+                    Log.Message("Merge request merge status is undefined.");
+                    return (true, false);
+                }
+                var mergeStatusValue = mergeStatus.Value;
+                if (mergeStatusValue == MergeRequestStatus.can_be_merged)
+                    return (true, false);
+                if (mergeStatus == MergeRequestStatus.cannot_be_merged) {
+                    Log.Message("Merge request merge status is in can not be merged state.");
+                    return (false, true);
+                }
+                if (currentMergeRequest.HasConflicts ?? false) {
+                    Log.Message("Merge request has conflicts.");
+                    return (false, true);
+                }
+
+                if (mergeStatus == MergeRequestStatus.checking)
+                    Log.Message("Merge request merge status is in checking state.");
+                if (mergeStatus == MergeRequestStatus.cannot_be_merged)
+                    Log.Message("Merge request merge status is in cannot be merged but checking state.");
+                if (mergeStatus == MergeRequestStatus.@unchecked)
+                    Log.Message("Merge request merge status is in unchecked state.");
+                Thread.Sleep(5000);
+            } while (timer.Elapsed.TotalSeconds < CheckMergeTimeout);
+
+            Log.Message("Merge request check merge timeout.");
+            return (false, false);
+        }
         static TrackItem CalcTrackItem(TrackBranch branch, string path) {
             var trackItem = branch.TrackItems.Where(b => !b.IsFile).FirstOrDefault(track => CheckItemForChangeSet(path, track));
             if (trackItem == null)
@@ -1221,7 +1268,7 @@ namespace DXVcs2Git.Console {
         }
         static string CalcCommentForFailedCheckoutMergeRequest(List<SyncItem> genericChange) {
             StringBuilder sb = new StringBuilder();
-            sb.AppendLine("Merging merge request failed. This is the result of either a merge conflict of a gitlab bug. I recommend that you merge latest changes into your branch to ensure there are no merge conflicts and assign merge request to bot again. Maybe several times.");
+            sb.AppendLine("Merge request can not be merged. Check for merge conflicts manually or Draft flag in the merge request title.");
             sb.AppendLine(Log.GetErrorsAccumulatorContent());
             return sb.ToString();
         }
@@ -1447,6 +1494,7 @@ namespace DXVcs2Git.Console {
         CheckoutFailed,
         Mixed,
         InvalidState,
+        Skipped,
     }
     public enum ProcessHistoryResult {
         Success,

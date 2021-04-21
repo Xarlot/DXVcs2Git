@@ -36,9 +36,9 @@ namespace DXVcs2Git.Git {
                 string.Compare(x.SshUrl, project, StringComparison.InvariantCultureIgnoreCase) == 0);
         }
         public IEnumerable<MergeRequest> GetMergeRequests(Project project, Func<MergeRequest, bool> mergeRequestsHandler = null) {
-            mergeRequestsHandler = mergeRequestsHandler ?? (x => true);
+            mergeRequestsHandler ??= x => true;
             var mergeRequestsClient = client.GetMergeRequest(project.Id);
-            return mergeRequestsClient.AllInState(MergeRequestState.opened).Where(x => mergeRequestsHandler(x));
+            return mergeRequestsClient.AllInState(MergeRequestState.opened, true).Where(x => mergeRequestsHandler(x));
         }
         public MergeRequest GetMergeRequest(Project project, int id) {
             var mergeRequestsClient = client.GetMergeRequest(project.Id);
@@ -108,7 +108,7 @@ namespace DXVcs2Git.Git {
                 return mergeRequestsClient.Update(mergeRequest.Iid, new MergeRequestUpdate() {
                     SourceBranch = mergeRequest.SourceBranch,
                     TargetBranch = mergeRequest.TargetBranch,
-                    Labels = labels,
+                    Title = labels,
                 });
             }
             catch {
