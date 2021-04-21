@@ -1105,13 +1105,13 @@ namespace DXVcs2Git.Console {
 
             Log.ResetErrorsAccumulator();
 
-            var (skipped, assignBack) = IsMergeRequestReadyToMerge(gitLabWrapper, mergeRequest);
+            var (merge, assignBack) = IsMergeRequestReadyToMerge(gitLabWrapper, mergeRequest);
             if (assignBack) {
                 AssignBackConflictedMergeRequest(gitLabWrapper, users, mergeRequest, CalcCommentForFailedCheckoutMergeRequest(null));
                 return MergeRequestResult.Failed;
             }
 
-            if (skipped)
+            if (!merge)
                 return MergeRequestResult.Skipped;
 
             var changes = gitLabWrapper.GetMergeRequestChanges(mergeRequest).ToList();
@@ -1199,8 +1199,11 @@ namespace DXVcs2Git.Console {
                     return (true, false);
                 }
                 var mergeStatusValue = mergeStatus.Value;
-                if (mergeStatusValue == MergeRequestStatus.can_be_merged)
+                if (mergeStatusValue == MergeRequestStatus.can_be_merged) {
+                    Log.Message("Merge request merge status is in can be merged state.");
                     return (true, false);
+                }
+
                 if (mergeStatus == MergeRequestStatus.cannot_be_merged) {
                     Log.Message("Merge request merge status is in can not be merged state.");
                     return (false, true);
