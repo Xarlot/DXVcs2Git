@@ -1,4 +1,4 @@
-#   DXVcs2Git
+#   DXVcs 2 Git
 
 
 
