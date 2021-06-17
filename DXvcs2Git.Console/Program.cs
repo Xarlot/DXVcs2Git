@@ -875,16 +875,14 @@ namespace DXVcs2Git.Console {
             if (checkMergeChangesResult == CheckMergeChangesResult.Error)
                 return Task.FromResult(1);
 
-            Stopwatch gitInitWatch = Stopwatch.StartNew();
             GitWrapper gitWrapper = CreateGitWrapper(gitRepoPath, localGitDir, "master", username, password);
             if (gitWrapper == null)
                 return Task.FromResult(1);
 
-            ZabbixHelper.Send(branchName, gitInitWatch.ElapsedMilliseconds.ToString());
-
             if (head.Status == SyncHistoryStatus.Sync) {
                 var cleanBranch = FindCleanBranch(branchName, trackerPath, vcsWrapper);
-                ProcessSync(vcsWrapper, gitWrapper, registeredUsers, defaultUser, gitRepoPath, localGitDir, branch, cleanBranch, syncHistory);
+                gitWrapper.GitSparseInit(branchName, string.Empty);
+                ProcessSync(vcsWrapper, gitWrapper, defaultUser, localGitDir, branch, cleanBranch, syncHistory);
                 return Task.FromResult(0);
             }
 
@@ -900,7 +898,7 @@ namespace DXVcs2Git.Console {
             return Task.FromResult(result != 0 ? result : 0);
         }
         static void ProcessSync(
-            DXVcsWrapper vcsWrapper, GitWrapper gitWrapper, RegisteredUsers registeredUsers, User defaultUser, string gitRepoPath, string localGitDir, TrackBranch branch, TrackBranch cleanBranch,
+            DXVcsWrapper vcsWrapper, GitWrapper gitWrapper, User defaultUser, string localGitDir, TrackBranch branch, TrackBranch cleanBranch,
             SyncHistoryWrapper syncHistory) {
             DateTime lastCommitDate = CalcLastCommitDate(syncHistory);
             string token = syncHistory.CreateNewToken();
@@ -938,17 +936,20 @@ namespace DXVcs2Git.Console {
         static ProcessHistoryResult ProcessHistory(DXVcsWrapper vcsWrapper, GitWrapper gitWrapper, RegisteredUsers registeredUsers, User defaultUser, string gitRepoPath, string localGitDir, TrackBranch branch, int commitsCount, SyncHistoryWrapper syncHistory) {
             var (commits, historyResult) = GenerateHistory(vcsWrapper, gitWrapper, registeredUsers, defaultUser, gitRepoPath, localGitDir, branch, commitsCount, syncHistory, true);
             var requiredTrackItems = commits.SelectMany(x => x.Items).Select(x => x.Track).Distinct().ToList();
-            if (requiredTrackItems.Count > 20) {
-                Log.Message($"Sparse checkout set");
-                gitWrapper.CheckOut(branch.Name);
-                Log.Message($"Sparse checkout branch {branch.Name}");
+            Stopwatch gitInitWatch = Stopwatch.StartNew();
+            if (requiredTrackItems.Count > 100) {
+                Log.Message($"Normal checkout set");
+                gitWrapper.GitInit(branch.Name);
+                Log.Message($"Normal checkout branch {branch.Name}");
             }
             else {
                 Log.Message($"Sparse checkout set");
                 var sparseCheckout = CalcSparseCheckout(requiredTrackItems);
-                gitWrapper.SparseCheckout(branch.Name, sparseCheckout);
+                gitWrapper.GitSparseInit(branch.Name, sparseCheckout);
                 Log.Message($"Sparse checkout branch {branch.Name}");
             }
+
+            ZabbixHelper.Send(branch.Name, gitInitWatch.ElapsedMilliseconds.ToString());
 
             ProcessHistoryInternal(vcsWrapper, gitWrapper, registeredUsers, defaultUser, localGitDir, branch, commits, syncHistory);
             Log.Message($"Importing history from vcs completed.");

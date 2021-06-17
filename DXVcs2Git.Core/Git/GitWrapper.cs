@@ -153,7 +153,7 @@ namespace DXVcs2Git {
             var code = WaitForProcess(gitPath, repoPath, out string output, out string errors, "diff --name-status", branch, $@"{remote}/{branch}");
             CheckFail(code, output, errors);
         }
-        public GitDiff[] Diff(string repoPath, string from, string to) { 
+        public GitDiff[] Diff(string repoPath, string from, string to) {
             var args = new[] {
                 "diff",
                 "--name-status",
@@ -263,7 +263,7 @@ namespace DXVcs2Git {
             var code = WaitForProcess(gitPath, repoPath, out string output, out string errors, "read-tree -mu HEAD");
             CheckFail(code, output, errors);
         }
-        
+
     }
 
     public enum GitDiffStatus {
@@ -304,15 +304,16 @@ namespace DXVcs2Git {
             GitDirectory = localPath;
             if (!DirectoryHelper.IsGitDir(localPath))
                 GitClone(branch);
-            GitInit(branch);
-            Pull();
-
             Log.Message("End initializing git repo");
+        }
+        public void GitSparseInit(string branch, string config) {
+            Fetch(branch);
+            SparseCheckoutInit();
+            SparseCheckout(branch, config);
         }
         public void GitInit(string branch) {
             Fetch(branch);
-            SparseCheckoutInit();
-            SparseCheckout(branch, string.Empty);
+            CheckOut(branch);
         }
         void GitClone(string branch) {
             gitCmd.ShallowClone(localPath, branch, remotePath);
@@ -334,7 +335,6 @@ namespace DXVcs2Git {
         }
         public void Pull() {
             gitCmd.Pull(localPath);
-            ;
         }
         public void LFSPull() {
             gitCmd.LFSPull(localPath);
@@ -350,9 +350,6 @@ namespace DXVcs2Git {
         }
         public void PushEverything() {
             gitCmd.Push(localPath);
-        }
-        string GetOriginName(string name) {
-            return $"origin/{name}";
         }
         public void CheckOut(string branch, bool track = true) {
             gitCmd.Checkout(localPath, branch, track);
@@ -378,7 +375,7 @@ namespace DXVcs2Git {
             gitCmd.SparseCheckoutSet(localPath, content);
         }
         //git sparse-checkout init --cone
-        public void SparseCheckoutInit() {
+        void SparseCheckoutInit() {
             gitCmd.SparseCheckoutInit(localPath);
         }
         public void ReadTree(string sparseCheckoutFile) {
