@@ -1262,7 +1262,7 @@ namespace DXVcs2Git.Console {
             return result;
         }
         static Regex NewlinePattern { get; } = new Regex(@"^[+][^+?]", RegexOptions.Compiled);
-        static HashSet<string> CheckFilesList { get; } = new HashSet<string> { ".cs", ".xaml", ".csproj", ".sln", ".tt", ".resx" };
+        static HashSet<string> CheckFilesList { get; } = new HashSet<string> { ".cs", ".xaml", ".csproj", ".sln", ".tt", ".resx", ".js", ".ts", ".razor", ".md" };
         static bool ValidateFileChange(MergeRequestFileData diff) {
             if (!CheckFilesList.Contains(Path.GetExtension(diff.OldPath)))
                 return true;
